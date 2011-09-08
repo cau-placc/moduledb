@@ -1,0 +1,490 @@
+module MDBEntitiesToHtml where
+
+import WUI
+import HTML
+import Time
+import Spicey
+import MDB
+import Helpers
+import List
+
+--- The list view of a StudyProgram entity in HTML format.
+--- This view is used in a row of a table of all entities.
+studyProgramToListView :: StudyProgram -> [[HtmlExp]]
+studyProgramToListView studyProgram =
+  [[href ("?listCategory/"++showStudyProgramKey studyProgram)
+         [stringToHtml (studyProgramName studyProgram)]]
+  ,[stringToHtml (studyProgramShortName studyProgram)]
+  ,[stringToHtml (studyProgramProgKey studyProgram)]
+  ,[stringToHtml (studyProgramURLKey studyProgram)]
+  ,[intToHtml (studyProgramPosition studyProgram)]]
+
+--- The short view of a StudyProgram entity as a string.
+--- This view is used in menus and comments to refer to a StudyProgram entity.
+studyProgramToShortView :: StudyProgram -> String
+studyProgramToShortView studyProgram = studyProgramShortName studyProgram
+
+--- The detailed view of a StudyProgram entity in HTML format.
+studyProgramToDetailsView :: StudyProgram -> [HtmlExp]
+studyProgramToDetailsView studyProgram =
+  [table
+    (map (\ (label ,value) -> [label,value])
+      (zip studyProgramLabelList detailedView))]
+  where detailedView = [[stringToHtml (studyProgramName studyProgram)]
+                       ,[stringToHtml (studyProgramShortName studyProgram)]
+                       ,[stringToHtml (studyProgramProgKey studyProgram)]
+                       ,[stringToHtml (studyProgramURLKey studyProgram)]
+                       ,[intToHtml (studyProgramPosition studyProgram)]]
+
+--- The labels of a StudyProgram entity, as used in HTML tables.
+studyProgramLabelList :: [[HtmlExp]]
+studyProgramLabelList =
+  [[textstyle "label label_for_type_string" "Name"]
+  ,[textstyle "label label_for_type_string" "ShortName"]
+  ,[textstyle "label label_for_type_string" "ProgKey"]
+  ,[textstyle "label label_for_type_string" "URLKey"]
+  ,[textstyle "label label_for_type_int" "Position"]]
+
+--- The list view of a Category entity in HTML format.
+--- This view is used in a row of a table of all entities.
+categoryToListView :: Category -> [[HtmlExp]]
+categoryToListView category =
+  [[href ("?listModData/"++showCategoryKey category)
+         [stringToHtml (categoryName category)]]
+  ,[stringToHtml (categoryShortName category)]
+  ,[stringToHtml (categoryCatKey category)]
+  ,[intToHtml (categoryPosition category)]]
+
+--- The HTML view of a Category entity.
+categoryToHtmlView :: Category -> HtmlExp
+categoryToHtmlView category =
+  ehref ("?listModData/"++showCategoryKey category)
+        [htxt (categoryCatKey category)]
+
+--- The short view of a Category entity as a string.
+--- This view is used in menus and comments to refer to a Category entity.
+categoryToShortView :: Category -> String
+categoryToShortView category = categoryCatKey category
+
+--- The detailed view of a Category entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+categoryToDetailsView :: Category -> StudyProgram -> [HtmlExp]
+categoryToDetailsView category relatedStudyProgram =
+  [table
+    (map (\ (label ,value) -> [label,value])
+      (zip categoryLabelList detailedView))]
+  where detailedView = [[stringToHtml (categoryName category)]
+                       ,[stringToHtml (categoryShortName category)]
+                       ,[stringToHtml (categoryCatKey category)]
+                       ,[intToHtml (categoryPosition category)]
+                       ,[htxt (studyProgramToShortView relatedStudyProgram)]]
+
+--- The labels of a Category entity, as used in HTML tables.
+categoryLabelList :: [[HtmlExp]]
+categoryLabelList =
+  [[textstyle "label label_for_type_string" "Name"]
+  ,[textstyle "label label_for_type_string" "ShortName"]
+  ,[textstyle "label label_for_type_string" "CatKey"]
+  ,[textstyle "label label_for_type_int" "Position"]
+  ,[textstyle "label label_for_type_relation" "StudyProgram"]]
+
+--- The list view of a MasterCoreArea entity in HTML format.
+--- This view is used in a row of a table of all entities.
+masterCoreAreaToListView :: MasterCoreArea -> [[HtmlExp]]
+masterCoreAreaToListView masterCoreArea =
+  [[stringToHtml (masterCoreAreaName masterCoreArea)]
+  ,[stringToHtml (masterCoreAreaShortName masterCoreArea)]
+  ,[stringToHtml (masterCoreAreaDescription masterCoreArea)]
+  ,[stringToHtml (masterCoreAreaAreaKey masterCoreArea)]
+  ,[intToHtml (masterCoreAreaPosition masterCoreArea)]]
+
+--- The short view of a MasterCoreArea entity as a string.
+--- This view is used in menus and comments to refer to a MasterCoreArea entity.
+masterCoreAreaToShortView :: MasterCoreArea -> String
+masterCoreAreaToShortView masterCoreArea =
+  masterCoreAreaName masterCoreArea
+
+--- The detailed view of a MasterCoreArea entity in HTML format.
+masterCoreAreaToDetailsView :: MasterCoreArea -> [HtmlExp]
+masterCoreAreaToDetailsView masterCoreArea =
+  [table
+    (map (\ (label ,value) -> [label,value])
+      (zip masterCoreAreaLabelList detailedView))]
+  where detailedView = [[stringToHtml (masterCoreAreaName masterCoreArea)]
+                       ,[stringToHtml
+                          (masterCoreAreaShortName masterCoreArea)]
+                       
+                       ,[stringToHtml
+                          (masterCoreAreaDescription masterCoreArea)]
+                       ,[stringToHtml (masterCoreAreaAreaKey masterCoreArea)]
+                       ,[intToHtml (masterCoreAreaPosition masterCoreArea)]]
+
+--- The labels of a MasterCoreArea entity, as used in HTML tables.
+masterCoreAreaLabelList :: [[HtmlExp]]
+masterCoreAreaLabelList =
+  [[textstyle "label label_for_type_string" "Name"]
+  ,[textstyle "label label_for_type_string" "ShortName"]
+  ,[textstyle "label label_for_type_string" "Description"]
+  ,[textstyle "label label_for_type_string" "AreaKey"]
+  ,[textstyle "label label_for_type_int" "Position"]]
+
+--- The list view of a User entity in HTML format.
+--- This view is used in a row of a table of all entities.
+userToListView :: User -> [[HtmlExp]]
+userToListView user =
+  [[stringToHtml (userLogin user)],[stringToHtml (userName user)]
+  ,[stringToHtml (userFirst user)]
+  ,[calendarTimeToHtml (userLastLogin user)]]
+
+--- The HTML view of a User entity.
+userToHtmlView :: User -> HtmlExp
+userToHtmlView user =
+  let name = userToShortView user
+   in if null (userUrl user)
+      then htxt name
+      else ehref (userUrl user) [stringToHtml name]
+
+--- The short view of a User entity as a string.
+--- This view is used in menus and comments to refer to a User entity.
+userToShortView :: User -> String
+userToShortView user =
+  let ut = userTitle user
+   in if null ut then userFirst user ++ " " ++ userName user
+                 else ut ++ " " ++ userFirst user ++ " " ++ userName user
+
+--- The detailed view of a User entity in HTML format.
+userToDetailsView :: User -> [HtmlExp]
+userToDetailsView user =
+  [table
+    (map (\ (label ,value) -> [label,value])
+      (zip userLabelList detailedView))]
+  where detailedView = [[stringToHtml (userLogin user)]
+                       ,[stringToHtml (userName user)]
+                       ,[stringToHtml (userFirst user)]
+                       ,[stringToHtml (userTitle user)]
+                       ,[stringToHtml (userEmail user)]
+                       ,[stringToHtml (userUrl user)]
+                       ,[stringToHtml (userPassword user)]
+                       ,[calendarTimeToHtml (userLastLogin user)]]
+
+--- The labels of a User entity, as used in HTML tables.
+userLabelList :: [[HtmlExp]]
+userLabelList =
+  [[textstyle "label label_for_type_string" "Login"]
+  ,[textstyle "label label_for_type_string" "Name"]
+  ,[textstyle "label label_for_type_string" "First"]
+  ,[textstyle "label label_for_type_string" "Title"]
+  ,[textstyle "label label_for_type_string" "Email"]
+  ,[textstyle "label label_for_type_string" "Url"]
+  ,[textstyle "label label_for_type_string" "Password"]
+  ,[textstyle "label label_for_type_calendarTime" "LastLogin"]]
+
+--- The list view of a ModData entity in HTML format.
+--- This view is used in a row of a table of all entities.
+modDataToListView :: ModData -> [[HtmlExp]]
+modDataToListView modData =
+  [[withHref (stringToHtml (modDataCode modData))],
+   [withHref (stringToHtml (modDataNameG modData))],
+   [stringToHtml (showDiv10 (modDataECTS modData))]]
+ where
+   withHref hexp = if null (modDataURL modData)
+                   then href ("?listModData/"++showModDataKey modData) [hexp]
+                   else ehref (modDataURL modData) [hexp]
+
+--- A more compact list view of a ModData entity in HTML format
+--- where code and title is shown in one column.
+modDataToCompactListView :: ModData -> [[HtmlExp]]
+modDataToCompactListView modData =
+  [[withHref (stringToHtml (modDataCode modData++": "++modDataNameG modData))],
+   [stringToHtml (showDiv10 (modDataECTS modData))]]
+ where
+   withHref hexp = if null (modDataURL modData)
+                   then href ("?listModData/"++showModDataKey modData) [hexp]
+                   else ehref (modDataURL modData) [hexp]
+
+--- The short view of a ModData entity as a string.
+--- This view is used in menus and comments to refer to a ModData entity.
+modDataToShortView :: ModData -> String
+modDataToShortView modData = modDataCode modData
+
+--- The detailed view of a ModData entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+modDataToDetailsView :: ModData -> User -> [Category] -> [HtmlExp]
+modDataToDetailsView modData relatedUser categorys =
+  [table
+    (map (\ (label ,value) -> [label,value])
+      (zip modDataLabelList detailedView))]
+  where detailedView = [[stringToHtml (modDataCode modData)]
+                       ,[stringToHtml (modDataNameG modData)]
+                       ,[stringToHtml (modDataNameE modData)]
+                       ,[stringToHtml (modDataCycle modData)]
+                       ,[stringToHtml (modDataPresence modData)]
+                       ,[intToHtml (modDataECTS modData)]
+                       ,[stringToHtml (modDataWorkload modData)]
+                       ,[intToHtml (modDataLength modData)]
+                       ,[stringToHtml (modDataURL modData)]
+                       ,[boolToHtml (modDataVisible modData)]
+                       ,[htxt (userToShortView relatedUser)]
+                       ,[htxt (unwords (map categoryToShortView categorys))]]
+
+--- The labels of a ModData entity, as used in HTML tables.
+modDataLabelList :: [[HtmlExp]]
+modDataLabelList =
+  [[textstyle "label label_for_type_string" "Code"]
+  ,[textstyle "label label_for_type_string" "Titel"]
+  ,[textstyle "label label_for_type_string" "Englischer Titel"]
+  ,[textstyle "label label_for_type_string" "Turnus"]
+  ,[textstyle "label label_for_type_string" "Präsenzzeiten"]
+  ,[textstyle "label label_for_type_int" "ECTS"]
+  ,[textstyle "label label_for_type_string" "Workload"]
+  ,[textstyle "label label_for_type_int" "Dauer (Semester)"]
+  ,[textstyle "label label_for_type_string" "URL (für externe Module)"]
+  ,[textstyle "label label_for_type_bool" "Sichtbarkeit"]
+  ,[textstyle "label label_for_type_relation" "Modulverantwortlicher"]
+  ,[textstyle "label label_for_type_relation" "Kategorien"]]
+
+--- The list view of a ModDescr entity in HTML format.
+--- This view is used in a row of a table of all entities.
+modDescrToListView :: ModDescr -> [[HtmlExp]]
+modDescrToListView modDescr =
+  [[stringToHtml (modDescrLanguage modDescr)]
+  ,[stringToHtml (modDescrShortDesc modDescr)]
+  ,[stringToHtml (modDescrObjectives modDescr)]
+  ,[stringToHtml (modDescrContents modDescr)]
+  ,[stringToHtml (modDescrPrereq modDescr)]
+  ,[stringToHtml (modDescrExam modDescr)]
+  ,[stringToHtml (modDescrMethods modDescr)]
+  ,[stringToHtml (modDescrUse modDescr)]
+  ,[stringToHtml (modDescrLiterature modDescr)]
+  ,[stringToHtml (modDescrLinks modDescr)]
+  ,[stringToHtml (modDescrComments modDescr)]]
+
+--- The short view of a ModDescr entity as a string.
+--- This view is used in menus and comments to refer to a ModDescr entity.
+modDescrToShortView :: ModDescr -> String
+modDescrToShortView modDescr = modDescrLanguage modDescr
+
+--- The detailed view of a ModDescr entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+modDescrToDetailsView :: ModDescr -> ModData -> [HtmlExp]
+modDescrToDetailsView modDescr relatedModData =
+  [table
+    (map (\ (label ,value) -> [label,value])
+      (zip modDescrLabelList detailedView))]
+  where detailedView = [[stringToHtml (modDescrLanguage modDescr)]
+                       ,[stringToHtml (modDescrShortDesc modDescr)]
+                       ,[stringToHtml (modDescrObjectives modDescr)]
+                       ,[stringToHtml (modDescrContents modDescr)]
+                       ,[stringToHtml (modDescrPrereq modDescr)]
+                       ,[stringToHtml (modDescrExam modDescr)]
+                       ,[stringToHtml (modDescrMethods modDescr)]
+                       ,[stringToHtml (modDescrUse modDescr)]
+                       ,[stringToHtml (modDescrLiterature modDescr)]
+                       ,[stringToHtml (modDescrLinks modDescr)]
+                       ,[stringToHtml (modDescrComments modDescr)]
+                       ,[htxt (modDataToShortView relatedModData)]]
+
+--- The labels of a ModDescr entity, as used in HTML tables.
+modDescrLabelList :: [[HtmlExp]]
+modDescrLabelList =
+  [[textstyle "label label_for_type_string" "Lehrsprache"]
+  ,[textstyle "label label_for_type_string" "Kurzbeschreibung"]
+  ,[textstyle "label label_for_type_string" "Lernziele"]
+  ,[textstyle "label label_for_type_string" "Inhalt"]
+  ,[textstyle "label label_for_type_string" "Voraussetzungen"]
+  ,[textstyle "label label_for_type_string" "Prüfungsleistung"]
+  ,[textstyle "label label_for_type_string" "Lehr- und Lernmethoden"]
+  ,[textstyle "label label_for_type_string" "Verwendbarkeit"]
+  ,[textstyle "label label_for_type_string" "Literatur"]
+  ,[textstyle "label label_for_type_string" "Verweise"]
+  ,[textstyle "label label_for_type_string" "Kommentar"]
+  ,[textstyle "label label_for_type_relation" "Modul"]]
+
+--- The list view of a ModInst entity in HTML format.
+--- This view is used in a row of a table of all entities.
+modInstToListView :: ModInst -> [[HtmlExp]]
+modInstToListView modInst =
+  [[stringToHtml (modInstTerm modInst)],[intToHtml (modInstYear modInst)]]
+
+--- The short view of a ModInst entity as a string.
+--- This view is used in menus and comments to refer to a ModInst entity.
+modInstToShortView :: ModInst -> String
+modInstToShortView modInst = modInstTerm modInst
+
+--- The detailed view of a ModInst entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+modInstToDetailsView :: ModInst -> ModData -> User -> [HtmlExp]
+modInstToDetailsView modInst relatedModData relatedUser =
+  [table
+    (map (\ (label ,value) -> [label,value])
+      (zip modInstLabelList detailedView))]
+  where detailedView = [[stringToHtml (modInstTerm modInst)]
+                       ,[intToHtml (modInstYear modInst)]
+                       ,[htxt (modDataToShortView relatedModData)]
+                       ,[htxt (userToShortView relatedUser)]]
+
+--- The labels of a ModInst entity, as used in HTML tables.
+modInstLabelList :: [[HtmlExp]]
+modInstLabelList =
+  [[textstyle "label label_for_type_string" "Semester"]
+  ,[textstyle "label label_for_type_int" "Jahr"]
+  ,[textstyle "label label_for_type_relation" "ModData"]
+  ,[textstyle "label label_for_type_relation" "Dozent"]]
+
+--- The list view of a MasterProgram entity in HTML format.
+--- This view is used in a row of a table of all entities.
+masterProgramToListView :: MasterProgram -> HtmlExp
+masterProgramToListView masterProgram =
+  href ("?listMasterProgram/"++showMasterProgramKey masterProgram)
+       [stringToHtml (masterProgramName masterProgram)]
+
+--- The short view of a MasterProgram entity as a string.
+--- This view is used in menus and comments to refer to a MasterProgram entity.
+masterProgramToShortView :: MasterProgram -> String
+masterProgramToShortView mprog =
+  masterProgramName mprog ++ " (Beginn: " ++
+  showSemester (masterProgramTerm mprog,masterProgramYear mprog) ++ ")"
+
+--- The detailed view of a MasterProgram entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+masterProgramToDetailsView
+ :: MasterProgram -> MasterCoreArea -> User -> [HtmlExp]
+masterProgramToDetailsView masterProgram relatedMasterCoreArea relatedUser =
+  [table
+    (map (\ (label ,value) -> [label,value])
+      (zip masterProgramLabelList detailedView))]
+  where detailedView = [[stringToHtml (masterProgramName masterProgram)]
+                       ,[stringToHtml (masterProgramTerm masterProgram)]
+                       ,[intToHtml (masterProgramYear masterProgram)]
+                       ,[stringToHtml (masterProgramDesc masterProgram)]
+                       ,[stringToHtml (masterProgramPrereq masterProgram)]
+                       ,[stringToHtml (masterProgramComments masterProgram)]
+                       ,[boolToHtml (masterProgramVisible masterProgram)]
+                       ,[htxt
+                          (masterCoreAreaToShortView relatedMasterCoreArea)]
+                       ,[htxt (userToShortView relatedUser)]]
+
+--- The labels of a MasterProgram entity, as used in HTML tables.
+masterProgramLabelList :: [[HtmlExp]]
+masterProgramLabelList =
+  [[textstyle "label label_for_type_string" "Titel"]
+  ,[textstyle "label label_for_type_string" "Beginn im Semester"]
+  ,[textstyle "label label_for_type_int" "Beginn im Jahr"]
+  ,[textstyle "label label_for_type_string" "Beschreibung"]
+  ,[textstyle "label label_for_type_string" "Voraussetzungen"]
+  ,[textstyle "label label_for_type_string" "Kommentar"]
+  ,[textstyle "label label_for_type_bool" "Sichtbarkeit"]
+  ,[textstyle "label label_for_type_relation" "Masterbereich"]
+  ,[textstyle "label label_for_type_relation" "Research Advisor"]]
+
+--- The list view of a MasterProgInfo entity in HTML format.
+--- This view is used in a row of a table of all entities.
+masterProgInfoToListView :: MasterProgInfo -> [[HtmlExp]]
+masterProgInfoToListView masterProgInfo =
+  [[stringToHtml (masterProgInfoProgModules masterProgInfo)]
+  ,[stringToHtml (masterProgInfoPraktikum masterProgInfo)]
+  ,[stringToHtml (masterProgInfoSeminar masterProgInfo)]
+  ,[stringToHtml (masterProgInfoThesis masterProgInfo)]
+  ,[stringToHtml (masterProgInfoAllgGrundlagen masterProgInfo)]
+  ,[stringToHtml (masterProgInfoAnwendungsfach masterProgInfo)]]
+
+--- The short view of a MasterProgInfo entity as a string.
+--- This view is used in menus and comments to refer to a MasterProgInfo entity.
+masterProgInfoToShortView :: MasterProgInfo -> String
+masterProgInfoToShortView masterProgInfo =
+  masterProgInfoProgModules masterProgInfo
+
+--- The detailed view of a MasterProgInfo entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+masterProgInfoToDetailsView :: MasterProgInfo -> MasterProgram -> [HtmlExp]
+masterProgInfoToDetailsView masterProgInfo relatedMasterProgram =
+  [table
+    (map (\ (label ,value) -> [label,value])
+      (zip masterProgInfoLabelList detailedView))]
+  where detailedView = [[stringToHtml
+                          (masterProgInfoProgModules masterProgInfo)]
+                       ,[stringToHtml
+                          (masterProgInfoPraktikum masterProgInfo)]
+                       ,[stringToHtml (masterProgInfoSeminar masterProgInfo)]
+                       ,[stringToHtml (masterProgInfoThesis masterProgInfo)]
+                       ,[stringToHtml
+                          (masterProgInfoAllgGrundlagen masterProgInfo)]
+                       
+                       ,[stringToHtml
+                          (masterProgInfoAnwendungsfach masterProgInfo)]
+                       
+                       ,[htxt
+                          (masterProgramToShortView relatedMasterProgram)]]
+
+--- The labels of a MasterProgInfo entity, as used in HTML tables.
+masterProgInfoLabelList :: [[HtmlExp]]
+masterProgInfoLabelList =
+  [[textstyle "label label_for_type_string" "Studienbereiche"]
+  ,[textstyle "label label_for_type_string" "Praktikum"]
+  ,[textstyle "label label_for_type_string" "Seminar"]
+  ,[textstyle "label label_for_type_string" "Thesis"]
+  ,[textstyle "label label_for_type_string" "AllgGrundlagen"]
+  ,[textstyle "label label_for_type_string" "Anwendungsfach"]
+  ,[textstyle "label label_for_type_relation" "MasterProgram"]]
+
+--- The list view of a UnivisInfo entity in HTML format.
+--- This view is used in a row of a table of all entities.
+univisInfoToListView :: UnivisInfo -> [[HtmlExp]]
+univisInfoToListView univisInfo =
+  [[stringToHtml (univisInfoCode univisInfo)]
+  ,[stringToHtml (univisInfoTerm univisInfo)]
+  ,[intToHtml (univisInfoYear univisInfo)]
+  ,[stringToHtml (univisInfoURL univisInfo)]]
+
+--- The short view of a UnivisInfo entity as a string.
+--- This view is used in menus and comments to refer to a UnivisInfo entity.
+univisInfoToShortView :: UnivisInfo -> String
+univisInfoToShortView univisInfo = univisInfoCode univisInfo
+
+--- The detailed view of a UnivisInfo entity in HTML format.
+univisInfoToDetailsView :: UnivisInfo -> [HtmlExp]
+univisInfoToDetailsView univisInfo =
+  [table
+    (map (\ (label ,value) -> [label,value])
+      (zip univisInfoLabelList detailedView))]
+  where detailedView = [[stringToHtml (univisInfoCode univisInfo)]
+                       ,[stringToHtml (univisInfoTerm univisInfo)]
+                       ,[intToHtml (univisInfoYear univisInfo)]
+                       ,[stringToHtml (univisInfoURL univisInfo)]]
+
+--- The labels of a UnivisInfo entity, as used in HTML tables.
+univisInfoLabelList :: [[HtmlExp]]
+univisInfoLabelList =
+  [[textstyle "label label_for_type_string" "Code"]
+  ,[textstyle "label label_for_type_string" "Term"]
+  ,[textstyle "label label_for_type_int" "Year"]
+  ,[textstyle "label label_for_type_string" "URL"]]
+
+-- Show the short name of each category and its study program
+-- for a given list of categories:
+showStudyProgCategories :: [StudyProgram] -> [Category] -> String
+showStudyProgCategories sprogs cats =
+  concat (intersperse ", " (map (showStudyProgCategory sprogs) cats))
+
+-----------------------------------------------------------------------------
+-- Show the short name of each category and its study program
+-- with a HTML link for a given list of categories:
+showStudyProgCategoriesAsHtml :: [StudyProgram] -> [Category] -> HtmlExp
+showStudyProgCategoriesAsHtml sprogs cats =
+  inline
+    (intersperse (stringToHtml ", ")
+       (map (\c -> ehref ("?listModData/"++showCategoryKey c)
+                         [stringToHtml (showStudyProgCategory sprogs c)])
+            cats))
+
+showStudyProgCategory :: [StudyProgram] -> Category -> String
+showStudyProgCategory sprogs cat =
+    let pkey = categoryStudyProgramProgramCategoriesKey cat
+     in categoryShortName cat ++
+        " (" ++ showShortStudyProgramWithKey pkey ++ ")"
+ where
+  showShortStudyProgramWithKey spk =
+    let sp = find (\p -> studyProgramKey p == spk) sprogs
+     in maybe "?" studyProgramShortName sp
+
+-----------------------------------------------------------------------------

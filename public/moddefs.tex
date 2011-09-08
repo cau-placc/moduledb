@@ -1,0 +1,72 @@
+\usepackage{ngerman}
+\usepackage[latin1]{inputenc}
+\usepackage{longtable}
+\usepackage{url}
+
+\setlength{\textwidth}{16.5cm}
+\setlength{\textheight}{23.5cm}
+%\renewcommand{\baselinestretch}{1.1}
+\setlength{\topmargin}{-1cm}
+\setlength{\oddsidemargin}{0cm}
+\setlength{\evensidemargin}{0cm}
+\setlength{\marginparwidth}{0.0cm}
+\setlength{\marginparsep}{0.0cm}
+\setlength{\parindent}{0.0cm}
+\sloppy
+
+\usepackage{paralist}
+\renewenvironment{itemize}{\begin{compactitem}}{\end{compactitem}}
+
+\newcommand{\importmodule}[4]{\typeout{Formatiere Modul #1...}
+\newpage
+\subsection*{Modul #1: #2}
+\textbf{URL:} #3
+}
+
+
+\newcommand{\module}[9]{\typeout{Formatiere Modul #1...}
+\subsection*{Modul #1: #2}
+\begin{longtable}{|ll|ll|ll|}
+\hline
+\textbf{Modulverantwortliche(r):} & \multicolumn{5}{l|}{#3}\\[0.5ex]
+\hline
+\textbf{Pr"asenzzeiten:} & #5 & \textbf{ECTS:} & #6 \hspace{0.5cm} & \textbf{Turnus:} & #4\\[0.5ex]
+\hline
+\textbf{Workload:} & \multicolumn{5}{p{11cm}|}{#7}\\[0.5ex]
+\hline
+\textbf{Art:} & \multicolumn{5}{p{11cm}|}{#9}\\[0.5ex]
+\hline
+\textbf{Dauer:} & #8 \hspace{0.5cm} &
+}
+
+\newcommand{\descitem}[2]{\multicolumn{6}{|p{16cm}|}{%
+%  \textbf{#1}\par\vspace{0.5ex}\begin{minipage}[b]{15.8cm}#2\end{minipage}}}
+  \par\vspace{-1.5ex}\begin{minipage}[b]{15.8cm}\textbf{#1}~#2\end{minipage}}}
+
+\newcommand{\descmain}[8]{
+\textbf{Lehrsprache:} & \multicolumn{3}{l|}{#1} \\[0.5ex]
+\hline
+\descitem{Kurzfassung:}{#2} \\[0.5ex]
+\hline
+\descitem{Kompetenzziele:}{#3} \\[0.5ex]
+\hline
+\descitem{Lehrinhalte:}{#4} \\[0.5ex]
+\hline
+\descitem{Voraussetzungen:}{#5} \\[0.5ex]
+\hline
+\descitem{Pr"ufungsleistung:}{#6} \\[0.5ex]
+\hline
+\descitem{Lehr- und Lernmethoden:}{#7} \\[0.5ex]
+\hline
+\descitem{Verwendbarkeit:}{#8}\\[0.5ex]\hline}
+
+\newcommand{\descrest}[3]{
+\descitem{Literatur:}{#1} \\[0.5ex]
+\hline
+\descitem{Verweise:}{#2}\\[0.5ex]
+\hline
+\descitem{Kommentar:}{#3}\\[0.5ex]
+\hline
+\end{longtable}
+\newpage}
+

@@ -1,0 +1,83 @@
+module MasterCoreAreaController (
+ newMasterCoreAreaController, editMasterCoreAreaController,
+ deleteMasterCoreAreaController, listMasterCoreAreaController
+ ) where
+
+import Spicey
+import KeyDatabase
+import HTML
+import Time
+import MDB
+import MasterCoreAreaView
+import Maybe
+import Authorization
+import AuthorizedControllers
+import UserProcesses
+import Authentication
+
+--- Shows a form to create a new MasterCoreArea entity.
+newMasterCoreAreaController :: Controller
+newMasterCoreAreaController =
+  checkAuthorization (masterCoreAreaOperationAllowed NewEntity) $
+   (do return (blankMasterCoreAreaView createMasterCoreAreaController))
+
+--- Persists a new MasterCoreArea entity to the database.
+createMasterCoreAreaController
+ :: Bool -> (String,String,String,String,Int) -> Controller
+createMasterCoreAreaController False _ = listMasterCoreAreaController
+createMasterCoreAreaController True (name ,shortName ,description ,areaKey
+                                     ,position) =
+  do transResult <- runT
+                     (newMasterCoreArea name shortName description areaKey
+                       (Just position))
+     either (\ _ -> nextInProcessOr listMasterCoreAreaController Nothing)
+      (\ error -> displayError (showTError error)) transResult
+
+--- Shows a form to edit the given MasterCoreArea entity.
+editMasterCoreAreaController :: MasterCoreArea -> Controller
+editMasterCoreAreaController masterCoreAreaToEdit =
+  checkAuthorization
+   (masterCoreAreaOperationAllowed (UpdateEntity masterCoreAreaToEdit)) $
+   (do return
+        (editMasterCoreAreaView masterCoreAreaToEdit
+          updateMasterCoreAreaController))
+
+--- Persists modifications of a given MasterCoreArea entity to the
+--- database depending on the Boolean argument. If the Boolean argument
+--- is False, nothing is changed.
+updateMasterCoreAreaController :: Bool -> MasterCoreArea -> Controller
+updateMasterCoreAreaController False _ = listMasterCoreAreaController
+updateMasterCoreAreaController True masterCoreArea =
+  do transResult <- runT (updateMasterCoreArea masterCoreArea)
+     either (\ _ -> nextInProcessOr listMasterCoreAreaController Nothing)
+      (\ error -> displayError (showTError error)) transResult
+
+--- Deletes a given MasterCoreArea entity (depending on the Boolean
+--- argument) and proceeds with the list controller.
+deleteMasterCoreAreaController :: MasterCoreArea -> Bool -> Controller
+deleteMasterCoreAreaController _ False = listMasterCoreAreaController
+deleteMasterCoreAreaController masterCoreArea True =
+  checkAuthorization
+   (masterCoreAreaOperationAllowed (DeleteEntity masterCoreArea)) $
+   (do transResult <- runT (deleteMasterCoreArea masterCoreArea)
+       either (\ _ -> listMasterCoreAreaController)
+        (\ error -> displayError (showTError error)) transResult)
+
+--- Lists all MasterCoreArea entities with buttons to show, delete,
+--- or edit an entity.
+listMasterCoreAreaController :: Controller
+listMasterCoreAreaController =
+  checkAuthorization (masterCoreAreaOperationAllowed ListEntities) $
+   (do admin <- isAdmin
+       masterCoreAreas <- runQ queryAllMasterCoreAreas
+       return
+        (listMasterCoreAreaView admin masterCoreAreas showMasterCoreAreaController
+          editMasterCoreAreaController deleteMasterCoreAreaController))
+
+--- Shows a MasterCoreArea entity.
+showMasterCoreAreaController :: MasterCoreArea -> Controller
+showMasterCoreAreaController masterCoreArea =
+  checkAuthorization
+   (masterCoreAreaOperationAllowed (ShowEntity masterCoreArea)) $
+   (do return
+        (showMasterCoreAreaView masterCoreArea listMasterCoreAreaController))

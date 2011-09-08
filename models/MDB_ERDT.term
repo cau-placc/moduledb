@@ -1,0 +1,126 @@
+{- ERD specification transformed from /home/mh/home/kiel/master/newprogs/mdb.erdterm -}
+
+ ERD "MDB"
+   [Entity "Categorizing"
+           [Attribute "ModDataCategorizingKey" (KeyDom "ModData") PKey False,
+            Attribute "CategoryCategorizingKey" (KeyDom "Category") PKey False],
+    Entity "StudyProgram"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Name" (StringDom Nothing) NoKey False,
+            Attribute "ShortName" (StringDom Nothing) Unique False,
+            Attribute "ProgKey" (StringDom Nothing) Unique False,
+            Attribute "URLKey" (StringDom Nothing) Unique False,
+            Attribute "Position" (IntDom Nothing) NoKey False],
+    Entity "Category"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Name" (StringDom Nothing) NoKey False,
+            Attribute "ShortName" (StringDom Nothing) NoKey False,
+            Attribute "CatKey" (StringDom Nothing) Unique False,
+            Attribute "Position" (IntDom Nothing) NoKey False,
+            Attribute "StudyProgramProgramCategoriesKey" (KeyDom "StudyProgram") NoKey False],
+    Entity "MasterCoreArea"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Name" (StringDom Nothing) NoKey False,
+            Attribute "ShortName" (StringDom Nothing) NoKey False,
+            Attribute "Description" (StringDom Nothing) NoKey True,
+            Attribute "AreaKey" (StringDom Nothing) Unique False,
+            Attribute "Position" (IntDom (Just 1)) NoKey False],
+    Entity "User"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Login" (StringDom Nothing) Unique False,
+            Attribute "Name" (StringDom Nothing) NoKey False,
+            Attribute "First" (StringDom Nothing) NoKey True,
+            Attribute "Title" (StringDom Nothing) NoKey True,
+            Attribute "Email" (StringDom Nothing) NoKey False,
+            Attribute "Url" (StringDom Nothing) NoKey True,
+            Attribute "Password" (StringDom Nothing) NoKey False,
+            Attribute "LastLogin" (DateDom Nothing) NoKey False],
+    Entity "ModData"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Code" (StringDom Nothing) Unique False,
+            Attribute "NameG" (StringDom Nothing) NoKey False,
+            Attribute "NameE" (StringDom Nothing) NoKey True,
+            Attribute "Cycle" (StringDom Nothing) NoKey False,
+            Attribute "Presence" (StringDom Nothing) NoKey False,
+            Attribute "ECTS" (IntDom (Just 8)) NoKey False,
+            Attribute "Workload" (StringDom Nothing) NoKey False,
+            Attribute "Length" (IntDom (Just 1)) NoKey False,
+            Attribute "URL" (StringDom Nothing) NoKey True,
+            Attribute "Visible" (BoolDom Nothing) NoKey False,
+            Attribute "UserResponsibleKey" (KeyDom "User") NoKey False],
+    Entity "ModDescr"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Language" (StringDom Nothing) NoKey False,
+            Attribute "ShortDesc" (StringDom Nothing) NoKey True,
+            Attribute "Objectives" (StringDom Nothing) NoKey True,
+            Attribute "Contents" (StringDom Nothing) NoKey True,
+            Attribute "Prereq" (StringDom Nothing) NoKey True,
+            Attribute "Exam" (StringDom Nothing) NoKey True,
+            Attribute "Methods" (StringDom Nothing) NoKey True,
+            Attribute "Use" (StringDom Nothing) NoKey True,
+            Attribute "Literature" (StringDom Nothing) NoKey True,
+            Attribute "Links" (StringDom Nothing) NoKey True,
+            Attribute "Comments" (StringDom Nothing) NoKey True,
+            Attribute "ModDataDataDescKey" (KeyDom "ModData") Unique False],
+    Entity "ModInst"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Term" (StringDom Nothing) NoKey False,
+            Attribute "Year" (IntDom (Just 2011)) NoKey False,
+            Attribute "UserLecturerModsKey" (KeyDom "User") NoKey False,
+            Attribute "ModDataModuleInstancesKey" (KeyDom "ModData") NoKey False],
+    Entity "MasterProgram"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Name" (StringDom Nothing) NoKey False,
+            Attribute "Term" (StringDom Nothing) NoKey False,
+            Attribute "Year" (IntDom (Just 2011)) NoKey False,
+            Attribute "Desc" (StringDom Nothing) NoKey True,
+            Attribute "Prereq" (StringDom Nothing) NoKey True,
+            Attribute "Comments" (StringDom Nothing) NoKey True,
+            Attribute "Visible" (BoolDom Nothing) NoKey False,
+            Attribute "UserAdvisingKey" (KeyDom "User") NoKey False,
+            Attribute "MasterCoreAreaAreaProgramsKey" (KeyDom "MasterCoreArea") NoKey False],
+    Entity "MasterProgInfo"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "ProgModules" (StringDom Nothing) NoKey False,
+            Attribute "Praktikum" (StringDom Nothing) NoKey True,
+            Attribute "Seminar" (StringDom Nothing) NoKey True,
+            Attribute "Thesis" (StringDom Nothing) NoKey True,
+            Attribute "AllgGrundlagen" (StringDom Nothing) NoKey True,
+            Attribute "Anwendungsfach" (StringDom Nothing) NoKey True,
+            Attribute "MasterProgramProgramInfoKey" (KeyDom "MasterProgram") NoKey False],
+    Entity "UnivisInfo"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Code" (StringDom Nothing) NoKey False,
+            Attribute "Term" (StringDom Nothing) NoKey False,
+            Attribute "Year" (IntDom Nothing) NoKey False,
+            Attribute "URL" (StringDom Nothing) NoKey False]]
+   [Relationship "ProgramInfo"
+                 [REnd "MasterProgram" "programInfoOf" (Exactly 1),
+                  REnd "MasterProgInfo" "withProgInfo" (Between 0 Infinite)],
+    Relationship "AreaPrograms"
+                 [REnd "MasterCoreArea" "ofCoreArea" (Exactly 1),
+                  REnd "MasterProgram" "withProgram" (Between 0 Infinite)],
+    Relationship "Advising"
+                 [REnd "User" "organizedBy" (Exactly 1),
+                  REnd "MasterProgram" "organizes" (Between 0 Infinite)],
+    Relationship "ModuleInstances"
+                 [REnd "ModData" "withModule" (Exactly 1),
+                  REnd "ModInst" "instOfModule" (Between 0 Infinite)],
+    Relationship "LecturerMods"
+                 [REnd "User" "withLecturer" (Exactly 1),
+                  REnd "ModInst" "instOfLecturer" (Between 0 Infinite)],
+    Relationship "DataDesc"
+                 [REnd "ModData" "descOf" (Exactly 1),
+                  REnd "ModDescr" "withDesc" (Between 0 (Max 1))],
+    Relationship ""
+                 [REnd "ModData" [] (Exactly 1),
+                  REnd "Categorizing" "belongsTo" (Between 1 Infinite)],
+    Relationship ""
+                 [REnd "Category" [] (Exactly 1),
+                  REnd "Categorizing" "contains" (Between 0 Infinite)],
+    Relationship "Responsible"
+                 [REnd "User" "managedBy" (Exactly 1),
+                  REnd "ModData" "responsibleFor" (Between 0 Infinite)],
+    Relationship "ProgramCategories"
+                 [REnd "StudyProgram" "ofProgram" (Exactly 1),
+                  REnd "Category" "withCategory" (Between 0 Infinite)]]

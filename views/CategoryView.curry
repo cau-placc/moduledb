@@ -1,0 +1,213 @@
+module CategoryView (
+ wCategory, tuple2Category, category2Tuple, wCategoryType, blankCategoryView,
+ createCategoryView, editCategoryView, showCategoryView, listCategoryView
+ ) where
+
+import WUI
+import HTML
+import Time
+import Sort
+import Spicey
+import MDB
+import MDBEntitiesToHtml
+import Helpers
+import List
+import ModDataView
+
+--- The WUI specification for the entity type Category.
+--- It also includes fields for associated entities.
+wCategory :: [StudyProgram] -> WuiSpec (String,String,String,Int,StudyProgram)
+wCategory studyProgramList =
+  withRendering
+   (w5Tuple wRequiredString wRequiredString wRequiredString wInt
+     (wSelect studyProgramToShortView studyProgramList))
+   (renderLabels categoryLabelList)
+
+--- Transformation from data of a WUI form to entity type Category.
+tuple2Category
+ :: Category -> (String,String,String,Int,StudyProgram) -> Category
+tuple2Category categoryToUpdate (name ,shortName ,catKey ,position
+                                 ,studyProgram) =
+  setCategoryName
+   (setCategoryShortName
+     (setCategoryCatKey
+       (setCategoryPosition
+         (setCategoryStudyProgramProgramCategoriesKey categoryToUpdate
+           (studyProgramKey studyProgram))
+         position)
+       catKey)
+     shortName)
+   name
+
+--- Transformation from entity type Category to a tuple
+--- which can be used in WUI specifications.
+category2Tuple
+ :: StudyProgram -> Category -> (String,String,String,Int,StudyProgram)
+category2Tuple studyProgram category =
+  (categoryName category,categoryShortName category,categoryCatKey category
+  ,categoryPosition category,studyProgram)
+
+--- WUI Type for editing or creating Category entities.
+--- Includes fields for associated entities.
+wCategoryType
+ :: Category -> StudyProgram -> [StudyProgram] -> WuiSpec Category
+wCategoryType category studyProgram studyProgramList =
+  transformWSpec (tuple2Category category,category2Tuple studyProgram)
+   (wCategory studyProgramList)
+
+--- Supplies a WUI form to create a new Category entity.
+--- The fields of the entity have some default values.
+blankCategoryView
+ :: [StudyProgram]
+  -> (Bool -> (String,String,String,Int,StudyProgram) -> Controller)
+  -> [HtmlExp]
+blankCategoryView possibleStudyPrograms controller =
+  createCategoryView [] [] [] 0 (head possibleStudyPrograms)
+   possibleStudyPrograms controller
+
+--- Supplies a WUI form to create a new Category entity.
+--- Takes default values to be prefilled in the form fields.
+createCategoryView
+ :: String -> String -> String -> Int -> StudyProgram -> [StudyProgram]
+  -> (Bool -> (String,String,String,Int,StudyProgram) -> Controller)
+  -> [HtmlExp]
+createCategoryView defaultName defaultShortName defaultCatKey defaultPosition
+                   defaultStudyProgram possibleStudyPrograms controller =
+  let initdata = (defaultName,defaultShortName,defaultCatKey,defaultPosition
+                 ,defaultStudyProgram)
+      
+      wuiframe = wuiEditForm "Neue Kategorie" "Anlegen"
+                  (controller False initdata)
+      
+      (hexp ,handler) = wuiWithErrorForm (wCategory possibleStudyPrograms)
+                         initdata (nextControllerForData (controller True))
+                         (wuiFrameToForm wuiframe)
+   in wuiframe hexp handler
+
+--- Supplies a WUI form to edit the given Category entity.
+--- Takes also associated entities and a list of possible associations
+--- for every associated entity type.
+editCategoryView
+ :: Category -> StudyProgram -> [StudyProgram]
+  -> (Bool -> Category -> Controller) -> [HtmlExp]
+editCategoryView category relatedStudyProgram possibleStudyPrograms
+                 controller =
+  let initdata = category
+      
+      wuiframe = wuiEditForm "edit Category" "change"
+                  (controller False initdata)
+      
+      (hexp ,handler) = wuiWithErrorForm
+                         (wCategoryType category relatedStudyProgram
+                           possibleStudyPrograms)
+                         initdata (nextControllerForData (controller True))
+                         (wuiFrameToForm wuiframe)
+   in wuiframe hexp handler
+
+--- Supplies a view to show the details of a Category.
+showCategoryView :: Category -> StudyProgram -> Controller -> [HtmlExp]
+showCategoryView category relatedStudyProgram controller =
+  categoryToDetailsView category relatedStudyProgram ++
+   [button "back to Category list" (nextController controller)]
+
+--- Compares two Category entities. This order is used in the list view.
+leqCategory :: Category -> Category -> Bool
+leqCategory x1 x2 =
+  categoryPosition x1 <= categoryPosition x2
+
+--- Supplies a list view for a given list of Category entities.
+--- Shows also buttons to show, delete, or edit entries.
+--- The arguments are the list of Category entities
+--- and the controller functions to show, delete and edit entities.
+listCategoryView
+ :: Bool -> Maybe String -> Maybe StudyProgram
+  -> [(Category,[(ModData,[Maybe ModInst],[Bool])])]
+  -> [(String,Int)] -> [User]
+  -> (Category -> Controller) -> (Category -> Controller)
+  -> (Category -> Bool -> Controller)
+  -> (StudyProgram -> (String,Int) -> (String,Int) -> Bool -> Controller)
+  -> [HtmlExp]
+listCategoryView admin login mbsprog catmods semperiod users
+                 showCategoryController
+                 editCategoryController deleteCategoryController
+                 showStudyProgramPlanController =
+  [h1 [htxt $ maybe "Alle Kategorien" studyProgramName mbsprog],
+   table (if admin
+          then [take 4 categoryLabelList] ++
+               map listCategory (mergeSort leqCategory (map fst catmods))
+          else concatMap
+                 (\ (c,mods) ->
+                    (catStyle (head (listCategory c)) :
+                     if null semperiod then [] else
+                     map (\s -> catStyle [stringToHtml s])
+                         ("ECTS":map showSemester semperiod)) :
+                     map (\ (md,mis,univs) -> modDataToCompactListView md ++
+                            if null univs
+                            then map (maybe [] showModInst) mis
+                            else map (showUnivisInst md)
+                                     (zip3 semperiod mis univs))
+                         (mergeSort (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2)
+                                    mods))
+                 (mergeSort (\ cm1 cm2 -> leqCategory (fst cm1) (fst cm2))
+                            catmods))] ++
+   maybe []
+         (\sprog ->
+           if not admin && null (concatMap snd catmods) then
+            [par [href ("?listCategory/"++showStudyProgramKey sprog++"/all")
+                    [htxt "Alle Module in diesem Studienprogramm anzeigen"]]]
+           else if admin then [] else
+                [par $ [bold [htxt "Semesterplanung"], htxt " von ",
+                        selectionInitial fromsem semSelection 4, htxt " bis ",
+                        selectionInitial tosem   semSelection 9, htxt ": ",
+                        button "Anzeigen" (showPlan False sprog)] ++
+                       maybe [] (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
+                                               (showPlan True sprog)])
+                             login])
+         mbsprog
+  where
+   fromsem,tosem free
+
+   -- show UnivIS instance of a semester
+   showUnivisInst md ((term,year),mbmi,hasinst)
+     | hasinst && mbmi/=Nothing = [univisRef [italic [htxt "UnivIS"]]]
+     | hasinst                  = [univisRef [textstyle "alertentry" "!UnivIS!"]]
+     | mbmi/=Nothing            = [italic [htxt "???"]]
+     | otherwise                = [nbsp]
+    where univisRef = ehref ("?listUnivisInfo/"++modDataCode md++"/"
+                                               ++term++"/"++show year)
+
+   showModInst mi =
+     let miuserkey = modInstUserLecturerModsKey mi
+         showUser u = let name = userName u
+                       in if length name > 6 then take 5 name ++ "." else name
+      in [italic
+           [ehref ("?listModInst/"++showModInstKey mi)
+                  [htxt (maybe "???" showUser
+                               (find (\u -> userKey u == miuserkey) users))]]]
+
+   semSelection = map (\(s,i) -> (showSemester s,show i))
+                      (zip semesterSelection [0..])
+
+   showPlan withunivis sprog env = do
+    let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
+        stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
+    showStudyProgramPlanController sprog
+     (semesterSelection!!start) (semesterSelection!!stop) withunivis >>= getForm
+
+   catStyle c = if null (concatMap snd catmods)
+                then c
+                else [style "category" c]
+
+   listCategory :: Category -> [[HtmlExp]]
+   listCategory category =
+      categoryToListView category ++
+       [[button "show" (nextController (showCategoryController category)),
+         button "edit" (nextController (editCategoryController category)),
+         button "delete"
+          (confirmNextController
+            (h3
+              [htxt
+                (concat
+                  ["Really delete entity \"",categoryToShortView category
+                  ,"\"?"])])
+            (deleteCategoryController category))]]
