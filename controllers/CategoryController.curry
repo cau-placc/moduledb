@@ -114,10 +114,12 @@ showStudyProgramPlanController studyprog startsem stopsem withunivis = do
   login <- getSessionLogin
   users <- runQ queryAllUsers
   categorys <- runQ $ queryCategorysOfStudyProgram (studyProgramKey studyprog)
-  catmods <- runJustT $ mapT (\c -> getModDataOfCategory (categoryKey c) |>>=
-                                    \mods -> mapT getModInsts mods |>>= \mmis ->
-                                             returnT (c,mmis))
-                             categorys
+  catmods <- runJustT $
+               mapT (\c -> getModDataOfCategory (categoryKey c) |>>= \mods ->
+                           mapT getModInsts (maybe (filter modDataVisible mods)
+                                              (const mods) login) |>>= \mmis ->
+                           returnT (c,mmis))
+                    categorys
   return (listCategoryView admin login (Just studyprog)
              catmods semPeriod users
              showCategoryController

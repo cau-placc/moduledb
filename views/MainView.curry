@@ -34,7 +34,8 @@ mainPageView studyPrograms =
       htxt "Allgemeine ",
       ehref "edit_infos.html"
             [htxt "Hinweise zu Modulbeschreibungen und deren Bearbeitung"]],
-     [ehref "?xml"
+     [bold [htxt "Für Programmierer: "],
+      ehref "?xml"
             [htxt "XML-Index aller Module des Instituts für Informatik"]]]]
 
 -----------------------------------------------------------------------------
