@@ -29,8 +29,8 @@ dispatcher = do
                 maybe (displayError "Illegal URL!")
                       getController
 
-  form <- getForm controller
   saveLastUrl (url ++ concatMap ("/"++) ctrlparams)
+  form <- getForm controller
   return form
 
 --- Main function: check for old form of URL parameters or call the dispatcher

@@ -88,19 +88,22 @@ listCategoryController =
                           showCategoryController
                           editCategoryController deleteCategoryController
                           showStudyProgramPlanController)
-        else do let spkey = fromJust spk
-                studyprog <- runJustT (getStudyProgram spkey)
-                categorys <- runQ $ queryCategorysOfStudyProgram spkey
-                catmods <- runJustT $
-                 if length args > 1 && args!!1 == "all"
-                 then mapT (\c -> getModDataOfCategory (categoryKey c) |>>=
-                                  \mods -> returnT (c,map (\m->(m,[],[])) mods))
-                           categorys
-                 else mapT (\c -> returnT (c,[])) categorys
-                return (listCategoryView admin login (Just studyprog)
-                           catmods [] [] showCategoryController
-                           editCategoryController deleteCategoryController
-                           showStudyProgramPlanController)
+        else do
+          let spkey = fromJust spk
+          studyprog <- runJustT (getStudyProgram spkey)
+          categorys <- runQ $ queryCategorysOfStudyProgram spkey
+          catmods <- runJustT $
+           if length args > 1 && args!!1 == "all"
+           then mapT (\c -> getModDataOfCategory (categoryKey c) |>>= \mods ->
+                            returnT (c,map (\m->(m,[],[]))
+                                           (maybe (filter modDataVisible mods)
+                                                  (const mods) login)))
+                     categorys
+           else mapT (\c -> returnT (c,[])) categorys
+          return (listCategoryView admin login (Just studyprog)
+                     catmods [] [] showCategoryController
+                     editCategoryController deleteCategoryController
+                     showStudyProgramPlanController)
 
 --- Lists all Categories and their modules together with their instances
 --- in the given period.

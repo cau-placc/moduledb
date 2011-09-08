@@ -187,9 +187,11 @@ modDataToListView modData =
    [withHref (stringToHtml (modDataNameG modData))],
    [stringToHtml (showDiv10 (modDataECTS modData))]]
  where
-   withHref hexp = if null (modDataURL modData)
-                   then href ("?listModData/"++showModDataKey modData) [hexp]
-                   else ehref (modDataURL modData) [hexp]
+   withHref hexp =
+     let txtelem = [if modDataVisible modData then hexp else italic [hexp]]
+      in  if null (modDataURL modData)
+          then href ("?listModData/"++showModDataKey modData) txtelem
+                   else ehref (modDataURL modData) txtelem
 
 --- A more compact list view of a ModData entity in HTML format
 --- where code and title is shown in one column.
@@ -198,9 +200,12 @@ modDataToCompactListView modData =
   [[withHref (stringToHtml (modDataCode modData++": "++modDataNameG modData))],
    [stringToHtml (showDiv10 (modDataECTS modData))]]
  where
-   withHref hexp = if null (modDataURL modData)
-                   then href ("?listModData/"++showModDataKey modData) [hexp]
-                   else ehref (modDataURL modData) [hexp]
+   withHref hexp =
+     let txtelem = [if modDataVisible modData then hexp else italic [hexp]]
+      in if null (modDataURL modData)
+         then href ("?listModData/"++showModDataKey modData) txtelem
+         else ehref (modDataURL modData) txtelem
+
 
 --- The short view of a ModData entity as a string.
 --- This view is used in menus and comments to refer to a ModData entity.
@@ -336,7 +341,9 @@ modInstLabelList =
 masterProgramToListView :: MasterProgram -> HtmlExp
 masterProgramToListView masterProgram =
   href ("?listMasterProgram/"++showMasterProgramKey masterProgram)
-       [stringToHtml (masterProgramName masterProgram)]
+       [if masterProgramVisible masterProgram
+        then stringToHtml (masterProgramName masterProgram)
+        else italic [stringToHtml (masterProgramName masterProgram)]]
 
 --- The short view of a MasterProgram entity as a string.
 --- This view is used in menus and comments to refer to a MasterProgram entity.
