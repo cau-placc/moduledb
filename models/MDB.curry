@@ -95,7 +95,7 @@ module MDB (
  checkAllData, checkCategorizing, checkStudyProgram, checkCategory,
  checkMasterCoreArea, checkUser, checkModData, checkModDescr, checkModInst,
  checkMasterProgram, checkMasterProgInfo, checkUnivisInfo,
- saveAllData, restoreAllData
+ saveAllData, restoreAllData, storeTermDB, readTermDB
  ) where
 
 import ERDGeneric
@@ -2390,3 +2390,11 @@ restoreAllData path =
       (univisInfoKeyToKey . univisInfoKey) univisInfo2tuple
      ERDGeneric.restoreDBRelTerms path "Categorizing" categorizingEntry
       categorizing2tuple
+
+-- store DBs in term files:
+storeTermDB :: IO ()
+storeTermDB = saveAllData storageDir
+
+-- initialize DBs from term files:
+readTermDB :: IO ()
+readTermDB = restoreAllData storageDir
