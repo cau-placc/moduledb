@@ -30,31 +30,28 @@ getRoutes =
       [("Haupseite",Exact "main",MainPageController)
       ,("Modulsuche",Exact "search",SearchController)
       ,("Studiengänge",Exact "listStudyProgram",ListStudyProgramController)] ++
-      addIf admin [("Neuer Studiengang",Exact "newStudyProgram",
-                   NewStudyProgramController)] ++
-      [("Alle Kategorien",Exact "listCategory",ListCategoryController)] ++
       addIf admin
-            [("Neue Kategorie",Exact "newCategory",NewCategoryController),
-             ("Neues Modul",Exact "newModData",NewModDataController),
-             ("Neues Importmodul",Exact "newImpModData",
-              NewImpModDataController)] ++
-      [("Masterbereiche",Exact "listMasterCoreArea"
-       ,ListMasterCoreAreaController)] ++
-      addIf admin [("Neuer Masterbereich",Exact "newMasterCoreArea"
-                   ,NewMasterCoreAreaController)] ++
-      addIf admin [("Alle Benutzer",Exact "listUser",ListUserController)
-                  ,("Neuer Benutzer",Exact "newUser",NewUserController)] ++
-      [("List ModData",Exact "listModData",ListModDataController)
+        [("Neues Modul",Exact "newModData",NewModDataController),
+         ("Neues Importmodul",Exact "newImpModData",
+          NewImpModDataController),
+         ("Alle Benutzer",Exact "listUser",ListUserController)
+          ,("Neuer Benutzer",Exact "newUser",NewUserController),
+         ("Neuer Studiengang",Exact "newStudyProgram",
+          NewStudyProgramController),
+         ("Neue Kategorie",Exact "newCategory",NewCategoryController),
+         ("Neuer Masterbereich",Exact "newMasterCoreArea"
+          ,NewMasterCoreAreaController)] ++
+      [("Alle Kategorien",Exact "listCategory",ListCategoryController)
+      ,("Masterbereiche",Exact "listMasterCoreArea"
+       ,ListMasterCoreAreaController)
+      ,("List ModData",Exact "listModData",ListModDataController)
       ,("List ModInst",Exact "listModInst",ListModInstController)
       --,("New ModInst",Exact "newModInst",NewModInstController)
       ,("List MasterProgram",Exact "listMasterProgram"
        ,ListMasterProgramController)
-      
       ,("New MasterProgram",Exact "newMasterProgram",NewMasterProgramController)
-      
       --,("List MasterProgInfo",Exact "listMasterProgInfo"
       -- ,ListMasterProgInfoController)
-      
       --,("New MasterProgInfo",Exact "newMasterProgInfo"
       -- ,NewMasterProgInfoController)
       ,("Daten aus UnivIS übernehmen",Exact "loadUnivisInfo",
