@@ -43,4 +43,5 @@ getController fktref =
    ListMasterProgInfoController -> listMasterProgInfoController
    ListUnivisInfoController -> listUnivisInfoController
    NewUnivisInfoController -> newUnivisInfoController
+   LoadUnivisController -> loadUnivisController
    _ -> displayError "getController: no mapping found"

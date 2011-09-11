@@ -1,6 +1,7 @@
 module UnivisInfoController (
  newUnivisInfoController, editUnivisInfoController,
- deleteUnivisInfoController, listUnivisInfoController
+ deleteUnivisInfoController, listUnivisInfoController,
+ loadUnivisController
  ) where
 
 import Spicey
@@ -14,6 +15,7 @@ import Authorization
 import AuthorizedControllers
 import UserProcesses
 import Read
+import UnivIS
 
 --- Shows a form to create a new UnivisInfo entity.
 newUnivisInfoController :: Controller
@@ -86,3 +88,15 @@ showUnivisInfoController :: UnivisInfo -> Controller
 showUnivisInfoController univisInfo =
   checkAuthorization (univisInfoOperationAllowed (ShowEntity univisInfo)) $
    (do return (showUnivisInfoView univisInfo listUnivisInfoController))
+
+--- Shows a form to load data from UnivisInfo for selectable term.
+loadUnivisController :: Controller
+loadUnivisController =
+  checkAuthorization (univisInfoOperationAllowed NewEntity) $
+    return (loadUnivisView loadUnivisDataController)
+
+loadUnivisDataController :: (String,Int) -> Controller
+loadUnivisDataController sem =
+  readAndStoreUnivisOfSemester sem >>= \s -> return [h1 [htxt s]]
+
+

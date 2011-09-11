@@ -5,6 +5,7 @@ import MDB
 import ReadShowTerm
 import KeyDatabase
 import Helpers
+import ReadUnivIS
 
 -- Initialize Univis DB:
 initUnivisDB = do
@@ -42,10 +43,17 @@ deleteUnivisOfSemester sem =
 
 -- add infos from UnivIS term file for some semester and delete
 -- existing entries for the same semester
-addUnivisOfSemester :: (String,Int) -> IO ()
+addUnivisOfSemester :: (String,Int) -> IO String
 addUnivisOfSemester sem = do
-  putStrLn $ "Adding Univis infos for semester " ++ showSemester sem
   uisdata <- processUnivisFile sem
   runJustT (deleteUnivisOfSemester sem |>>
             mapT_  (\ (c,t,y,u) -> newUnivisInfo c t y u) uisdata)
+  return $ "Univis infos for semester " ++ showSemester sem ++ " added."
+
+
+----------------------------------------------------------------
+-- Main operation: read UnivIS data and store it in the database:
+readAndStoreUnivisOfSemester :: (String,Int) -> IO String
+readAndStoreUnivisOfSemester sem =
+  loadLectures sem >>= either (\_ -> addUnivisOfSemester sem) return
 

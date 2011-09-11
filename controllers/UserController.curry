@@ -13,6 +13,8 @@ import Maybe
 import Authorization
 import AuthorizedControllers
 import UserProcesses
+import DefaultController
+import Authentication
 
 --- Shows a form to create a new User entity.
 newUserController :: Controller
@@ -60,6 +62,14 @@ deleteUserController user True =
        either (\ _ -> listUserController)
         (\ error -> displayError (showTError error)) transResult)
 
+--- Login as a given User entity.
+loginUserController :: User -> Controller
+loginUserController user = do
+  let loginname = userLogin user
+  loginToSession loginname
+  setPageMessage ("Angemeldet als: "++loginname)
+  defaultController
+
 --- Lists all User entities with buttons to show, delete,
 --- or edit an entity.
 listUserController :: Controller
@@ -68,7 +78,7 @@ listUserController =
    (do users <- runQ queryAllUsers
        return
         (listUserView users showUserController editUserController
-          deleteUserController))
+          deleteUserController loginUserController))
 
 --- Shows a User entity.
 showUserController :: User -> Controller

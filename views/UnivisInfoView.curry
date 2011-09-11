@@ -1,7 +1,8 @@
 module UnivisInfoView (
  wUnivisInfo, tuple2UnivisInfo, univisInfo2Tuple, wUnivisInfoType,
  blankUnivisInfoView, createUnivisInfoView, editUnivisInfoView,
- showUnivisInfoView, listUnivisInfoView, showUnivisLinks
+ showUnivisInfoView, listUnivisInfoView, showUnivisLinks,
+ loadUnivisView
  ) where
 
 import WUI
@@ -12,6 +13,7 @@ import Spicey
 import MDB
 import MDBEntitiesToHtml
 import Helpers
+import List
 
 --- The WUI specification for the entity type UnivisInfo.
 wUnivisInfo :: WuiSpec (String,String,Int,String)
@@ -107,6 +109,7 @@ listUnivisInfoView univisInfos showUnivisInfoController
   where listUnivisInfo :: UnivisInfo -> [[HtmlExp]]
         listUnivisInfo univisInfo =
           univisInfoToListView univisInfo ++
+           if True then [] else -- only show list, no changes allowed
            [[button "show"
               (nextController (showUnivisInfoController univisInfo))
             ,button "edit"
@@ -133,3 +136,25 @@ showUnivisLinks mcode sem lecturer urls =
    then [par [htxt "Keine Einträge im UnivIS gefunden."]]
    else [h3 [htxt "Links zu Einträgen im UnivIS:"],
          ulist (map (\url -> [ehref url [htxt url]]) urls)]
+
+------------------------------------------------------------------------
+--- Supplies a WUI form to create a new UnivisInfo entity.
+--- The fields of the entity have some default values.
+loadUnivisView :: ((String,Int) -> Controller) -> [HtmlExp]
+loadUnivisView loadcontroller =
+    [h1 [htxt "Daten aus dem UnivIS der CAU laden"],
+     par [htxt "Daten aus dem UnivIS für das Semester ",
+          selectionInitial insem semSelection 4,
+          button "jetzt übernehmen" loadData,
+          htxt " (dauert etwas länger!)"]]
+ where
+  insem free
+
+  semSelection = map (\(s,i) -> (showSemester s,show i))
+                     (zip semesterSelection [0..])
+
+  loadData env =
+    let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
+     in loadcontroller (semesterSelection!!semi) >>= getForm
+
+

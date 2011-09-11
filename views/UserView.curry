@@ -94,7 +94,8 @@ editUserView :: User -> (Bool -> User -> Controller) -> [HtmlExp]
 editUserView user controller =
   let initdata = user
       
-      wuiframe = wuiEditForm "edit User" "change" (controller False initdata)
+      wuiframe = wuiEditForm "Benutzerdaten ändern"
+                             "Speichern" (controller False initdata)
       
       (hexp ,handler) = wuiWithErrorForm (wUserType user) initdata
                          (nextControllerForData (controller True))
@@ -104,8 +105,9 @@ editUserView user controller =
 --- Supplies a view to show the details of a User.
 showUserView :: User -> Controller -> [HtmlExp]
 showUserView user controller =
+  [h1 [htxt $ "Benutzer " ++ userLogin user]] ++
   userToDetailsView user ++
-   [button "back to User list" (nextController controller)]
+  [par [button "Zurück zur Benutzerliste" (nextController controller)]]
 
 --- Compares two User entities. This order is used in the list view.
 leqUser :: User -> User -> Bool
@@ -121,22 +123,23 @@ leqUser x1 x2 =
 --- and the controller functions to show, delete and edit entities.
 listUserView
  :: [User] -> (User -> Controller) -> (User -> Controller)
-  -> (User -> Bool -> Controller) -> [HtmlExp]
+  -> (User -> Bool -> Controller) -> (User -> Controller) -> [HtmlExp]
 listUserView users showUserController editUserController
-             deleteUserController =
-  [h1 [htxt "User list"]
+             deleteUserController loginUserController =
+  [h1 [htxt "Lister aller Benutzer"]
   ,table ([take 3 userLabelList ++ [userLabelList!!7]] ++
           map listUser (mergeSort leqUser users))]
   where listUser :: User -> [[HtmlExp]]
         listUser user =
           userToListView user ++
-           [[button "show" (nextController (showUserController user))
-            ,button "edit" (nextController (editUserController user))
-            ,button "delete"
+           [[button "Anzeigen" (nextController (showUserController user))
+            ,button "Ändern" (nextController (editUserController user))
+            ,button "Löschen"
               (confirmNextController
                 (h3
                   [htxt
                     (concat
-                      ["Really delete entity \"",userToShortView user
-                      ,"\"?"])])
-                (deleteUserController user))]]
+                      ["Benutzer \"",userToShortView user
+                      ,"\" wirklich löschen?"])])
+                (deleteUserController user))
+            ,button "Anmelden" (nextController (loginUserController user))]]

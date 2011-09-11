@@ -5,11 +5,12 @@
 
 module Routes(
   getControllerReference,
-  getRouteMenu
+  getRouteMenus
 ) where
 
 import HTML
 import RoutesData
+import List
 
 --generated in RoutesData
 --type Route = (String, UrlMatch, ControllerReference)
@@ -35,21 +36,23 @@ getControllerReference url = getRoutes >>= return . findControllerReference
 --- Generates the menu for all route entries put on the top of
 --- each page. As a default, all routes specified with URL matcher
 --- Exact in the module RouteData are taken as menu entries.
-getRouteMenu :: IO HtmlExp
-getRouteMenu = do
+getRouteMenus :: IO (HtmlExp,HtmlExp)
+getRouteMenus = do
   routes <- getRoutes
-  return $ blockstyle "menu" [ulist (getLinks routes)]
+  let links = getLinks routes
+      (newlinks,otherlinks) = partition (\l -> take 3 (fst l) == "new") links
+  return $ (blockstyle "menu" [ulist (map snd newlinks)],
+            blockstyle "menu" [ulist (map snd otherlinks)])
  where
-   getLinks :: [Route] -> [[HtmlExp]]
+   getLinks :: [Route] -> [(String,[HtmlExp])]
    getLinks ((name, matcher, _):restroutes) =
      case matcher of
        Exact string -> if string `elem`
                            ["main","search","listStudyProgram",
                             "listMasterProgram","newMasterProgram",
-                            "login","listModData","listModInst",
-                            "listUnivisInfo"]
+                            "login","listModData","listModInst"]
                        then getLinks restroutes
-                       else [(href ("?" ++ string) [htxt name])]
-                              : getLinks restroutes
+                       else (string,[(href ("?" ++ string) [htxt name])])
+                             : getLinks restroutes
        _ -> getLinks restroutes
    getLinks [] = []

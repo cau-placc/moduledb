@@ -12,6 +12,7 @@ data ControllerReference
  | ListModInstController | ListMasterProgramController 
  | NewMasterProgramController | ListMasterProgInfoController 
  | ListUnivisInfoController | NewUnivisInfoController 
+ | LoadUnivisController
 
 data UrlMatch = Exact String | Matcher (String -> Bool) | Always 
 type Route = (String,UrlMatch,ControllerReference)
@@ -56,7 +57,10 @@ getRoutes =
       
       --,("New MasterProgInfo",Exact "newMasterProgInfo"
       -- ,NewMasterProgInfoController)
-      ,("List UnivisInfo",Exact "listUnivisInfo",ListUnivisInfoController)
+      ,("Daten aus UnivIS übernehmen",Exact "loadUnivisInfo",
+        LoadUnivisController)
+      ,("Zeige UnivisInfo-Daten",Exact "listUnivisInfo",
+        ListUnivisInfoController)
       ,(maybe "An" (const "Ab") login ++ "melden",Exact "login",LoginController)
       ,("default",Always,MainPageController)]
  where

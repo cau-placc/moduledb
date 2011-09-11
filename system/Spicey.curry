@@ -188,16 +188,18 @@ getUserMenu = do
 --- Adds the basic page layout to a view.
 addLayout :: ViewBlock -> IO ViewBlock
 addLayout viewblock = do
-  usermenu  <- getUserMenu
-  routemenu <- getRouteMenu
-  msg       <- getPageMessage
-  admin     <- isAdmin
+  usermenu   <- getUserMenu
+  routemenus <- getRouteMenus
+  msg        <- getPageMessage
+  admin      <- isAdmin
   return $
     [blockstyle "header" [mdbHeader],
      blockstyle "pagemessage" [nbsp, htxt msg],
      usermenu] ++
     viewblock ++
-    (if admin then [routemenu] else []) ++
+    (if admin then [fst routemenus,h2 [nbsp],-- to enforce line break
+                    snd routemenus]
+              else []) ++
     [blockstyle "footer"
       [par [htxt "powered by",
             href "http://www.informatik.uni-kiel.de/~pakcs/spicey"

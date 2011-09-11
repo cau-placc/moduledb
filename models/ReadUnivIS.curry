@@ -1,5 +1,7 @@
 -- Reading data from UnivIS and storing it in a term file.
 
+module ReadUnivIS(loadLectures) where
+
 import XML
 import XCuery
 import SetFunctions
@@ -62,22 +64,24 @@ findLectureURL univissem
 
 -- Read all Informatik-lectures from UnivIS in a given semester
 -- and store the corresponding Curry terms in a file
-loadLectures :: (String,Int) -> IO ()
+loadLectures :: (String,Int) -> IO (Either String String)
 loadLectures sem = do
   let univissem = showSemUnivis sem
+      termfile  = storageDir++"UnivisLectureURL_"++univissem++".terms"
   xmlstring <- getContentsOfUrl $
     "http://univis.uni-kiel.de/prg?search=lectures&department=080110000&sem="++
     univissem++"&show=xml"
-  writeFile ("univis_lectures_"++univissem++".xml") xmlstring
+  --writeFile ("univis_lectures_"++univissem++".xml") xmlstring
   let xexps = parseXmlString xmlstring
-      xexp = if xexps==[]
-             then error ("No XML document!")
-             else if tail xexps /= []
-                  then error ("More than one XML document!")
-                  else head xexps
-  let termfile = storageDir++"UnivisLectureURL_"++univissem++".terms"
-  writeQTermListFile termfile (sortValues (set2 findLectureURL univissem xexp))
-  putStrLn $ "...and written into file " ++ termfile
+  if xexps==[]
+   then return (Right "No XML document!")
+   else
+    if tail xexps /= []
+    then return (Right "More than one XML document!")
+    else do
+     writeQTermListFile termfile
+                        (sortValues (set2 findLectureURL univissem (head xexps)))
+     return (Left $ "...and written into file " ++ termfile)
 
 -- ...with benchmarking
 loadLecturesBench :: (String,Int) -> IO [(String,String)]
@@ -91,10 +95,10 @@ showSemUnivis :: (String,Int) -> String
 showSemUnivis (term,year) = show year ++ if term=="SS" then "s" else "w"
 
 main = do
-  loadLectures ("WS",2009)
-  loadLectures ("SS",2010)
-  loadLectures ("WS",2010)
-  loadLectures ("SS",2011)
-  loadLectures ("WS",2011)
+  loadLectures ("WS",2009) >>= either putStrLn error
+  loadLectures ("SS",2010) >>= either putStrLn error
+  loadLectures ("WS",2010) >>= either putStrLn error
+  loadLectures ("SS",2011) >>= either putStrLn error
+  loadLectures ("WS",2011) >>= either putStrLn error
 
 -- > Next step: call UnivIS.addUnivisOfSemester to store the data in the MDB
