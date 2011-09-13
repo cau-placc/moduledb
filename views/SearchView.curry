@@ -81,13 +81,13 @@ showModulePlanView catmods semheaders users =
 
 -----------------------------------------------------------------------------
 --- Supplies a view for the examination requirements of a given list of modules.
-showExamOverview :: (String,Int) -> [(ModData,ModDescr)] -> [HtmlExp]
+showExamOverview :: (String,Int) -> [(ModData,String)] -> [HtmlExp]
 showExamOverview sem mods =
   [h1 [htxt $ "Prüfungsanforderungen im " ++ showSemester sem],
    headedTable $
      [[htxt "Modul:"],[htxt "Prüfungsanforderungen:"]] :
-     map (\ (m,d) -> [[htxt (modDataCode m ++": "++ modDataNameG m)],
-                     [HtmlText (latex2html (modDescrExam d))]])
+     map (\ (m,e) -> [[htxt (modDataCode m ++": "++ modDataNameG m)],
+                     [HtmlText (latex2html e)]])
          (mergeSort (\ (m1,_) (m2,_) -> leqModData m1 m2) mods)]
 
 -----------------------------------------------------------------------------

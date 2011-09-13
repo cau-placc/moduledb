@@ -28,14 +28,16 @@ searchModules :: String -> Controller
 searchModules pat = do
     admin <- isAdmin
     login <- getSessionLogin
-    mods <- runQ $ queryCondModData (isMatchingModule pat)
+    modcodes <- runQ $ transformQ (filter isMatching) queryModDataCodeName
+    mods <- runJustT $ mapT (\ (k,_,_) -> getModData k) modcodes
     return (listModDataView admin "Gefundene Module:"
                 (maybe (filter modDataVisible mods) (const mods) login)
                 showModDataController editModDataController
                 deleteModDataController)
+ where
+   isMatching (_,code,name) = match pat (map toLower code) ||
+                              match pat (map toLower name)
 
-isMatchingModule pat mod = match pat (map toLower (modDataCode mod)) ||
-                           match pat (map toLower (modDataNameG mod))
 
 -- simple generic string pattern matcher:
 match pattern string = loop pattern string pattern string
@@ -88,13 +90,12 @@ mandatoryModulCodes =
 --- in the given semester.
 showExamController :: (String,Int) -> Controller
 showExamController sem = do
-  semmis <- runQ $ queryCondModInst (\mi -> (modInstTerm mi,modInstYear mi)==sem)
-  let semmodkeys = nub (map modInstModDataModuleInstancesKey semmis)
-  semmods   <- runJustT $ mapT getModData semmodkeys
-  semdescrs <- runJustT $ mapT (getDB . queryDescriptionOfMod) semmodkeys
+  semmodkeys <- runQ $ transformQ nub (queryModKeysOfSem sem)
+  semmods    <- runJustT $ mapT getModData semmodkeys
+  semexams   <- runJustT $ mapT (getDB . queryExamOfMod) semmodkeys
   return $ showExamOverview sem
               (map (\ (x,Just y) -> (x,y))
-                   (filter (\ (m,d) -> modDataVisible m && isJust d)
-                           (zip semmods semdescrs)))
+                   (filter (\ (m,e) -> modDataVisible m && isJust e)
+                           (zip semmods semexams)))
 
 -----------------------------------------------------------------------------
