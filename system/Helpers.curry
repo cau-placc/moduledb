@@ -10,7 +10,7 @@ module Helpers(LogEvent(..),logEvent,
                showDigit2,showDiv10,
                string2hrefs, latex2html, html2latex,
                showSemester, nextSemester, prevSemester, leqSemester,
-               semesterSelection,
+               semesterSelection, lowerSemesterSelection, upperSemesterSelection,
                imageNB, wTerm, wYear, wVisible)
   where
 
@@ -177,7 +177,16 @@ prevSemester (sem,year) = if sem=="WS" then ("SS",year) else ("WS",year-1)
 leqSemester (s1,y1) (s2,y2) = y1 < y2 || (y1 == y2 && (s1 == s2 || s1 == "SS"))
 
 -- a list of semesters to select in some WUIs
+semesterSelection :: [(String,Int)]
 semesterSelection = take 14 (iterate nextSemester ("WS",2008))
+
+-- preselected lower and upper bound index of a semester list:
+lowerSemesterSelection =
+  maybe (error "Helpers.lowerSemesterSelection: current semester not found!")
+        id
+        (findIndex (==currentSemester) semesterSelection)
+
+upperSemesterSelection = lowerSemesterSelection + 3
 
 -----------------------------------------------------------------------------
 --- An image without borders.

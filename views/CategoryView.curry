@@ -157,8 +157,12 @@ listCategoryView admin login mbsprog catmods semperiod users
                     [htxt "Alle Module in diesem Studienprogramm anzeigen"]]]
            else if admin then [] else
                 [par $ [bold [htxt "Semesterplanung"], htxt " von ",
-                        selectionInitial fromsem semSelection 4, htxt " bis ",
-                        selectionInitial tosem   semSelection 9, htxt ": ",
+                        selectionInitial fromsem semSelection
+                                         lowerSemesterSelection,
+                        htxt " bis ",
+                        selectionInitial tosem semSelection
+                                         upperSemesterSelection,
+                        htxt ": ",
                         button "Anzeigen" (showPlan False sprog)] ++
                        maybe [] (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
                                                (showPlan True sprog)])

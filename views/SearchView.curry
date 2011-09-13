@@ -29,11 +29,12 @@ searchPageView searchcontroller showPlanController showExamController =
         htxt " im Modulcode oder -titel ",
         button "suchen" searchHandler],
        [htxt "Planung aller Module von ",
-        selectionInitial fromsem semSelection 4, htxt " bis ",
-        selectionInitial tosem   semSelection 9, nbsp,
+        selectionInitial fromsem semSelection lowerSemesterSelection,
+        htxt " bis ",
+        selectionInitial tosem   semSelection upperSemesterSelection, nbsp,
         button "anzeigen" showPlan],
        [htxt "Prüfungsanforderungen aller Module im ",
-        selectionInitial insem semSelection 4,
+        selectionInitial insem semSelection lowerSemesterSelection,
         button "anzeigen" showExams]]]]
  where
   scode,fromsem,tosem,insem free
@@ -83,7 +84,7 @@ showModulePlanView catmods semheaders users =
 --- Supplies a view for the examination requirements of a given list of modules.
 showExamOverview :: (String,Int) -> [(ModData,String)] -> [HtmlExp]
 showExamOverview sem mods =
-  [h1 [htxt $ "Prüfungsanforderungen im " ++ showSemester sem],
+  [h1 [htxt $ "Prüfungsanforderungen aller Module im " ++ showSemester sem],
    headedTable $
      [[htxt "Modul:"],[htxt "Prüfungsanforderungen:"]] :
      map (\ (m,e) -> [[htxt (modDataCode m ++": "++ modDataNameG m)],
