@@ -67,8 +67,8 @@ nextControllerForData controller param = do
 confirmNextController :: HtmlExp -> (Bool -> Controller) -> _ -> IO HtmlForm
 confirmNextController question controller _ = do
   getForm [question,
-           button "Ja"   (nextController (controller True)),
-           button "Nein" (nextController (controller False))]
+           par [button "Ja"   (nextController (controller True)),
+                button "Nein" (nextController (controller False))]]
 
 --- If we are in a process, execute the next process depending on
 --- the provided information passed in the second argument,
@@ -197,7 +197,7 @@ addLayout viewblock = do
      blockstyle "pagemessage" [nbsp, htxt msg],
      usermenu] ++
     viewblock ++
-    (if admin then [fst routemenus,h2 [nbsp],-- to enforce line break
+    (if admin then [fst routemenus,h1 [nbsp],-- to enforce line break
                     snd routemenus]
               else []) ++
     [blockstyle "footer"

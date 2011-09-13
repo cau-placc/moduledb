@@ -7,6 +7,7 @@ import Spicey
 import KeyDatabase
 import HTML
 import Time
+import ConfigMDB
 import MDB
 import MasterProgramView
 import Maybe
@@ -125,29 +126,26 @@ deleteMasterProgramController mprog True =
 --- or edit an entity.
 listMasterProgramController :: Controller
 listMasterProgramController =
-  getControllerParams >>= listMasterProgramControllerWithParams
-
-listMasterProgramControllerWithParams :: [String] -> Controller
-listMasterProgramControllerWithParams args =
   checkAuthorization (masterProgramOperationAllowed ListEntities) $ do
-    admin <- isAdmin
     login <- getSessionLogin
-    if null args
-     then do masterPrograms <- runQ queryAllMasterPrograms
+    args <- getControllerParams
+    if null args || args == ["all"]
+     then do allmpinfos <- runQ queryMasterProgramMainInfos
+             let mpinfos = if null args
+                           then filter currentProgram allmpinfos
+                           else allmpinfos
              coreareas <- runQ queryAllMasterCoreAreas
-             return (listMasterProgramView admin
-                       (maybe (filter masterProgramVisible masterPrograms)
-                              (const masterPrograms) login)
-                       coreareas
-                       showMasterProgramController
-                       editMasterProgramController
-                       deleteMasterProgramController)
+             return (listMasterProgramView (not (null args))
+                       (maybe (filter visibleProgram mpinfos)
+                              (const mpinfos) login)
+                       coreareas)
      else maybe (displayError "Illegal URL")
             (\mpkey -> do
               mprog <- runJustT $ getMasterProgram mpkey
               runQ (queryInfoOfMasterProgram mpkey) >>=
                maybe (displayError "Illegal URL")
                 (\mpinfo -> do
+                  admin <- isAdmin
                   let modinfo = progModsOfMasterProgInfo mpinfo
                   tmodinfo <- runJustT $ mapT getMCodeForInfo modinfo
                   mcarea <- runJustT $ getMasterCoreArea
@@ -168,6 +166,12 @@ listMasterProgramControllerWithParams args =
             )
             (readMasterProgramKey (head args))
  where
+  -- is a master program a current one?
+  currentProgram (_,_,term,year,_,_) =
+    leqSemester (prevSemester (prevSemester currentSemester)) (term,year)
+
+  visibleProgram (_,_,_,_,vis,_) = vis
+
   getMCodeForInfo (c,b,mk,t,y) =
     getModData (fromJust (readModDataKey mk)) |>>= \mod ->
     returnT (c,b,mod,t,y)

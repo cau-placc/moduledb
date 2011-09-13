@@ -180,66 +180,53 @@ leqMasterProgram x1 x2 =
 --- The arguments are the list of MasterProgram entities
 --- and the controller functions to show, delete and edit entities.
 listMasterProgramView
- :: Bool -> [MasterProgram] -> [MasterCoreArea] -> (MasterProgram -> Controller)
-  -> (MasterProgram -> Controller) -> (MasterProgram -> Bool -> Controller)
-  -> [HtmlExp]
-listMasterProgramView admin masterPrograms allcoreareas
-    showMasterProgramController editMasterProgramController
-    deleteMasterProgramController =
+  :: Bool -> [(MasterProgramKey,String,String,Int,Bool,MasterCoreAreaKey)]
+  -> [MasterCoreArea] -> [HtmlExp]
+listMasterProgramView listall mpinfos allcoreareas =
   [h1 [htxt "Programme im Masterstudiengang Informatik"]] ++
-  categorizeMasterProgs
-   (if admin then adminMasterProgram
-    else (\mp -> [masterProgramToListView mp]))
-   allMasterProgs
+  categorizeMasterProgs mpListView sortedmpinfos
  where
-   allMasterProgs = reverse (mergeSort leqMasterProgram masterPrograms)
+   mpListView (mpkey,name,_,_,vis,_) =
+     [href ("?listMasterProgram/"++masterProgramKeyToString mpkey)
+           [if vis then stringToHtml name
+                   else italic [stringToHtml name]]]
 
-   categorizeMasterProgs formatprog allprogs =
-     if null allprogs then [] else
-     let prog1 = head allprogs
-      in catSems (masterProgramTerm prog1,masterProgramYear prog1) allprogs
+   sortedmpinfos = reverse (mergeSort leqMP mpinfos)
+     where leqMP (_,name1,term1,year1,_,_) (_,name2,term2,year2,_,_) =
+             (year1,term1,name1) <= (year2,term2,name2)
+
+   categorizeMasterProgs formatprog allmpinfos =
+     if null allmpinfos then [] else
+     let (_,_,term,year,_,_) = head allmpinfos
+      in catSems (term,year) allmpinfos ++
+         if listall then [] else
+          [h2 [href "?listMasterProgram/all"
+                    [htxt "Alle Masterprogramme anzeigen"]]]
     where
      catSems sem progs = if null progs then [] else
        [h2 [htxt ("Beginn: " ++ showSemester sem)]] ++
        (if (fst sem == "SS") then [par [italic [htxt ssCmt]]] else []) ++
        let (semprogs,remprogs) =
-               span (\mp -> (masterProgramTerm mp,masterProgramYear mp) == sem)
+               span (\ (_,_,term,year,_,_) -> (term,year) == sem)
                     progs
-           mcakeys = nub $
-                       map masterProgramMasterCoreAreaAreaProgramsKey semprogs
+           mcakeys = nub $ map (\ (_,_,_,_,_,mcakey) -> mcakey) semprogs
            mcas = map (\k -> fromJust (find (\a -> masterCoreAreaKey a == k)
                                             allcoreareas))
                       mcakeys
         in concatMap
              (\mca ->
-               [h3 [href "?listMasterCoreArea"
-                     [htxt ("Schwerpunktbereich: "++masterCoreAreaName mca)]],
+               [h3 [ehref "?listMasterCoreArea"
+                      [htxt ("Schwerpunktbereich: "++masterCoreAreaName mca)]],
                 ulist
                  (map formatprog
-                   (filter (\p -> masterProgramMasterCoreAreaAreaProgramsKey p
-                                  == masterCoreAreaKey mca) semprogs))])
+                   (filter (\ (_,_,_,_,_,mcak) -> mcak == masterCoreAreaKey mca)
+                           semprogs))])
              (mergeSort leqMasterCoreArea mcas) ++
            catSems (prevSemester sem) remprogs
 
    ssCmt = "Bei Beginn im Sommersemester können auch Programme der "++
            "benachbarten Wintersemester gewählt werden. "++
            "Bei der Anpassung berät Sie der Academic Advisor."
-
-   adminMasterProgram :: MasterProgram -> [HtmlExp]
-   adminMasterProgram masterProgram =
-      [button "show"
-              (nextController (showMasterProgramController masterProgram)),
-       button "edit"
-              (nextController (editMasterProgramController masterProgram)),
-       button "delete"
-          (confirmNextController
-            (h3
-              [htxt
-                (concat
-                  ["Masterprogramm \""
-                  ,masterProgramToShortView masterProgram,"\" löschen?"])])
-            (deleteMasterProgramController masterProgram)),
-       masterProgramToListView masterProgram]
 
 --- Supplies a view for a given MasterProgram entity.
 singleMasterProgramView

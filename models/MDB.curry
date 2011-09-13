@@ -70,10 +70,12 @@ module MDB (
  newModInstWithUserLecturerModsKeyWithModDataModuleInstancesKey,
  updateModInst, deleteModInst, getModInst, queryAllModInsts, queryCondModInst,
  queryInstancesOfMod,
- masterProgram, masterProgramKey, showMasterProgramKey, readMasterProgramKey,
+ masterProgram, masterProgramKey, showMasterProgramKey, masterProgramKeyToString,
+ readMasterProgramKey,
  newMasterProgramWithUserAdvisingKeyWithMasterCoreAreaAreaProgramsKey,
  updateMasterProgram, deleteMasterProgram, getMasterProgram,
  queryAllMasterPrograms, queryCondMasterProgram, queryMasterProgramOfUser,
+ queryMasterProgramMainInfos,
  getMasterProgramKeysOfModInst,
  masterProgInfo,
  masterProgInfoKey, showMasterProgInfoKey, readMasterProgInfoKey,
@@ -100,6 +102,7 @@ module MDB (
 
 import ERDGeneric
 import KeyDatabase
+import KeyDatabaseQuery
 import Time
 import ConfigMDB
 import ReadShowTerm
@@ -1429,19 +1432,43 @@ queryCondModData :: (ModData -> Bool) -> KeyDatabase.Query [ModData]
 queryCondModData econd =
   KeyDatabase.transformQ (filter econd) queryAllModDatas
 
---- Gets all ModData entities of a user.
-queryModDataOfUser :: UserKey -> KeyDatabase.Query [ModData]
-queryModDataOfUser ukey =
-  KeyDatabase.transformQ
-   (map (uncurry keytuple2ModData))
-   (KeyDatabase.someDBKeyInfos modDataEntry [10 @= userKeyToKey ukey])
+--- Database table for ModData entities.
+modDataTable :: DBTable ModData
+modDataTable =
+  DBTable (\colvals ->
+             transformQ (map (uncurry keytuple2ModData))
+                        (someDBKeyInfos modDataEntry colvals))
+          (someDBKeyProjectionRaw modDataEntry)
+
+--- Attribute Key of entity ModData.
+modData'Key :: DBAttr ModData ModDataKey
+modData'Key = DBAttr (-1)
+                     (\k -> AttrEq ((-1) @= modDataKeyToKey k))
+                     (Just ModDataKey)
+
+--- Attribute Code of entity ModData.
+modData'Code :: DBAttr ModData String
+modData'Code = DBAttr 0 (\mcode -> AttrEq (0 @= mcode)) Nothing
+
+--- Attribute Code of entity ModData.
+modData'NameG :: DBAttr ModData String
+modData'NameG = DBAttr 1 (\mcode -> AttrEq (0 @= mcode)) Nothing
+
+--- Attribute UserResponsibleKey of entity ModData.
+modData'UserResponsibleKey :: DBAttr ModData UserKey
+modData'UserResponsibleKey =
+  DBAttr 10 (\ukey -> AttrEq (10 @= userKeyToKey ukey))
+            (Just UserKey)
 
 --- Gets all ModData entities with a given module code.
 queryModDataWithCode :: String -> KeyDatabase.Query [ModData]
-queryModDataWithCode mcode =
-  KeyDatabase.transformQ
-   (map (uncurry keytuple2ModData))
-   (KeyDatabase.someDBKeyInfos modDataEntry [0 @= mcode])
+queryModDataWithCode mcode = modDataTable `dbWhere` modData'Code @== mcode
+
+--- Gets all ModData entities of a user.
+queryModDataOfUser :: UserKey -> KeyDatabase.Query [ModData]
+queryModDataOfUser ukey =
+  modDataTable `dbWhere` modData'UserResponsibleKey @== ukey
+
 
 --- Database predicate representing the relation between keys and ModDescr tuple entities.
 modDescrEntry :: ERDGeneric.Key -> ModDescrTuple -> KeyDatabase.Dynamic
@@ -1659,6 +1686,14 @@ showMasterProgramKey obj =
   ERDGeneric.showDatabaseKey "MasterProgram" masterProgramKeyToKey
    (masterProgramKey obj)
 
+--- Shows the key of a MasterProgram entity as a string.
+--- This is useful if a textual representation of the key is necessary
+--- (e.g., as URL parameters in web pages), but it should no be used
+--- to store keys in other attributes!
+masterProgramKeyToString :: MasterProgramKey -> String
+masterProgramKeyToString key =
+  ERDGeneric.showDatabaseKey "MasterProgram" masterProgramKeyToKey key
+
 --- Transforms a string into a key of a MasterProgram entity.
 --- Nothing is returned if the string does not represent a reasonable key.
 readMasterProgramKey :: String -> Maybe MasterProgramKey
@@ -1733,13 +1768,61 @@ queryCondMasterProgram
 queryCondMasterProgram econd =
   KeyDatabase.transformQ (filter econd) queryAllMasterPrograms
 
+--- Database table for MasterProgram entities.
+masterProgramTable :: DBTable MasterProgram
+masterProgramTable =
+  DBTable (\colvals ->
+             transformQ (map (uncurry keytuple2MasterProgram))
+                        (someDBKeyInfos masterProgramEntry colvals))
+          (someDBKeyProjectionRaw masterProgramEntry)
+
+--- Attribute Key of entity ModData.
+masterProgram'Key :: DBAttr MasterProgram MasterProgramKey
+masterProgram'Key = DBAttr (-1)
+                     (\k -> AttrEq ((-1) @= masterProgramKeyToKey k))
+                     (Just MasterProgramKey)
+
+--- Attribute Code of entity ModData.
+masterProgram'Name :: DBAttr MasterProgram String
+masterProgram'Name = DBAttr 0 (\s -> AttrEq (0 @= s)) Nothing
+
+--- Attribute Code of entity ModData.
+masterProgram'Term :: DBAttr MasterProgram String
+masterProgram'Term = DBAttr 1 (\s -> AttrEq (1 @= s)) Nothing
+
+--- Attribute Code of entity ModData.
+masterProgram'Year :: DBAttr MasterProgram Int
+masterProgram'Year = DBAttr 2 (\s -> AttrEq (2 @= s)) Nothing
+
+--- Attribute Code of entity ModData.
+masterProgram'Visible :: DBAttr MasterProgram Bool
+masterProgram'Visible = DBAttr 6 (\s -> AttrEq (6 @= s)) Nothing
+
+--- Attribute UserResponsibleKey of entity ModData.
+masterProgram'UserAdvisingKey :: DBAttr MasterProgram UserKey
+masterProgram'UserAdvisingKey =
+  DBAttr 7 (\ukey -> AttrEq (7 @= userKeyToKey ukey))
+           (Just UserKey)
+
+--- Attribute UserResponsibleKey of entity ModData.
+masterProgram'MasterCoreAreaAreaProgramsKey
+  :: DBAttr MasterProgram MasterCoreAreaKey
+masterProgram'MasterCoreAreaAreaProgramsKey =
+  DBAttr 8 (\cakey -> AttrEq (8 @= masterCoreAreaKeyToKey cakey))
+           (Just MasterCoreAreaKey)
+
+queryMasterProgramMainInfos
+  :: Query [(MasterProgramKey,String,String,Int,Bool,MasterCoreAreaKey)]
+queryMasterProgramMainInfos =
+  select6 masterProgram'Key masterProgram'Name masterProgram'Term
+          masterProgram'Year masterProgram'Visible
+          masterProgram'MasterCoreAreaAreaProgramsKey
+    masterProgramTable
+
 --- Gets all MasterProgram entities belonging to a user.
 queryMasterProgramOfUser :: UserKey -> KeyDatabase.Query [MasterProgram]
-queryMasterProgramOfUser uk =
-  KeyDatabase.transformQ
-   (map (uncurry keytuple2MasterProgram))
-   (KeyDatabase.someDBKeyInfos masterProgramEntry
-                               [7 @= userKeyToKey uk])
+queryMasterProgramOfUser ukey =
+  masterProgramTable `dbWhere` masterProgram'UserAdvisingKey @== ukey
 
 --- Gets all MasterProgram (keys) for each ModInst of a given ModInst list.
 getMasterProgramKeysOfModInst :: [ModInst] -> Query [[MasterProgramKey]]
@@ -1934,21 +2017,44 @@ queryCondUnivisInfo :: (UnivisInfo -> Bool) -> KeyDatabase.Query [UnivisInfo]
 queryCondUnivisInfo econd =
   KeyDatabase.transformQ (filter econd) queryAllUnivisInfos
 
+--- Database table for UnivisInfo entities.
+univisInfoTable :: DBTable UnivisInfo
+univisInfoTable =
+  DBTable (\colvals ->
+             transformQ (map (uncurry keytuple2UnivisInfo))
+                        (someDBKeyInfos univisInfoEntry colvals))
+          (someDBKeyProjectionRaw univisInfoEntry)
+
+--- Query condition for equality of attribute Code of entity UnivisInfo.
+univisInfo'Code :: DBAttr UnivisInfo String
+univisInfo'Code = DBAttr 0 (\mcode -> AttrEq (0 @= mcode)) Nothing
+
+--- Query condition for equality of attribute Term of entity UnivisInfo.
+univisInfo'Term :: DBAttr UnivisInfo String
+univisInfo'Term = DBAttr 1 (\term -> AttrEq (1 @= term)) Nothing
+
+--- Attribute Term of entity UnivisInfo.
+univisInfo'Year :: DBAttr UnivisInfo Int
+univisInfo'Year = DBAttr 2 (\year -> AttrEq (2 @= year)) Nothing
+
 --- query the univis URLs for a module in a semester:
 queryUnivisURL :: String -> (String,Int) -> Query [String]
-queryUnivisURL mcode (term,year) = 
-  KeyDatabase.transformQ
-   (map (univisInfoURL . uncurry keytuple2UnivisInfo))
-   (KeyDatabase.someDBKeyInfos univisInfoEntry [0@=mcode, 1@=term, 2@=year])
+queryUnivisURL mcode (term,year) = transformQ (map univisInfoURL) $
+  univisInfoTable
+   `dbWhere` univisInfo'Code @== mcode @&&
+             univisInfo'Term @== term @&&
+             univisInfo'Year @== year
 
 --- query whether a module has a UnivIS instance in a semester:
 queryHasUnivisEntry :: String -> (String,Int) -> Query Bool
-queryHasUnivisEntry mcode (term,year) = 
-  KeyDatabase.transformQ
-   (not . null)
-   (KeyDatabase.someDBKeyInfos univisInfoEntry [0@=mcode, 1@=term, 2@=year])
+queryHasUnivisEntry mcode (term,year) = transformQ (not . null) $
+  univisInfoTable
+   `dbWhere` univisInfo'Code @== mcode @&&
+             univisInfo'Term @== term @&&
+             univisInfo'Year @== year
 
---- Database predicate representing the relation between keys and Categorizing tuple entities.
+--- Database predicate representing the relation between keys and
+--- Categorizing tuple entities.
 categorizingEntry
  :: ERDGeneric.Key -> CategorizingTuple -> KeyDatabase.Dynamic
 categorizingEntry =
@@ -2398,3 +2504,33 @@ storeTermDB = saveAllData storageDir
 -- initialize DBs from term files:
 readTermDB :: IO ()
 readTermDB = restoreAllData storageDir
+
+------------------------------------------------------------------------
+-- Tests for better querying
+
+ex1 = runQ (select1 modData'Code modDataTable)
+        >>= putStrLn . unlines . map show
+
+ex2 = runQ (select2 modData'Code modData'NameG modDataTable)
+        >>= putStrLn . unlines . map show
+
+ex3 = runQ (select2 modData'Code modData'UserResponsibleKey modDataTable)
+        >>= putStrLn . unlines . map show
+
+ex4 = runQ (select2 modData'Key modData'Code modDataTable)
+        >>= putStrLn . unlines . map show
+
+ex5 = runQ (select1where modData'NameG modDataTable (modData'Code @=="Inf-Prog"))
+
+ex6 = runQ (select2where modData'NameG modData'UserResponsibleKey modDataTable
+                         (modData'Code @=="Inf-Prog"))
+
+ex7 = runQ queryAllMasterPrograms
+ex8 = runQ (select1 masterProgram'UserAdvisingKey masterProgramTable)
+ex9 = runQ (select7 masterProgram'Key masterProgram'Name masterProgram'Term
+                    masterProgram'Year masterProgram'Visible
+                    masterProgram'UserAdvisingKey
+                    masterProgram'MasterCoreAreaAreaProgramsKey
+              masterProgramTable)
+
+------------------------------------------------------------------------

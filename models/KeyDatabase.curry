@@ -29,7 +29,7 @@
 --- functions <code>deleteDBEntries</code> and <code>closeDBHandles</code>.
 ---
 --- @author Sebastian Fischer with changes by Michael Hanus
---- @version August 2011
+--- @version September 2011
 ------------------------------------------------------------------------------
 
 module KeyDatabase (
@@ -46,7 +46,8 @@ module KeyDatabase (
 
   allDBKeys, allDBInfos, allDBKeyInfos,
 
-  ColVal, (@=), someDBKeys, someDBInfos, someDBKeyInfos, someDBKeyProjections,
+  ColVal, (@=), someDBKeys, someDBInfos, someDBKeyInfos,
+  someDBKeyProjections, someDBKeyProjectionRaw,
 
   getDBInfo, getDBInfos,
 
@@ -343,6 +344,19 @@ someDBKeyProjections keyPred cols cvs = Query $
      rows <- selectSomeRows keyPred cvs ("_rowid_,"++colnames)
      mapIO readKeyInfo rows
 
+--- Returns a list of column projections strings (!) on
+--- those entries that match the given value
+--- restrictions for columns. Safe to use even on large databases if
+--- the number of results is small.
+someDBKeyProjectionRaw :: KeyPred a -> [Int] -> [ColVal] -> Query [String]
+someDBKeyProjectionRaw keyPred cols cvs = Query $
+  do let colnames = commaSep (map (selColName (colNames keyPred)) cols)
+     rows <- selectSomeRows keyPred cvs colnames
+     return rows
+ where
+  selColName colnames n = if n>=0 then colnames!!n
+                                  else "_rowid_" -- n=-1 is the key
+
 --- Queries the information stored under the given key. Yields
 --- <code>Nothing</code> if the given key is not present.
 getDBInfo :: KeyPred a -> Key -> Query (Maybe a)
@@ -513,7 +527,8 @@ showColVals :: KeyPred a -> [ColVal] -> String
 showColVals _       []     = "1"
 showColVals keyPred (c:vs) = concat . intersperse " AND " $ map showCV (c:vs)
  where
-  showCV (ColVal n s) = colNames keyPred !! n ++ " = " ++ s
+  showCV (ColVal n s) = if n>=0 then colNames keyPred !! n ++ " = " ++ s
+                                else "_rowid_ = " ++ s -- n=-1 is the key
 
 --- Closes all database connections. Should be called when no more
 --- database access will be necessary.
@@ -679,7 +694,7 @@ updStack char stack =
 -- hPutStrLn h s =
 --   do IO.hPutStrLn stderr $ " > " ++ s
 --      IO.hPutStrLn h s
-
+-- 
 -- hGetLine h =
 --   do l <- IO.hGetLine h
 --      IO.hPutStrLn stderr $ "<  " ++ l
