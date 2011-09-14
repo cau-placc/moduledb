@@ -169,12 +169,14 @@ reasonableMasterProgInfo mpi =
    in returnT (satisfied catpoints)
  where
   satisfied [ig,tg,is,mv]
-    | ig<160 = msg "IG"
-    | tg<160 = msg "TG"
-    | is<160 = msg "IS"
-    | mv<80  = msg "MV"
+    | ig<160 = msg "IG" ig 160
+    | tg<160 = msg "TG" tg 160
+    | is<160 = msg "IS" is 160
+    | mv<80  = msg "MV" mv  80
     | otherwise = ""
-   where msg ck = "der Studienbereich "++ck++" hat noch zu wenig ECTS-Punkte."
+   where msg ck curr atleast =
+          "der Studienbereich "++ck++" hat noch zu wenig ECTS-Punkte ("++
+          showDiv10 curr++" statt mindestens "++showDiv10 atleast++")."
 
   getMCodeForInfo (c,_,mk,_,_) =
     getModData (fromJust (readModDataKey mk)) |>>= \mod -> returnT (c,mod)
