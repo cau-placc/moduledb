@@ -27,7 +27,10 @@ mainPageView studyPrograms =
    h2 [htxt "Studiengänge"],
    table (map (\sp -> [head (studyProgramToListView sp)])
               (mergeSort leqStudyProgram studyPrograms)),
-   h2 [href "?listMasterProgram" [htxt "Masterprogramme"]],
+   h2 [htxt "Masterstudium Informatik:", nbsp,
+   style "buttonhref" [href "?listMasterCoreArea"
+                                 [htxt "Schwerpunktbereiche"]],nbsp,
+        style "buttonhref" [href "?listMasterProgram" [htxt "Masterprogramme"]]],
    par [htxt "Weitere Informationen:"],
    ulist
     [[bold [htxt "Für Modulverantwortliche: "],

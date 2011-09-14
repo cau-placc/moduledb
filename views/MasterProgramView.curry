@@ -200,8 +200,9 @@ listMasterProgramView listall mpinfos allcoreareas =
      let (_,_,term,year,_,_) = head allmpinfos
       in catSems (term,year) allmpinfos ++
          if listall then [] else
-          [h2 [href "?listMasterProgram/all"
-                    [htxt "Alle Masterprogramme anzeigen"]]]
+          [par [style "buttonhref"
+                      [href "?listMasterProgram/all"
+                        [htxt "Alle (auch ältere) Masterprogramme anzeigen"]]]]
     where
      catSems sem progs = if null progs then [] else
        [h2 [htxt ("Beginn: " ++ showSemester sem)]] ++

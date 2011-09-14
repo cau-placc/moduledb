@@ -153,8 +153,9 @@ listCategoryView admin login mbsprog catmods semperiod users
    maybe []
          (\sprog ->
            if not admin && null (concatMap snd catmods) then
-            [par [href ("?listCategory/"++showStudyProgramKey sprog++"/all")
-                    [htxt "Alle Module in diesem Studienprogramm anzeigen"]]]
+            [par [style "buttonhref"
+                    [href ("?listCategory/"++showStudyProgramKey sprog++"/all")
+                      [htxt "Alle Module in diesem Studienprogramm anzeigen"]]]]
            else if admin then [] else
                 [par $ [bold [htxt "Semesterplanung"], htxt " von ",
                         selectionInitial fromsem semSelection

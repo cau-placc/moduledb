@@ -114,7 +114,7 @@ listMasterCoreAreaView
 listMasterCoreAreaView admin masterCoreAreas showMasterCoreAreaController
                        editMasterCoreAreaController
                        deleteMasterCoreAreaController =
-  [h1 [htxt "Schwerpunktbereiche im Masterstudium"]] ++
+  [h1 [htxt "Schwerpunktbereiche im Masterstudiengang Informatik"]] ++
   if admin
   then [table ([take 5 masterCoreAreaLabelList] ++
                map listMasterCoreArea

@@ -320,7 +320,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
                        (nextController modinstaddController),
                 button "Semesterangaben ändern"
                        (nextController modinsteditController),
-                button "Moduldaten ändern"
+                button "Moduldaten/Sichtbarkeit ändern"
                        (nextController (editModDataController modData))] ++
                 maybe []
                       (\desc ->
