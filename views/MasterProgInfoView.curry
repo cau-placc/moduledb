@@ -73,8 +73,9 @@ wMasterProgInfo modinsts =
                else showModTitle mc ++ " (" ++ showSemester (term,year) ++ ")"
 
   showModTitle mc =
-    let mbmi = find (\ (_,md,_) -> showModDataKey md == mc)modinsts
-     in maybe mc (\ (_,md,_) -> modDataNameG md) mbmi
+    let mbmi = find (\ (_,md,_) -> showModDataKey md == mc) modinsts
+     in maybe mc (\ (_,md,_) -> modDataNameG md++", "++
+                                showDiv10 (modDataECTS md)++" ECTS") mbmi
 
   leqModSem (mi1,mod1,_) (mi2,mod2,_) =
     let code1 = modDataCode mod1

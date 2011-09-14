@@ -245,7 +245,7 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
    h2 [htxt $ "Beginn: " ++ showSemester (startSem,startYear) ++
               " / Research advisor: " ++ userToShortView advisor],
    par $ (if admin || editallowed
-          then [button "Beschreibung ändern"
+          then [button "Beschreibung/Sichtbarkeit ändern"
                        (nextController (editMasterProgramController mprog))]
           else []) ++
          (if admin
