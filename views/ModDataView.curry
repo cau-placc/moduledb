@@ -353,7 +353,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
         if null modinsts then []
         else htxt " ": showSemsOfModInstances (mergeSort leqModInst modinsts)],
      [[bold [stringToHtml "Präsenzzeiten:"]],
-      [stringToHtml (modDataPresence modData)]],
+      [stringToHtml (formatPresence (modDataPresence modData))]],
      [[bold [stringToHtml "ECTS:"]],
       [stringToHtml $ showDiv10 (modDataECTS modData)]],
      [[bold [stringToHtml "Workload:"]],
@@ -396,6 +396,8 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
              | l==2 = "zwei"
              | otherwise = show l
 
+   formatPresence ps = let xs = words ps
+                        in unwords (filter (\s -> head s /= '0') xs)
 
 -- show the semesters of module instances enclosed in brackets:
 showSemsOfModInstances :: [ModInst] -> [HtmlExp]
