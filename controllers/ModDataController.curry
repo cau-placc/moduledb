@@ -385,7 +385,7 @@ mod2latex md responsibleUser sprogs categorys (Just desc) =
     "\\module{"++modDataCode md++"}{"++modDataNameG md++"}{"++
     userToShortView responsibleUser++"}{"++
     modDataCycle md++"}{"++
-    modDataPresence md++"}{"++
+    formatPresence (modDataPresence md)++"}{"++
     showDiv10 (modDataECTS md)++"}{"++modDataWorkload md++"}{"++
     showLen (modDataLength md)++" Semester}{"++
     (showStudyProgCategories sprogs categorys)++

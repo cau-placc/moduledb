@@ -7,7 +7,7 @@ module Helpers(LogEvent(..),logEvent,
                modInfoLatexFile,modTableLatexFile,semTableLatexFile,
                shortModInfoLatexFile,
                ehref,
-               showDigit2,showDiv10,
+               showDigit2,showDiv10, formatPresence,
                string2hrefs, latex2html, html2latex,
                showSemester, nextSemester, prevSemester, leqSemester,
                semesterSelection, lowerSemesterSelection, upperSemesterSelection,
@@ -99,6 +99,18 @@ showDigit2 i = if abs i < 10 then '0':show i else show i
 showDiv10 :: Int -> String
 showDiv10 i = let m = mod i 10
                in show (div i 10) ++ (if m==0 then "" else ',' : show m)
+
+-----------------------------------------------------------------------------
+-- format the presence field string of ModData entities
+-- (delete 0 fields, replace P bei PUe):
+formatPresence :: String -> String
+formatPresence ps =
+  let xs = words ps
+   in unwords (map p2pue (filter (\s -> head s /= '0') xs))
+ where
+   p2pue s = case s of
+               [d,'P'] -> [d,'P','Ü']
+               _ -> s
 
 -----------------------------------------------------------------------------
 -- translate potential URLs in a string into HTML hyperrefs:

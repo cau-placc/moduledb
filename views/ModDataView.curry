@@ -396,9 +396,6 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
              | l==2 = "zwei"
              | otherwise = show l
 
-   formatPresence ps = let xs = words ps
-                        in unwords (filter (\s -> head s /= '0') xs)
-
 -- show the semesters of module instances enclosed in brackets:
 showSemsOfModInstances :: [ModInst] -> [HtmlExp]
 showSemsOfModInstances mis =
