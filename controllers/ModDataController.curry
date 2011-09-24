@@ -225,11 +225,11 @@ listModDataController =
                         (editAllModInstController modData
                                                   listModDataController)
                         copyModController emailModuleController)
-               else let format = args!!1 in
-                    if format `elem` ["pdf"]
-                    then formatModuleForm modData
-                              responsibleUser sprogs categories moddesc
-                    else displayError "Illegal URL"
+               else case args!!1 of
+                      "pdf" -> formatModuleForm modData
+                                  responsibleUser sprogs categories moddesc
+                      "url" -> moduleUrlForm modData
+                      _ -> displayError "Illegal URL"
             )
             (readModDataKey (head args))
 
@@ -333,7 +333,18 @@ emailModuleController mdata user = return
     listModDataController >>= getForm
 
 ----------------------------------------------------------------------
--- Formatiere Liste von Modulen
+-- Show the permanent URL of a module
+moduleUrlForm :: ModData -> IO [HtmlExp]
+moduleUrlForm md = do
+  let url = baseURL ++ "?mod=" ++ string2urlencoded (modDataCode md)
+  return
+    [h1 [htxt ("Externe URL für das Modul \""++modDataNameG md++"\"")],
+     par [htxt $ "Bitte verwenden Sie die folgende URL, um das Modul aus "++
+                 "anderen Webseiten zu referenzieren:"],
+     h3 [ehref url [htxt url]]]
+
+----------------------------------------------------------------------
+-- Format a module as PDF
 formatModuleForm :: ModData -> User -> [StudyProgram] -> [Category]
                 -> Maybe ModDescr -> IO [HtmlExp]
 formatModuleForm md respuser sprogs categorys mbdesc = do

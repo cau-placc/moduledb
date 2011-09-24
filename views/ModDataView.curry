@@ -310,11 +310,11 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
      modinstaddController modinsteditController copyModController
      emailController =
   [h1 [htxt ("Modul " ++ modDataCode modData), nbsp,
-       HtmlStruct "sup" []
-         [ehref ("?listModData/"++showModDataKey modData++"/pdf")
-                [imageNB "images/topdf.png" "Convert to PDF"]], nbsp,
-       HtmlStruct "sup" []
-         [ehref xmlurl [imageNB "images/xml.gif" "XML representation"]]]] ++
+       ehref ("?listModData/"++showModDataKey modData++"/url")
+             [imageNB "images/url.png" "Show URL"], nbsp,
+       ehref ("?listModData/"++showModDataKey modData++"/pdf")
+             [imageNB "images/pdf.png" "Convert to PDF"], nbsp,
+       ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
   [par $ (if admin || editallowed
           then [button "Semester hinzufügen"
                        (nextController modinstaddController),

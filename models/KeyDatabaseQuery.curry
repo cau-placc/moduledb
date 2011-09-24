@@ -9,8 +9,8 @@
 ------------------------------------------------------------------------------
 
 module KeyDatabaseQuery
-        (DBTable(..),DBAttr(..),QueryCond(..),(@==),(@&&),whereQ,
-         selectAll,selectAll1,selectAll2,selectAll3,selectAll6,selectAll7,
+        (DBTable(..),DBAttr(..),readKeyInfo,QueryCond(..),(@==),(@&&),whereQ,
+         selectAll,selectAll1,selectAll2,selectAll3,selectAll6,
          select,select1,select2)
  where
 
@@ -20,6 +20,109 @@ import ReadShowTerm
 infix  4 @==
 infixr 3 @&&
 infix  1 `whereQ`
+
+readTuple1 :: (String -> [(a,String)]) -> String -> a
+readTuple1 r1 s = case s of
+  '(':s1 -> case r1 s1 of
+              [(x1,")")] -> x1
+              _ -> readError
+  _ -> readError
+ where readError = error ("Illegal tuple string: "++s)
+
+readTuple2 :: (String -> [(a,String)]) -> (String -> [(b,String)])
+           -> String -> (a,b)
+readTuple2 r1 r2 s = case s of
+  '(':s1 -> case r1 s1 of
+              [(x1,',':s2)] -> case r2 s2 of
+                                 [(x2,")")] -> (x1,x2)
+                                 _ -> readError
+              _ -> readError
+  _ -> readError
+ where readError = error ("Illegal tuple string: "++s)
+
+readTuple3 :: (String -> [(a,String)])
+           -> (String -> [(b,String)])
+           -> (String -> [(c,String)])
+           -> String -> (a,b,c)
+readTuple3 r1 r2 r3 s = case s of
+  '(':s1 -> case r1 s1 of
+       [(x1,',':s2)] -> case r2 s2 of
+            [(x2,',':s3)] -> case r3 s3 of
+                [(x3,")")] -> (x1,x2,x3)
+                _ -> readError
+            _ -> readError
+       _ -> readError
+  _ -> readError
+ where readError = error ("Illegal tuple string: "++s)
+
+readTuple4 :: (String -> [(a,String)])
+           -> (String -> [(b,String)])
+           -> (String -> [(c,String)])
+           -> (String -> [(d,String)])
+           -> String -> (a,b,c,d)
+readTuple4 r1 r2 r3 r4 s = case s of
+  '(':s1 -> case r1 s1 of
+       [(x1,',':s2)] -> case r2 s2 of
+            [(x2,',':s3)] -> case r3 s3 of
+                [(x3,',':s4)] -> case r4 s4 of
+                    [(x4,")")] -> (x1,x2,x3,x4)
+                    _ -> readError
+                _ -> readError
+            _ -> readError
+       _ -> readError
+  _ -> readError
+ where readError = error ("Illegal tuple string: "++s)
+
+readTuple5 :: (String -> [(a,String)])
+           -> (String -> [(b,String)])
+           -> (String -> [(c,String)])
+           -> (String -> [(d,String)])
+           -> (String -> [(e,String)])
+           -> String -> (a,b,c,d,e)
+readTuple5 r1 r2 r3 r4 r5 s = case s of
+  '(':s1 -> case r1 s1 of
+       [(x1,',':s2)] -> case r2 s2 of
+            [(x2,',':s3)] -> case r3 s3 of
+                [(x3,',':s4)] -> case r4 s4 of
+                    [(x4,',':s5)] -> case r5 s5 of
+                        [(x5,")")] -> (x1,x2,x3,x4,x5)
+                        _ -> readError
+                    _ -> readError
+                _ -> readError
+            _ -> readError
+       _ -> readError
+  _ -> readError
+ where readError = error ("Illegal tuple string: "++s)
+
+readTuple6 :: (String -> [(a,String)])
+           -> (String -> [(b,String)])
+           -> (String -> [(c,String)])
+           -> (String -> [(d,String)])
+           -> (String -> [(e,String)])
+           -> (String -> [(f,String)])
+           -> String -> (a,b,c,d,e,f)
+readTuple6 r1 r2 r3 r4 r5 r6 s = case s of
+  '(':s1 -> case r1 s1 of
+       [(x1,',':s2)] -> case r2 s2 of
+            [(x2,',':s3)] -> case r3 s3 of
+                [(x3,',':s4)] -> case r4 s4 of
+                    [(x4,',':s5)] -> case r5 s5 of
+                        [(x5,',':s6)] -> case r6 s6 of
+                            [(x6,")")] -> (x1,x2,x3,x4,x5,x6)
+                            _ -> readError
+                        _ -> readError
+                    _ -> readError
+                _ -> readError
+            _ -> readError
+       _ -> readError
+  _ -> readError
+ where readError = error ("Illegal tuple string: "++s)
+
+readKeyInfo :: (Key -> a) -> String -> [(a,String)]
+readKeyInfo keyfun s = map (\ (v,r) -> (keyfun v,r)) (readKey s)
+
+readKey :: String -> [(Int,String)]
+readKey s = readsQTerm s
 
 ------------------------------------------------------------------------
 -- Auxiliaries for better querying
@@ -52,7 +155,7 @@ data DBTable e = DBTable ([ColVal] -> Query [e])
 --- (used to transform foreign keys in attributes).
 data DBAttr etype atype =
   DBAttr (DBTable etype)
-         Int (atype -> QueryCond etype) (Maybe (KeyDatabase.Key -> atype))
+          Int (atype -> QueryCond etype) (String -> [(atype,String)])
 
 --- Equality condition between a database attribute and a value.
 (@==) :: DBAttr etype atype -> atype -> QueryCond etype
@@ -62,83 +165,47 @@ data DBAttr etype atype =
 readInfo :: String -> a
 readInfo str = readQTerm $ "(" ++ str ++ ")"
 
+-- Read results of sqlite query as tuple.
+readTInfo :: (String->a) -> String -> a
+readTInfo readtuple str = readtuple $ "(" ++ str ++ ")"
+
 --- Query an entity with a condition on this entity.
 selectAll :: DBTable e -> Query [e]
 selectAll (DBTable condquery _) = condquery []
 
 -- Projection on an attribute.
 selectAll1 :: DBAttr e atype -> Query [atype]
-selectAll1 (DBAttr (DBTable _ condqueryproject) i _ t) =
-  transformQ (map (trans . readInfo))
+selectAll1 (DBAttr (DBTable _ condqueryproject) i _ f) =
+  transformQ (map (readTInfo (readTuple1 f)))
              (condqueryproject [i] [])
- where
-  trans x = maybe x (\f -> f (unsafeCoerce x)) t
 
 -- Projection on two attributes.
 selectAll2 :: DBAttr e atype1 -> DBAttr e atype2
            -> Query [(atype1,atype2)]
-selectAll2 (DBAttr (DBTable _ condqueryproject) i1 _ t1) (DBAttr _ i2 _ t2) =
-  transformQ (map (trans . readInfo))
+selectAll2 (DBAttr (DBTable _ condqueryproject) i1 _ f1) (DBAttr _ i2 _ f2) =
+  transformQ (map (readTInfo (readTuple2 f1 f2)))
              (condqueryproject [i1,i2] [])
- where
-   trans (x1,x2) = (maybe x1 (\f -> f (unsafeCoerce x1)) t1,
-                    maybe x2 (\f -> f (unsafeCoerce x2)) t2)
 
+
+-- Projection on three attributes.
+selectAll3 :: DBAttr e atype1 -> DBAttr e atype2
+           -> DBAttr e atype3
+           -> Query [(atype1,atype2,atype3)]
+selectAll3 (DBAttr (DBTable _ condqueryproject) i1 _ f1) (DBAttr _ i2 _ f2)
+           (DBAttr _ i3 _ f3) =
+  transformQ (map (readTInfo (readTuple3 f1 f2 f3)))
+             (condqueryproject [i1,i2,i3] [])
 
 -- Projection on six attributes.
 selectAll6 :: DBAttr e atype1 -> DBAttr e atype2
            -> DBAttr e atype3 -> DBAttr e atype4
            -> DBAttr e atype5 -> DBAttr e atype6
            -> Query [(atype1,atype2,atype3,atype4,atype5,atype6)]
-selectAll6 (DBAttr (DBTable _ condqueryproject) i1 _ t1) (DBAttr _ i2 _ t2)
-           (DBAttr _ i3 _ t3) (DBAttr _ i4 _ t4)
-           (DBAttr _ i5 _ t5) (DBAttr _ i6 _ t6) =
-  transformQ (map (trans . readInfo))
+selectAll6 (DBAttr (DBTable _ condqueryproject) i1 _ f1) (DBAttr _ i2 _ f2)
+           (DBAttr _ i3 _ f3) (DBAttr _ i4 _ f4)
+           (DBAttr _ i5 _ f5) (DBAttr _ i6 _ f6) =
+  transformQ (map (readTInfo (readTuple6 f1 f2 f3 f4 f5 f6)))
              (condqueryproject [i1,i2,i3,i4,i5,i6] [])
- where
-   trans (x1,x2,x3,x4,x5,x6) =
-     (maybe x1 (\f -> f (unsafeCoerce x1)) t1,
-      maybe x2 (\f -> f (unsafeCoerce x2)) t2,
-      maybe x3 (\f -> f (unsafeCoerce x3)) t3,
-      maybe x4 (\f -> f (unsafeCoerce x4)) t4,
-      maybe x5 (\f -> f (unsafeCoerce x5)) t5,
-      maybe x6 (\f -> f (unsafeCoerce x6)) t6)
-
--- Projection on three attributes.
-selectAll3 :: DBAttr e atype1 -> DBAttr e atype2
-           -> DBAttr e atype3
-           -> Query [(atype1,atype2,atype3)]
-selectAll3 (DBAttr (DBTable _ condqueryproject) i1 _ t1) (DBAttr _ i2 _ t2)
-           (DBAttr _ i3 _ t3) =
-  transformQ (map (trans . readInfo))
-             (condqueryproject [i1,i2,i3] [])
- where
-   trans (x1,x2,x3) =
-     (maybe x1 (\f -> f (unsafeCoerce x1)) t1,
-      maybe x2 (\f -> f (unsafeCoerce x2)) t2,
-      maybe x3 (\f -> f (unsafeCoerce x3)) t3)
-
--- Projection on seven attributes.
-selectAll7 :: DBAttr e atype1 -> DBAttr e atype2
-           -> DBAttr e atype3 -> DBAttr e atype4
-           -> DBAttr e atype5 -> DBAttr e atype6
-           -> DBAttr e atype7
-           -> Query [(atype1,atype2,atype3,atype4,atype5,atype6,atype7)]
-selectAll7 (DBAttr (DBTable _ condqueryproject) i1 _ t1) (DBAttr _ i2 _ t2)
-           (DBAttr _ i3 _ t3) (DBAttr _ i4 _ t4)
-           (DBAttr _ i5 _ t5) (DBAttr _ i6 _ t6)
-           (DBAttr _ i7 _ t7) =
-  transformQ (map (trans . readInfo))
-             (condqueryproject [i1,i2,i3,i4,i5,i6,i7] [])
- where
-   trans (x1,x2,x3,x4,x5,x6,x7) =
-     (maybe x1 (\f -> f (unsafeCoerce x1)) t1,
-      maybe x2 (\f -> f (unsafeCoerce x2)) t2,
-      maybe x3 (\f -> f (unsafeCoerce x3)) t3,
-      maybe x4 (\f -> f (unsafeCoerce x4)) t4,
-      maybe x5 (\f -> f (unsafeCoerce x5)) t5,
-      maybe x6 (\f -> f (unsafeCoerce x6)) t6,
-      maybe x7 (\f -> f (unsafeCoerce x7)) t7)
 
 --- Query an entity with a condition on this entity.
 select :: DBTable e -> QueryCond e -> Query [e]
@@ -152,25 +219,16 @@ condquery `whereQ` qcond = condquery qcond
 
 -- Projection on an attributes with condition.
 select1 :: DBAttr e atype -> QueryCond e -> Query [atype]
-select1 (DBAttr (DBTable _ condqueryproject) i _ t) qcond =
-  transformQ (map (trans . readInfo))
+select1 (DBAttr (DBTable _ condqueryproject) i _ f) qcond =
+  transformQ (map (readTInfo (readTuple1 f)))
              (condqueryproject [i] (queryCond2ColVals qcond))
- where
-  trans x = maybe x (\f -> f (unsafeCoerce x)) t
 
 -- Projection on two attributes with condition.
 select2 :: DBAttr e atype1 -> DBAttr e atype2 -> QueryCond e
         -> Query [(atype1,atype2)]
-select2 (DBAttr (DBTable _ condqueryproject) i1 _ t1) (DBAttr _ i2 _ t2)
+select2 (DBAttr (DBTable _ condqueryproject) i1 _ f1) (DBAttr _ i2 _ f2)
              qcond =
-  transformQ (map (\s -> trans (readInfo s)))
+  transformQ (map (readTInfo (readTuple2 f1 f2)))
              (condqueryproject [i1,i2] (queryCond2ColVals qcond))
- where
-   trans (x1,x2) = (maybe x1 (\f -> f (unsafeCoerce x1)) t1,
-                    maybe x2 (\f -> f (unsafeCoerce x2)) t2)
-
---- A strict definition of arbitrary type conversion.
-unsafeCoerce :: a -> b
-unsafeCoerce x = readQTerm (showQTerm x)
 
 ------------------------------------------------------------------------
