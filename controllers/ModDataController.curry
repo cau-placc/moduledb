@@ -2,7 +2,8 @@ module ModDataController (
  newModDataController, newImportModDataController,
  showModDataController, editModDataController, deleteModDataController,
  listModDataController, getModDataOfCategory, showModDataWithCode,
- getResponsibleUser, showXmlIndex, showXmlModule
+ getResponsibleUser, showXmlIndex, showXmlModule,
+ formatModulesForm
  ) where
 
 import ConfigMDB
@@ -346,13 +347,30 @@ moduleUrlForm md = do
 ----------------------------------------------------------------------
 -- Format a module as PDF
 formatModuleForm :: ModData -> User -> [StudyProgram] -> [Category]
-                -> Maybe ModDescr -> IO [HtmlExp]
+                 -> Maybe ModDescr -> IO [HtmlExp]
 formatModuleForm md respuser sprogs categorys mbdesc = do
   pid <- getPID
   let tmp = "tmp_"++show pid
   writeModulesLatexFile (tmp++".tex")
                         md respuser sprogs categorys mbdesc
   latexFormatForm tmp "Formatierte Modulbeschreibung"
+
+-- Format a list of modules as PDF
+formatModulesForm :: [ModData] -> IO [HtmlExp]
+formatModulesForm mods = do
+  sprogs <- runQ queryAllStudyPrograms
+  pid <- getPID
+  let tmp = "tmp_"++show pid
+  mstr <- mapIO (formatModData sprogs) mods
+  writeStandaloneLatexFile (tmp++".tex") (concat mstr)
+  latexFormatForm tmp "Formatierte Modulbeschreibungen"
+ where
+  formatModData sprogs md = do
+    respuser <- runJustT (getResponsibleUser md)
+    categories <- runJustT (getModDataCategorys md)
+    mbdesc <- runQ $ queryDescriptionOfMod (modDataKey md)
+    return (quoteUnknownLatexCmd
+              (mod2latex md respuser sprogs categories mbdesc))
 
 -- Form to format a file tmp.tex with pdflatex and show the result
 latexFormatForm :: String -> String -> IO [HtmlExp]
@@ -376,11 +394,16 @@ latexFormatForm tmp title = do
 -- Generate LaTeX document containing a detailed description of a module:
 writeModulesLatexFile :: String -> ModData -> User -> [StudyProgram]
                       -> [Category] -> Maybe ModDescr -> IO ()
-writeModulesLatexFile fname md respuser sprogs categorys mbdesc = do
-  let modsformatted = mod2latex md respuser sprogs categorys mbdesc
+writeModulesLatexFile fname md respuser sprogs categorys mbdesc =
+  writeStandaloneLatexFile fname
+   (quoteUnknownLatexCmd (mod2latex md respuser sprogs categorys mbdesc))
+
+-- Put a latex string into a file with headers and footers
+writeStandaloneLatexFile :: String -> String -> IO ()
+writeStandaloneLatexFile fname latexstring = do
   writeFile fname ("\\documentclass{article}\n\\input{moddefs}\n" ++
                    "\\begin{document}\n" ++
-                  modsformatted ++
+                   latexstring ++
                    "\\end{document}\n")
 
 mod2latex :: ModData -> User -> [StudyProgram] -> [Category]

@@ -8,7 +8,7 @@ module Helpers(LogEvent(..),logEvent,
                shortModInfoLatexFile,
                ehref,
                showDigit2,showDiv10, formatPresence,
-               string2hrefs, latex2html, html2latex,
+               string2hrefs, latex2html, html2latex, quoteUnknownLatexCmd,
                showSemester, nextSemester, prevSemester, leqSemester,
                semesterSelection, lowerSemesterSelection, upperSemesterSelection,
                imageNB, wTerm, wYear, wVisible)
@@ -27,6 +27,7 @@ import WUI
 import Char
 import Authentication
 import ReadShowTerm
+import Unsafe(unsafePerformIO)
 
 -------------------------------------------------------------------------------
 -- Logging:
@@ -170,6 +171,31 @@ html2latex (c:cs) | c=='<' = tryTrans c cs htmltrans
                ("ol>","\\begin{enumerate}"),("/ol>","\\end{enumerate}"),
                ("li>","\\item{}"),("/li>","")]
          
+-----------------------------------------------------------------------------
+-- Transform a latex string into a latex string where all latex
+-- commands that are not explicitly allowed are quoted, e.g.,
+-- "\input{/etc/passwd}" is translated into
+-- "{\char92}{/etc/passwd}"
+quoteUnknownLatexCmd [] = []
+quoteUnknownLatexCmd (c:cs) | c=='\\'   = tryQuote cs allowedLatexCommands
+                            | otherwise = c : quoteUnknownLatexCmd cs
+ where
+  tryQuote xs [] = logUnknownLatex xs `seq`
+                     "{\\char92}" ++ quoteUnknownLatexCmd xs
+  tryQuote xs (cmd:cmds) =
+    if cmd `isPrefixOf` xs
+    then '\\' : cmd ++ quoteUnknownLatexCmd (drop (length cmd) xs)
+    else tryQuote xs cmds
+
+allowedLatexCommands =
+  ["\\","%","&","\"","ss","begin","end","item",
+   "module","descmain","descrest","importmodule",
+   "ite","url","em"]
+
+-- logging for development:
+logUnknownLatex cmd =
+ unsafePerformIO (appendFile (storageDir++"LATEX.LOG") ('\\':take 20 cmd++"\n"))
+
 -----------------------------------------------------------------------------
 -- Semester/Year management:
 

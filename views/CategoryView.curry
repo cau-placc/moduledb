@@ -126,13 +126,14 @@ listCategoryView
   -> (Category -> Controller) -> (Category -> Controller)
   -> (Category -> Bool -> Controller)
   -> (StudyProgram -> (String,Int) -> (String,Int) -> Bool -> Controller)
+  -> ([ModData] -> Controller)
   -> [HtmlExp]
 listCategoryView admin login mbsprog catmods semperiod users
                  showCategoryController
                  editCategoryController deleteCategoryController
-                 showStudyProgramPlanController =
+                 showStudyProgramPlanController formatModsController =
   [h1 [htxt $ maybe "Alle Kategorien" studyProgramName mbsprog],
-   table (if admin
+   table (if admin && null (concatMap snd catmods)
           then [take 4 categoryLabelList] ++
                map listCategory (mergeSort leqCategory (map fst catmods))
           else concatMap
@@ -152,22 +153,25 @@ listCategoryView admin login mbsprog catmods semperiod users
                             catmods))] ++
    maybe []
          (\sprog ->
-           if not admin && null (concatMap snd catmods) then
+           if null (concatMap snd catmods) then
             [par [style "buttonhref"
                     [href ("?listCategory/"++showStudyProgramKey sprog++"/all")
                       [htxt "Alle Module in diesem Studienprogramm anzeigen"]]]]
-           else if admin then [] else
-                [par $ [bold [htxt "Semesterplanung"], htxt " von ",
-                        selectionInitial fromsem semSelection
-                                         lowerSemesterSelection,
-                        htxt " bis ",
-                        selectionInitial tosem semSelection
-                                         upperSemesterSelection,
-                        htxt ": ",
-                        button "Anzeigen" (showPlan False sprog)] ++
-                       maybe [] (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
+           else
+             [par $ [bold [htxt "Semesterplanung"], htxt " von ",
+                     selectionInitial fromsem semSelection
+                                      lowerSemesterSelection,
+                     htxt " bis ",
+                     selectionInitial tosem semSelection
+                                      upperSemesterSelection,
+                     htxt ": ",
+                     button "Anzeigen" (showPlan False sprog)] ++
+                     maybe [] (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
                                                (showPlan True sprog)])
-                             login])
+                           login] ++
+             (if admin
+             then [par [button "Alle Module formatieren" (nextController (formatModsController ((map (\ (md,_,_)->md) (concatMap snd catmods)))))]]
+             else []))
          mbsprog
   where
    fromsem,tosem free

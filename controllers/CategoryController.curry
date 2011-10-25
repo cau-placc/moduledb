@@ -87,7 +87,8 @@ listCategoryController =
                           (map (\c -> (c,[])) categorys) [] []
                           showCategoryController
                           editCategoryController deleteCategoryController
-                          showStudyProgramPlanController)
+                          showStudyProgramPlanController
+                          formatModulesForm)
         else do
           let spkey = fromJust spk
           studyprog <- runJustT (getStudyProgram spkey)
@@ -103,7 +104,8 @@ listCategoryController =
           return (listCategoryView admin login (Just studyprog)
                      catmods [] [] showCategoryController
                      editCategoryController deleteCategoryController
-                     showStudyProgramPlanController)
+                     showStudyProgramPlanController
+                     formatModulesForm)
 
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
@@ -124,7 +126,8 @@ showStudyProgramPlanController studyprog startsem stopsem withunivis = do
              catmods semPeriod users
              showCategoryController
              editCategoryController deleteCategoryController
-             showStudyProgramPlanController)
+             showStudyProgramPlanController
+             formatModulesForm)
  where
    getModInsts md =
      getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->
