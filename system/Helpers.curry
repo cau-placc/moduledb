@@ -8,7 +8,8 @@ module Helpers(LogEvent(..),logEvent,
                shortModInfoLatexFile,
                ehref,
                showDigit2,showDiv10, formatPresence,
-               string2hrefs, latex2html, html2latex, quoteUnknownLatexCmd,
+               hrefs2markdown,
+               docText2html, docText2latex, quoteUnknownLatexCmd,
                showSemester, nextSemester, prevSemester, leqSemester,
                semesterSelection, lowerSemesterSelection, upperSemesterSelection,
                imageNB, wTerm, wYear, wVisible)
@@ -27,6 +28,7 @@ import WUI
 import Char
 import Authentication
 import ReadShowTerm
+import Markdown
 import Unsafe(unsafePerformIO)
 
 -------------------------------------------------------------------------------
@@ -114,32 +116,31 @@ formatPresence ps =
                _ -> s
 
 -----------------------------------------------------------------------------
--- translate potential URLs in a string into HTML hyperrefs:
-string2hrefs :: String -> String
-string2hrefs s =
+-- translate potential URLs in a string into markdown hyperrefs:
+hrefs2markdown :: String -> String
+hrefs2markdown s =
   let (sps,s1) = break (not . isSpace) s
       (w,s2)   = break isSpace s1
    in if w==""
       then s -- there is no word
-      else sps ++ toHref w ++ string2hrefs s2
+      else sps ++ toHref w ++ hrefs2markdown s2
  where
-  toHref w = if take 7 w == "http://"
-             then "<a href=\""++w++"\" target=\"_blank\">"++w++"</a>"
+  toHref w = if take 7 w == "http://" || take 8 w == "https://"
+             then "<"++w++">"
              else w
 
 -----------------------------------------------------------------------------
+-- translate a document text (containing some standard latex markups
+-- as well as markdown markups) into HTML:
+docText2html :: String -> String
+docText2html = showHtmlExps . markdownText2HTML  . latex2html
+
 -- translate string containing some standard latex markups into HTML:
 latex2html [] = []
 latex2html (c:cs) | c=='\\' = tryTrans c cs slashtrans
                   | c=='"'  = tryTrans c cs apotrans
-                  | c=='\n' = tryLinebreak cs
                   | otherwise = htmlIsoUmlauts [c] ++ latex2html cs
  where
-  tryLinebreak xs = let (ys,zs) = break (=='\n') xs in
-    if null zs || not (all isSpace ys)
-    then '\n' : latex2html xs
-    else "<br/>" ++ latex2html (tail zs)
-
   tryTrans x xs [] = x : latex2html xs
   tryTrans x xs ((lmacro,hmacro) : ms) = let l = length lmacro in
     if take l xs == lmacro then hmacro ++ latex2html (drop l xs)
@@ -150,13 +151,18 @@ latex2html (c:cs) | c=='\\' = tryTrans c cs slashtrans
                 ("item","<li>"),
                 ("\"a","&auml;"),("\"o","&ouml;"),("\"u","&uuml;"),
                 ("\"A","&Auml;"),("\"O","&Ouml;"),("\"U","&Uuml;"),
-                ("ss{}","&szlig;"),("-",""),("\\","<br/>"),(" "," "),
+                ("ss{}","&szlig;"),("-",""),("\\","\n\n"),(" "," "),
                 ("%","%")]
 
   apotrans = [("a","&auml;"),("o","&ouml;"),("u","&uuml;"),("s","&szlig;"),
               ("A","&Auml;"),("O","&Ouml;"),("U","&Uuml;"),
               ("\'","\""),("`","\"")]
          
+-- translate a document text (containing some standard latex markups
+-- as well as markdown markups) into LaTeX:
+docText2latex :: String -> String
+docText2latex = html2latex . markdownText2LaTeX . latex2html
+
 -- translate some standard HTML markups in a string into latex equivalents:
 html2latex [] = []
 html2latex (c:cs) | c=='<' = tryTrans c cs htmltrans
@@ -190,7 +196,8 @@ quoteUnknownLatexCmd (c:cs) | c=='\\'   = tryQuote cs allowedLatexCommands
 allowedLatexCommands =
   ["\\","%","&","\"","ss","begin","end","item",
    "module","descmain","descrest","importmodule",
-   "ite","url","em"]
+   "ite","url","em","texttt","textbf","par","bf","href",
+   "leftarrow","rightarrow"]
 
 -- logging for development:
 logUnknownLatex cmd =

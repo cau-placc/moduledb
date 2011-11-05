@@ -122,7 +122,7 @@ listMasterCoreAreaView admin masterCoreAreas showMasterCoreAreaController
   else concatMap (\mca -> [h2 [htxt (masterCoreAreaName mca ++ " (" ++
                                      masterCoreAreaShortName mca ++ ")")],
                            par [HtmlText
-                                (latex2html (masterCoreAreaDescription mca))]])
+                                (docText2html (masterCoreAreaDescription mca))]])
                  (mergeSort leqMasterCoreArea masterCoreAreas)
   where listMasterCoreArea :: MasterCoreArea -> [[HtmlExp]]
         listMasterCoreArea masterCoreArea =

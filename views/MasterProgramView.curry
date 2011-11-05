@@ -258,11 +258,11 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
                     (deleteMasterProgramController mprog))]
           else [])] ++
   [h3 [htxt "Beschreibung:"],
-   par [HtmlText (latex2html (masterProgramDesc mprog))],
+   par [HtmlText (docText2html (masterProgramDesc mprog))],
    h3 [htxt "Voraussetzungen:"],
-   par [HtmlText (latex2html (masterProgramPrereq mprog))],
+   par [HtmlText (docText2html (masterProgramPrereq mprog))],
    h3 [htxt "Kommentare:"],
-   par [HtmlText (latex2html (masterProgramComments mprog))],
+   par [HtmlText (docText2html (masterProgramComments mprog))],
    h2 [htxt "Masterprogrammübersicht"],
    par $ if admin || editallowed
          then [button "Modulempfehlungen ändern"
@@ -277,7 +277,7 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
                   else [ulist (map (\m -> formatMods m) mods)])
             masterStudienbereiche ++
   concatMap (\ (title,cnt) -> [h4 [htxt $ title++":"],
-                               par [HtmlText (latex2html cnt)]])
+                               par [HtmlText (docText2html cnt)]])
             (zip descTitles
                  (map (\sel -> sel mpinfo)
                    [masterProgInfoPraktikum,

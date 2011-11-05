@@ -379,8 +379,8 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
      concatMap (\ (title,cnt) ->
                   [h3 [htxt $ title++":"],
                    par [HtmlText (if title=="Verweise"
-                                  then string2hrefs (latex2html cnt)
-                                  else latex2html cnt)]])
+                                  then docText2html (hrefs2markdown cnt)
+                                  else docText2html cnt)]])
                (zip descTitles
                  (map (\sel -> sel moddesc)
                       [modDescrShortDesc,modDescrObjectives,modDescrContents,

@@ -53,8 +53,10 @@ die wichtigsten <i>Hauptdaten</i> und die genauere
 
 <p>
 Da der Modulkatalog mit LaTeX formatiert wird,
-können alle Textfelder die üblichen LaTeX-Kommandos (article style)
-enthalten.
+können alle Textfelder übliche LaTeX-Kommandos (article style)
+enthalten. Einfacher ist es allerdings, die
+unterstützte <a href="#markdown">Markdown-Syntax</a>
+in den Textfeldern zu verwenden.
 </p>
 
 <h3>Hauptdaten eines Moduls</a>
@@ -193,6 +195,69 @@ Modul gibt, sollten die URLs hier angegeben werden.
 <h4>Kommentar</h4>
 <p>
 Alle Dinge, die in keine der obigen Punkte passen.
+</p>
+
+<a name="markdown" />
+<h2>Markdown-Syntax</h2>
+
+<p>
+In vielen Textfelder wird auch die
+<a href="http://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html">Markdown-Syntax</a>
+unterstützt, die bestimmte Standardformatierungen sehr einfach
+ermöglicht. Z.B. kann man Listen sehr einfach in folgenden Formaten
+eingeben:
+</p>
+<pre>
+- Ein Element einer Liste ohne Nummern.
+- Ein weiteres Element der Liste
+
+1. Ein Element einer Liste
+   mit Nummern.
+2. Ein weiteres Element
+   dieser Liste.
+</pre>
+Diese werden dann wie folgt formatiert:
+<ul>
+<li>
+Ein Element einer Liste ohne Nummern.
+</li>
+<li>
+Ein weiteres Element der Liste
+</li>
+</ul>
+<ol>
+<li>
+Ein Element einer Liste
+mit Nummern.
+</li>
+<li>
+Ein weiteres Element
+dieser Liste.
+</li>
+</ol>
+<p>
+Weiterhin kann man Verweise auf Web-Seiten in spitze
+Klammern einfassen (oder in runde Klammern falls ein Text für diese
+Referenz in eckigen Klammern davor gesetzt wird)
+und Hervorhebungen im Text
+durch Unterstriche (Kursiv-Druck) oder zwei Sterne
+(Fett-Druck) einfassen. Z.B. wird der Eingabetext
+</p>
+<pre>
+Die ist eine _Referenz_: &lt;http://www.google.com&gt;
+Oder eine **Referenz mit Text**: [Google](http://www.google.com)
+</pre>
+<p>
+wie folgt formatiert:
+</p>
+<blockquote>
+Die ist eine <em>Referenz</em>: <a href="http://www.google.com"><code>http://www.google.com</code></a>
+Oder eine <strong>Referenz mit Text</strong>: <a href="http://www.google.com">Google</a>
+</blockquote>
+<p>
+Weitere Details zur Markdown-Syntax kann man
+<a href="http://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html">hier</a>
+finden.
 </p>
 
 <hr/>

@@ -30,6 +30,7 @@ import MDBEntitiesToHtml
 import ModInstView
 import FileGoodies(baseName)
 import Mail
+import Directory
 
 --- Shows a form to create a new ModData entity.
 newModDataController :: Controller
@@ -377,7 +378,9 @@ latexFormatForm :: String -> String -> IO [HtmlExp]
 latexFormatForm tmp title = do
   system ("pdflatex \'\\nonstopmode\\input{"++tmp++".tex}\' 2>&1 > "++
                                                         tmp++".output")
-  system ("chmod 644 "++tmp++".pdf")
+  pdfexist <- doesFileExist (tmp++".pdf")
+  if pdfexist then system ("chmod 644 "++tmp++".pdf")
+              else return 0
   output <- readFile (tmp++".output")
   --system ("/bin/rm -f "++tmp++".tex "++tmp++".aux "++tmp++".log")
   system ("/bin/rm -f "++tmp++".aux "++tmp++".log")
@@ -425,16 +428,16 @@ mod2latex md responsibleUser sprogs categorys (Just desc) =
     (showStudyProgCategories sprogs categorys)++
     "}\n\\descmain{"++
     modDescrLanguage desc++"}{"++
-    html2latex (modDescrShortDesc desc)++"}{"++
-    html2latex (modDescrObjectives desc)++"}{"++
-    html2latex (modDescrContents desc)++"}{"++
-    html2latex (modDescrPrereq desc)++"}{"++
-    html2latex (modDescrExam desc)++"}{"++
-    html2latex (modDescrMethods desc)++"}{"++
-    html2latex (modDescrUse desc)++"}\n\\descrest{"++
-    html2latex (modDescrLiterature desc)++"}{"++
-    html2latex (modDescrLinks desc)++"}{"++
-    html2latex (modDescrComments desc)++"}\n\n"
+    docText2latex (modDescrShortDesc desc)++"}{"++
+    docText2latex (modDescrObjectives desc)++"}{"++
+    docText2latex (modDescrContents desc)++"}{"++
+    docText2latex (modDescrPrereq desc)++"}{"++
+    docText2latex (modDescrExam desc)++"}{"++
+    docText2latex (modDescrMethods desc)++"}{"++
+    docText2latex (modDescrUse desc)++"}\n\\descrest{"++
+    docText2latex (modDescrLiterature desc)++"}{"++
+    docText2latex (modDescrLinks desc)++"}{"++
+    docText2latex (modDescrComments desc)++"}\n\n"
  where
    showLen l | l==1 = "ein"
              | l==2 = "zwei"
@@ -487,7 +490,7 @@ mod2xml md responsibleUser users sprogs categorys modinsts (Just desc) =
      xml "ectspunkte" [xtxt (showDiv10 (modDataECTS md))],
      xml "workload"   [xtxt (modDataWorkload md)],
      xml "lehrsprache" [xtxt $ modDescrLanguage desc]] ++
-    map (\ (tag,sel) -> xml tag [xtxt (latex2html (sel desc))])
+    map (\ (tag,sel) -> xml tag [xtxt (docText2html (sel desc))])
         (zip descTitles
              [modDescrShortDesc,modDescrObjectives,modDescrContents,
               modDescrPrereq,modDescrExam,modDescrMethods,modDescrUse,

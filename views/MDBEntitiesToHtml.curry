@@ -124,7 +124,7 @@ masterCoreAreaLabelList :: [[HtmlExp]]
 masterCoreAreaLabelList =
   [[textstyle "label label_for_type_string" "Name"]
   ,[textstyle "label label_for_type_string" "ShortName"]
-  ,[textstyle "label label_for_type_string" "Description"]
+  ,[textstyle "label label_for_type_string" "Description", markdownRef]
   ,[textstyle "label label_for_type_string" "AreaKey"]
   ,[textstyle "label label_for_type_int" "Position"]]
 
@@ -293,17 +293,21 @@ modDescrToDetailsView modDescr relatedModData =
 modDescrLabelList :: [[HtmlExp]]
 modDescrLabelList =
   [[textstyle "label label_for_type_string" "Lehrsprache"]
-  ,[textstyle "label label_for_type_string" "Kurzbeschreibung"]
-  ,[textstyle "label label_for_type_string" "Lernziele"]
-  ,[textstyle "label label_for_type_string" "Inhalt"]
-  ,[textstyle "label label_for_type_string" "Voraussetzungen"]
-  ,[textstyle "label label_for_type_string" "Prüfungsleistung"]
-  ,[textstyle "label label_for_type_string" "Lehr- und Lernmethoden"]
-  ,[textstyle "label label_for_type_string" "Verwendbarkeit"]
-  ,[textstyle "label label_for_type_string" "Literatur"]
-  ,[textstyle "label label_for_type_string" "Verweise"]
-  ,[textstyle "label label_for_type_string" "Kommentar"]
+  ,[textstyle "label label_for_type_string" "Kurzbeschreibung", markdownRef]
+  ,[textstyle "label label_for_type_string" "Lernziele", markdownRef]
+  ,[textstyle "label label_for_type_string" "Inhalt", markdownRef]
+  ,[textstyle "label label_for_type_string" "Voraussetzungen", markdownRef]
+  ,[textstyle "label label_for_type_string" "Prüfungsleistung", markdownRef]
+  ,[textstyle "label label_for_type_string" "Lehr- und Lernmethoden",
+    markdownRef]
+  ,[textstyle "label label_for_type_string" "Verwendbarkeit", markdownRef]
+  ,[textstyle "label label_for_type_string" "Literatur", markdownRef]
+  ,[textstyle "label label_for_type_string" "Verweise", markdownRef]
+  ,[textstyle "label label_for_type_string" "Kommentar", markdownRef]
   ,[textstyle "label label_for_type_relation" "Modul"]]
+
+-- Reference to markdown syntax description:
+markdownRef = ehref "edit_infos#markdown" [htxt "(mit Markdown-Syntax)"]
 
 --- The list view of a ModInst entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -377,9 +381,9 @@ masterProgramLabelList =
   [[textstyle "label label_for_type_string" "Titel"]
   ,[textstyle "label label_for_type_string" "Beginn im Semester"]
   ,[textstyle "label label_for_type_int" "Beginn im Jahr"]
-  ,[textstyle "label label_for_type_string" "Beschreibung"]
-  ,[textstyle "label label_for_type_string" "Voraussetzungen"]
-  ,[textstyle "label label_for_type_string" "Kommentar"]
+  ,[textstyle "label label_for_type_string" "Beschreibung", markdownRef]
+  ,[textstyle "label label_for_type_string" "Voraussetzungen", markdownRef]
+  ,[textstyle "label label_for_type_string" "Kommentar", markdownRef]
   ,[textstyle "label label_for_type_bool" "Sichtbarkeit"]
   ,[textstyle "label label_for_type_relation" "Masterbereich"]
   ,[textstyle "label label_for_type_relation" "Research Advisor"]]
