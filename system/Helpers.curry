@@ -161,16 +161,47 @@ latex2html (c:cs) | c=='\\' = tryTrans c cs slashtrans
 -- translate a document text (containing some standard latex markups
 -- as well as markdown markups) into LaTeX:
 docText2latex :: String -> String
-docText2latex = html2latex . markdownText2LaTeX . latex2html
+docText2latex =
+  htmlLists2latexLists . markdownText2LaTeXWithFormat html2latex . latex2html
 
--- translate some standard HTML markups in a string into latex equivalents:
-html2latex [] = []
-html2latex (c:cs) | c=='<' = tryTrans c cs htmltrans
-                  | otherwise = c : html2latex cs
+html2latex =
+  escapeLaTeXSpecials . htmlSpecialChars2tex . translateMDSpecials2LaTeX
  where
-  tryTrans x xs [] = x : html2latex xs
+  escapeLaTeXSpecials s = case s of
+    [] -> []
+    ('#':cs) -> "\\#" ++ escapeLaTeXSpecials cs
+    ('%':cs) -> "\\%" ++ escapeLaTeXSpecials cs
+    ('&':cs) -> "\\&" ++ escapeLaTeXSpecials cs
+    ('\\':'#':cs) -> "\\#" ++ escapeLaTeXSpecials cs
+    ('\\':'%':cs) -> "\\%" ++ escapeLaTeXSpecials cs
+    ('\\':'&':cs) -> "\\&" ++ escapeLaTeXSpecials cs
+    ('\\':'\\':cs) -> "\\\\" ++ escapeLaTeXSpecials cs
+    ('\\':cs) -> "\\" ++ escapeLaTeXSpecials cs
+    (c:cs) -> c : escapeLaTeXSpecials cs
+
+  -- by removing the backslash
+  translateMDSpecials2LaTeX :: String -> String
+  translateMDSpecials2LaTeX s = case s of
+    []          -> []
+    ('\\':'\\':cs) -> '\\' : '\\' : translateMDSpecials2LaTeX cs
+                      --"{\\tt\\char92}" ++ translateMDSpecials2LaTeX cs
+    ('\\':'_':cs) -> '\\' : '_' : translateMDSpecials2LaTeX cs
+    ('\\':c:cs) -> if c `elem` mdEscapeChars
+                   then c : translateMDSpecials2LaTeX cs
+                   else '\\' : translateMDSpecials2LaTeX (c:cs)
+    (c:cs)      -> c : translateMDSpecials2LaTeX cs
+
+  mdEscapeChars =
+    ['\\','`','*','_','{','}','[',']','(',')','#','+','-','.',' ','!']
+
+-- translate HTML markups for lists in a string into latex equivalents:
+htmlLists2latexLists [] = []
+htmlLists2latexLists (c:cs) | c=='<' = tryTrans c cs htmltrans
+                  | otherwise = c : htmlLists2latexLists cs
+ where
+  tryTrans x xs [] = x : htmlLists2latexLists xs
   tryTrans x xs ((hmacro,lmacro) : ms) = let l = length hmacro in
-    if take l xs == hmacro then lmacro ++ html2latex (drop l xs)
+    if take l xs == hmacro then lmacro ++ htmlLists2latexLists (drop l xs)
                            else tryTrans x xs ms
 
   htmltrans = [("ul>","\\begin{itemize}"),("/ul>","\\end{itemize}"),
