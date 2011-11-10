@@ -125,13 +125,14 @@ listCategoryView
   -> [(String,Int)] -> [User]
   -> (Category -> Controller) -> (Category -> Controller)
   -> (Category -> Bool -> Controller)
-  -> (StudyProgram -> (String,Int) -> (String,Int) -> Bool -> Controller)
+  -> (Maybe StudyProgram -> [(Category,[ModData])]
+        -> (String,Int) -> (String,Int) -> Bool -> Controller)
   -> ([ModData] -> Controller)
   -> [HtmlExp]
 listCategoryView admin login mbsprog catmods semperiod users
                  showCategoryController
                  editCategoryController deleteCategoryController
-                 showStudyProgramPlanController formatModsController =
+                 showCategoryPlanController formatModsController =
   [h1 [htxt $ maybe "Alle Kategorien" studyProgramName mbsprog],
    table (if admin && null (concatMap snd catmods)
           then [take 4 categoryLabelList] ++
@@ -165,12 +166,16 @@ listCategoryView admin login mbsprog catmods semperiod users
                      selectionInitial tosem semSelection
                                       upperSemesterSelection,
                      htxt ": ",
-                     button "Anzeigen" (showPlan False sprog)] ++
+                     button "Anzeigen" (showPlan False (Just sprog))] ++
                      maybe [] (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
-                                               (showPlan True sprog)])
+                                               (showPlan True (Just sprog))])
                            login] ++
              (if admin
-             then [par [button "Alle Module formatieren" (nextController (formatModsController ((map (\ (md,_,_)->md) (concatMap snd catmods)))))]]
+             then [par [button "Alle Module formatieren"
+                               (nextController
+                                  (formatModsController
+                                     ((map (\ (md,_,_)->md)
+                                           (concatMap snd catmods)))))]]
              else []))
          mbsprog
   where
@@ -200,7 +205,8 @@ listCategoryView admin login mbsprog catmods semperiod users
    showPlan withunivis sprog env = do
     let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
         stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
-    showStudyProgramPlanController sprog
+    showCategoryPlanController sprog
+     (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
      (semesterSelection!!start) (semesterSelection!!stop) withunivis >>= getForm
 
    catStyle c = if null (concatMap snd catmods)

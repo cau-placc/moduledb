@@ -49,7 +49,7 @@ studyProgramLabelList =
 --- This view is used in a row of a table of all entities.
 categoryToListView :: Category -> [[HtmlExp]]
 categoryToListView category =
-  [[href ("?listModData/"++showCategoryKey category)
+  [[href ("?listCategory/"++showCategoryKey category)
          [stringToHtml (categoryName category)]]
   ,[stringToHtml (categoryShortName category)]
   ,[stringToHtml (categoryCatKey category)]
@@ -58,7 +58,7 @@ categoryToListView category =
 --- The HTML view of a Category entity.
 categoryToHtmlView :: Category -> HtmlExp
 categoryToHtmlView category =
-  ehref ("?listModData/"++showCategoryKey category)
+  ehref ("?listCategory/"++showCategoryKey category)
         [htxt (categoryCatKey category)]
 
 --- The short view of a Category entity as a string.
@@ -484,7 +484,7 @@ showStudyProgCategoriesAsHtml :: [StudyProgram] -> [Category] -> HtmlExp
 showStudyProgCategoriesAsHtml sprogs cats =
   inline
     (intersperse (stringToHtml ", ")
-       (map (\c -> ehref ("?listModData/"++showCategoryKey c)
+       (map (\c -> ehref ("?listCategory/"++showCategoryKey c)
                          [stringToHtml (showStudyProgCategory sprogs c)])
             cats))
 

@@ -190,23 +190,7 @@ listModDataController =
                   return (listModDataView admin "Eigene Module"
                            mods showModDataController
                            editModDataController deleteModDataController)
-      else if head (head args) == 'C'
-           then maybe (displayError "Illegal URL")
-            (\catkey -> do
-              cat <- runJustT $ getCategory catkey
-              sprogs <- runQ queryAllStudyPrograms
-              let spk = categoryStudyProgramProgramCategoriesKey cat
-                  spname = maybe "?" studyProgramName
-                                 (find (\p -> studyProgramKey p == spk) sprogs)
-              modDatas <- runJustT $ getModDataOfCategory catkey
-              return (listModDataView admin
-                        (categoryName cat++" ("++spname++")")
-                        (maybe (filter modDataVisible modDatas) (const modDatas)
-                                login)
-                        showModDataController
-                        editModDataController deleteModDataController))
-            (readCategoryKey (head args))
-           else maybe (displayError "Illegal URL")
+      else maybe (displayError "Illegal URL")
             (\mdkey -> do
               modData <- runJustT $ getModData mdkey
               responsibleUser <- runJustT (getResponsibleUser modData)

@@ -1,6 +1,6 @@
 module CategoryController (
  newCategoryController, editCategoryController, deleteCategoryController,
- listCategoryController, showStudyProgramPlanController
+ listCategoryController
  ) where
 
 import Spicey
@@ -80,53 +80,78 @@ listCategoryController =
     do admin <- isAdmin
        login <- getSessionLogin
        args  <- getControllerParams
-       let spk = readStudyProgramKey (head args)
-       if null args || spk==Nothing
+       if null args
         then do categorys <- runQ queryAllCategorys
                 return (listCategoryView admin login Nothing
                           (map (\c -> (c,[])) categorys) [] []
                           showCategoryController
                           editCategoryController deleteCategoryController
-                          showStudyProgramPlanController
+                          showCategoryPlanController
                           formatModulesForm)
-        else do
-          let spkey = fromJust spk
-          studyprog <- runJustT (getStudyProgram spkey)
-          categorys <- runQ $ queryCategorysOfStudyProgram spkey
-          catmods <- runJustT $
-           if length args > 1 && args!!1 == "all"
-           then mapT (\c -> getModDataOfCategory (categoryKey c) |>>= \mods ->
+        else
+         if head (head args) == 'C'
+         then
+           maybe (displayError "Illegal URL")
+            (\catkey -> do
+              cat <- runJustT $ getCategory catkey
+              sprogs <- runQ queryAllStudyPrograms
+              let spk = categoryStudyProgramProgramCategoriesKey cat
+                  mbsprog = find (\p -> studyProgramKey p == spk) sprogs
+              mods <- runJustT $ getModDataOfCategory catkey
+              return (listCategoryView admin login mbsprog
+                        [(cat,map (\m->(m,[],[]))
+                                  (maybe (filter modDataVisible mods)
+                                         (const mods)
+                                         login))]
+                        [] [] showCategoryController
+                        editCategoryController deleteCategoryController
+                        showCategoryPlanController
+                        formatModulesForm))
+            (readCategoryKey (head args))
+
+         else
+          maybe (displayError "Illegal URL")
+            (\spkey -> do
+              studyprog <- runJustT (getStudyProgram spkey)
+              categorys <- runQ $ queryCategorysOfStudyProgram spkey
+              catmods <- runJustT $
+               if length args > 1 && args!!1 == "all"
+               then mapT (\c ->
+                            getModDataOfCategory (categoryKey c) |>>= \mods ->
                             returnT (c,map (\m->(m,[],[]))
                                            (maybe (filter modDataVisible mods)
-                                                  (const mods) login)))
-                     categorys
-           else mapT (\c -> returnT (c,[])) categorys
-          return (listCategoryView admin login (Just studyprog)
-                     catmods [] [] showCategoryController
-                     editCategoryController deleteCategoryController
-                     showStudyProgramPlanController
-                     formatModulesForm)
-
+                                                  (const mods)
+                                                  login)))
+                         categorys
+               else mapT (\c -> returnT (c,[])) categorys
+              return (listCategoryView admin login (Just studyprog)
+                         catmods [] [] showCategoryController
+                         editCategoryController deleteCategoryController
+                         showCategoryPlanController
+                         formatModulesForm))
+            (readStudyProgramKey (head args))
+    
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
-showStudyProgramPlanController :: StudyProgram -> (String,Int) -> (String,Int)
-                               -> Bool -> Controller
-showStudyProgramPlanController studyprog startsem stopsem withunivis = do
+showCategoryPlanController :: Maybe StudyProgram -> [(Category,[ModData])]
+                          -> (String,Int) -> (String,Int) -> Bool -> Controller
+showCategoryPlanController mbstudyprog catmods startsem stopsem withunivis = do
   admin <- isAdmin
   login <- getSessionLogin
   users <- runQ queryAllUsers
-  categorys <- runQ $ queryCategorysOfStudyProgram (studyProgramKey studyprog)
-  catmods <- runJustT $
-               mapT (\c -> getModDataOfCategory (categoryKey c) |>>= \mods ->
-                           mapT getModInsts (maybe (filter modDataVisible mods)
-                                              (const mods) login) |>>= \mmis ->
+  catmodinsts <- runJustT $
+               mapT (\ (c,mods) ->
+                           mapT getModInsts
+                                (maybe (filter modDataVisible mods)
+                                       (const mods)
+                                       login              ) |>>= \mmis ->
                            returnT (c,mmis))
-                    categorys
-  return (listCategoryView admin login (Just studyprog)
-             catmods semPeriod users
+                    catmods
+  return (listCategoryView admin login mbstudyprog
+             catmodinsts semPeriod users
              showCategoryController
              editCategoryController deleteCategoryController
-             showStudyProgramPlanController
+             showCategoryPlanController
              formatModulesForm)
  where
    getModInsts md =
@@ -138,7 +163,6 @@ showStudyProgramPlanController studyprog startsem stopsem withunivis = do
 
    instOfSem mis sem =
      find (\mi -> (modInstTerm mi,modInstYear mi) == sem) mis
-
 
    semPeriod = takeWhile (\s -> leqSemester s stopsem)
                          (iterate nextSemester startsem)
