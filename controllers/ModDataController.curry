@@ -181,16 +181,7 @@ listModDataController =
                         showModDataController
                         editModDataController deleteModDataController)
      else
-      if take 5 (head args) == "user="
-      then do let lname = drop 5 (head args)
-              -- get user entries with a given login name
-              users <- runQ $ queryCondUser (\u -> userLogin u == lname)
-              if null users then return [h1 [htxt "Illegal URL"]] else
-               do mods <- runQ $ queryModDataOfUser (userKey (head users))
-                  return (listModDataView admin "Eigene Module"
-                           mods showModDataController
-                           editModDataController deleteModDataController)
-      else maybe (displayError "Illegal URL")
+      maybe (displayError "Illegal URL")
             (\mdkey -> do
               modData <- runJustT $ getModData mdkey
               responsibleUser <- runJustT (getResponsibleUser modData)

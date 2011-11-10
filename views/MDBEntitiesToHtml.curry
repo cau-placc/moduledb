@@ -13,7 +13,7 @@ import List
 studyProgramToListView :: StudyProgram -> [[HtmlExp]]
 studyProgramToListView studyProgram =
   [[href ("?listCategory/"++showStudyProgramKey studyProgram)
-         [stringToHtml (studyProgramName studyProgram)]]
+         [textstyle "studyprogram" (studyProgramName studyProgram)]]
   ,[stringToHtml (studyProgramShortName studyProgram)]
   ,[stringToHtml (studyProgramProgKey studyProgram)]
   ,[stringToHtml (studyProgramURLKey studyProgram)]

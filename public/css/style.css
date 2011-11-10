@@ -261,6 +261,9 @@ div.header {
   vertical-align: middle;  
 }
 
+.studyprogram {
+  font-size: 12pt;
+}
 .category {
   background-color: #DDDDDD;
   font-weight: bold;

@@ -9,6 +9,7 @@ import HTML
 import Time
 import MDB
 import CategoryView
+import ModDataView
 import Maybe
 import Authorization
 import AuthorizedControllers
@@ -80,37 +81,50 @@ listCategoryController =
     do admin <- isAdmin
        login <- getSessionLogin
        args  <- getControllerParams
-       if null args
-        then do categorys <- runQ queryAllCategorys
-                return (listCategoryView admin login Nothing
-                          (map (\c -> (c,[])) categorys) [] []
+       runListCategoyController admin login args
+
+runListCategoyController admin login args
+ | null args
+  = do categorys <- runQ queryAllCategorys
+       return (listCategoryView admin login (Right "Alle Kategorien")
+                          (map (\c -> (Just c,[])) categorys) [] []
                           showCategoryController
                           editCategoryController deleteCategoryController
                           showCategoryPlanController
                           formatModulesForm)
-        else
-         if head (head args) == 'C'
-         then
-           maybe (displayError "Illegal URL")
+ | take 5 (head args) == "user="
+  = do let lname = drop 5 (head args)
+       -- get user entries with a given login name
+       users <- runQ $ queryCondUser (\u -> userLogin u == lname)
+       if null users then return [h1 [htxt "Illegal URL"]] else
+        do mods <- runQ $ queryModDataOfUser (userKey (head users))
+           return (listCategoryView admin login (Right "Eigene Module")
+                        [(Nothing,map (\m->(m,[],[])) mods)]
+                        [] [] showCategoryController
+                        editCategoryController deleteCategoryController
+                        showCategoryPlanController
+                        formatModulesForm)
+ | head (head args) == 'C'
+  = maybe (displayError "Illegal URL")
             (\catkey -> do
               cat <- runJustT $ getCategory catkey
               sprogs <- runQ queryAllStudyPrograms
               let spk = categoryStudyProgramProgramCategoriesKey cat
                   mbsprog = find (\p -> studyProgramKey p == spk) sprogs
               mods <- runJustT $ getModDataOfCategory catkey
-              return (listCategoryView admin login mbsprog
-                        [(cat,map (\m->(m,[],[]))
-                                  (maybe (filter modDataVisible mods)
-                                         (const mods)
-                                         login))]
+              return (listCategoryView admin login
+                        (maybe (Right "???") Left mbsprog)
+                        [(Just cat,map (\m->(m,[],[]))
+                                       (maybe (filter modDataVisible mods)
+                                              (const mods)
+                                              login))]
                         [] [] showCategoryController
                         editCategoryController deleteCategoryController
                         showCategoryPlanController
                         formatModulesForm))
             (readCategoryKey (head args))
-
-         else
-          maybe (displayError "Illegal URL")
+ | otherwise
+  = maybe (displayError "Illegal URL")
             (\spkey -> do
               studyprog <- runJustT (getStudyProgram spkey)
               categorys <- runQ $ queryCategorysOfStudyProgram spkey
@@ -118,13 +132,13 @@ listCategoryController =
                if length args > 1 && args!!1 == "all"
                then mapT (\c ->
                             getModDataOfCategory (categoryKey c) |>>= \mods ->
-                            returnT (c,map (\m->(m,[],[]))
-                                           (maybe (filter modDataVisible mods)
-                                                  (const mods)
-                                                  login)))
+                            returnT (Just c,map (\m->(m,[],[]))
+                                             (maybe (filter modDataVisible mods)
+                                                    (const mods)
+                                                    login)))
                          categorys
-               else mapT (\c -> returnT (c,[])) categorys
-              return (listCategoryView admin login (Just studyprog)
+               else mapT (\c -> returnT (Just c,[])) categorys
+              return (listCategoryView admin login (Left studyprog)
                          catmods [] [] showCategoryController
                          editCategoryController deleteCategoryController
                          showCategoryPlanController
@@ -133,20 +147,21 @@ listCategoryController =
     
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
-showCategoryPlanController :: Maybe StudyProgram -> [(Category,[ModData])]
-                          -> (String,Int) -> (String,Int) -> Bool -> Controller
+showCategoryPlanController
+  :: Either StudyProgram String -> [(Maybe Category,[ModData])]
+  -> (String,Int) -> (String,Int) -> Bool -> Controller
 showCategoryPlanController mbstudyprog catmods startsem stopsem withunivis = do
   admin <- isAdmin
   login <- getSessionLogin
   users <- runQ queryAllUsers
   catmodinsts <- runJustT $
-               mapT (\ (c,mods) ->
-                           mapT getModInsts
-                                (maybe (filter modDataVisible mods)
-                                       (const mods)
-                                       login              ) |>>= \mmis ->
-                           returnT (c,mmis))
-                    catmods
+                   mapT (\ (c,mods) ->
+                               mapT getModInsts
+                                    (maybe (filter modDataVisible mods)
+                                           (const mods)
+                                           login              ) |>>= \mmis ->
+                               returnT (c,mmis))
+                        catmods
   return (listCategoryView admin login mbstudyprog
              catmodinsts semPeriod users
              showCategoryController

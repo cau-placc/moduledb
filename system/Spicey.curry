@@ -179,7 +179,7 @@ getUserMenu = do
        [href "?listMasterProgram" [htxt "Masterprogramme"]],
        [href "?search" [htxt "Modulsuche"]]] ++
       (maybe []
-         (\lname -> [[href ("?listModData/"++"user="++lname)
+         (\lname -> [[href ("?listCategory/"++"user="++lname)
                            [htxt "Eigene Module"]],
                      [href "?newMasterProgram" [htxt "Neues Masterprogram"]]])
          login) ++
