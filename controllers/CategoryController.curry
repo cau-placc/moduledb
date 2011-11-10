@@ -1,6 +1,6 @@
 module CategoryController (
  newCategoryController, editCategoryController, deleteCategoryController,
- listCategoryController
+ listCategoryController, showCategoryController, showCategoryPlanController
  ) where
 
 import Spicey

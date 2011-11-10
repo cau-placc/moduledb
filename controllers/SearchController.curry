@@ -13,6 +13,8 @@ import Char
 import List
 import Maybe
 import ModDataController
+import CategoryController
+import CategoryView
 import SearchView
 import ModDataView
 import Helpers
@@ -20,8 +22,8 @@ import Helpers
 -----------------------------------------------------------------------------
 --- Controller for the main page.
 searchController :: Controller
-searchController = return (searchPageView searchModules showPlanController
-                                          showExamController)
+searchController = return (searchPageView searchModules showExamController
+                                          showAllModulesController)
 
 --- Controller for searching modules
 searchModules :: String -> Controller
@@ -30,10 +32,13 @@ searchModules pat = do
     login <- getSessionLogin
     modcodes <- runQ $ transformQ (filter isMatching) queryModDataCodeName
     mods <- runJustT $ mapT (\ (k,_,_) -> getModData k) modcodes
-    return (listModDataView admin "Gefundene Module:"
-                (maybe (filter modDataVisible mods) (const mods) login)
-                showModDataController editModDataController
-                deleteModDataController)
+    let vismods = maybe (filter modDataVisible mods) (const mods) login
+    return (listCategoryView admin login (Right "Gefundene Module")
+                        [(Nothing,map (\m->(m,[],[])) vismods)]
+                        [] [] showCategoryController
+                        editCategoryController deleteCategoryController
+                        showCategoryPlanController
+                        formatModulesForm)
  where
    isMatching (_,code,name) = match pat (map toLower code) ||
                               match pat (map toLower name)
@@ -51,28 +56,21 @@ match pattern string = loop pattern string pattern string
     next op (_:ss) = loop op ss op ss
 
 
---- Controller to list all modules together with their instances
---- in the given period.
-showPlanController :: (String,Int) -> (String,Int) -> Controller
-showPlanController startsem stopsem = do
-  users <- runQ queryAllUsers
+--- Controller to list all (visible) modules.
+showAllModulesController :: Controller
+showAllModulesController = do
+  admin <- isAdmin
+  login <- getSessionLogin
   mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
   let (pmods,wmods) = partition isMandatoryModule mods
-  catmods <- runJustT $ mapT (\ (c,mds) -> mapT getModInsts mds |>>= \mmis ->
-                                            returnT (c,mmis))
-                           [("Pflichtmodule (Informatik und Nebenfach)",pmods),
-                            ("Weitere Module",wmods)]
-  return (showModulePlanView catmods (map showSemester semPeriod) users)
- where
-   getModInsts md =
-     getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->
-     returnT (md,map (instOfSem mis) semPeriod)
-
-   instOfSem mis sem =
-     find (\mi -> (modInstTerm mi,modInstYear mi) == sem) mis
-
-   semPeriod = takeWhile (\s -> leqSemester s stopsem)
-                         (iterate nextSemester startsem)
+  return (listCategoryView admin login
+                        (Right "Pflichtmodule und sonstige Module")
+                        [(Nothing,map (\m->(m,[],[])) pmods),
+                         (Nothing,map (\m->(m,[],[])) wmods)]
+                        [] [] showCategoryController
+                        editCategoryController deleteCategoryController
+                        showCategoryPlanController
+                        formatModulesForm)
 
 isMandatoryModule :: ModData -> Bool
 isMandatoryModule md = modDataCode md `elem` mandatoryModulCodes

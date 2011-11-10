@@ -128,14 +128,44 @@ listUnivisInfoView univisInfos showUnivisInfoController
 ------------------------------------------------------------------------
 -- Show a web page with the UnivIS links of a module in a given semester.
 
-showUnivisLinks :: String -> (String,Int) -> Maybe User -> [String] -> [HtmlExp]
-showUnivisLinks mcode sem lecturer urls =
-  [h1 [htxt $ "Modul "++mcode++" im "++showSemester sem]] ++
+showUnivisLinks :: ModData -> (String,Int) -> Maybe User -> [String]
+                -> Bool ->  (String -> Controller)
+                -> [HtmlExp]
+showUnivisLinks md sem lecturer urls admin emailcontroller =
+  [h1 [htxt $ "Modul "++modDataCode md++" im "++showSemester sem]] ++
   maybe [] (\u -> [par [htxt "Dozent: ", userToHtmlView u]]) lecturer ++
   if null urls
-   then [par [htxt "Keine Einträge im UnivIS gefunden."]]
+   then [par [htxt "Keine Einträge im UnivIS gefunden."]] ++
+        if admin
+        then [par [button mailButtonTitle
+                     (nextController (emailcontroller missingMDBMessage))]]
+        else []
    else [h3 [htxt "Links zu Einträgen im UnivIS:"],
-         ulist (map (\url -> [ehref url [htxt url]]) urls)]
+         ulist (map (\url -> [ehref url [htxt url]]) urls)] ++
+        if admin && lecturer==Nothing
+        then [par [button mailButtonTitle
+                     (nextController (emailcontroller missingUnivISMessage))]]
+        else []
+ where
+   mailButtonTitle = "Mail mit Korrekturbitte an Modulverantwortlichen senden"
+
+   missingMDBMessage =
+     "Lieber Modulverantwortlicher,\n\n"++
+     "das Modul "++modDataCode md++" ist für das "++showSemester sem++"\n"++
+     "noch nicht im UnivIS angekündigt, obwohl es in der Planung\n"++
+     "der Moduldatenbank aufgelistet ist. Bitte überprüfen und korrigieren\n"++
+     "Sie dies im UnvIS oder der Moduldatenbank, damit die Angaben\n"++
+     "im UnivIS und der Moduldatenbank konsistent sind.\n\n"++
+     "Viele Grüße vom Moduldatenbankadministrator"
+
+   missingUnivISMessage =
+     "Lieber Modulverantwortlicher,\n\n"++
+     "das Modul "++modDataCode md++" ist für das "++showSemester sem++"\n"++
+     "im UnivIS angekündigt, obwohl es in der Planung der Moduldatenbank\n"++
+     "nicht aufgelistet ist. Bitte überprüfen und korrigieren\n"++
+     "Sie dies im UnvIS oder der Moduldatenbank, damit die Angaben\n"++
+     "im UnivIS und der Moduldatenbank konsistent sind.\n\n"++
+     "Viele Grüße vom Moduldatenbankadministrator"
 
 ------------------------------------------------------------------------
 --- Supplies a WUI form to create a new UnivisInfo entity.

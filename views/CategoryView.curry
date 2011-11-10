@@ -159,16 +159,15 @@ listCategoryView admin login mbsprog catmods semperiod users
                                      (\c1 -> maybe True (leqCategory c1) mbc2)
                                      mbc1)
                             catmods))] ++
-   either (\sprog ->
-           if null (concatMap snd catmods)
-           then
+   (if null (concatMap snd catmods)
+    then either
+          (\sprog ->
             [par [style "buttonhref"
                    [href ("?listCategory/"++showStudyProgramKey sprog++"/all")
-                      [htxt "Alle Module in diesem Studienprogramm anzeigen"]]]]
-           else [])
+                     [htxt "Alle Module in diesem Studienprogramm anzeigen"]]]])
           (const [])
-          mbsprog ++
-   [par $ [bold [htxt "Semesterplanung"], htxt " von ",
+          mbsprog
+    else [par $ [bold [htxt "Semesterplanung"], htxt " von ",
            selectionInitial fromsem semSelection lowerSemesterSelection,
            htxt " bis ",
            selectionInitial tosem semSelection  upperSemesterSelection,
@@ -176,7 +175,7 @@ listCategoryView admin login mbsprog catmods semperiod users
            button "Anzeigen" (showPlan False mbsprog)] ++
            maybe [] (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
                                    (showPlan True mbsprog)])
-                 login] ++
+                 login]) ++
    (if admin
     then [par [button "Alle Module formatieren"
                       (nextController
@@ -191,9 +190,9 @@ listCategoryView admin login mbsprog catmods semperiod users
    showUnivisInst md ((term,year),mbmi,hasinst)
      | hasinst && mbmi/=Nothing = [univisRef [italic [htxt "UnivIS"]]]
      | hasinst                  = [univisRef [textstyle "alertentry" "!UnivIS!"]]
-     | mbmi/=Nothing            = [italic [htxt "???"]]
+     | mbmi/=Nothing            = [univisRef [italic [htxt "???"]]]
      | otherwise                = [nbsp]
-    where univisRef = ehref ("?listUnivisInfo/"++modDataCode md++"/"
+    where univisRef = ehref ("?listUnivisInfo/"++showModDataKey md++"/"
                                                ++term++"/"++show year)
 
    showModInst mi =

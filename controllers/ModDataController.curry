@@ -3,7 +3,7 @@ module ModDataController (
  showModDataController, editModDataController, deleteModDataController,
  listModDataController, getModDataOfCategory, showModDataWithCode,
  getResponsibleUser, showXmlIndex, showXmlModule,
- formatModulesForm
+ formatModulesForm, emailModuleMessageController
  ) where
 
 import ConfigMDB
@@ -280,7 +280,13 @@ getStudyProgramsWithCats = do
 -------------------------------------------------------------------------
 -- A controller (and view) to send an email:
 emailModuleController :: ModData -> User -> IO [HtmlExp]
-emailModuleController mdata user = return
+emailModuleController mdata user =
+  emailModuleMessageController listModDataController mdata user
+    "Lieber Modulverantwortlicher,\n\n\nViele Gruesse\n\n"
+
+emailModuleMessageController :: Controller -> ModData -> User -> String
+                             -> IO [HtmlExp]
+emailModuleMessageController cntcontroller mdata user msg = return
    [h1 [htxt "Email an Modulverantwortlichen"],
     table
      [[[bold [htxt "Empfänger: "]],
@@ -291,10 +297,10 @@ emailModuleController mdata user = return
        [longTextField msub
                      ("Modul "++modDataCode mdata++": "++modDataNameG mdata)]],
       [[bold [htxt "Inhalt:"]],
-       [textarea mcnt (10,70) ("Lieber \n\n\nViele Gruesse\n\n")]]],
+       [textarea mcnt (10,70) msg]]],
     par [button "Absenden" sendTo,
          button "Abbrechen" (const (cancelOperation >>
-                                    listModDataController >>= getForm))]]
+                                    cntcontroller >>= getForm))]]
  where
   mto,mcc,msub,mcnt free
 
@@ -307,7 +313,7 @@ emailModuleController mdata user = return
                         (TO (env mto) : if null cc then [] else [CC cc])
                         (env mcnt)
     setPageMessage "Mail gesendet!"
-    listModDataController >>= getForm
+    cntcontroller >>= getForm
 
 ----------------------------------------------------------------------
 -- Show the permanent URL of a module

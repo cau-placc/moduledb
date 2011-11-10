@@ -16,6 +16,9 @@ import AuthorizedControllers
 import UserProcesses
 import Read
 import UnivIS
+import Authentication
+import ModDataController
+
 
 --- Shows a form to create a new UnivisInfo entity.
 newUnivisInfoController :: Controller
@@ -69,19 +72,24 @@ listUnivisInfoController =
      then do univisInfos <- runQ queryAllUnivisInfos
              return (listUnivisInfoView univisInfos showUnivisInfoController
                        editUnivisInfoController deleteUnivisInfoController)
-     else do let mcode = head args
-                 sem   = (args!!1, Read.readNat (args!!2))
-             urls <- runQ $ queryUnivisURL mcode sem
-             mods <- runQ $ queryModDataWithCode mcode
-             if null mods then return (showUnivisLinks mcode sem Nothing urls)
-              else do
-                mis <- runQ $ queryInstancesOfMod (modDataKey (head mods))
-                let semmis = filter (\mi -> (modInstTerm mi,modInstYear mi)==sem)
-                                    mis
-                lecturer <- if null semmis then return Nothing else
-                  runT (getUser (modInstUserLecturerModsKey (head semmis)))
-                   >>= return . either Just (const Nothing)
-                return (showUnivisLinks mcode sem lecturer urls)
+     else
+      maybe (displayError "Illegal URL")
+            (\mdkey -> do
+              admin <- isAdmin
+              md <- runJustT $ getModData mdkey
+              responsible <- runJustT (getResponsibleUser md)
+              let sem = (args!!1, Read.readNat (args!!2))
+              urls <- runQ $ queryUnivisURL (modDataCode md) sem
+              mis <- runQ $ queryInstancesOfMod mdkey
+              let semmis = filter (\mi -> (modInstTerm mi,modInstYear mi)==sem)
+                                  mis
+              lecturer <- if null semmis then return Nothing else
+                runT (getUser (modInstUserLecturerModsKey (head semmis)))
+                     >>= return . either Just (const Nothing)
+              return (showUnivisLinks md sem lecturer urls admin
+                         (emailModuleMessageController listUnivisInfoController
+                                                       md responsible)))
+            (readModDataKey (head args))
 
 --- Shows a UnivisInfo entity.
 showUnivisInfoController :: UnivisInfo -> Controller
