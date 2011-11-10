@@ -212,7 +212,7 @@ listModDataController =
                                                   listModDataController)
                         copyModController emailModuleController)
                else case args!!1 of
-                      "pdf" -> formatModuleForm modData
+                      "pdf" -> formatModuleForm modData modinsts
                                   responsibleUser sprogs categories moddesc
                       "url" -> moduleUrlForm modData
                       _ -> displayError "Illegal URL"
@@ -331,13 +331,13 @@ moduleUrlForm md = do
 
 ----------------------------------------------------------------------
 -- Format a module as PDF
-formatModuleForm :: ModData -> User -> [StudyProgram] -> [Category]
+formatModuleForm :: ModData -> [ModInst] -> User -> [StudyProgram] -> [Category]
                  -> Maybe ModDescr -> IO [HtmlExp]
-formatModuleForm md respuser sprogs categorys mbdesc = do
+formatModuleForm md mis respuser sprogs categorys mbdesc = do
   pid <- getPID
   let tmp = "tmp_"++show pid
   writeModulesLatexFile (tmp++".tex")
-                        md respuser sprogs categorys mbdesc
+                        md mis respuser sprogs categorys mbdesc
   latexFormatForm tmp "Formatierte Modulbeschreibung"
 
 -- Format a list of modules as PDF
@@ -354,8 +354,9 @@ formatModulesForm mods = do
     respuser <- runJustT (getResponsibleUser md)
     categories <- runJustT (getModDataCategorys md)
     mbdesc <- runQ $ queryDescriptionOfMod (modDataKey md)
+    modinsts <- runQ $ queryInstancesOfMod (modDataKey md)
     return (quoteUnknownLatexCmd
-              (mod2latex md respuser sprogs categories mbdesc))
+              (mod2latex md modinsts respuser sprogs categories mbdesc))
 
 -- Form to format a file tmp.tex with pdflatex and show the result
 latexFormatForm :: String -> String -> IO [HtmlExp]
@@ -379,11 +380,11 @@ latexFormatForm tmp title = do
 -- Formatting modules as LaTeX documents:
 
 -- Generate LaTeX document containing a detailed description of a module:
-writeModulesLatexFile :: String -> ModData -> User -> [StudyProgram]
+writeModulesLatexFile :: String -> ModData -> [ModInst] -> User -> [StudyProgram]
                       -> [Category] -> Maybe ModDescr -> IO ()
-writeModulesLatexFile fname md respuser sprogs categorys mbdesc =
+writeModulesLatexFile fname md mis respuser sprogs categorys mbdesc =
   writeStandaloneLatexFile fname
-   (quoteUnknownLatexCmd (mod2latex md respuser sprogs categorys mbdesc))
+   (quoteUnknownLatexCmd (mod2latex md mis respuser sprogs categorys mbdesc))
 
 -- Put a latex string into a file with headers and footers
 writeStandaloneLatexFile :: String -> String -> IO ()
@@ -393,19 +394,19 @@ writeStandaloneLatexFile fname latexstring = do
                    latexstring ++
                    "\\end{document}\n")
 
-mod2latex :: ModData -> User -> [StudyProgram] -> [Category]
+mod2latex :: ModData -> [ModInst] -> User -> [StudyProgram] -> [Category]
           -> Maybe ModDescr -> String
 
-mod2latex md _ _ _ Nothing =
+mod2latex md _ _ _ _ Nothing =
     "%%%%%%%%%% "++modDataCode md++" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"++
     "\\importmodule{"++modDataCode md++"}{"++modDataNameG md++"}{"++
     modDataURL md++"}{"++baseName (modDataURL md)++"}\n\n"
 
-mod2latex md responsibleUser sprogs categorys (Just desc) =
+mod2latex md mis responsibleUser sprogs categorys (Just desc) =
     "%%%%%%%%%% "++modDataCode md++" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"++
     "\\module{"++modDataCode md++"}{"++modDataNameG md++"}{"++
     userToShortView responsibleUser++"}{"++
-    modDataCycle md++"}{"++
+    improveCycle md mis++"}{"++
     formatPresence (modDataPresence md)++"}{"++
     showDiv10 (modDataECTS md)++"}{"++modDataWorkload md++"}{"++
     showLen (modDataLength md)++" Semester}{"++

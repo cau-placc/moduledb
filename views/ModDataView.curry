@@ -1,7 +1,7 @@
 module ModDataView (
  wModData, tuple2ModData, modData2Tuple, wModDataType, blankModDataView,
  createModDataView, editModDataView, showModDataView, listModDataView,
- singleModDataView, leqModData, copyModView
+ singleModDataView, leqModData, copyModView, improveCycle
  ) where
 
 import WUI
@@ -292,6 +292,26 @@ listModDataView admin title modDatas showModDataController editModDataController
                       ,"\"?"])])
                 (deleteModDataController modData))]]
 
+--- Improves the cycle information of a module w.r.t. a given list
+--- of module instances.
+improveCycle :: ModData -> [ModInst] -> String
+improveCycle md mis =
+  let cycle = modDataCycle md
+   in if cycle == "jedes Jahr"
+      then let uterm = getUniqueTerm mis
+            in if null uterm then cycle
+                             else cycle++" im "++uterm
+      else cycle
+
+--- Computes the unique term (or nothing if not unique) of
+--- a list of module instances.
+getUniqueTerm :: [ModInst] -> String
+getUniqueTerm mis
+  | null mis = ""
+  | all (\mi -> modInstTerm mi == "WS" ) mis = "WS"
+  | all (\mi -> modInstTerm mi == "SS" ) mis = "SS"
+  | otherwise = ""
+  
 --- Supplies a view for a given ModData entity.
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of ModData entities
@@ -349,7 +369,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
      [[bold [stringToHtml "Modulverantwortliche(r):"]],
       [userToHtmlView responsibleUser]],
      [[bold [stringToHtml "Turnus:"]],
-      [stringToHtml (modDataCycle modData)] ++
+      [stringToHtml (improveCycle modData modinsts)] ++
         if null modinsts then []
         else htxt " ": showSemsOfModInstances (mergeSort leqModInst modinsts)],
      [[bold [stringToHtml "Präsenzzeiten:"]],
