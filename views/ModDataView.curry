@@ -53,7 +53,7 @@ wCatList spcats =
   catref t = let mbcat = find (\c -> categoryCatKey c == t)
                               allcats
                  short = maybe "?" categoryShortName mbcat
-              in ehref "show.cgi?showcats" [htxt short]
+              in ehref "?showcats" [htxt short]
 
   renderCats hexps = table (split2rows spcats hexps)
 

@@ -186,7 +186,8 @@ getUserMenu = do
                            [htxt "Eigene Module"]],
                      [href "?newMasterProgram" [htxt "Neues Masterprogram"]]])
          login) ++
-      [[href (if curryCompiler=="kics2" then "show.cgi?login" else "?login")
+      [[href (if curryCompiler=="kics2" then "showsession.cgi?login"
+                                        else "?login")
              [htxt (maybe "An" (const "Ab") login ++ "melden")]]]
     ]
 
@@ -241,10 +242,10 @@ mdbHeader =
   table [map (\i->[i]) headerItems]
  where
   headerItems =
-   [href "show.cgi"
+   [href "?"
       [imageNB "images/MDB_Logo_small.gif" "Moduldatenbank"],
     blockstyle "headertitle"
-      [nbsp, href "show.cgi" [htxt "Modulinformationssystem Informatik"], nbsp],
+      [nbsp, href "?" [htxt "Modulinformationssystem Informatik"], nbsp],
     ehref "http://www.informatik.uni-kiel.de"
       [imageNB "images/ifilogo.gif" "Institut für Informatik"],
     ehref "http://www.uni-kiel.de"
