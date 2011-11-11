@@ -1,6 +1,7 @@
 module CategoryView (
  wCategory, tuple2Category, category2Tuple, wCategoryType, blankCategoryView,
- createCategoryView, editCategoryView, showCategoryView, listCategoryView
+ createCategoryView, editCategoryView, showCategoryView, listCategoryView,
+ leqCategory
  ) where
 
 import WUI
@@ -13,7 +14,7 @@ import MDBEntitiesToHtml
 import Helpers
 import List
 import ModDataView
-import Maybe
+import ConfigMDB
 
 --- The WUI specification for the entity type Category.
 --- It also includes fields for associated entities.
@@ -122,11 +123,11 @@ leqCategory x1 x2 =
 --- and the controller functions to show, delete and edit entities.
 listCategoryView
  :: Bool -> Maybe String -> Either StudyProgram String
-  -> [(Maybe Category,[(ModData,[Maybe ModInst],[Bool])])]
+  -> [(Either Category String,[(ModData,[Maybe ModInst],[Bool])])]
   -> [(String,Int)] -> [User]
   -> (Category -> Controller) -> (Category -> Controller)
   -> (Category -> Bool -> Controller)
-  -> (Either StudyProgram String -> [(Maybe Category,[ModData])]
+  -> (Either StudyProgram String -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Bool -> Controller)
   -> ([ModData] -> Controller)
   -> [HtmlExp]
@@ -137,13 +138,14 @@ listCategoryView admin login mbsprog catmods semperiod users
   [h1 [htxt $ either studyProgramName id mbsprog],
    table (if admin && null (concatMap snd catmods)
           then [take 4 categoryLabelList] ++
-               map listCategory (mergeSort leqCategory
-                                           (catMaybes (map fst catmods)))
+               map listCategory
+                    (mergeSort leqCategory
+                     (concatMap (\ (c,_) -> either (:[]) (const []) c) catmods))
           else concatMap
                  (\ (mbcat,mods) ->
-                    (maybe [nbsp]
-                           (\c->[style "category" (head (listCategory c))])
-                           mbcat :
+                    (either (\c->[style "category" (head (listCategory c))])
+                            (\s->[style "category" [htxt s]])
+                            mbcat :
                      if null mods then []
                      else map (\s -> [style "category" [stringToHtml s]])
                               ("ECTS":map showSemester semperiod)) :
@@ -154,11 +156,7 @@ listCategoryView admin login mbsprog catmods semperiod users
                                      (zip3 semperiod mis univs))
                          (mergeSort (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2)
                                     mods))
-                 (mergeSort (\ (mbc1,_) (mbc2,_) ->
-                               maybe True
-                                     (\c1 -> maybe True (leqCategory c1) mbc2)
-                                     mbc1)
-                            catmods))] ++
+                 catmods)] ++
    (if null (concatMap snd catmods)
     then either
           (\sprog ->
@@ -167,15 +165,22 @@ listCategoryView admin login mbsprog catmods semperiod users
                      [htxt "Alle Module in diesem Studienprogramm anzeigen"]]]])
           (const [])
           mbsprog
-    else [par $ [bold [htxt "Semesterplanung"], htxt " von ",
-           selectionInitial fromsem semSelection lowerSemesterSelection,
-           htxt " bis ",
-           selectionInitial tosem semSelection  upperSemesterSelection,
-           htxt ": ",
-           button "Anzeigen" (showPlan False mbsprog)] ++
-           maybe [] (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
+    else
+     [par $
+       maybe
+         [bold [htxt $ "Semesterplanung von " ++
+                       showSemester currentSemester ++ " bis " ++
+                       showSemester currentUpperSemester ++ ": ",
+                button "Anzeigen" (showFixedPlan False mbsprog)]]
+         (\_ -> [bold [htxt "Semesterplanung"], htxt " von ",
+                 selectionInitial fromsem semSelection lowerSemesterSelection,
+                 htxt " bis ",
+                 selectionInitial tosem semSelection  upperSemesterSelection,
+                 htxt ": ",
+                 button "Anzeigen" (showPlan False mbsprog),
+                 button "Anzeigen mit UnivIS-Abgleich"
                                    (showPlan True mbsprog)])
-                 login]) ++
+         login]) ++
    (if admin
     then [par [button "Alle Module formatieren"
                       (nextController
@@ -213,6 +218,11 @@ listCategoryView admin login mbsprog catmods semperiod users
     showCategoryPlanController sprog
      (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
      (semesterSelection!!start) (semesterSelection!!stop) withunivis >>= getForm
+
+   showFixedPlan withunivis sprog _  =
+    showCategoryPlanController sprog
+     (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
+     currentSemester currentUpperSemester withunivis >>= getForm
 
    listCategory :: Category -> [[HtmlExp]]
    listCategory category =

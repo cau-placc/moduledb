@@ -12,6 +12,7 @@ module Helpers(LogEvent(..),logEvent,
                docText2html, docText2latex, quoteUnknownLatexCmd,
                showSemester, nextSemester, prevSemester, leqSemester,
                semesterSelection, lowerSemesterSelection, upperSemesterSelection,
+               currentUpperSemester,
                imageNB, wTerm, wYear, wVisible)
   where
 
@@ -263,6 +264,9 @@ lowerSemesterSelection =
         (findIndex (==currentSemester) semesterSelection)
 
 upperSemesterSelection = lowerSemesterSelection + 3
+
+-- the upper semester in current period views:
+currentUpperSemester = iterate nextSemester currentSemester !! 3
 
 -----------------------------------------------------------------------------
 --- An image without borders.

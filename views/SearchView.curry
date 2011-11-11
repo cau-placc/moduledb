@@ -17,20 +17,23 @@ import ModDataView
 
 -----------------------------------------------------------------------------
 --- A view for searching modules.
-searchPageView :: (String -> Controller)
+searchPageView :: Maybe String -> (String -> Controller)
                -> ((String,Int) -> Controller) -> Controller
                -> [HtmlExp]
-searchPageView searchcontroller showExamController showAllMods =
+searchPageView login searchcontroller showExamController showAllMods =
   [h1 [htxt "Modulsuche"],
    blockstyle "widelist" [ulist $
       [[htxt "Alle Module mit Zeichenfolge ",
         textfield scode "" `addAttr` ("size","20"),
         htxt " im Modulcode oder -titel ",
         button "suchen" searchHandler],
-       [htxt "Alle Module ", button "anzeigen" (nextController showAllMods)],
-       [htxt "Prüfungsanforderungen aller Module im ",
-        selectionInitial insem semSelection lowerSemesterSelection,
-        button "anzeigen" showExams]]]]
+       [htxt "Alle Module ", button "anzeigen" (nextController showAllMods)]] ++
+      if login==Nothing
+      then []
+      else [[htxt "Prüfungsanforderungen aller Module im ",
+            selectionInitial insem semSelection lowerSemesterSelection,
+            button "anzeigen" showExams]]
+      ]]
  where
   scode,insem free
 

@@ -19,6 +19,7 @@ import DefaultController
 import ModDataController
 import Helpers
 import List
+import Sort
 
 --- Shows a form to create a new Category entity.
 newCategoryController :: Controller
@@ -87,11 +88,10 @@ runListCategoyController admin login args
  | null args
   = do categorys <- runQ queryAllCategorys
        return (listCategoryView admin login (Right "Alle Kategorien")
-                          (map (\c -> (Just c,[])) categorys) [] []
-                          showCategoryController
-                          editCategoryController deleteCategoryController
-                          showCategoryPlanController
-                          formatModulesForm)
+                      (map (\c -> (Left c,[])) (mergeSort leqCategory categorys))
+                      [] [] showCategoryController
+                      editCategoryController deleteCategoryController
+                      showCategoryPlanController formatModulesForm)
  | take 5 (head args) == "user="
   = do let lname = drop 5 (head args)
        -- get user entries with a given login name
@@ -99,7 +99,7 @@ runListCategoyController admin login args
        if null users then return [h1 [htxt "Illegal URL"]] else
         do mods <- runQ $ queryModDataOfUser (userKey (head users))
            return (listCategoryView admin login (Right "Eigene Module")
-                        [(Nothing,map (\m->(m,[],[])) mods)]
+                        [(Right "",map (\m->(m,[],[])) mods)]
                         [] [] showCategoryController
                         editCategoryController deleteCategoryController
                         showCategoryPlanController
@@ -114,7 +114,7 @@ runListCategoyController admin login args
               mods <- runJustT $ getModDataOfCategory catkey
               return (listCategoryView admin login
                         (maybe (Right "???") Left mbsprog)
-                        [(Just cat,map (\m->(m,[],[]))
+                        [(Left cat,map (\m->(m,[],[]))
                                        (maybe (filter modDataVisible mods)
                                               (const mods)
                                               login))]
@@ -132,12 +132,12 @@ runListCategoyController admin login args
                if length args > 1 && args!!1 == "all"
                then mapT (\c ->
                             getModDataOfCategory (categoryKey c) |>>= \mods ->
-                            returnT (Just c,map (\m->(m,[],[]))
+                            returnT (Left c,map (\m->(m,[],[]))
                                              (maybe (filter modDataVisible mods)
                                                     (const mods)
                                                     login)))
                          categorys
-               else mapT (\c -> returnT (Just c,[])) categorys
+               else mapT (\c -> returnT (Left c,[])) categorys
               return (listCategoryView admin login (Left studyprog)
                          catmods [] [] showCategoryController
                          editCategoryController deleteCategoryController
@@ -148,7 +148,7 @@ runListCategoyController admin login args
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
 showCategoryPlanController
-  :: Either StudyProgram String -> [(Maybe Category,[ModData])]
+  :: Either StudyProgram String -> [(Either Category String,[ModData])]
   -> (String,Int) -> (String,Int) -> Bool -> Controller
 showCategoryPlanController mbstudyprog catmods startsem stopsem withunivis = do
   admin <- isAdmin

@@ -22,8 +22,10 @@ import Helpers
 -----------------------------------------------------------------------------
 --- Controller for the main page.
 searchController :: Controller
-searchController = return (searchPageView searchModules showExamController
-                                          showAllModulesController)
+searchController = do
+  login <- getSessionLogin
+  return (searchPageView login searchModules showExamController
+                         showAllModulesController)
 
 --- Controller for searching modules
 searchModules :: String -> Controller
@@ -34,11 +36,10 @@ searchModules pat = do
     mods <- runJustT $ mapT (\ (k,_,_) -> getModData k) modcodes
     let vismods = maybe (filter modDataVisible mods) (const mods) login
     return (listCategoryView admin login (Right "Gefundene Module")
-                        [(Nothing,map (\m->(m,[],[])) vismods)]
-                        [] [] showCategoryController
-                        editCategoryController deleteCategoryController
-                        showCategoryPlanController
-                        formatModulesForm)
+              [(Right $ "...mit Muster: "++pat, map (\m->(m,[],[])) vismods)]
+              [] [] showCategoryController
+              editCategoryController deleteCategoryController
+              showCategoryPlanController formatModulesForm)
  where
    isMatching (_,code,name) = match pat (map toLower code) ||
                               match pat (map toLower name)
@@ -64,13 +65,13 @@ showAllModulesController = do
   mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
   let (pmods,wmods) = partition isMandatoryModule mods
   return (listCategoryView admin login
-                        (Right "Pflichtmodule und sonstige Module")
-                        [(Nothing,map (\m->(m,[],[])) pmods),
-                         (Nothing,map (\m->(m,[],[])) wmods)]
-                        [] [] showCategoryController
-                        editCategoryController deleteCategoryController
-                        showCategoryPlanController
-                        formatModulesForm)
+            (Right "Alle Module")
+            [(Right "Pflichtmodule (Informatik und Nebenfach)",
+              map (\m->(m,[],[])) pmods),
+             (Right "Weitere Module", map (\m->(m,[],[])) wmods)]
+            [] [] showCategoryController
+            editCategoryController deleteCategoryController
+            showCategoryPlanController formatModulesForm)
 
 isMandatoryModule :: ModData -> Bool
 isMandatoryModule md = modDataCode md `elem` mandatoryModulCodes
