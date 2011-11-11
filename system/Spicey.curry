@@ -10,7 +10,7 @@ module Spicey (
   Controller,
   nextController, nextControllerForData, confirmNextController,
   getControllerURL,getControllerParams, showControllerURL,
-  getForm, wDateType, wBoolean, wUncheckMaybe,
+  getForm, wDateType, wBoolean, --wUncheckMaybe,
   displayError, cancelOperation,
   wuiEditForm, wuiEditFormWithText, wuiFrameToForm, nextInProcessOr,
   renderLabels,
@@ -34,6 +34,7 @@ import Session
 import Global
 import Authentication
 import Helpers
+import Distribution
 
 ---------------- vvvv -- Framework functions -- vvvv -----------------------
 
@@ -164,9 +165,11 @@ wBoolean :: WuiSpec Bool
 wBoolean = wSelectBool "True" "False"
 
 --- A WUI transformer to map WUIs into WUIs for corresponding Maybe types.
+{-
 wUncheckMaybe :: a -> WuiSpec a -> WuiSpec (Maybe a)
 wUncheckMaybe defval wspec =
   wMaybe (adaptWSpec not (wCheckBool [htxt "No value"])) wspec defval
+-}
 
 --- The standard menu for all users.
 getUserMenu :: IO HtmlExp
@@ -183,7 +186,9 @@ getUserMenu = do
                            [htxt "Eigene Module"]],
                      [href "?newMasterProgram" [htxt "Neues Masterprogram"]]])
          login) ++
-      [[href "?login" [htxt (maybe "An" (const "Ab") login ++ "melden")]]]]
+      [[href (if curryCompiler=="kics2" then "show.cgi?login" else "?login")
+             [htxt (maybe "An" (const "Ab") login ++ "melden")]]]
+    ]
 
 --- Adds the basic page layout to a view.
 addLayout :: ViewBlock -> IO ViewBlock

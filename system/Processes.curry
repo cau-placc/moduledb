@@ -53,7 +53,8 @@ getCurrentProcess = do
 
 --- Is the current user session in a process interaction?
 isInProcess :: IO Bool
-isInProcess = getCurrentProcess >>= return . (/=Nothing)
+isInProcess = return False -- due to compilation problem with KiCS2
+--isInProcess = getCurrentProcess >>= return . (/=Nothing)
 
 --- Saves the state of a process, i.e., a node in the process graph,
 --- in the user session.
