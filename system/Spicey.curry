@@ -224,12 +224,20 @@ getForm viewBlock =
   else do
     cookie  <- sessionCookie
     --lasturl <- getLastUrl
-    login   <- getSessionLogin
+    login   <- getRealSessionLogin -- for KiCS2 version
     body    <- addLayout ([blockstyle "debug"
                              [par [htxt ("login: "++maybe "" id login)]],
                                    --htxt ("last page: "++lasturl)]],
                            blockstyle "contents" viewBlock])
-    return $ HtmlForm "Moduldatenbank"
+    if curryCompiler=="kics2" && login/=Nothing
+     then
+      return $ HtmlForm "forward to login session"
+                  [HeadInclude (HtmlStruct "meta"
+                                 [("http-equiv","refresh"),
+                                  ("content","1; url=showsession.cgi")] [])]
+                  [par [htxt "You will be forwarded to login session..."]]
+     else
+      return $ HtmlForm "Moduldatenbank"
                       [cookie, FormCSS "css/style.css",icon,MultipleHandlers]
                       body
  where

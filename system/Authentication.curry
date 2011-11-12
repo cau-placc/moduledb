@@ -9,7 +9,8 @@
 
 module Authentication (
   getUserHash, randomPassword,
-  getSessionLogin, loginToSession, logoutFromSession, isAdmin
+  getSessionLogin, getRealSessionLogin, loginToSession, logoutFromSession,
+  isAdmin
  ) where
 
 import Random
@@ -71,6 +72,9 @@ getSessionLogin =
   if curryCompiler=="kics2"
   then return Nothing -- login sessions don't work in KiCS2
   else getSessionData sessionLogin
+
+getRealSessionLogin :: IO (Maybe String)
+getRealSessionLogin = getSessionData sessionLogin
 
 --- Stores a login name in the current session.
 --- The authentication has to be done before!
