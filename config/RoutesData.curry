@@ -29,7 +29,7 @@ getRoutes =
      return $
       [("Haupseite",Exact "main",MainPageController)
       ,("Modulsuche",Exact "search",SearchController)
-      ,("Studiengänge",Exact "listStudyProgram",ListStudyProgramController)] ++
+      ,("StudiengÃ¤nge",Exact "listStudyProgram",ListStudyProgramController)] ++
       addIf admin
         [("Neues Modul",Exact "newModData",NewModDataController),
          ("Neues Importmodul",Exact "newImpModData",
@@ -54,7 +54,7 @@ getRoutes =
       -- ,ListMasterProgInfoController)
       --,("New MasterProgInfo",Exact "newMasterProgInfo"
       -- ,NewMasterProgInfoController)
-      ,("Daten aus UnivIS übernehmen",Exact "loadUnivisInfo",
+      ,("Daten aus UnivIS Ã¼bernehmen",Exact "loadUnivisInfo",
         LoadUnivisController)
       ,("Zeige UnivisInfo-Daten",Exact "listUnivisInfo",
         ListUnivisInfoController)

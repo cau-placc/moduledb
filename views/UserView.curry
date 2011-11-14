@@ -94,7 +94,7 @@ editUserView :: User -> (Bool -> User -> Controller) -> [HtmlExp]
 editUserView user controller =
   let initdata = user
       
-      wuiframe = wuiEditForm "Benutzerdaten ändern"
+      wuiframe = wuiEditForm "Benutzerdaten Ã¤ndern"
                              "Speichern" (controller False initdata)
       
       (hexp ,handler) = wuiWithErrorForm (wUserType user) initdata
@@ -107,7 +107,7 @@ showUserView :: User -> Controller -> [HtmlExp]
 showUserView user controller =
   [h1 [htxt $ "Benutzer " ++ userLogin user]] ++
   userToDetailsView user ++
-  [par [button "Zurück zur Benutzerliste" (nextController controller)]]
+  [par [button "ZurÃ¼ck zur Benutzerliste" (nextController controller)]]
 
 --- Compares two User entities. This order is used in the list view.
 leqUser :: User -> User -> Bool
@@ -133,13 +133,13 @@ listUserView users showUserController editUserController
         listUser user =
           userToListView user ++
            [[button "Anzeigen" (nextController (showUserController user))
-            ,button "Ändern" (nextController (editUserController user))
-            ,button "Löschen"
+            ,button "Ã„ndern" (nextController (editUserController user))
+            ,button "LÃ¶schen"
               (confirmNextController
                 (h3
                   [htxt
                     (concat
                       ["Benutzer \"",userToShortView user
-                      ,"\" wirklich löschen?"])])
+                      ,"\" wirklich lÃ¶schen?"])])
                 (deleteUserController user))
             ,button "Anmelden" (nextController (loginUserController user))]]

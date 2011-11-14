@@ -64,7 +64,7 @@ createMasterProgramController True
             (return
               [h2 [htxt "Masterprogramm angelegt. Bitte die weiteren Angaben ",
                    href ("?listMasterProgram/"++showMasterProgramKey mp)
-                        [htxt "hier"], htxt " ergänzen!"]])
+                        [htxt "hier"], htxt " ergÃ¤nzen!"]])
             Nothing)
          (\ error -> displayError (showTError error))
  where

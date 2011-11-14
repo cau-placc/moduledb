@@ -41,7 +41,7 @@ createModInstController moddata cntcontroller True (term,year,user) = do
    then runT (newModInstWithUserLecturerModsKeyWithModDataModuleInstancesKey
                     term (Just year) (userKey user) (modDataKey moddata)) >>=
         either (\ mi -> logEvent (NewModInst mi) >>
-                        setPageMessage "Semester hinzugefügt" >>
+                        setPageMessage "Semester hinzugefÃ¼gt" >>
                         nextInProcessOr cntcontroller Nothing)
                (\ error -> displayError (showTError error))
    else setPageMessage "Semester schon vorhanden!" >> cntcontroller
@@ -96,7 +96,7 @@ updateAllModInstController oldinsts cntcontroller True modinsts =
   inUse mi = getDB (getMasterProgramKeysOfModInst [mi]) |>>= \[mpkeys] ->
              returnT (not (null mpkeys))
 
-  useMsg = "Einige Modulinstanzen können nicht mehr verändert werden, "++
+  useMsg = "Einige Modulinstanzen kÃ¶nnen nicht mehr verÃ¤ndert werden, "++
            "da sie inzwischen in einem Masterprogramm verwendet werden!"
 
 --- Shows a form to edit the given ModInst entity.

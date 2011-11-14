@@ -18,13 +18,13 @@ import Sort
 --- A view for the main page.
 mainPageView :: [StudyProgram] -> [HtmlExp]
 mainPageView studyPrograms =
-  [h1 [htxt "Module und Studienprogramme des Instituts für Informatik"],
+  [h1 [htxt "Module und Studienprogramme des Instituts fÃ¼r Informatik"],
    par [htxt $ "Auf diesen Webseiten sind die Module aller Studienprogramme "++
-               "des Instituts für Informatik sowie alle vom Institut "++
+               "des Instituts fÃ¼r Informatik sowie alle vom Institut "++
                "angebotenen Module beschrieben."++
-               "Außerdem befindet sich hier eine Übersicht über alle "++
+               "AuÃŸerdem befindet sich hier eine Ãœbersicht Ã¼ber alle "++
                "angebotenen Masterprogramme."],
-   h2 [htxt "Studiengänge"],
+   h2 [htxt "StudiengÃ¤nge"],
    table (map (\sp -> [head (studyProgramToListView sp)])
               (mergeSort leqStudyProgram studyPrograms)),
    h2 [htxt "Masterstudium Informatik:", nbsp,
@@ -33,12 +33,12 @@ mainPageView studyPrograms =
         style "buttonhref" [href "?listMasterProgram" [htxt "Masterprogramme"]]],
    par [htxt "Weitere Informationen:"],
    ulist
-    [[bold [htxt "Für Modulverantwortliche: "],
+    [[bold [htxt "FÃ¼r Modulverantwortliche: "],
       htxt "Allgemeine ",
       ehref "edit_infos.html"
             [htxt "Hinweise zu Modulbeschreibungen und deren Bearbeitung"]],
-     [bold [htxt "Für Programmierer: "],
+     [bold [htxt "FÃ¼r Programmierer: "],
       ehref "?xml"
-            [htxt "XML-Index aller Module des Instituts für Informatik"]]]]
+            [htxt "XML-Index aller Module des Instituts fÃ¼r Informatik"]]]]
 
 -----------------------------------------------------------------------------

@@ -86,7 +86,7 @@ editModDescrView modDescr controller =
   let initdata = modDescr
       
       wuiframe = wuiEditFormWithText
-                   "Modulbeschreibung ändern" "Änderungen speichern"
+                   "Modulbeschreibung Ã¤ndern" "Ã„nderungen speichern"
                    [par [htxt "Bitte auch die allgemeinen ",
                          ehref "edit_infos.html"
                                [htxt "Hinweise zu Modulbeschreibungen"],

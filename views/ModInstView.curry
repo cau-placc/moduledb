@@ -28,7 +28,7 @@ wListModInst :: [User] -> WuiSpec [(String,Int,User,Bool)]
 wListModInst userList =
   wList
    (w4Tuple wTerm wYear (wSelect userToShortView userList)
-           (wCheckBool [htxt "Semester löschen"]) )
+           (wCheckBool [htxt "Semester lÃ¶schen"]) )
 
 --- Transformation from data of a WUI form to entity type ModInst.
 tuple2ModInst :: ModInst -> (String,Int,User) -> ModInst
@@ -68,7 +68,7 @@ addModInstView :: User -> [User]
 addModInstView defaultUser possibleUsers storecontroller =
   let initdata = (currentTerm,currentYear,defaultUser)
       
-      wuiframe = wuiEditForm "Neues Semester hinzufügen" "Hinzufügen"
+      wuiframe = wuiEditForm "Neues Semester hinzufÃ¼gen" "HinzufÃ¼gen"
                              (storecontroller False initdata)
       
       (hexp ,handler) = wuiWithErrorForm
@@ -84,7 +84,7 @@ editModInstView :: ModData -> [ModInst] -> [User]
                 -> (Bool -> [(ModInst,Bool)] -> Controller) -> [HtmlExp]
 editModInstView md insts possibleUsers controller =
   let wuiframe = wuiEditFormWithText
-                    "Semesterangaben ändern" "Änderungen speichern"
+                    "Semesterangaben Ã¤ndern" "Ã„nderungen speichern"
                     [par [htxt modinstcomment]]
                     (controller False (map (\i -> (i,False)) insts))
       
@@ -96,8 +96,8 @@ editModInstView md insts possibleUsers controller =
    in wuiframe hexp handler
  where
   modinstcomment = "Anmerkung: Alte Veranstaltungen und Veranstaltungen, "++
-    "die schon in Masterprogrammen eingeplant sind, können nicht "++
-    "verändert werden!"
+    "die schon in Masterprogrammen eingeplant sind, kÃ¶nnen nicht "++
+    "verÃ¤ndert werden!"
 
 --- Supplies a view to show the details of a ModInst.
 showModInstView :: ModInst -> ModData -> User -> Controller -> [HtmlExp]
@@ -160,7 +160,7 @@ singleModInstView modinst moddata user mprogs =
            mprogs)]
  where
   usedcmt =
-   "Dieses Modul ist für dieses Semester in folgenden Masterprogramm eingeplant:"
+   "Dieses Modul ist fÃ¼r dieses Semester in folgenden Masterprogramm eingeplant:"
 
   notusedcmt =
-   "Dieses Modul ist für dieses Semester in keinem Masterprogramm eingeplant."
+   "Dieses Modul ist fÃ¼r dieses Semester in keinem Masterprogramm eingeplant."

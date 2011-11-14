@@ -30,7 +30,7 @@ searchPageView login searchcontroller showExamController showAllMods =
        [htxt "Alle Module ", button "anzeigen" (nextController showAllMods)]] ++
       if login==Nothing
       then []
-      else [[htxt "Prüfungsanforderungen aller Module im ",
+      else [[htxt "PrÃ¼fungsanforderungen aller Module im ",
             selectionInitial insem semSelection lowerSemesterSelection,
             button "anzeigen" showExams]]
       ]]
@@ -51,9 +51,9 @@ searchPageView login searchcontroller showExamController showAllMods =
 --- Supplies a view for the examination requirements of a given list of modules.
 showExamOverview :: (String,Int) -> [(ModData,String)] -> [HtmlExp]
 showExamOverview sem mods =
-  [h1 [htxt $ "Prüfungsanforderungen aller Module im " ++ showSemester sem],
+  [h1 [htxt $ "PrÃ¼fungsanforderungen aller Module im " ++ showSemester sem],
    headedTable $
-     [[htxt "Modul:"],[htxt "Prüfungsanforderungen:"]] :
+     [[htxt "Modul:"],[htxt "PrÃ¼fungsanforderungen:"]] :
      map (\ (m,e) -> [[htxt (modDataCode m ++": "++ modDataNameG m)],
                      [HtmlText (docText2html e)]])
          (mergeSort (\ (m1,_) (m2,_) -> leqModData m1 m2) mods)]

@@ -61,8 +61,8 @@ updateMasterProgInfoController cntcontroller True mpinfo =
               nextInProcessOr cntcontroller Nothing)
          (\ error -> displayError (showTError error))
  where
-  notExistMsg = "Einige ausgewählte Modulinstanzen inzwischen sind nicht "++
-                "mehr vorhanden und wurden daher gelöscht!"
+  notExistMsg = "Einige ausgewÃ¤hlte Modulinstanzen inzwischen sind nicht "++
+                "mehr vorhanden und wurden daher gelÃ¶scht!"
 
 --- Deletes a given MasterProgInfo entity (depending on the Boolean
 --- argument) and proceeds with the list controller.

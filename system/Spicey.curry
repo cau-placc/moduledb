@@ -178,7 +178,7 @@ getUserMenu = do
   return $ blockstyle "menu"
     [ulist $
       [[href "?main" [htxt "Haupseite"]],
-       [href "?listStudyProgram" [htxt "Studieng‰nge"]],
+       [href "?listStudyProgram" [htxt "Studieng√§nge"]],
        [href "?listMasterProgram" [htxt "Masterprogramme"]],
        [href "?search" [htxt "Modulsuche"]]] ++
       (maybe []
@@ -255,9 +255,9 @@ mdbHeader =
     blockstyle "headertitle"
       [nbsp, href "?" [htxt "Modulinformationssystem Informatik"], nbsp],
     ehref "http://www.informatik.uni-kiel.de"
-      [imageNB "images/ifilogo.gif" "Institut f¸r Informatik"],
+      [imageNB "images/ifilogo.gif" "Institut f√ºr Informatik"],
     ehref "http://www.uni-kiel.de"
-      [imageNB "images/caulogo.gif" "Christian-Albrechts-Universit‰t zu Kiel"]]
+      [imageNB "images/caulogo.gif" "Christian-Albrechts-Universit√§t zu Kiel"]]
 
 -------------------------------------------------------------------------
 -- Action performed when a "cancel" button is pressed.

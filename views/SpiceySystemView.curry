@@ -34,8 +34,8 @@ loginView controller currlogin =
                par [button "Abmelden"  (logoutHandler True),
                     button "Abbrechen" (logoutHandler False)],
                hrule,
-               h3 [htxt "Sie können auch nur Ihr ",
-                   button "Passwort ändern" (const passwdForm)]]
+               h3 [htxt "Sie kÃ¶nnen auch nur Ihr ",
+                   button "Passwort Ã¤ndern" (const passwdForm)]]
  where
   loginfield,passfield free
 
@@ -52,15 +52,15 @@ loginView controller currlogin =
               getForm $
                [h1 [htxt "Anmeldung erfolgreich"],
                 par [htxt $ "Sie sind als Benutzer '" ++ loginname ++
-                            "' angemeldet und können Ihre Module und " ++
+                            "' angemeldet und kÃ¶nnen Ihre Module und " ++
                      "Programme bearbeiten."],
                 par [htxt timeoutText]] ++
                 if length urls > 1
-                then [par [href ('?':urls!!1) [htxt "Zurück zur letzten Seite"]]]
+                then [par [href ('?':urls!!1) [htxt "ZurÃ¼ck zur letzten Seite"]]]
                 else []
 
   timeoutText = "Bitte beachten Sie, dass Sie bei mehr als 60 Minuten "++
-                "Inaktivität automatisch wieder abgemeldet werden."
+                "InaktivitÃ¤t automatisch wieder abgemeldet werden."
 
   logoutHandler confirm _ = do
     if confirm then logoutFromSession >> setPageMessage "Abgemeldet"
@@ -78,12 +78,12 @@ passwdForm :: IO HtmlForm
 passwdForm = do
   login <- getSessionLogin
   getForm
-    [h1 [htxt "Passwort ändern"],
+    [h1 [htxt "Passwort Ã¤ndern"],
      table [[[htxt "Altes Passwort:"], [password oldpass]],
             [[htxt "Neues Passwort:"], [password newpass1]],
             [[htxt "Neues Passwort wiederholen:"], [password newpass2]]],
      hrule,
-     button "Passwort ändern" (\ e -> passwdHandler login e >>= getForm), nbsp,
+     button "Passwort Ã¤ndern" (\ e -> passwdHandler login e >>= getForm), nbsp,
      button "Abbrechen"
             (const (cancelOperation >> defaultController >>= getForm))]
  where
@@ -98,9 +98,9 @@ passwdForm = do
      else do let u = head users
              newhashpass <- getUserHash lname (env newpass1)
              if env newpass1 /= env newpass2
-              then displayError "Neue Passwörter sind verschieden!"
+              then displayError "Neue PasswÃ¶rter sind verschieden!"
               else do runT (updateUser (setUserPassword u newhashpass))
-                      setPageMessage "Passwort geändert"
+                      setPageMessage "Passwort geÃ¤ndert"
                       defaultController
 
 ------------------------------------------------------------------------
@@ -109,7 +109,7 @@ sendLoginDataForm :: IO HtmlForm
 sendLoginDataForm =
   getForm
     [h1 [htxt "Login-Daten zusenden"],
-     par [htxt "Sie können sich ein neues Password an Ihre Email-Adresse ",
+     par [htxt "Sie kÃ¶nnen sich ein neues Password an Ihre Email-Adresse ",
           htxt " zusenden lassen, sofern Sie im System registriert sind."],
      par [htxt "Ihre Email-Adresse: ", textfield emailref ""],
      hrule,
@@ -141,7 +141,7 @@ sendLoginDataForm =
        "und dann nach Auswahl von 'Abmelden' den Punkt\n"++
        "'Passwort aendern' waehlen.")
     runT $ updateUser (setUserPassword user hashpass)
-    getForm [h1 [htxt "Bestätigung"],
+    getForm [h1 [htxt "BestÃ¤tigung"],
              h3 [htxt "Ihr neues Passwort wurde Ihnen zugesandt"]]
 
 ------------------------------------------------------------------------

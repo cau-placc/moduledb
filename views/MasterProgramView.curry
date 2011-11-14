@@ -146,7 +146,7 @@ editMasterProgramView admin masterProgram relatedMasterCoreArea relatedUser
   let initdata = masterProgram
       
       wuiframe = wuiEditFormWithText
-                   "Masterprogrammbeschreibung" "Änderungen speichern"
+                   "Masterprogrammbeschreibung" "Ã„nderungen speichern"
                    [par [htxt "Bitte auch die ",
                          ehref "editprog_infos.html"
                                [htxt "Hinweise zu Masterprogrammen"],
@@ -202,7 +202,7 @@ listMasterProgramView listall mpinfos allcoreareas =
          if listall then [] else
           [par [style "buttonhref"
                       [href "?listMasterProgram/all"
-                        [htxt "Alle (auch ältere) Masterprogramme anzeigen"]]]]
+                        [htxt "Alle (auch Ã¤ltere) Masterprogramme anzeigen"]]]]
     where
      catSems sem progs = if null progs then [] else
        [h2 [htxt ("Beginn: " ++ showSemester sem)]] ++
@@ -225,9 +225,9 @@ listMasterProgramView listall mpinfos allcoreareas =
              (mergeSort leqMasterCoreArea mcas) ++
            catSems (prevSemester sem) remprogs
 
-   ssCmt = "Bei Beginn im Sommersemester können auch Programme der "++
-           "benachbarten Wintersemester gewählt werden. "++
-           "Bei der Anpassung berät Sie der Academic Advisor."
+   ssCmt = "Bei Beginn im Sommersemester kÃ¶nnen auch Programme der "++
+           "benachbarten Wintersemester gewÃ¤hlt werden. "++
+           "Bei der Anpassung berÃ¤t Sie der Academic Advisor."
 
 --- Supplies a view for a given MasterProgram entity.
 singleMasterProgramView
@@ -241,20 +241,20 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
    editMasterProgInfoController =
   [h1 [htxt ("Masterprogramm "++masterProgramName mprog)]] ++
   (if masterProgramVisible mprog then []
-   else [h3 [htxt "(nicht öffentlich sichtbar)"]]) ++
+   else [h3 [htxt "(nicht Ã¶ffentlich sichtbar)"]]) ++
   [h2 [htxt ("Schwerpunktbereich: "++masterCoreAreaName mcarea)],
    h2 [htxt $ "Beginn: " ++ showSemester (startSem,startYear) ++
               " / Research advisor: " ++ userToShortView advisor],
    par $ (if admin || editallowed
-          then [button "Beschreibung/Sichtbarkeit ändern"
+          then [button "Beschreibung/Sichtbarkeit Ã¤ndern"
                        (nextController (editMasterProgramController mprog))]
           else []) ++
          (if admin
-          then [button "Masterprogramm löschen"
+          then [button "Masterprogramm lÃ¶schen"
                  (confirmNextController
                     (h3 [htxt (concat
                          ["Masterprogramm \"",
-                          masterProgramToShortView mprog,"\" löschen?"])])
+                          masterProgramToShortView mprog,"\" lÃ¶schen?"])])
                     (deleteMasterProgramController mprog))]
           else [])] ++
   [h3 [htxt "Beschreibung:"],
@@ -263,13 +263,13 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
    par [HtmlText (docText2html (masterProgramPrereq mprog))],
    h3 [htxt "Kommentare:"],
    par [HtmlText (docText2html (masterProgramComments mprog))],
-   h2 [htxt "Masterprogrammübersicht"],
+   h2 [htxt "MasterprogrammÃ¼bersicht"],
    par $ if admin || editallowed
-         then [button "Modulempfehlungen ändern"
+         then [button "Modulempfehlungen Ã¤ndern"
                       (nextController (editMasterProgInfoController mpinfo))]
          else [],
    semTable,
-   h2 [htxt "Masterprogrammübersicht nach Studienbereichen"]
+   h2 [htxt "MasterprogrammÃ¼bersicht nach Studienbereichen"]
   ] ++
   concatMap (\ (ms,ml) -> [h4 [htxt $ ml++" ("++ms++")"]] ++
               let mods = filter (\ (c,_,_,_,_) -> c==ms) modinfo

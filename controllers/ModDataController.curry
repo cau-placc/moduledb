@@ -289,7 +289,7 @@ emailModuleMessageController :: Controller -> ModData -> User -> String
 emailModuleMessageController cntcontroller mdata user msg = return
    [h1 [htxt "Email an Modulverantwortlichen"],
     table
-     [[[bold [htxt "Empfänger: "]],
+     [[[bold [htxt "EmpfÃ¤nger: "]],
        [longTextField mto (userEmail user)]],
       [[bold [htxt "Kopie an: "]],
        [longTextField mcc adminEmail]],
@@ -321,7 +321,7 @@ moduleUrlForm :: ModData -> IO [HtmlExp]
 moduleUrlForm md = do
   let url = baseURL ++ "?mod=" ++ string2urlencoded (modDataCode md)
   return
-    [h1 [htxt ("Externe URL für das Modul \""++modDataNameG md++"\"")],
+    [h1 [htxt ("Externe URL fÃ¼r das Modul \""++modDataNameG md++"\"")],
      par [htxt $ "Bitte verwenden Sie die folgende URL, um das Modul aus "++
                  "anderen Webseiten zu referenzieren:"],
      h3 [ehref url [htxt url]]]
@@ -370,7 +370,7 @@ latexFormatForm tmp title = do
     [h1 [htxt title],
      par [href (tmp++".pdf") [htxt (title++" (PDF)")]],
      hrule,
-     h3 [htxt "LaTeX-Ausgaben während des Formatierens"],
+     h3 [htxt "LaTeX-Ausgaben wÃ¤hrend des Formatierens"],
      verbatim output]
 
 -----------------------------------------------------------------------------

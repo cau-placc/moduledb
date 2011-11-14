@@ -151,7 +151,7 @@ editMasterProgInfoView masterProgInfo modinsts controller =
   let initdata = masterProgInfo
       
       wuiframe = wuiEditFormWithText
-                   "Modulempfehlungen" "Ändern"
+                   "Modulempfehlungen" "Ã„ndern"
                    [par [htxt "Bitte auch die ",
                          ehref "editprog_infos.html"
                                [htxt "Hinweise zu Masterprogrammen"],

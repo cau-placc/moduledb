@@ -113,7 +113,7 @@ formatPresence ps =
    in unwords (map p2pue (filter (\s -> head s /= '0') xs))
  where
    p2pue s = case s of
-               [d,'P'] -> [d,'P','Ü']
+               [d,'P'] -> [d,'P','Ãœ']
                _ -> s
 
 -----------------------------------------------------------------------------
@@ -284,7 +284,7 @@ wYear = wSelect show [(currentYear-4)..(currentYear+6)]
 
 --- A WUI for the visibility of a module:
 wVisible :: WuiSpec Bool
-wVisible = wRadioBool [htxt "öffentlich sichtbar"]
+wVisible = wRadioBool [htxt "Ã¶ffentlich sichtbar"]
                       [htxt "nur zur internen Bearbeitung"]
 
 -----------------------------------------------------------------------------

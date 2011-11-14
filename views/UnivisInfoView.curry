@@ -135,12 +135,12 @@ showUnivisLinks md sem lecturer urls admin emailcontroller =
   [h1 [htxt $ "Modul "++modDataCode md++" im "++showSemester sem]] ++
   maybe [] (\u -> [par [htxt "Dozent: ", userToHtmlView u]]) lecturer ++
   if null urls
-   then [par [htxt "Keine Einträge im UnivIS gefunden."]] ++
+   then [par [htxt "Keine EintrÃ¤ge im UnivIS gefunden."]] ++
         if admin
         then [par [button mailButtonTitle
                      (nextController (emailcontroller missingMDBMessage))]]
         else []
-   else [h3 [htxt "Links zu Einträgen im UnivIS:"],
+   else [h3 [htxt "Links zu EintrÃ¤gen im UnivIS:"],
          ulist (map (\url -> [ehref url [htxt url]]) urls)] ++
         if admin && lecturer==Nothing
         then [par [button mailButtonTitle
@@ -151,21 +151,21 @@ showUnivisLinks md sem lecturer urls admin emailcontroller =
 
    missingMDBMessage =
      "Lieber Modulverantwortlicher,\n\n"++
-     "das Modul "++modDataCode md++" ist für das "++showSemester sem++"\n"++
-     "noch nicht im UnivIS angekündigt, obwohl es in der Planung\n"++
-     "der Moduldatenbank aufgelistet ist. Bitte überprüfen und korrigieren\n"++
+     "das Modul "++modDataCode md++" ist fÃ¼r das "++showSemester sem++"\n"++
+     "noch nicht im UnivIS angekÃ¼ndigt, obwohl es in der Planung\n"++
+     "der Moduldatenbank aufgelistet ist. Bitte Ã¼berprÃ¼fen und korrigieren\n"++
      "Sie dies im UnvIS oder der Moduldatenbank, damit die Angaben\n"++
      "im UnivIS und der Moduldatenbank konsistent sind.\n\n"++
-     "Viele Grüße vom Moduldatenbankadministrator"
+     "Viele GrÃ¼ÃŸe vom Moduldatenbankadministrator"
 
    missingUnivISMessage =
      "Lieber Modulverantwortlicher,\n\n"++
-     "das Modul "++modDataCode md++" ist für das "++showSemester sem++"\n"++
-     "im UnivIS angekündigt, obwohl es in der Planung der Moduldatenbank\n"++
-     "nicht aufgelistet ist. Bitte überprüfen und korrigieren\n"++
+     "das Modul "++modDataCode md++" ist fÃ¼r das "++showSemester sem++"\n"++
+     "im UnivIS angekÃ¼ndigt, obwohl es in der Planung der Moduldatenbank\n"++
+     "nicht aufgelistet ist. Bitte Ã¼berprÃ¼fen und korrigieren\n"++
      "Sie dies im UnvIS oder der Moduldatenbank, damit die Angaben\n"++
      "im UnivIS und der Moduldatenbank konsistent sind.\n\n"++
-     "Viele Grüße vom Moduldatenbankadministrator"
+     "Viele GrÃ¼ÃŸe vom Moduldatenbankadministrator"
 
 ------------------------------------------------------------------------
 --- Supplies a WUI form to create a new UnivisInfo entity.
@@ -173,10 +173,10 @@ showUnivisLinks md sem lecturer urls admin emailcontroller =
 loadUnivisView :: ((String,Int) -> Controller) -> [HtmlExp]
 loadUnivisView loadcontroller =
     [h1 [htxt "Daten aus dem UnivIS der CAU laden"],
-     par [htxt "Daten aus dem UnivIS für das Semester ",
+     par [htxt "Daten aus dem UnivIS fÃ¼r das Semester ",
           selectionInitial insem semSelection 4,
-          button "jetzt übernehmen" loadData,
-          htxt " (dauert etwas länger!)"]]
+          button "jetzt Ã¼bernehmen" loadData,
+          htxt " (dauert etwas lÃ¤nger!)"]]
  where
   insem free
 

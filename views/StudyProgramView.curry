@@ -112,10 +112,10 @@ listStudyProgramView
 listStudyProgramView admin studyPrograms showStudyProgramController
                      editStudyProgramController deleteStudyProgramController =
   if admin
-  then [h1 [htxt "Studiengänge"],
+  then [h1 [htxt "StudiengÃ¤nge"],
         table ([take 5 studyProgramLabelList] ++
                map listStudyProgram (mergeSort leqStudyProgram studyPrograms))]
-  else [h1 [htxt "Studiengänge"],
+  else [h1 [htxt "StudiengÃ¤nge"],
         table (map (\sp -> [head (studyProgramToListView sp)])
                    (mergeSort leqStudyProgram studyPrograms))]
  where listStudyProgram :: StudyProgram -> [[HtmlExp]]

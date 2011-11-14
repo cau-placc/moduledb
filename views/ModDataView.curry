@@ -20,7 +20,7 @@ import ConfigMDB
 import DefaultController
 
 --- The WUI specification of the module cycle:
-wCycle = wSelect id ["unregelmäßig","jedes Semester","jedes Jahr"]
+wCycle = wSelect id ["unregelmÃ¤ÃŸig","jedes Semester","jedes Jahr"]
 
 --- A WUI for the presence time of a module:
 wPresence :: WuiSpec String
@@ -28,13 +28,13 @@ wPresence =
   transformWSpec (showPresence,readPresence)
    (w4Tuple wSWS wSWS wSWS wSWS
      `withRendering`
-        (\ [v,u,p,s] -> inline [v, htxt "Vorlesung ", u, htxt "Übung ",
+        (\ [v,u,p,s] -> inline [v, htxt "Vorlesung ", u, htxt "Ãœbung ",
                                 p, htxt "Praktikum ", s, htxt "Seminar"]))
  where
    wSWS = wSelect show [0..15]
 
    showPresence (vor,ueb,prk,sem) =
-    show vor ++ "V " ++ show ueb ++ "Ü " ++ show prk ++ "P " ++ show sem ++ "S"
+    show vor ++ "V " ++ show ueb ++ "Ãœ " ++ show prk ++ "P " ++ show sem ++ "S"
 
    readPresence ps =
      let [v,u,p,s] = if null ps then [0,0,0,0] else map Read.readNat (words ps)
@@ -79,7 +79,7 @@ wModData admin allowchangemcode userList spcats =
  where
   labelList = if allowchangemcode
               then [textstyle "label label_for_type_string"
-                      "Code (Vorsicht beim Ändern!)"] : drop 1 modDataLabelList
+                      "Code (Vorsicht beim Ã„ndern!)"] : drop 1 modDataLabelList
               else modDataLabelList
 
   wECTS = if admin then wSelect showDiv10 [0,5..300]
@@ -165,7 +165,7 @@ blankModDataView admin isimport possibleUsers spcats controller =
   createModDataView admin isimport [] [] [] [] [] 80 wload 1 [] False
                     (head possibleUsers) [] possibleUsers spcats controller
  where
-  wload = "60 Std. Vorlesung, 30 Std. Präsenzübung, 150 Std. Selbststudium"
+  wload = "60 Std. Vorlesung, 30 Std. PrÃ¤senzÃ¼bung, 150 Std. Selbststudium"
 
 --- Supplies a WUI form to create a new ModData entity.
 --- Takes default values to be prefilled in the form fields.
@@ -212,7 +212,7 @@ editModDataView admin (modData ,categorys) relatedUser possibleUsers
   let initdata = (modData,categorys)
       
       wuiframe = wuiEditFormWithText
-                   "Moduldaten ändern" "Änderungen speichern"
+                   "Moduldaten Ã¤ndern" "Ã„nderungen speichern"
                    [par [htxt "Bitte auch die allgemeinen ",
                          ehref "edit_infos.html"
                                [htxt "Hinweise zu Modulbeschreibungen"],
@@ -240,7 +240,7 @@ copyModView oldmod controller =
                modDataNameG oldmod++"\" mit einem neuen Modulcode angelegt. "++
                "Die Semesterinstanzen des alten Moduls werden dabei nicht "++
                "kopiert!"],
-   par [htxt "Neuer Modulcode für das kopierte Modul: ",
+   par [htxt "Neuer Modulcode fÃ¼r das kopierte Modul: ",
         textfield newcode "" `addAttr` ("size","20"),
         button "Modul kopieren" copyHandler]]
  where
@@ -336,15 +336,15 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
              [imageNB "images/pdf.png" "Convert to PDF"], nbsp,
        ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
   [par $ (if admin || editallowed
-          then [button "Semester hinzufügen"
+          then [button "Semester hinzufÃ¼gen"
                        (nextController modinstaddController),
-                button "Semesterangaben ändern"
+                button "Semesterangaben Ã¤ndern"
                        (nextController modinsteditController),
-                button "Moduldaten/Sichtbarkeit ändern"
+                button "Moduldaten/Sichtbarkeit Ã¤ndern"
                        (nextController (editModDataController modData))] ++
                 maybe []
                       (\desc ->
-                        [button "Modulbeschreibung ändern"
+                        [button "Modulbeschreibung Ã¤ndern"
                              (nextController (editModDescrController desc))] ++
                         if admin
                         then [button "Modul kopieren"
@@ -355,7 +355,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
          (if admin
           then [button "Email"
                     (nextController (emailController modData responsibleUser)),
-                button "Modul löschen"
+                button "Modul lÃ¶schen"
                  (confirmNextController
                     (h3 [htxt (concat
                          ["Really delete entity \"",modDataToShortView modData
@@ -372,7 +372,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
       [stringToHtml (improveCycle modData modinsts)] ++
         if null modinsts then []
         else htxt " ": showSemsOfModInstances (mergeSort leqModInst modinsts)],
-     [[bold [stringToHtml "Präsenzzeiten:"]],
+     [[bold [stringToHtml "PrÃ¤senzzeiten:"]],
       [stringToHtml (formatPresence (modDataPresence modData))]],
      [[bold [stringToHtml "ECTS:"]],
       [stringToHtml $ showDiv10 (modDataECTS modData)]],
@@ -388,7 +388,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
        in if null url then [] else
           [[[bold [stringToHtml "URL:"]],[ehref url [stringToHtml url]]]]) ++
      (let vis = if modDataVisible modData
-                then "öffentlich sichtbar"
+                then "Ã¶ffentlich sichtbar"
                 else "nur zur internen Bearbeitung"
        in if admin || editallowed
           then [[[bold [stringToHtml "Sichtbarkeit"]],[stringToHtml vis]]]
@@ -409,7 +409,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
    maybedesc
  where
    descTitles = ["Kurzfassung","Lernziele","Lehrinhalte","Voraussetzungen",
-                 "Prüfungsleistung","Lehr- und Lernmethoden","Verwendbarkeit",
+                 "PrÃ¼fungsleistung","Lehr- und Lernmethoden","Verwendbarkeit",
                  "Literatur","Verweise","Kommentar"]
 
    showLen l | l==1 = "ein"
