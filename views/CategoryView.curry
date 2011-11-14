@@ -168,10 +168,12 @@ listCategoryView admin login mbsprog catmods semperiod users
     else
      [par $
        maybe
-         [bold [htxt $ "Semesterplanung von " ++
-                       showSemester currentSemester ++ " bis " ++
-                       showSemester currentUpperSemester ++ ": ",
-                button "Anzeigen" (showFixedPlan False mbsprog)]]
+         [let lowersem = prevSemester (prevSemester currentSemester)
+              uppersem = nextSemester (nextSemester currentUpperSemester)
+           in bold [htxt $ "Semesterplanung von " ++
+                           showSemester lowersem ++ " bis " ++
+                           showSemester uppersem ++ ": ",
+                   button "Anzeigen" (showFixedPlan lowersem uppersem mbsprog)]]
          (\_ -> [bold [htxt "Semesterplanung"], htxt " von ",
                  selectionInitial fromsem semSelection lowerSemesterSelection,
                  htxt " bis ",
@@ -219,10 +221,10 @@ listCategoryView admin login mbsprog catmods semperiod users
      (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
      (semesterSelection!!start) (semesterSelection!!stop) withunivis >>= getForm
 
-   showFixedPlan withunivis sprog _  =
+   showFixedPlan lsem usem sprog _  =
     showCategoryPlanController sprog
-     (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
-     currentSemester currentUpperSemester withunivis >>= getForm
+      (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
+      lsem usem False >>= getForm
 
    listCategory :: Category -> [[HtmlExp]]
    listCategory category =
