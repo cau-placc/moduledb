@@ -265,6 +265,6 @@ div.header {
   font-size: 12pt;
 }
 .category {
-  background-color: #DDDDDD;
   font-weight: bold;
+  font-style: italic;
 }

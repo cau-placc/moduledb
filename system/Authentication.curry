@@ -9,7 +9,7 @@
 
 module Authentication (
   getUserHash, randomPassword,
-  getSessionLogin, getRealSessionLogin, loginToSession, logoutFromSession,
+  getSessionLogin, loginToSession, logoutFromSession,
   isAdmin
  ) where
 
@@ -68,13 +68,7 @@ sessionLogin = global emptySessionStore (Persistent "sessionLogin")
 --- Gets the login name of the current session
 --- (or the Nothing if there is no login).
 getSessionLogin :: IO (Maybe String)
-getSessionLogin =
-  if curryCompiler=="kics2"
-  then return Nothing -- login sessions don't work in KiCS2
-  else getSessionData sessionLogin
-
-getRealSessionLogin :: IO (Maybe String)
-getRealSessionLogin = getSessionData sessionLogin
+getSessionLogin = getSessionData sessionLogin
 
 --- Stores a login name in the current session.
 --- The authentication has to be done before!

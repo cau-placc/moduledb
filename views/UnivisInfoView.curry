@@ -151,21 +151,21 @@ showUnivisLinks md sem lecturer urls admin emailcontroller =
 
    missingMDBMessage =
      "Lieber Modulverantwortlicher,\n\n"++
-     "das Modul "++modDataCode md++" ist für das "++showSemester sem++"\n"++
-     "noch nicht im UnivIS angekündigt, obwohl es in der Planung\n"++
-     "der Moduldatenbank aufgelistet ist. Bitte überprüfen und korrigieren\n"++
-     "Sie dies im UnvIS oder der Moduldatenbank, damit die Angaben\n"++
+     "das Modul "++modDataCode md++" ist fuer das "++showSemester sem++"\n"++
+     "noch nicht im UnivIS angekuendigt, obwohl es in der Planung\n"++
+     "der Moduldatenbank aufgelistet ist. Bitte ueberpruefen und korrigieren\n"++
+     "Sie dies im UnivIS oder der Moduldatenbank, damit die Angaben\n"++
      "im UnivIS und der Moduldatenbank konsistent sind.\n\n"++
-     "Viele Grüße vom Moduldatenbankadministrator"
+     "Viele Gruesse vom Moduldatenbankadministrator"
 
    missingUnivISMessage =
      "Lieber Modulverantwortlicher,\n\n"++
-     "das Modul "++modDataCode md++" ist für das "++showSemester sem++"\n"++
-     "im UnivIS angekündigt, obwohl es in der Planung der Moduldatenbank\n"++
-     "nicht aufgelistet ist. Bitte überprüfen und korrigieren\n"++
-     "Sie dies im UnvIS oder der Moduldatenbank, damit die Angaben\n"++
+     "das Modul "++modDataCode md++" ist fuer das "++showSemester sem++"\n"++
+     "im UnivIS angekuendigt, obwohl es in der Planung der Moduldatenbank\n"++
+     "nicht aufgelistet ist. Bitte ueberpruefen und korrigieren\n"++
+     "Sie dies im UnivIS oder der Moduldatenbank, damit die Angaben\n"++
      "im UnivIS und der Moduldatenbank konsistent sind.\n\n"++
-     "Viele Grüße vom Moduldatenbankadministrator"
+     "Viele Gruesse vom Moduldatenbankadministrator"
 
 ------------------------------------------------------------------------
 --- Supplies a WUI form to create a new UnivisInfo entity.

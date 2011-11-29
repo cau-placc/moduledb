@@ -10,7 +10,7 @@ module Spicey (
   Controller,
   nextController, nextControllerForData, confirmNextController,
   getControllerURL,getControllerParams, showControllerURL,
-  getForm, wDateType, wBoolean, --wUncheckMaybe,
+  getForm, wDateType, wBoolean, wUncheckMaybe,
   displayError, cancelOperation,
   wuiEditForm, wuiEditFormWithText, wuiFrameToForm, nextInProcessOr,
   renderLabels,
@@ -165,11 +165,11 @@ wBoolean :: WuiSpec Bool
 wBoolean = wSelectBool "True" "False"
 
 --- A WUI transformer to map WUIs into WUIs for corresponding Maybe types.
-{-
 wUncheckMaybe :: a -> WuiSpec a -> WuiSpec (Maybe a)
 wUncheckMaybe defval wspec =
-  wMaybe (adaptWSpec not (wCheckBool [htxt "No value"])) wspec defval
--}
+  wMaybe (transformWSpec (not,not) (wCheckBool [htxt "No value"]))
+         wspec
+         defval
 
 --- The standard menu for all users.
 getUserMenu :: IO HtmlExp
@@ -186,9 +186,7 @@ getUserMenu = do
                            [htxt "Eigene Module"]],
                      [href "?newMasterProgram" [htxt "Neues Masterprogram"]]])
          login) ++
-      [[href (if curryCompiler=="kics2" then "showsession.cgi?login"
-                                        else "?login")
-             [htxt (maybe "An" (const "Ab") login ++ "melden")]]]
+      [[href "?login" [htxt (maybe "An" (const "Ab") login ++ "melden")]]]
     ]
 
 --- Adds the basic page layout to a view.
@@ -224,20 +222,12 @@ getForm viewBlock =
   else do
     cookie  <- sessionCookie
     --lasturl <- getLastUrl
-    login   <- getRealSessionLogin -- for KiCS2 version
+    login   <- getSessionLogin
     body    <- addLayout ([blockstyle "debug"
                              [par [htxt ("login: "++maybe "" id login)]],
                                    --htxt ("last page: "++lasturl)]],
                            blockstyle "contents" viewBlock])
-    if curryCompiler=="kics2" && login/=Nothing
-     then
-      return $ HtmlForm "forward to login session"
-                  [HeadInclude (HtmlStruct "meta"
-                                 [("http-equiv","refresh"),
-                                  ("content","1; url=showsession.cgi")] [])]
-                  [par [htxt "You will be forwarded to login session..."]]
-     else
-      return $ HtmlForm "Moduldatenbank"
+    return $ HtmlForm "Moduldatenbank"
                       [cookie, FormCSS "css/style.css",icon,MultipleHandlers]
                       body
  where
