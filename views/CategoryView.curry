@@ -166,23 +166,16 @@ listCategoryView admin login mbsprog catmods semperiod users
           (const [])
           mbsprog
     else
-     [par $
-       maybe
-         [let lowersem = prevSemester (prevSemester currentSemester)
-              uppersem = nextSemester (nextSemester currentUpperSemester)
-           in bold [htxt $ "Semesterplanung von " ++
-                           showSemester lowersem ++ " bis " ++
-                           showSemester uppersem ++ ": ",
-                   button "Anzeigen" (showFixedPlan lowersem uppersem mbsprog)]]
-         (\_ -> [bold [htxt "Semesterplanung"], htxt " von ",
-                 selectionInitial fromsem semSelection lowerSemesterSelection,
-                 htxt " bis ",
-                 selectionInitial tosem semSelection  upperSemesterSelection,
-                 htxt ": ",
-                 button "Anzeigen" (showPlan False mbsprog),
-                 button "Anzeigen mit UnivIS-Abgleich"
-                                   (showPlan True mbsprog)])
-         login]) ++
+     [par ([bold [htxt "Semesterplanung"], htxt " von ",
+            selectionInitial fromsem semSelection lowerSemesterSelection,
+            htxt " bis ",
+            selectionInitial tosem semSelection  upperSemesterSelection,
+            htxt ": ",
+            button "Anzeigen" (showPlan False mbsprog)] ++
+           maybe []
+                 (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
+                                (showPlan True mbsprog)])
+                 login)]) ++
    (if admin
     then [par [button "Alle Module formatieren"
                       (nextController
@@ -220,11 +213,6 @@ listCategoryView admin login mbsprog catmods semperiod users
     showCategoryPlanController sprog
      (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
      (semesterSelection!!start) (semesterSelection!!stop) withunivis >>= getForm
-
-   showFixedPlan lsem usem sprog _  =
-    showCategoryPlanController sprog
-      (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
-      lsem usem False >>= getForm
 
    listCategory :: Category -> [[HtmlExp]]
    listCategory category =
