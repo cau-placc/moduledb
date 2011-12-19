@@ -81,7 +81,7 @@ mandatoryModulCodes =
    "Inf-IS",
    "Inf-Ing","Inf-KomSys","Inf-LogInf","Inf-Math-A","Inf-Math-B","Inf-Math-C",
    "Inf-OAR","Inf-PP","Inf-Prog","Inf-SP","Inf-SWT","Inf-TGI",
-   "Math-Num",
+   "Math-Num","Inf-IngNum","Inf-NumMeth1","Inf-NumMeth2",
    "NF-Inf-1","NF-Inf-1v","NF-Inf-2","NF-Inf-2-Phys"]
 
 
