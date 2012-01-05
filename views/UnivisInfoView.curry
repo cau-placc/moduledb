@@ -174,7 +174,7 @@ loadUnivisView :: ((String,Int) -> Controller) -> [HtmlExp]
 loadUnivisView loadcontroller =
     [h1 [htxt "Daten aus dem UnivIS der CAU laden"],
      par [htxt "Daten aus dem UnivIS für das Semester ",
-          selectionInitial insem semSelection 4,
+          selectionInitial insem semSelection lowerSemesterSelection,
           button "jetzt übernehmen" loadData,
           htxt " (dauert etwas länger!)"]]
  where

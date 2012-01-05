@@ -24,12 +24,12 @@ processUnivisFile (term,year) = do
   return $ process allmcodes infos
  where
   process mcodes info =
-    map (\ (t,url) -> (fst (break (==':') t), term, year, url))
+    map (\ (t,url) -> (stripSpaces (fst (break (==':') t)), term, year, url))
         (filter hasModCode info)
    where
      hasModCode (title,_) =
        let (tc,_) = break (==':') title
-        in tc `elem` mcodes
+        in stripSpaces tc `elem` mcodes
 
   -- show semester in UnivIS string format:
   showSemUnivis = show year ++ if term=="SS" then "s" else "w"

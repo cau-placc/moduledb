@@ -6,7 +6,7 @@ module Helpers(LogEvent(..),logEvent,
                masterProgsLatexFile,
                modInfoLatexFile,modTableLatexFile,semTableLatexFile,
                shortModInfoLatexFile,
-               ehref,
+               ehref, stripSpaces,
                showDigit2,showDiv10, formatPresence,
                hrefs2markdown,
                docText2html, docText2latex, quoteUnknownLatexCmd,
@@ -94,7 +94,11 @@ ehref :: String -> [HtmlExp] -> HtmlExp
 ehref ref hexp = href ref hexp `addAttr` ("target","_blank")
 
 -------------------------------------------------------------------------------
+-- strip pre- and post spaces in a string:
+stripSpaces :: String -> String
+stripSpaces = reverse . dropWhile isSpace . reverse . dropWhile isSpace
 
+-------------------------------------------------------------------------------
 -- show an integer with at leat 2 digit (i.e., leading 0):
 showDigit2 :: Int -> String
 showDigit2 i = if abs i < 10 then '0':show i else show i
