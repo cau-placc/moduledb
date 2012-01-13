@@ -180,7 +180,8 @@ listCategoryView admin login mbsprog catmods semperiod users
     then [par [button "Alle Module formatieren"
                       (nextController
                          (formatModsController
-                            ((map (\ (md,_,_)->md)
+                            (mergeSort leqModData
+                               (map (\ (md,_,_)->md)
                                   (concatMap snd catmods)))))]]
     else [])
   where
