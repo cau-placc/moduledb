@@ -182,7 +182,14 @@ listCategoryView admin login mbsprog catmods semperiod users
                          (formatModsController
                             (mergeSort leqModData
                                (map (\ (md,_,_)->md)
-                                  (concatMap snd catmods)))))]]
+                                  (concatMap snd catmods))))),
+               button "Alle sichtbaren Module formatieren"
+                      (nextController
+                         (formatModsController
+                            (mergeSort leqModData
+                               (filter modDataVisible
+                                  (map (\ (md,_,_)->md)
+                                     (concatMap snd catmods))))))]]
     else [])
   where
    fromsem,tosem free
