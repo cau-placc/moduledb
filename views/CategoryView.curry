@@ -1,7 +1,7 @@
 module CategoryView (
  wCategory, tuple2Category, category2Tuple, wCategoryType, blankCategoryView,
  createCategoryView, editCategoryView, showCategoryView, listCategoryView,
- leqCategory
+ leqCategory, listEmailCorrectionView
  ) where
 
 import WUI
@@ -15,6 +15,9 @@ import Helpers
 import List
 import ModDataView
 import ConfigMDB
+import UnivisInfoView
+import Mail
+import System(sleep)
 
 --- The WUI specification for the entity type Category.
 --- It also includes fields for associated entities.
@@ -130,11 +133,14 @@ listCategoryView
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Bool -> Controller)
   -> ([ModData] -> Controller)
+  -> (Either StudyProgram String -> [(Either Category String,[ModData])]
+        -> (String,Int) -> (String,Int) -> Controller)
   -> [HtmlExp]
 listCategoryView admin login mbsprog catmods semperiod users
                  showCategoryController
                  editCategoryController deleteCategoryController
-                 showCategoryPlanController formatModsController =
+                 showCategoryPlanController formatModsController
+                 showEmailCorrectionController =
   [h1 [htxt $ either studyProgramName id mbsprog],
    table (if admin && null (concatMap snd catmods)
           then [take 4 categoryLabelList] ++
@@ -172,10 +178,14 @@ listCategoryView admin login mbsprog catmods semperiod users
             selectionInitial tosem semSelection  upperSemesterSelection,
             htxt ": ",
             button "Anzeigen" (showPlan False mbsprog)] ++
-           maybe []
-                 (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
-                                (showPlan True mbsprog)])
-                 login)]) ++
+           (maybe []
+                  (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
+                                 (showPlan True mbsprog)])
+                  login) ++
+           (if admin
+            then [button "UnivIS-Abgleich Emails senden"
+                         (showCorrectionEmails mbsprog)]
+            else []))]) ++
    (if admin
     then [par [button "Alle Module formatieren"
                       (nextController
@@ -222,6 +232,13 @@ listCategoryView admin login mbsprog catmods semperiod users
      (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
      (semesterSelection!!start) (semesterSelection!!stop) withunivis >>= getForm
 
+   showCorrectionEmails sprog env = do
+    let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
+        stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
+    showEmailCorrectionController sprog
+     (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
+     (semesterSelection!!start) (semesterSelection!!stop) >>= getForm
+
    listCategory :: Category -> [[HtmlExp]]
    listCategory category =
       categoryToListView category ++
@@ -235,3 +252,66 @@ listCategoryView admin login mbsprog catmods semperiod users
                   ["Really delete entity \"",categoryToShortView category
                   ,"\"?"])])
             (deleteCategoryController category))]]
+
+
+
+
+--- Supplies a list view for a given list of Category entities.
+--- Shows also buttons to show, delete, or edit entries.
+--- The arguments are the list of Category entities
+--- and the controller functions to show, delete and edit entities.
+listEmailCorrectionView
+ :: Either StudyProgram String
+  -> [(ModData,[Maybe ModInst],[Bool])]
+  -> [(String,Int)] -> [User]
+  -> [HtmlExp]
+listEmailCorrectionView mbsprog modinsts semperiod users =
+  [h1 [htxt $ either studyProgramName id mbsprog],
+   table (map showUnivisInst problemmods),
+   button "UnivIS-Korrektur-Emails jetzt an alle versenden" sendMails]
+  where
+   -- show UnivIS instance of a semester
+   showUnivisInst (md,sem,reason) =
+     [[htxt (modDataCode md)],
+      [htxt (showSemester sem)],
+      [htxt (if reason=="NOMDB" then "Kein Eintrag in MDB"
+                                else "Kein Eintrag in UnivIS")],
+      [htxt ("TO: "++ getResponsibleEmail md)]]
+
+   sendMails _ = do
+     mailresults <- mapIO sendSingleMail problemmods
+     getForm ([h1 [htxt "Mails gesendet!"]] ++
+              map (\t -> par [verbatim t]) mailresults)
+
+   sendSingleMail (md,sem,reason) = do
+     let to      = getResponsibleEmail md
+         from    = adminEmail
+         subject = "Modul "++modDataCode md++": "++modDataNameG md
+         contents = (if reason=="NOMDB"
+                     then missingMDBMessage
+                     else missingUnivISMessage) md sem
+     sendMail from to subject contents
+     sleep 1
+     return ("=======\nTO: " ++ to ++ "\n" ++
+             "FROM: " ++ from ++ "\n" ++
+             "SUBJECT: " ++ subject ++ "\n" ++
+             contents)
+
+   -- list of "problematic" modules together with their reason:
+   -- "NOMDB" = missing instance in module database
+   -- "NOUNIVIS" = missing instance in UnivIS
+   problemmods = concatMap (\ (md,mis,univs) ->
+                                concatMap (analyzeUnivisInst md)
+                                          (zip3 semperiod mis univs))
+                           modinsts
+     where
+      analyzeUnivisInst md (sem,mbmi,hasinst)
+        | hasinst && mbmi/=Nothing = []
+        | hasinst                  = [(md,sem,"NOMDB")]
+        | mbmi/=Nothing            = [(md,sem,"NOUNIVIS")]
+        | otherwise                = []
+
+   getResponsibleEmail md =
+     let mduserkey = modDataUserResponsibleKey md
+      in maybe adminEmail userEmail (find (\u -> userKey u == mduserkey) users)
+

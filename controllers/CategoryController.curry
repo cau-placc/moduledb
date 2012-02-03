@@ -1,6 +1,7 @@
 module CategoryController (
  newCategoryController, editCategoryController, deleteCategoryController,
- listCategoryController, showCategoryController, showCategoryPlanController
+ listCategoryController, showCategoryController, showCategoryPlanController,
+ showEmailCorrectionController
  ) where
 
 import Spicey
@@ -91,7 +92,8 @@ runListCategoyController admin login args
                       (map (\c -> (Left c,[])) (mergeSort leqCategory categorys))
                       [] [] showCategoryController
                       editCategoryController deleteCategoryController
-                      showCategoryPlanController formatModulesForm)
+                      showCategoryPlanController formatModulesForm
+                      showEmailCorrectionController)
  | take 5 (head args) == "user="
   = do let lname = drop 5 (head args)
        -- get user entries with a given login name
@@ -103,7 +105,7 @@ runListCategoyController admin login args
                         [] [] showCategoryController
                         editCategoryController deleteCategoryController
                         showCategoryPlanController
-                        formatModulesForm)
+                        formatModulesForm showEmailCorrectionController)
  | head (head args) == 'C'
   = maybe (displayError "Illegal URL")
             (\catkey -> do
@@ -121,7 +123,7 @@ runListCategoyController admin login args
                         [] [] showCategoryController
                         editCategoryController deleteCategoryController
                         showCategoryPlanController
-                        formatModulesForm))
+                        formatModulesForm showEmailCorrectionController))
             (readCategoryKey (head args))
  | otherwise
   = maybe (displayError "Illegal URL")
@@ -142,7 +144,7 @@ runListCategoyController admin login args
                          catmods [] [] showCategoryController
                          editCategoryController deleteCategoryController
                          showCategoryPlanController
-                         formatModulesForm))
+                         formatModulesForm showEmailCorrectionController))
             (readStudyProgramKey (head args))
     
 --- Lists all Categories and their modules together with their instances
@@ -167,13 +169,44 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem withunivis = do
              showCategoryController
              editCategoryController deleteCategoryController
              showCategoryPlanController
-             formatModulesForm)
+             formatModulesForm showEmailCorrectionController)
  where
    getModInsts md =
      getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->
      (if withunivis
       then mapT (\s -> getDB $ queryHasUnivisEntry (modDataCode md) s) semPeriod
       else returnT []) |>>= \univs ->
+     returnT (md,map (instOfSem mis) semPeriod,univs)
+
+   instOfSem mis sem =
+     find (\mi -> (modInstTerm mi,modInstYear mi) == sem) mis
+
+   semPeriod = takeWhile (\s -> leqSemester s stopsem)
+                         (iterate nextSemester startsem)
+
+--- Lists all Categories and their modules together with their instances
+--- in the given period.
+showEmailCorrectionController
+  :: Either StudyProgram String -> [(Either Category String,[ModData])]
+  -> (String,Int) -> (String,Int) -> Controller
+showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
+  login <- getSessionLogin
+  users <- runQ queryAllUsers
+  modinsts <- runJustT $
+                   mapT (\ (_,mods) ->
+                               mapT getModInsts
+                                    (maybe (filter modDataVisible mods)
+                                           (const mods)
+                                           login              ) |>>= \mmis ->
+                               returnT mmis)
+                        catmods
+  return (listEmailCorrectionView mbstudyprog
+                                  (concat modinsts) semPeriod users)
+ where
+   getModInsts md =
+     getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->
+     mapT (\s -> getDB $ queryHasUnivisEntry (modDataCode md) s) semPeriod
+      |>>= \univs ->
      returnT (md,map (instOfSem mis) semPeriod,univs)
 
    instOfSem mis sem =

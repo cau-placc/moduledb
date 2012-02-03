@@ -160,7 +160,7 @@ singleModInstView modinst moddata user mprogs =
            mprogs)]
  where
   usedcmt =
-   "Dieses Modul ist für dieses Semester in folgenden Masterprogramm eingeplant:"
+   "Dieses Modul ist für dieses Semester in folgenden Masterprogrammen eingeplant:"
 
   notusedcmt =
    "Dieses Modul ist für dieses Semester in keinem Masterprogramm eingeplant."

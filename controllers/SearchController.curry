@@ -39,7 +39,8 @@ searchModules pat = do
               [(Right $ "...mit Muster: "++pat, map (\m->(m,[],[])) vismods)]
               [] [] showCategoryController
               editCategoryController deleteCategoryController
-              showCategoryPlanController formatModulesForm)
+              showCategoryPlanController formatModulesForm
+              showEmailCorrectionController)
  where
    isMatching (_,code,name) = match pat (map toLower code) ||
                               match pat (map toLower name)
@@ -71,7 +72,8 @@ showAllModulesController = do
              (Right "Weitere Module", map (\m->(m,[],[])) wmods)]
             [] [] showCategoryController
             editCategoryController deleteCategoryController
-            showCategoryPlanController formatModulesForm)
+            showCategoryPlanController formatModulesForm
+            showEmailCorrectionController)
 
 isMandatoryModule :: ModData -> Bool
 isMandatoryModule md = modDataCode md `elem` mandatoryModulCodes

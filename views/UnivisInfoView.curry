@@ -2,7 +2,7 @@ module UnivisInfoView (
  wUnivisInfo, tuple2UnivisInfo, univisInfo2Tuple, wUnivisInfoType,
  blankUnivisInfoView, createUnivisInfoView, editUnivisInfoView,
  showUnivisInfoView, listUnivisInfoView, showUnivisLinks,
- loadUnivisView
+ loadUnivisView, missingMDBMessage, missingUnivISMessage
  ) where
 
 import WUI
@@ -138,18 +138,20 @@ showUnivisLinks md sem lecturer urls admin emailcontroller =
    then [par [htxt "Keine Einträge im UnivIS gefunden."]] ++
         if admin
         then [par [button mailButtonTitle
-                     (nextController (emailcontroller missingMDBMessage))]]
+                     (nextController
+                       (emailcontroller (missingUnivISMessage md sem)))]]
         else []
    else [h3 [htxt "Links zu Einträgen im UnivIS:"],
          ulist (map (\url -> [ehref url [htxt url]]) urls)] ++
         if admin && lecturer==Nothing
         then [par [button mailButtonTitle
-                     (nextController (emailcontroller missingUnivISMessage))]]
+                     (nextController
+                       (emailcontroller (missingMDBMessage md sem)))]]
         else []
  where
    mailButtonTitle = "Mail mit Korrekturbitte an Modulverantwortlichen senden"
 
-   missingMDBMessage =
+missingUnivISMessage md sem =
      "Lieber Modulverantwortlicher,\n\n"++
      "das Modul "++modDataCode md++" ist fuer das "++showSemester sem++"\n"++
      "noch nicht im UnivIS angekuendigt, obwohl es in der Planung\n"++
@@ -158,7 +160,7 @@ showUnivisLinks md sem lecturer urls admin emailcontroller =
      "im UnivIS und der Moduldatenbank konsistent sind.\n\n"++
      "Viele Gruesse vom Moduldatenbankadministrator"
 
-   missingUnivISMessage =
+missingMDBMessage md sem =
      "Lieber Modulverantwortlicher,\n\n"++
      "das Modul "++modDataCode md++" ist fuer das "++showSemester sem++"\n"++
      "im UnivIS angekuendigt, obwohl es in der Planung der Moduldatenbank\n"++
