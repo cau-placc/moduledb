@@ -15,6 +15,7 @@ import AuthorizedControllers
 import UserProcesses
 import DefaultController
 import Authentication
+import SearchController
 
 --- Shows a form to create a new User entity.
 newUserController :: Controller
@@ -78,7 +79,7 @@ listUserController =
    (do users <- runQ queryAllUsers
        return
         (listUserView users showUserController editUserController
-          deleteUserController loginUserController))
+          deleteUserController loginUserController searchUserModules))
 
 --- Shows a User entity.
 showUserController :: User -> Controller

@@ -177,7 +177,7 @@ getUserMenu = do
   login <- getSessionLogin
   return $ blockstyle "menu"
     [ulist $
-      [[href "?main" [htxt "Haupseite"]],
+      [[href "?main" [htxt "Hauptseite"]],
        [href "?listStudyProgram" [htxt "Studiengänge"]],
        [href "?listMasterProgram" [htxt "Masterprogramme"]],
        [href "?search" [htxt "Modulsuche"]]] ++

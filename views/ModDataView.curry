@@ -18,6 +18,7 @@ import Read
 import Mail
 import ConfigMDB
 import DefaultController
+import UserView(leqUser)
 
 --- The WUI specification of the module cycle:
 wCycle = wSelect id ["unregelmäßig","jedes Semester","jedes Jahr"]
@@ -92,7 +93,7 @@ wModData admin allowchangemcode userList spcats =
 
   wURL = if admin then wStr else wConstant htxt
 
-  wResp = if admin then wSelect userToShortView userList
+  wResp = if admin then wSelect userToShortView (mergeSort leqUser userList)
                    else wConstant (stringToHtml . userToShortView)
 
   wStr = wStringSize 70

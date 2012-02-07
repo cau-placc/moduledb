@@ -123,9 +123,10 @@ leqUser x1 x2 =
 --- and the controller functions to show, delete and edit entities.
 listUserView
  :: [User] -> (User -> Controller) -> (User -> Controller)
-  -> (User -> Bool -> Controller) -> (User -> Controller) -> [HtmlExp]
+  -> (User -> Bool -> Controller) -> (User -> Controller)
+  -> (User -> Controller) -> [HtmlExp]
 listUserView users showUserController editUserController
-             deleteUserController loginUserController =
+             deleteUserController loginUserController searchUserModController =
   [h1 [htxt "Lister aller Benutzer"]
   ,table ([take 3 userLabelList ++ [userLabelList!!7]] ++
           map listUser (mergeSort leqUser users))]
@@ -142,4 +143,5 @@ listUserView users showUserController editUserController
                       ["Benutzer \"",userToShortView user
                       ,"\" wirklich löschen?"])])
                 (deleteUserController user))
-            ,button "Anmelden" (nextController (loginUserController user))]]
+            ,button "Anmelden" (nextController (loginUserController user))
+            ,button "Module"   (nextController (searchUserModController user))]]

@@ -27,7 +27,7 @@ getRoutes =
   do login <- getSessionLogin
      admin <- isAdmin
      return $
-      [("Haupseite",Exact "main",MainPageController)
+      [("Hauptseite",Exact "main",MainPageController)
       ,("Modulsuche",Exact "search",SearchController)
       ,("Studiengänge",Exact "listStudyProgram",ListStudyProgramController)] ++
       addIf admin

@@ -2,7 +2,7 @@
 --- This module contains a controller for search modules.
 --------------------------------------------------------------------------
 
-module SearchController(searchController)
+module SearchController(searchController,searchUserModules)
  where
 
 import Spicey
@@ -18,6 +18,7 @@ import CategoryView
 import SearchView
 import ModDataView
 import Helpers
+import MDBEntitiesToHtml
 
 -----------------------------------------------------------------------------
 --- Controller for the main page.
@@ -56,6 +57,22 @@ match pattern string = loop pattern string pattern string
 
     next _  [] = False
     next op (_:ss) = loop op ss op ss
+
+
+--- Controller to list all modules of a user.
+searchUserModules :: User -> Controller
+searchUserModules user = do
+  admin <- isAdmin
+  login <- getSessionLogin
+  mods <- runQ $ queryModDataOfUser (userKey user)
+  return (listCategoryView admin login
+               (Right ("Module von " ++ (userToShortView user)))
+               [(Right "",map (\m->(m,[],[])) mods)]
+               [] [] showCategoryController
+               editCategoryController deleteCategoryController
+               showCategoryPlanController
+               formatModulesForm showEmailCorrectionController)
+
 
 
 --- Controller to list all (visible) modules.
