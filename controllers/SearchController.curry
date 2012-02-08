@@ -84,7 +84,7 @@ showAllModulesController = do
   let (pmods,wmods) = partition isMandatoryModule mods
   return (listCategoryView admin login
             (Right "Alle Module")
-            [(Right "Pflichtmodule (Informatik und Nebenfach)",
+            [(Right "Pflichtmodule (Informatik, Wirtschaftsinformatik, Nebenfach)",
               map (\m->(m,[],[])) pmods),
              (Right "Weitere Module", map (\m->(m,[],[])) wmods)]
             [] [] showCategoryController
@@ -100,8 +100,10 @@ mandatoryModulCodes =
    "Inf-IS",
    "Inf-Ing","Inf-KomSys","Inf-LogInf","Inf-Math-A","Inf-Math-B","Inf-Math-C",
    "Inf-OAR","Inf-PP","Inf-Prog","Inf-SP","Inf-SWT","Inf-TGI",
+   "WInf-WInf1","WInf-WInf2","WInf-WInf3","WInf-BetrStan","WInf-ModIS",
+   "Inf-InfRecht","Inf-DatSchutz",
    "Math-Num","Inf-IngNum","Inf-NumMeth1","Inf-NumMeth2",
-   "NF-Inf-1","NF-Inf-1v","NF-Inf-2","NF-Inf-2-Phys"]
+   "NF-Inf-1","NF-Inf-1v","NF-Inf-2"]
 
 
 --- Controller to show all examination requirement of the modules
