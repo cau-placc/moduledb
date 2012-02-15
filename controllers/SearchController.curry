@@ -103,6 +103,7 @@ mandatoryModulCodes =
    "WInf-WInf1","WInf-WInf2","WInf-WInf3","WInf-BetrStan","WInf-ModIS",
    "Inf-InfRecht","Inf-DatSchutz",
    "Math-Num","Inf-IngNum","Inf-NumMeth1","Inf-NumMeth2",
+   "Inf-SecCom", -- for Digital Communications
    "NF-Inf-1","NF-Inf-1v","NF-Inf-2"]
 
 
