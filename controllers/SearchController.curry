@@ -104,7 +104,7 @@ mandatoryModulCodes =
    "Inf-InfRecht","Inf-DatSchutz",
    "Math-Num","Inf-IngNum","Inf-NumMeth1","Inf-NumMeth2",
    "Inf-SecCom", -- for Digital Communications
-   "NF-Inf-1","NF-Inf-1v","NF-Inf-2"]
+   "Inf-InfNat","NF-Inf-1","NF-Inf-1v","NF-Inf-2"]
 
 
 --- Controller to show all examination requirement of the modules

@@ -16,6 +16,7 @@ import KeyDatabase
 import MDB
 import DefaultController
 import Mail
+import Time
 import ConfigMDB
 
 -----------------------------------------------------------------------------
@@ -47,6 +48,8 @@ loginView controller currlogin =
       then do setPageMessage "Falsche Login-Daten!"
               nextInProcessOr controller Nothing >>= getForm
       else do loginToSession loginname
+              ctime <- getLocalTime
+              runT (updateUser (setUserLastLogin (head users) ctime))
               setPageMessage ("Angemeldet als: "++loginname)
               urls <- getLastUrls
               getForm $
