@@ -14,12 +14,13 @@ import MDB
 import MDBEntitiesToHtml
 import ConfigMDB
 import Helpers
+import UserView(leqUser)
 
 --- The WUI specification for a term/year/user tuple.
 wModInst :: [User] -> WuiSpec (String,Int,User)
 wModInst userList =
   withRendering
-   (wTriple wTerm wYear (wSelect userToShortView userList))
+   (wTriple wTerm wYear (wSelect userToShortView (mergeSort leqUser userList)))
    (renderLabels (map (\s -> [stringToHtml s]) ["Semester","Jahr","Dozent"]))
 
 --- The WUI specification for a list of term/year/user tuples with a deletion
@@ -27,7 +28,7 @@ wModInst userList =
 wListModInst :: [User] -> WuiSpec [(String,Int,User,Bool)]
 wListModInst userList =
   wList
-   (w4Tuple wTerm wYear (wSelect userToShortView userList)
+   (w4Tuple wTerm wYear (wSelect userToShortView (mergeSort leqUser userList))
            (wCheckBool [htxt "Semester löschen"]) )
 
 --- Transformation from data of a WUI form to entity type ModInst.
