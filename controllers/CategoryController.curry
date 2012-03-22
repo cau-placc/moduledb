@@ -151,8 +151,9 @@ runListCategoyController admin login args
 --- in the given period.
 showCategoryPlanController
   :: Either StudyProgram String -> [(Either Category String,[ModData])]
-  -> (String,Int) -> (String,Int) -> Bool -> Controller
-showCategoryPlanController mbstudyprog catmods startsem stopsem withunivis = do
+  -> (String,Int) -> (String,Int) -> Bool -> Bool -> Controller
+showCategoryPlanController mbstudyprog catmods startsem stopsem
+                           withunivis withmprogs = do
   admin <- isAdmin
   login <- getSessionLogin
   users <- runQ queryAllUsers
@@ -173,13 +174,17 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem withunivis = do
  where
    getModInsts md =
      getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->
+     (if withmprogs
+      then getDB (transformQ (map length)
+              $ getMasterProgramKeysOfModInst mis)
+      else returnT (repeat 0)) |>>= \nummps ->
      (if withunivis
       then mapT (\s -> getDB $ queryHasUnivisEntry (modDataCode md) s) semPeriod
       else returnT []) |>>= \univs ->
-     returnT (md,map (instOfSem mis) semPeriod,univs)
+     returnT (md,map (instOfSem (zip mis nummps)) semPeriod,univs)
 
-   instOfSem mis sem =
-     find (\mi -> (modInstTerm mi,modInstYear mi) == sem) mis
+   instOfSem misnums sem =
+     find (\ (mi,_) -> (modInstTerm mi,modInstYear mi) == sem) misnums
 
    semPeriod = takeWhile (\s -> leqSemester s stopsem)
                          (iterate nextSemester startsem)
@@ -234,5 +239,6 @@ getProgramCategoriesStudyProgram cStudyProgram =
 --- Query the categories of a given StudyProgram.
 queryCategorysOfStudyProgram :: StudyProgramKey -> Query [Category]
 queryCategorysOfStudyProgram sp =
-  queryCondCategory (\c -> categoryStudyProgramProgramCategoriesKey c == sp)
+  transformQ (mergeSort leqCategory) $
+   queryCondCategory (\c -> categoryStudyProgramProgramCategoriesKey c == sp)
 

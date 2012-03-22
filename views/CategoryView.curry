@@ -122,16 +122,27 @@ leqCategory x1 x2 =
 
 --- Supplies a list view for a given list of Category entities.
 --- Shows also buttons to show, delete, or edit entries.
---- The arguments are the list of Category entities
---- and the controller functions to show, delete and edit entities.
+--- Various controller functions to show, delete, edit, and format entities
+--- as well as sending emails to request corrections are passed as arguments.
+--- The third argument is the current study program or a header string.
+--- The fourth argument is the real data to be shown:
+--- a list of category information where each info contains
+--- a category (or a header string) together with a list of triples containing
+--- the modules in this category. Each triple contains:
+--- * the module data
+--- * a list of possible module instances for the semester period
+--    (passed as the fifth argument)
+--- * a list of Booleans indicating whether the corresponding module instance
+---   has a UnivIS entry (if this list is empty, UnivIS entries should not
+---   be shown)
 listCategoryView
  :: Bool -> Maybe String -> Either StudyProgram String
-  -> [(Either Category String,[(ModData,[Maybe ModInst],[Bool])])]
+  -> [(Either Category String,[(ModData,[Maybe (ModInst,Int)],[Bool])])]
   -> [(String,Int)] -> [User]
   -> (Category -> Controller) -> (Category -> Controller)
   -> (Category -> Bool -> Controller)
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
-        -> (String,Int) -> (String,Int) -> Bool -> Controller)
+        -> (String,Int) -> (String,Int) -> Bool -> Bool -> Controller)
   -> ([ModData] -> Controller)
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Controller)
@@ -177,10 +188,12 @@ listCategoryView admin login mbsprog catmods semperiod users
             htxt " bis ",
             selectionInitial tosem semSelection  upperSemesterSelection,
             htxt ": ",
-            button "Anzeigen" (showPlan False mbsprog)] ++
+            button "Anzeigen" (showPlan False False mbsprog)] ++
            (maybe []
-                  (\_ -> [button "Anzeigen mit UnivIS-Abgleich"
-                                 (showPlan True mbsprog)])
+                  (\_ -> [button "mit UnivIS-Abgleich"
+                                 (showPlan True False mbsprog),
+                          button "mit Masterprogrammverwendungen"
+                                 (showPlan False True mbsprog)])
                   login) ++
            (if admin
             then [button "UnivIS-Abgleich Emails senden"
@@ -213,24 +226,26 @@ listCategoryView admin login mbsprog catmods semperiod users
     where univisRef = ehref ("?listUnivisInfo/"++showModDataKey md++"/"
                                                ++term++"/"++show year)
 
-   showModInst mi =
+   showModInst (mi,num) =
      let miuserkey = modInstUserLecturerModsKey mi
          showUser u = let name = userName u
                        in if length name > 6 then take 5 name ++ "." else name
       in [italic
            [ehref ("?listModInst/"++showModInstKey mi)
                   [htxt (maybe "???" showUser
-                               (find (\u -> userKey u == miuserkey) users))]]]
+                               (find (\u -> userKey u == miuserkey) users)),
+                   htxt (if num==0 then "" else '(':show num++")")]]]
 
    semSelection = map (\(s,i) -> (showSemester s,show i))
                       (zip semesterSelection [0..])
 
-   showPlan withunivis sprog env = do
+   showPlan withunivis withmprogs sprog env = do
     let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
         stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
     showCategoryPlanController sprog
      (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
-     (semesterSelection!!start) (semesterSelection!!stop) withunivis >>= getForm
+     (semesterSelection!!start) (semesterSelection!!stop)
+     withunivis withmprogs >>= getForm
 
    showCorrectionEmails sprog env = do
     let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
