@@ -66,7 +66,7 @@ logEvent event = exclusiveIO (logFile++".lock") $ do
 
 --- Get symbolic name of ip address:
 getHostnameForIP :: String -> IO String
-getHostnameForIP ipaddr = (flip catchFail) (return "") $ do
+getHostnameForIP ipaddr = (flip catch) (\_ -> return "") $ do
   h <- connectToCommand $ "host " ++ ipaddr
   b <- hIsEOF h
   if b then return ""
