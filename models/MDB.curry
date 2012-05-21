@@ -1434,41 +1434,33 @@ queryCondModData econd =
 
 --- Database table for ModData entities.
 modData'Table :: DBTable ModData
-modData'Table =
-  DBTable (\colvals ->
-             transformQ (map (uncurry keytuple2ModData))
-                        (someDBKeyInfos modDataEntry colvals))
-          (someDBKeyProjectionRaw modDataEntry)
+modData'Table = dbTable modDataEntry keytuple2ModData
 
 --- Attribute Key of entity ModData.
 modData'Key :: DBAttr ModData ModDataKey
-modData'Key = DBAttr modData'Table (-1)
-                     (\k -> AttrEq ((-1) @= modDataKeyToKey k))
-                     (readKeyInfo ModDataKey)
+modData'Key = dbKeyAttr modData'Table (-1) modDataKeyToKey ModDataKey
 
 --- Attribute Code of entity ModData.
 modData'Code :: DBAttr ModData String
-modData'Code = DBAttr modData'Table 0 (\mcode -> AttrEq (0 @= mcode)) readsQTerm
+modData'Code = dbAttr modData'Table 0
 
---- Attribute Code of entity ModData.
+--- Attribute NameG of entity ModData.
 modData'NameG :: DBAttr ModData String
-modData'NameG = DBAttr modData'Table 1 (\mcode -> AttrEq (0 @= mcode)) readsQTerm
+modData'NameG = dbAttr modData'Table 1
 
 --- Attribute UserResponsibleKey of entity ModData.
 modData'UserResponsibleKey :: DBAttr ModData UserKey
-modData'UserResponsibleKey =
-  DBAttr modData'Table 10 (\ukey -> AttrEq (10 @= userKeyToKey ukey))
-         (readKeyInfo UserKey)
+modData'UserResponsibleKey = dbKeyAttr modData'Table 10 userKeyToKey UserKey
 
 --- Gets all ModData entities with a given module code.
 queryModDataWithCode :: String -> KeyDatabase.Query [ModData]
 queryModDataWithCode mcode =
-  select modData'Table `whereQ` modData'Code @== mcode
+  selectFrom modData'Table `whereQ` modData'Code @== mcode
 
 --- Gets all ModData entities of a user.
 queryModDataOfUser :: UserKey -> KeyDatabase.Query [ModData]
 queryModDataOfUser ukey =
-  select modData'Table `whereQ` modData'UserResponsibleKey @== ukey
+  selectFrom modData'Table `whereQ` modData'UserResponsibleKey @== ukey
 
 --- Query the key/code/name of all ModData entities.
 queryModDataCodeName :: KeyDatabase.Query [(ModDataKey,String,String)]
@@ -1565,28 +1557,23 @@ queryCondModDescr econd =
 
 --- Database table for ModDescr entities.
 modDescr'Table :: DBTable ModDescr
-modDescr'Table =
-  DBTable (\colvals ->
-             transformQ (map (uncurry keytuple2ModDescr))
-                        (someDBKeyInfos modDescrEntry colvals))
-          (someDBKeyProjectionRaw modDescrEntry)
+modDescr'Table = dbTable modDescrEntry keytuple2ModDescr
 
 --- Attribute Exam of entity ModDescr.
 modDescr'Exam :: DBAttr ModDescr String
-modDescr'Exam = DBAttr modDescr'Table 5 (\s -> AttrEq (5 @= s)) readsQTerm
+modDescr'Exam = dbAttr modDescr'Table 5
 
 --- Attribute ModDataDataDescKey of entity ModDescr.
 modDescr'ModDataDataDescKey :: DBAttr ModDescr ModDataKey
 modDescr'ModDataDataDescKey =
-  DBAttr modDescr'Table 11 (\key -> AttrEq (11 @= modDataKeyToKey key))
-         readsQTerm
+  dbKeyAttr modDescr'Table 11 modDataKeyToKey ModDataKey
 
 --- Gets the ModDescr entity associated to a given ModData key.
 queryDescriptionOfMod :: ModDataKey -> KeyDatabase.Query (Maybe ModDescr)
 queryDescriptionOfMod mdk =
   KeyDatabase.transformQ
    (\l -> if null l then Nothing else Just (head l))
-   (select modDescr'Table `whereQ` modDescr'ModDataDataDescKey @== mdk)
+   (selectFrom modDescr'Table `whereQ` modDescr'ModDataDataDescKey @== mdk)
 
 --- Gets the Exam attribute associated to a given ModData key.
 queryExamOfMod :: ModDataKey -> KeyDatabase.Query (Maybe String)
@@ -1681,30 +1668,25 @@ queryCondModInst econd =
 
 --- Database table for ModData entities.
 modInst'Table :: DBTable ModInst
-modInst'Table =
-  DBTable (\colvals ->
-             transformQ (map (uncurry keytuple2ModInst))
-                        (someDBKeyInfos modInstEntry colvals))
-          (someDBKeyProjectionRaw modInstEntry)
+modInst'Table = dbTable modInstEntry keytuple2ModInst
 
 --- Attribute Code of entity ModData.
 modInst'Term :: DBAttr ModInst String
-modInst'Term = DBAttr modInst'Table 0 (\s -> AttrEq (0 @= s)) readsQTerm
+modInst'Term = dbAttr modInst'Table 0
 
 --- Attribute Code of entity ModData.
 modInst'Year :: DBAttr ModInst Int
-modInst'Year = DBAttr modInst'Table 1 (\s -> AttrEq (1 @= s)) readsQTerm
+modInst'Year = dbAttr modInst'Table 1
 
 --- Attribute Code of entity ModData.
 modInst'ModDataModuleInstancesKey :: DBAttr ModInst ModDataKey
 modInst'ModDataModuleInstancesKey =
- DBAttr modInst'Table 3 (\s -> AttrEq (3 @= modDataKeyToKey s))
-        (readKeyInfo ModDataKey)
+ dbKeyAttr modInst'Table 3 modDataKeyToKey ModDataKey
 
 --- Gets all module instances for a given module (key).
 queryInstancesOfMod :: ModDataKey -> KeyDatabase.Query [ModInst]
 queryInstancesOfMod mdk =
-  select modInst'Table `whereQ` modInst'ModDataModuleInstancesKey @== mdk
+  selectFrom modInst'Table `whereQ` modInst'ModDataModuleInstancesKey @== mdk
 
 --- Gets the ModData keys of all module instances in a given semester.
 queryModKeysOfSem :: (String,Int) -> KeyDatabase.Query [ModDataKey]
@@ -1825,48 +1807,39 @@ queryCondMasterProgram econd =
 
 --- Database table for MasterProgram entities.
 masterProgram'Table :: DBTable MasterProgram
-masterProgram'Table =
-  DBTable (\colvals ->
-             transformQ (map (uncurry keytuple2MasterProgram))
-                        (someDBKeyInfos masterProgramEntry colvals))
-          (someDBKeyProjectionRaw masterProgramEntry)
+masterProgram'Table = dbTable masterProgramEntry keytuple2MasterProgram
 
 --- Attribute Key of entity ModData.
 masterProgram'Key :: DBAttr MasterProgram MasterProgramKey
-masterProgram'Key = DBAttr masterProgram'Table (-1)
-                     (\k -> AttrEq ((-1) @= masterProgramKeyToKey k))
-                     (readKeyInfo MasterProgramKey)
+masterProgram'Key = dbKeyAttr masterProgram'Table (-1) masterProgramKeyToKey
+                              MasterProgramKey
 
 --- Attribute Code of entity ModData.
 masterProgram'Name :: DBAttr MasterProgram String
-masterProgram'Name = DBAttr masterProgram'Table 0 (\s -> AttrEq (0 @= s)) readsQTerm
+masterProgram'Name = dbAttr masterProgram'Table 0
 
 --- Attribute Code of entity ModData.
 masterProgram'Term :: DBAttr MasterProgram String
-masterProgram'Term = DBAttr masterProgram'Table 1 (\s -> AttrEq (1 @= s)) readsQTerm
+masterProgram'Term = dbAttr masterProgram'Table 1
 
 --- Attribute Code of entity ModData.
 masterProgram'Year :: DBAttr MasterProgram Int
-masterProgram'Year = DBAttr masterProgram'Table 2 (\s -> AttrEq (2 @= s)) readsQTerm
+masterProgram'Year = dbAttr masterProgram'Table 2
 
 --- Attribute Code of entity ModData.
 masterProgram'Visible :: DBAttr MasterProgram Bool
-masterProgram'Visible =
-  DBAttr masterProgram'Table 6 (\s -> AttrEq (6 @= s)) readsQTerm
+masterProgram'Visible = dbAttr masterProgram'Table 6
 
 --- Attribute UserResponsibleKey of entity ModData.
 masterProgram'UserAdvisingKey :: DBAttr MasterProgram UserKey
 masterProgram'UserAdvisingKey =
-  DBAttr masterProgram'Table 7 (\ukey -> AttrEq (7 @= userKeyToKey ukey))
-           (readKeyInfo UserKey)
+  dbKeyAttr masterProgram'Table 7 userKeyToKey UserKey
 
 --- Attribute UserResponsibleKey of entity ModData.
 masterProgram'MasterCoreAreaAreaProgramsKey
   :: DBAttr MasterProgram MasterCoreAreaKey
 masterProgram'MasterCoreAreaAreaProgramsKey =
-  DBAttr masterProgram'Table 8
-         (\cakey -> AttrEq (8 @= masterCoreAreaKeyToKey cakey))
-         (readKeyInfo MasterCoreAreaKey)
+  dbKeyAttr masterProgram'Table 8 masterCoreAreaKeyToKey MasterCoreAreaKey
 
 queryMasterProgramMainInfos
   :: Query [(MasterProgramKey,String,String,Int,Bool,MasterCoreAreaKey)]
@@ -1878,7 +1851,7 @@ queryMasterProgramMainInfos =
 --- Gets all MasterProgram entities belonging to a user.
 queryMasterProgramOfUser :: UserKey -> KeyDatabase.Query [MasterProgram]
 queryMasterProgramOfUser ukey =
-  select masterProgram'Table `whereQ` masterProgram'UserAdvisingKey @== ukey
+  selectFrom masterProgram'Table `whereQ` masterProgram'UserAdvisingKey @== ukey
 
 --- Gets all MasterProgram (keys) for each ModInst of a given ModInst list.
 getMasterProgramKeysOfModInst :: [ModInst] -> Query [[MasterProgramKey]]
@@ -1995,23 +1968,17 @@ queryCondMasterProgInfo econd =
 
 --- Database table for MasterProgram entities.
 masterProgInfo'Table :: DBTable MasterProgInfo
-masterProgInfo'Table =
-  DBTable (\colvals ->
-             transformQ (map (uncurry keytuple2MasterProgInfo))
-                        (someDBKeyInfos masterProgInfoEntry colvals))
-          (someDBKeyProjectionRaw masterProgInfoEntry)
+masterProgInfo'Table = dbTable masterProgInfoEntry keytuple2MasterProgInfo
 
 --- Attribute Code of entity ModData.
 masterProgInfo'ProgModules :: DBAttr MasterProgInfo String
-masterProgInfo'ProgModules =
-  DBAttr masterProgInfo'Table 0 (\s -> AttrEq (0 @= s)) readsQTerm
+masterProgInfo'ProgModules = dbAttr masterProgInfo'Table 0
 
 --- Attribute Code of entity ModData.
 masterProgInfo'MasterProgramProgramInfoKey
   :: DBAttr MasterProgInfo MasterProgramKey
 masterProgInfo'MasterProgramProgramInfoKey =
-  DBAttr masterProgInfo'Table 6 (\k -> AttrEq (6 @= masterProgramKeyToKey k))
-         (readKeyInfo MasterProgramKey)
+  dbKeyAttr masterProgInfo'Table 6 masterProgramKeyToKey MasterProgramKey
 
 --- Gets the MasterProgInfo entity associated to a MasterProgram key.
 queryInfoOfMasterProgram :: MasterProgramKey
@@ -2019,7 +1986,7 @@ queryInfoOfMasterProgram :: MasterProgramKey
 queryInfoOfMasterProgram mpk =
   KeyDatabase.transformQ
    (\l -> if null l then Nothing else Just (head l))
-   (select masterProgInfo'Table
+   (selectFrom masterProgInfo'Table
       `whereQ` masterProgInfo'MasterProgramProgramInfoKey @== mpk)
 {-
   KeyDatabase.transformQ
@@ -2106,31 +2073,24 @@ queryCondUnivisInfo econd =
 
 --- Database table for UnivisInfo entities.
 univisInfo'Table :: DBTable UnivisInfo
-univisInfo'Table =
-  DBTable (\colvals ->
-             transformQ (map (uncurry keytuple2UnivisInfo))
-                        (someDBKeyInfos univisInfoEntry colvals))
-          (someDBKeyProjectionRaw univisInfoEntry)
+univisInfo'Table = dbTable univisInfoEntry keytuple2UnivisInfo
 
 --- Query condition for equality of attribute Code of entity UnivisInfo.
 univisInfo'Code :: DBAttr UnivisInfo String
-univisInfo'Code =
-  DBAttr univisInfo'Table 0 (\mcode -> AttrEq (0 @= mcode)) readsQTerm
+univisInfo'Code = dbAttr univisInfo'Table 0
 
 --- Query condition for equality of attribute Term of entity UnivisInfo.
 univisInfo'Term :: DBAttr UnivisInfo String
-univisInfo'Term =
-  DBAttr univisInfo'Table 1 (\term -> AttrEq (1 @= term)) readsQTerm
+univisInfo'Term = dbAttr univisInfo'Table 1
 
 --- Attribute Term of entity UnivisInfo.
 univisInfo'Year :: DBAttr UnivisInfo Int
-univisInfo'Year =
-  DBAttr univisInfo'Table 2 (\year -> AttrEq (2 @= year)) readsQTerm
+univisInfo'Year = dbAttr univisInfo'Table 2
 
 --- query the univis URLs for a module in a semester:
 queryUnivisURL :: String -> (String,Int) -> Query [String]
 queryUnivisURL mcode (term,year) = transformQ (map univisInfoURL) $
-  select univisInfo'Table
+  selectFrom univisInfo'Table
    `whereQ` univisInfo'Code @== mcode @&&
             univisInfo'Term @== term @&&
             univisInfo'Year @== year
@@ -2138,7 +2098,7 @@ queryUnivisURL mcode (term,year) = transformQ (map univisInfoURL) $
 --- query whether a module has a UnivIS instance in a semester:
 queryHasUnivisEntry :: String -> (String,Int) -> Query Bool
 queryHasUnivisEntry mcode (term,year) = transformQ (not . null) $
-  select univisInfo'Table
+  selectFrom univisInfo'Table
    `whereQ` univisInfo'Code @== mcode @&&
             univisInfo'Term @== term @&&
             univisInfo'Year @== year
@@ -2612,7 +2572,7 @@ ex4 = runQ (selectAll2 modData'Key modData'Code)
 
 ex5 = runQ (select1 modData'NameG `whereQ` modData'Code @=="Inf-Prog")
 
-ex5' = runQ (select modData'Table `whereQ` modData'Code @=="Inf-Prog")
+ex5' = runQ (selectFrom modData'Table `whereQ` modData'Code @=="Inf-Prog")
 
 ex6 = runQ (select2 modData'NameG modData'UserResponsibleKey
               `whereQ` modData'Code @=="Inf-Prog")

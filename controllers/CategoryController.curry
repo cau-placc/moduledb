@@ -92,7 +92,7 @@ runListCategoyController admin login args
                       (map (\c -> (Left c,[])) (mergeSort leqCategory categorys))
                       [] [] showCategoryController
                       editCategoryController deleteCategoryController
-                      showCategoryPlanController formatModulesForm
+                      showCategoryPlanController formatCatModulesForm
                       showEmailCorrectionController)
  | take 5 (head args) == "user="
   = do let lname = drop 5 (head args)
@@ -105,7 +105,7 @@ runListCategoyController admin login args
                         [] [] showCategoryController
                         editCategoryController deleteCategoryController
                         showCategoryPlanController
-                        formatModulesForm showEmailCorrectionController)
+                        formatCatModulesForm showEmailCorrectionController)
  | head (head args) == 'C'
   = maybe (displayError "Illegal URL")
             (\catkey -> do
@@ -123,7 +123,7 @@ runListCategoyController admin login args
                         [] [] showCategoryController
                         editCategoryController deleteCategoryController
                         showCategoryPlanController
-                        formatModulesForm showEmailCorrectionController))
+                        formatCatModulesForm showEmailCorrectionController))
             (readCategoryKey (head args))
  | otherwise
   = maybe (displayError "Illegal URL")
@@ -144,7 +144,7 @@ runListCategoyController admin login args
                          catmods [] [] showCategoryController
                          editCategoryController deleteCategoryController
                          showCategoryPlanController
-                         formatModulesForm showEmailCorrectionController))
+                         formatCatModulesForm showEmailCorrectionController))
             (readStudyProgramKey (head args))
     
 --- Lists all Categories and their modules together with their instances
@@ -170,7 +170,7 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem
              showCategoryController
              editCategoryController deleteCategoryController
              showCategoryPlanController
-             formatModulesForm showEmailCorrectionController)
+             formatCatModulesForm showEmailCorrectionController)
  where
    getModInsts md =
      getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->

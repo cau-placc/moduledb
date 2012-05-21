@@ -3,7 +3,7 @@ module ModDataController (
  showModDataController, editModDataController, deleteModDataController,
  listModDataController, getModDataOfCategory, showModDataWithCode,
  getResponsibleUser, showXmlIndex, showXmlModule,
- formatModulesForm, emailModuleMessageController
+ formatCatModulesForm, emailModuleMessageController
  ) where
 
 import ConfigMDB
@@ -337,16 +337,20 @@ formatModuleForm md mis respuser sprogs categorys mbdesc = do
                         md mis respuser sprogs categorys mbdesc
   latexFormatForm tmp "Formatierte Modulbeschreibung"
 
--- Format a list of modules as PDF
-formatModulesForm :: [ModData] -> IO [HtmlExp]
-formatModulesForm mods = do
+-- Format a list of categories containing modules as PDF
+formatCatModulesForm :: [(String,[ModData])] -> IO [HtmlExp]
+formatCatModulesForm catmods = do
   sprogs <- runQ queryAllStudyPrograms
   pid <- getPID
   let tmp = "tmp_"++show pid
-  mstr <- mapIO (formatModData sprogs) mods
+  mstr <- mapIO (formatCatMods sprogs) catmods
   writeStandaloneLatexFile (tmp++".tex") (concat mstr)
   latexFormatForm tmp "Formatierte Modulbeschreibungen"
  where
+  formatCatMods sprogs (catname,mods) = do
+    mstr <- mapIO (formatModData sprogs) mods
+    return ("\\modulecategory{"++catname++"}\n\n"++concat mstr)
+    
   formatModData sprogs md = do
     respuser <- runJustT (getResponsibleUser md)
     categories <- runJustT (getModDataCategorys md)

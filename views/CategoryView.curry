@@ -143,14 +143,14 @@ listCategoryView
   -> (Category -> Bool -> Controller)
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Bool -> Bool -> Controller)
-  -> ([ModData] -> Controller)
+  -> ([(String,[ModData])] -> Controller)
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Controller)
   -> [HtmlExp]
 listCategoryView admin login mbsprog catmods semperiod users
                  showCategoryController
                  editCategoryController deleteCategoryController
-                 showCategoryPlanController formatModsController
+                 showCategoryPlanController formatCatModsController
                  showEmailCorrectionController =
   [h1 [htxt $ either studyProgramName id mbsprog],
    table (if admin && null (concatMap snd catmods)
@@ -202,17 +202,19 @@ listCategoryView admin login mbsprog catmods semperiod users
    (if admin
     then [par [button "Alle Module formatieren"
                       (nextController
-                         (formatModsController
-                            (mergeSort leqModData
-                               (map (\ (md,_,_)->md)
-                                  (concatMap snd catmods))))),
+                         (formatCatModsController
+                            (map (\ (cat,mods) -> 
+                                      (either categoryName id cat,
+                                       map (\ (md,_,_)->md) mods))
+                                 catmods))),
                button "Alle sichtbaren Module formatieren"
                       (nextController
-                         (formatModsController
-                            (mergeSort leqModData
-                               (filter modDataVisible
-                                  (map (\ (md,_,_)->md)
-                                     (concatMap snd catmods))))))]]
+                         (formatCatModsController
+                            (map (\ (cat,mods) -> 
+                                      (either categoryName id cat,
+                                       filter modDataVisible
+                                              (map (\ (md,_,_)->md) mods)))
+                                 catmods)))]]
     else [])
   where
    fromsem,tosem free
