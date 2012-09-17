@@ -17,6 +17,10 @@ module Spicey (
   stringToHtml, maybeStringToHtml,
   intToHtml,maybeIntToHtml, floatToHtml, maybeFloatToHtml,
   boolToHtml, maybeBoolToHtml, calendarTimeToHtml, maybeCalendarTimeToHtml,
+  hrefStudyProgram, hrefCategory, smallHrefCategory,
+  hrefModule, smallHrefModule, hrefExtModule, hrefModInst, hrefUnivis,
+  spHref, spButton, spPrimButton, spSmallButton, spTable, spHeadedTable,
+  spShortSelectionInitial,
   setPageMessage, getPageMessage,
   saveLastUrl, getLastUrl, getLastUrls
   ) where
@@ -68,8 +72,8 @@ nextControllerForData controller param = do
 confirmNextController :: HtmlExp -> (Bool -> Controller) -> _ -> IO HtmlForm
 confirmNextController question controller _ = do
   getForm [question,
-           par [button "Ja"   (nextController (controller True)),
-                button "Nein" (nextController (controller False))]]
+           par [spButton "Ja"   (nextController (controller True)),
+                spButton "Nein" (nextController (controller False))]]
 
 --- If we are in a process, execute the next process depending on
 --- the provided information passed in the second argument,
@@ -123,8 +127,8 @@ wuiEditForm :: String -> String -> Controller
 wuiEditForm title buttontag controller hexp handler =
   [h1 [htxt title],
    blockstyle "editform" [hexp],
-   par [wuiHandler2button buttontag handler,
-        button "Abbrechen" (nextController (cancelOperation >> controller))]]
+   wuiHandler2button buttontag handler `addClass` "btn btn-primary",
+   spButton "Abbrechen" (nextController (cancelOperation >> controller))]
 
 -- A standard HTML frame for editing data with WUIs where some
 -- additional text explanations are included at the top.
@@ -133,8 +137,8 @@ wuiEditFormWithText :: String -> String -> [HtmlExp] -> Controller
 wuiEditFormWithText title buttontag cmts controller hexp handler =
   [h1 [htxt title]] ++ cmts ++
   [blockstyle "editform" [hexp],
-   par [wuiHandler2button buttontag handler,
-        button "Abbrechen" (nextController (cancelOperation >> controller))]]
+   par [wuiHandler2button buttontag handler `addClass` "btn btn-primary",
+        spButton "Abbrechen" (nextController (cancelOperation >> controller))]]
 
 --- Transforms a WUI frame into a standard form.
 wuiFrameToForm :: (HtmlExp -> WuiHandler -> [HtmlExp])
@@ -175,9 +179,9 @@ wUncheckMaybe defval wspec =
 getUserMenu :: IO HtmlExp
 getUserMenu = do
   login <- getSessionLogin
-  return $ blockstyle "menu"
-    [ulist $
-      [[href "?main" [htxt "Hauptseite"]],
+  return $
+     ulist $
+      [--[href "?main" [htxt "Hauptseite"]],
        [href "?listStudyProgram" [htxt "Studiengänge"]],
        [href "?listMasterProgram" [htxt "Masterprogramme"]],
        [href "?search" [htxt "Modulsuche"]]] ++
@@ -187,29 +191,94 @@ getUserMenu = do
                      [href "?newMasterProgram" [htxt "Neues Masterprogram"]]])
          login) ++
       [[href "?login" [htxt (maybe "An" (const "Ab") login ++ "melden")]]]
-    ]
+
+--- The title of this application (shown in the header).
+spiceyTitle :: String
+spiceyTitle = "Modulinformationssystem Informatik"
 
 --- Adds the basic page layout to a view.
 addLayout :: ViewBlock -> IO ViewBlock
 addLayout viewblock = do
   usermenu   <- getUserMenu
-  routemenus <- getRouteMenus
+  (routemenu1,routemenu2) <- getRouteMenus
   msg        <- getPageMessage
   admin      <- isAdmin
+  login      <- getSessionLogin
   return $
-    [blockstyle "header" [mdbHeader],
-     blockstyle "pagemessage" [nbsp, htxt msg],
-     usermenu] ++
-    viewblock ++
-    (if admin then [fst routemenus,h1 [nbsp],-- to enforce line break
-                    snd routemenus]
-              else []) ++
-    [blockstyle "footer"
-      [par [htxt "powered by",
-            href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
-                 [image "images/spicey-logo.png" "Spicey"]
+    stdNavBar usermenu login ++
+    [blockstyle "container-fluid" $
+      [HtmlStruct "header" [("class","hero-unit")] [h1 [htxt spiceyTitle]],
+       if null msg
+        then HtmlStruct "header" [("class","pagemessage pagemessage-empty")]
+                        [nbsp]
+        else HtmlStruct "header" [("class","pagemessage")] [htxt msg],
+       blockstyle "row-fluid"
+        [blockstyle "span12" viewblock]] ++
+       (if admin then adminNavBar routemenu1 ++ adminNavBar routemenu2
+                 else []) ++
+      [hrule,
+       HtmlStruct "footer" []
+        [par [htxt "powered by",
+              href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
+                   [image "images/spicey-logo.png" "Spicey"]
                  `addAttr` ("target","_blank"),
-            htxt "Framework"]]]
+              htxt "Framework"]]]]
+
+-- Standard navigation bar at the top.
+-- The first argument is the route menu (a ulist).
+-- The second argument is the possible login name.
+stdNavBar :: HtmlExp -> Maybe String -> [HtmlExp]
+stdNavBar routemenu login =
+  [blockstyle "navbar navbar-inverse navbar-fixed-top"
+    [blockstyle "navbar-inner"
+      [blockstyle "container-fluid"
+         [addDropdownItem routemenu `addClass` "nav",
+          par [userIcon, nbsp, htxt $ maybe "nicht angemeldet" id login]
+            `addClass` "navbar-text pull-right"]
+      ]
+    ]
+  ]
+ where
+  userIcon = HtmlText "<i class=\"icon-user icon-white\"></i>"
+
+  addDropdownItem (HtmlStruct t ats items) =
+    HtmlStruct t ats (dropDownMenuItem : items)
+
+  dropDownMenuItem =
+    HtmlStruct "li" [("class","dropdown")]
+     [href "#" [htxt "Gehe zu", bold [htxt " "] `addClass` "caret"]
+       `addAttrs` [("class","dropdown-toggle"),("data-toggle","dropdown")],
+      HtmlStruct "ul" []
+        (litem [href "?main" [htxt "Hauptseite der Moduldatenbank"]] : extUrls)
+        `addClass` "dropdown-menu"]
+
+  extUrls =
+   [toEHref "http://www.informatik.uni-kiel.de" "Institut für Informatik"
+   ,toEHref "http://www.uni-kiel.de" "CAU Kiel"
+   ,litem [htxt " "] `addClass` "divider"
+   ,litem [htxt "Unterstützt durch:"] `addClass` "nav-header"
+   ,toEHref "http://www.curry-language.org" "Curry (Programmiersprache)"
+   ,toEHref "http://www.informatik.uni-kiel.de/~pakcs/spicey"
+            "Spicey (Web Framework)"
+   ,toEHref "http://twitter.github.com/bootstrap/"
+            "Twitter Bootstrap (Style Sheets)"
+   ]
+
+  toEHref url t = litem [ehref url [arrowIcon, nbsp, htxt t]]
+
+  arrowIcon = HtmlText "<i class=\"icon-arrow-right\"></i>"
+
+-- Admin navigation bar at the bottom.
+-- The first argument is the menu (a ulist).
+adminNavBar :: HtmlExp -> [HtmlExp]
+adminNavBar routemenu =
+  [blockstyle "navbar navbar-inverse"
+    [blockstyle "navbar-inner"
+      [blockstyle "container-fluid"
+         [routemenu `addClass` "nav"]
+      ]
+    ]
+  ]
 
 getForm :: ViewBlock -> IO HtmlForm
 getForm viewBlock =
@@ -221,16 +290,20 @@ getForm viewBlock =
                   [par [htxt "You will be forwarded..."]]
   else do
     cookie  <- sessionCookie
-    --lasturl <- getLastUrl
-    login   <- getSessionLogin
-    body    <- addLayout ([blockstyle "debug"
-                             [par [htxt ("login: "++maybe "" id login)]],
-                                   --htxt ("last page: "++lasturl)]],
-                           blockstyle "contents" viewBlock])
-    return $ HtmlForm "Moduldatenbank"
-                      [cookie, FormCSS "css/style.css",icon,MultipleHandlers]
-                      body
+    body    <- addLayout viewBlock
+    return $ HtmlForm spiceyTitle
+                     ([responsiveView, cookie, icon, MultipleHandlers] ++
+                      map (\f -> FormCSS $ "css/"++f++".css")
+                          ["bootstrap","bootstrap-responsive","style"] ++
+                      map (\f -> FormJScript $ "js/"++f++".js")
+                          ["jquery","bootstrap-dropdown"])
+                     body
  where
+   responsiveView =
+     HeadInclude (HtmlStruct "meta"
+                    [("name","viewport"),
+                     ("content","width=device-width, initial-scale=1.0")] [])
+
    icon = HeadInclude (HtmlStruct "link"
                                   [("rel","shortcut icon"),
                                    ("href","favicon.ico")] [])
@@ -243,7 +316,7 @@ mdbHeader =
    [href "?"
       [imageNB "images/MDB_Logo_small.gif" "Moduldatenbank"],
     blockstyle "headertitle"
-      [nbsp, href "?" [htxt "Modulinformationssystem Informatik"], nbsp],
+      [nbsp, htxt "Modulinformationssystem Informatik", nbsp],
     ehref "http://www.informatik.uni-kiel.de"
       [imageNB "images/ifilogo.gif" "Institut für Informatik"],
     ehref "http://www.uni-kiel.de"
@@ -270,11 +343,12 @@ displayError msg = do
                 then "General error (shown by function Spicey.displayError)"
                 else msg]]
 
--- like renderTaggedTuple from WUI Library but takes list of HtmlExp instead of list of strings
+-- like renderTaggedTuple from WUI Library but takes list of HtmlExp
+-- instead of list of strings
 renderLabels :: [[HtmlExp]] -> Rendering
 renderLabels labels hexps =
- table (map (\(l, h) -> [l, [h]]) (zip labels hexps))
-    
+  spTable (map (\(l, h) -> [l, [h]]) (zip labels hexps))
+
 -- convert standard-datatype-values to html representation
 stringToHtml :: String -> HtmlExp
 stringToHtml s = textstyle "type_string" s
@@ -306,6 +380,104 @@ calendarTimeToHtml ct = textstyle "type_calendartime" (toDayString ct)
 maybeCalendarTimeToHtml :: Maybe CalendarTime -> HtmlExp
 maybeCalendarTimeToHtml ct =
   textstyle "type_calendartime" (maybe "" toDayString ct)
+
+--------------------------------------------------------------------------
+-- Auxiliary HTML items:
+
+--- Hypertext reference to a study program:
+hrefStudyProgram :: String -> [HtmlExp] -> HtmlExp
+hrefStudyProgram ref hexps =
+  href ref hexps `addClass` "btn btn-info btn-block btn-left"
+
+--- Hypertext reference to a category:
+hrefCategory :: String -> [HtmlExp] -> HtmlExp
+hrefCategory ref hexps =
+  href ref hexps `addClass` "btn btn-info btn-block btn-left"
+
+--- Small hypertext reference to a category:
+smallHrefCategory :: String -> [HtmlExp] -> HtmlExp
+smallHrefCategory = spEHref
+
+--- Hypertext reference to a module:
+hrefModule :: String -> [HtmlExp] -> HtmlExp
+hrefModule ref hexps =
+  href ref hexps `addClass` "btn btn-link"
+
+--- Small hypertext reference to a module:
+smallHrefModule :: String -> [HtmlExp] -> HtmlExp
+smallHrefModule = spEHref
+
+--- Hypertext reference to an external module:
+hrefExtModule :: String -> [HtmlExp] -> HtmlExp
+hrefExtModule ref hexps =
+  hrefModule ref hexps `addAttr` ("target","_blank")
+
+--- Hypertext reference to a module instance:
+hrefModInst :: String -> [HtmlExp] -> HtmlExp
+hrefModInst = spEHrefBlock
+
+--- Hypertext reference to a UnivIS information:
+hrefUnivis :: String -> [HtmlExp] -> HtmlExp
+hrefUnivis = spEHrefBlock
+
+--- Hypertext reference in Spicey (rendered as a block button):
+spHref :: String -> [HtmlExp] -> HtmlExp
+spHref ref hexps =
+  href ref hexps `addClass` "btn btn-small"
+
+--- Hypertext reference in Spicey (rendered as a block button):
+spHrefBlock :: String -> [HtmlExp] -> HtmlExp
+spHrefBlock ref hexps =
+  href ref hexps `addClass` "btn btn-small btn-block"
+
+--- Hypertext reference in Spicey (rendered as an info block button):
+spHrefInfoBlock :: String -> [HtmlExp] -> HtmlExp
+spHrefInfoBlock ref hexps =
+  href ref hexps `addClass` "btn btn-info btn-block"
+
+--- External hypertext reference in Spicey (rendered as a block button):
+spEHref :: String -> [HtmlExp] -> HtmlExp
+spEHref ref hexps = spHref ref hexps `addAttr` ("target","_blank")
+
+--- External hypertext reference in Spicey (rendered as a block button):
+spEHrefBlock :: String -> [HtmlExp] -> HtmlExp
+spEHrefBlock ref hexps = spHrefBlock ref hexps `addAttr` ("target","_blank")
+
+--- External hypertext reference in Spicey (rendered as an info block button):
+spEHrefInfoBlock :: String -> [HtmlExp] -> HtmlExp
+spEHrefInfoBlock ref hexps =
+  spHrefInfoBlock ref hexps `addAttr` ("target","_blank")
+
+--- Input button in Spicey (rendered as a default button):
+spButton :: String -> HtmlHandler -> HtmlExp
+spButton label handler =
+  button label handler `addClass` "btn"
+
+--- Primary input button in Spicey (rendered as a default primary button):
+spPrimButton :: String -> HtmlHandler -> HtmlExp
+spPrimButton label handler =
+  button label handler `addClass` "btn btn-primary"
+
+--- Small input button in Spicey (rendered as a small button):
+spSmallButton :: String -> HtmlHandler -> HtmlExp
+spSmallButton label handler =
+  button label handler `addClass` "btn btn-small"
+
+--- Short selectionInitial input field:
+spShortSelectionInitial :: CgiRef -> [(String,String)] -> Int -> HtmlExp
+spShortSelectionInitial cref sellist sel =
+  selectionInitial cref sellist sel `addClass` "shorttextinput"
+
+--- Standard table in Spicey. Visualize it with a grid or with
+--- a table if there are too many columns.
+spTable :: [[[HtmlExp]]] -> HtmlExp
+spTable items = table items  `addClass` "table table-hover table-condensed"
+
+--- Headed table in Spicey.
+spHeadedTable :: [[[HtmlExp]]] -> HtmlExp
+spHeadedTable items =
+  headedTable items  `addClass` "table table-hover table-condensed"
+
 
 --------------------------------------------------------------------------
 -- The page messages are implemented by a session store.

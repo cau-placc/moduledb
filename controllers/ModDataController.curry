@@ -288,7 +288,7 @@ emailModuleMessageController :: Controller -> ModData -> User -> String
                              -> IO [HtmlExp]
 emailModuleMessageController cntcontroller mdata user msg = return
    [h1 [htxt "Email an Modulverantwortlichen"],
-    table
+    spTable
      [[[bold [htxt "Empfänger: "]],
        [longTextField mto (userEmail user)]],
       [[bold [htxt "Kopie an: "]],
@@ -297,14 +297,15 @@ emailModuleMessageController cntcontroller mdata user msg = return
        [longTextField msub
                      ("Modul "++modDataCode mdata++": "++modDataNameG mdata)]],
       [[bold [htxt "Inhalt:"]],
-       [textarea mcnt (10,70) msg]]],
-    par [button "Absenden" sendTo,
-         button "Abbrechen" (const (cancelOperation >>
-                                    cntcontroller >>= getForm))]]
+       [textarea mcnt (10,70) msg `addClass` "input-xxlarge"]]],
+    par [spPrimButton "Absenden" sendTo,
+         spButton "Abbrechen" (const (cancelOperation >>
+                                      cntcontroller >>= getForm))]]
  where
   mto,mcc,msub,mcnt free
 
   longTextField ref txt = textfield ref txt `addAttr` ("size","40")
+                                            `addClass` "input-xxlarge"
 
   sendTo env = do
     let cc = env mcc

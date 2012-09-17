@@ -1,46 +1,17 @@
-html {
-  margin: 0;
-  padding: 0;
-  background-color: gray;
-}
-
-body {
-  font-size: 10pt;
-  font-family: Optima, Helvetica, sans-serif;
-  width: 96%;
-  background-color: white;
-  color: black;
-  padding: 0;
-  margin: 30px auto;
-  border: 1px solid black;
-  -moz-border-radius:8px;
-  -khtml-border-radius:8px;
-}
-
-form {
-  margin: 0;
-}
-
-/* Show hyperlinks without underscore */
-a:visited, a:link, a:active
-   {
-    text-decoration: none;
-   }
-
 .label {
   display: block;
   padding: 3px 8px;
   color: black;
   font-size: 10pt;
-  margin-left: 10px;
 }
 
+/*
 .label_for_type_string:before {
-  /* content: url(../images/text.png); */
+  content: url(../images/text.png);
 }
 
 .label_for_type_int:before {
-  /* content: url(../images/number.png); */
+  content: url(../images/number.png);
 }
 
 .label_for_type_calendarTime:before {
@@ -48,8 +19,9 @@ a:visited, a:link, a:active
 }
 
 .label_for_type_relation:before {
-  /* content: url(../images/foreign.png); */
+  content: url(../images/foreign.png);
 }
+*/
 
 .type_string {
   font-size: 10pt;
@@ -67,204 +39,92 @@ a:visited, a:link, a:active
   font-size: 10pt;
 }
 
+.studyprogram {
+  text-align: left;
+}
+
+.category {
+  font-weight: bold;
+  /* font-style: italic; */
+}
 
 input, select {
   font-size: 10pt;
-  margin-left: 5px;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
-.widelist ul li {padding: 5px;} 
-
-table{
-  border-spacing: 1px;
-  background: #E7E7E7;
-  color: #666666;
-  margin: 10px 0 10px 20px;
+.editform tr {
+  text-align: left;
+  padding-left: 0px;
 }
-
-td, th{
-  padding:4px 8px;
-}
-
-tr{
-  background:#EBF8FE;
-  text-align:left;
-}
-
-table tr:hover {
-  background: #F9F9F9;
-}
-
-.alertentry {
-  background: white;
-  color: red;
-}
-
-h1 {
-  margin: 10px 0 15px 20px;
-  font-size: 20pt;
-}
-
-h2 {
-  margin: 5px 0 5px 20px;
-  font-size: 18pt;
-}
-
-h3 {
-  margin: 5px 0 5px 20px;
-}
-
-h4 {
-  margin: 5px 0 5px 20px;
-}
-
-p {
-  margin: 10px 20px 10px 20px;
-  font-size: 10pt;
-}
-
-pre {
-  margin: 10px 20px 10px 20px;
-  font-size: 10pt;
-}
-
-div.debug {
-  margin: 0;
-  padding: 10px;
-  color: #888888;
-  font-size: 8pt;
-  font-family: courier;  
-}
-
-.debug p {
-  margin: 0;
-  padding: 0;
-  text-align: right;
-}
-
-div.header {
-  margin: 0;
-  padding: 5px;
-  background-color: #DDDDDD;
-  -moz-border-radius-topleft: 8px;
-  -moz-border-radius-topright: 8px;
-  -khtml-border-radius: 8px;
-}
-
-.header table{
-  width: 100%;
-  border-spacing: 0px;
-  background: rgb(48,60,135);
-  margin: 0;
-}
-
-.header tr{
-  background:  rgb(48,60,135);
-}
-
-.header tr:hover {
-  background: rgb(48,60,135);
-}
-
-.header td, th{
-  padding: 0px 0px;
-}
-
-.header h1 {
-  margin: 0;
-  padding: 0;
-  font-size: 16pt;
-  text-align: center;
-}
-
-.headertitle
-    {
-    text-align: center;
-    font-weight: bold;
-    font-size: 200%;
-    }
-
- .headertitle a[href] {
-    color: white;
- }
 
 .pagemessage {
-  margin: 0;
-  padding: 5px;
-  color: red;
-  background-color: #eeeeee;
-  font-size: 10pt;
+  padding: 1px 35px 1px 14px;
+  margin-bottom: 0px;
+  text-align: left;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 1px solid #fbeed5;
+  -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
+  color: #b94a48;
+  background-color: #f2dede;
+  border-color: #eed3d7;
 }
 
-.menu ul {
-  list-style: none;
-  margin: 0;
+.pagemessage-empty {
+  color: #ffffff;
+  background-color: #ffffff;
+  border-color: #ffffff;
 }
 
-.menu li {
-  float: left;
-  margin: 0;
-  padding: 0;
+/* Changes to default bootstrap style: */
+
+body {
+  padding-top: 60px;
+  padding-bottom: 40px;
 }
 
-.menu li a {
-  display: block;
-  background-color: #DDDDDD;
-  padding: 5px;
-  margin: 5px;
-  font-size: 10pt;
-  color: black;
-  text-decoration: none;
-  min-width: 60px;
-  text-align: center;
-  -moz-border-radius:8px;
-  -khtml-border-radius:8px;
+.hero-unit {
+  padding: 5px 15px;
+  margin-bottom: 0px;
 }
 
-/* style for hrefs as a button */
-.buttonhref a {
-  background-color: #DDDDDD;
-  padding: 5px;
-  font-size: 10pt;
-  font-weight: normal;
-  color: black;
-  text-decoration: none;
-  min-width: 60px;
-  text-align: center;
-  -moz-border-radius:8px;
-  -khtml-border-radius:8px;
+.hero-unit h1 {
+  margin-bottom: 10px;
+  font-size: 40px;
 }
 
-/* style for the main contents of the application */
-.contents {
-  background-color: white;
+/* button with left-aligned text */
+.btn-left {
+  text-align: left;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
-.footer {
-  font-size: 10pt;
-  font-style: italic;
+.table {
+  width: auto;
 }
 
-.footer p {
-  margin: 50px 0 8px;
-  height: 50px;
-  width: 100%;
-  text-align: center;
+/* set sizes of input elements */
+textarea {
+  width: 530px;
 }
 
-.footer img {
-  vertical-align: middle;  
+.largetextinput {
+  width: 530px;
 }
 
-.footer a img {
-  border-width: 0px;
-  vertical-align: middle;  
+.mediumtextinput {
+  width: 300px;
 }
 
-.studyprogram {
-  font-size: 12pt;
+.shorttextinput {
+  width: 120px;
 }
-.category {
-  font-weight: bold;
-  font-style: italic;
+
+.numwidth {
+  width: 4em;
 }
+

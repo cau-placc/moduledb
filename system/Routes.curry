@@ -41,8 +41,8 @@ getRouteMenus = do
   routes <- getRoutes
   let links = getLinks routes
       (newlinks,otherlinks) = partition (\l -> take 3 (fst l) == "new") links
-  return $ (blockstyle "menu" [ulist (map snd newlinks)],
-            blockstyle "menu" [ulist (map snd otherlinks)])
+  return $ (ulist (map snd newlinks),
+            ulist (map snd otherlinks))
  where
    getLinks :: [Route] -> [(String,[HtmlExp])]
    getLinks ((name, matcher, _):restroutes) =

@@ -21,16 +21,15 @@ mainPageView studyPrograms =
   [h1 [htxt "Module und Studienprogramme des Instituts für Informatik"],
    par [htxt $ "Auf diesen Webseiten sind die Module aller Studienprogramme "++
                "des Instituts für Informatik sowie alle vom Institut "++
-               "angebotenen Module beschrieben."++
+               "angebotenen Module beschrieben. "++
                "Außerdem befindet sich hier eine Übersicht über alle "++
                "angebotenen Masterprogramme."],
    h2 [htxt "Studiengänge"],
-   table (map (\sp -> [head (studyProgramToListView sp)])
-              (mergeSort leqStudyProgram studyPrograms)),
+   spTable (map (\sp -> [head (studyProgramToListView sp)])
+                (mergeSort leqStudyProgram studyPrograms)),
    h2 [htxt "Masterstudium Informatik:", nbsp,
-   style "buttonhref" [href "?listMasterCoreArea"
-                                 [htxt "Schwerpunktbereiche"]],nbsp,
-        style "buttonhref" [href "?listMasterProgram" [htxt "Masterprogramme"]]],
+       spHref "?listMasterCoreArea" [htxt "Schwerpunktbereiche"], nbsp,
+       spHref "?listMasterProgram" [htxt "Masterprogramme"]],
    par [htxt "Weitere Informationen:"],
    ulist
     [[bold [htxt "Für Modulverantwortliche: "],

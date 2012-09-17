@@ -54,7 +54,7 @@ wMasterProgInfo modinsts =
   -- render a tuple as a bordered table with string tags:
   renderModBorder :: [String] -> [HtmlExp] -> HtmlExp
   renderModBorder tags hexps =
-     table (map (\(t,h)->[[bold [htxt t]],[h]]) (zip tags hexps))
+     spTable (map (\(t,h)->[[bold [htxt t]],[h]]) (zip tags hexps))
 
 
   -- omit all non-module codes in a list of module instances
@@ -64,9 +64,11 @@ wMasterProgInfo modinsts =
    transformWSpec
     (\ (p,(ck,mdk,s,y))->(ck,p,mdk,s,y), \ (ck,p,mdk,s,y)->(p,(ck,mdk,s,y)))
     (wPair
-      (wSelectBool "Pflicht" "Empfehlung")
+      (wSelectBool "Pflicht" "Empfehlung"
+         `withRendering` shorttextinputRendering)
       (wSelect showModSem
-               ((catkey,"",currentTerm,currentYear) :cs)))
+               ((catkey,"",currentTerm,currentYear) :cs)
+         `withRendering` largetextinputRendering))
 
   showModSem (_,mc,term,year) =
     if null mc then ""
@@ -169,7 +171,7 @@ showMasterProgInfoView
  :: MasterProgInfo -> MasterProgram -> Controller -> [HtmlExp]
 showMasterProgInfoView masterProgInfo relatedMasterProgram controller =
   masterProgInfoToDetailsView masterProgInfo relatedMasterProgram ++
-   [button "back to MasterProgInfo list" (nextController controller)]
+   [spButton "back to MasterProgInfo list" (nextController controller)]
 
 --- Compares two MasterProgInfo entities. This order is used in the list view.
 leqMasterProgInfo :: MasterProgInfo -> MasterProgInfo -> Bool
@@ -193,18 +195,18 @@ listMasterProgInfoView masterProgInfos showMasterProgInfoController
                        editMasterProgInfoController
                        deleteMasterProgInfoController =
   [h1 [htxt "MasterProgInfo list"]
-  ,table
+  ,spTable
     ([take 6 masterProgInfoLabelList] ++
      map listMasterProgInfo (mergeSort leqMasterProgInfo masterProgInfos))]
   where listMasterProgInfo :: MasterProgInfo -> [[HtmlExp]]
         listMasterProgInfo masterProgInfo =
           masterProgInfoToListView masterProgInfo ++
-           [[button "show"
+           [[spSmallButton "show"
               (nextController (showMasterProgInfoController masterProgInfo))
-            ,button "edit"
+            ,spSmallButton "edit"
               (nextController (editMasterProgInfoController masterProgInfo))
             
-            ,button "delete"
+            ,spSmallButton "delete"
               (confirmNextController
                 (h3
                   [htxt

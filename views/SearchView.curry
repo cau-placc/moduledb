@@ -26,13 +26,14 @@ searchPageView login searchcontroller showExamController showAllMods =
       [[htxt "Alle Module mit Zeichenfolge ",
         textfield scode "" `addAttr` ("size","20"),
         htxt " im Modulcode oder -titel ",
-        button "suchen" searchHandler],
-       [htxt "Alle Module ", button "anzeigen" (nextController showAllMods)]] ++
+        spButton "suchen" searchHandler],
+       [htxt "Alle Module ",
+        spButton "anzeigen" (nextController showAllMods)]] ++
       if login==Nothing
       then []
       else [[htxt "Prüfungsanforderungen aller Module im ",
-            selectionInitial insem semSelection lowerSemesterSelection,
-            button "anzeigen" showExams]]
+            spShortSelectionInitial insem semSelection lowerSemesterSelection,
+            spButton "anzeigen" showExams]]
       ]]
  where
   scode,insem free
@@ -52,7 +53,7 @@ searchPageView login searchcontroller showExamController showAllMods =
 showExamOverview :: (String,Int) -> [(ModData,String)] -> [HtmlExp]
 showExamOverview sem mods =
   [h1 [htxt $ "Prüfungsanforderungen aller Module im " ++ showSemester sem],
-   headedTable $
+   spHeadedTable $
      [[htxt "Modul:"],[htxt "Prüfungsanforderungen:"]] :
      map (\ (m,e) -> [[htxt (modDataCode m ++": "++ modDataNameG m)],
                      [HtmlText (docText2html e)]])

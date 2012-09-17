@@ -103,7 +103,7 @@ editModDescrView modDescr controller =
 showModDescrView :: ModDescr -> ModData -> Controller -> [HtmlExp]
 showModDescrView modDescr relatedModData controller =
   modDescrToDetailsView modDescr relatedModData ++
-   [button "back to ModDescr list" (nextController controller)]
+   [spButton "back to ModDescr list" (nextController controller)]
 
 --- Compares two ModDescr entities. This order is used in the list view.
 leqModDescr :: ModDescr -> ModDescr -> Bool
@@ -126,15 +126,17 @@ listModDescrView
 listModDescrView modDescrs showModDescrController editModDescrController
                  deleteModDescrController =
   [h1 [htxt "ModDescr list"]
-  ,table
+  ,spTable
     ([take 11 modDescrLabelList] ++
      map listModDescr (mergeSort leqModDescr modDescrs))]
   where listModDescr :: ModDescr -> [[HtmlExp]]
         listModDescr modDescr =
           modDescrToListView modDescr ++
-           [[button "show" (nextController (showModDescrController modDescr))
-            ,button "edit" (nextController (editModDescrController modDescr))
-            ,button "delete"
+           [[spSmallButton "show"
+              (nextController (showModDescrController modDescr))
+            ,spSmallButton "edit"
+              (nextController (editModDescrController modDescr))
+            ,spSmallButton "delete"
               (confirmNextController
                 (h3
                   [htxt

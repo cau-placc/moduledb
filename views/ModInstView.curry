@@ -104,7 +104,7 @@ editModInstView md insts possibleUsers controller =
 showModInstView :: ModInst -> ModData -> User -> Controller -> [HtmlExp]
 showModInstView modInst relatedModData relatedUser controller =
   modInstToDetailsView modInst relatedModData relatedUser ++
-   [button "back to ModInst list" (nextController controller)]
+   [spButton "back to ModInst list" (nextController controller)]
 
 --- Compares two ModInst entities. This order is used in the list view.
 leqModInst :: ModInst -> ModInst -> Bool
@@ -121,15 +121,17 @@ listModInstView
 listModInstView modInsts showModInstController editModInstController
                 deleteModInstController =
   [h1 [htxt "ModInst list"]
-  ,table
+  ,spTable
     ([take 2 modInstLabelList] ++
      map listModInst (mergeSort leqModInst modInsts))]
   where listModInst :: ModInst -> [[HtmlExp]]
         listModInst modInst =
           modInstToListView modInst ++
-           [[button "show" (nextController (showModInstController modInst))
-            ,button "edit" (nextController (editModInstController modInst))
-            ,button "delete"
+           [[spSmallButton "show"
+              (nextController (showModInstController modInst))
+            ,spSmallButton "edit"
+              (nextController (editModInstController modInst))
+            ,spSmallButton "delete"
               (confirmNextController
                 (h3
                   [htxt

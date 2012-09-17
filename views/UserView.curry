@@ -8,6 +8,7 @@ import HTML
 import Time
 import Sort
 import Spicey
+import Helpers
 import MDB
 import MDBEntitiesToHtml
 
@@ -16,12 +17,10 @@ wUser
  :: WuiSpec (String,String,String,String,String,String,String,CalendarTime)
 wUser =
   withRendering
-   (w8Tuple wReqStr wReqStr wStr wStr wReqStr wStr
+   (w8Tuple wMediumRequiredString wMediumRequiredString wMediumString
+            wMediumString wMediumRequiredString wMediumString
             (wConstant htxt) (wConstant (htxt . calendarTimeToString)))
    (renderLabels userLabelList)
- where
-  wReqStr = wRequiredStringSize 40
-  wStr    = wStringSize 40
 
 --- Transformation from data of a WUI form to entity type User.
 tuple2User
@@ -80,7 +79,8 @@ createUserView defaultLogin defaultName defaultFirst defaultTitle defaultEmail
   let initdata = (defaultLogin,defaultName,defaultFirst,defaultTitle
                  ,defaultEmail,defaultUrl,defaultPassword,defaultLastLogin)
       
-      wuiframe = wuiEditForm "new User" "create" (controller False initdata)
+      wuiframe = wuiEditForm "Neuen Benutzer anlegen" "Anlegen"
+                             (controller False initdata)
       
       (hexp ,handler) = wuiWithErrorForm wUser initdata
                          (nextControllerForData (controller True))
@@ -107,7 +107,7 @@ showUserView :: User -> Controller -> [HtmlExp]
 showUserView user controller =
   [h1 [htxt $ "Benutzer " ++ userLogin user]] ++
   userToDetailsView user ++
-  [par [button "Zurück zur Benutzerliste" (nextController controller)]]
+  [par [spButton "Zurück zur Benutzerliste" (nextController controller)]]
 
 --- Compares two User entities. This order is used in the list view.
 leqUser :: User -> User -> Bool
@@ -128,20 +128,21 @@ listUserView
 listUserView users showUserController editUserController
              deleteUserController loginUserController searchUserModController =
   [h1 [htxt "Lister aller Benutzer"]
-  ,table ([take 3 userLabelList ++ [userLabelList!!7]] ++
-          map listUser (mergeSort leqUser users))]
-  where listUser :: User -> [[HtmlExp]]
-        listUser user =
-          userToListView user ++
-           [[button "Anzeigen" (nextController (showUserController user))
-            ,button "Ändern" (nextController (editUserController user))
-            ,button "Löschen"
-              (confirmNextController
-                (h3
-                  [htxt
-                    (concat
-                      ["Benutzer \"",userToShortView user
-                      ,"\" wirklich löschen?"])])
-                (deleteUserController user))
-            ,button "Anmelden" (nextController (loginUserController user))
-            ,button "Module"   (nextController (searchUserModController user))]]
+  ,spTable ([take 3 userLabelList ++ [userLabelList!!7]] ++
+            map listUser (mergeSort leqUser users))]
+  where
+   listUser :: User -> [[HtmlExp]]
+   listUser user =
+     userToListView user ++
+      [[spSmallButton "Anzeigen" (nextController (showUserController user))
+       ,spSmallButton "Ändern" (nextController (editUserController user))
+       ,spSmallButton "Löschen"
+         (confirmNextController
+           (h3
+             [htxt
+               (concat
+                 ["Benutzer \"",userToShortView user
+                 ,"\" wirklich löschen?"])])
+           (deleteUserController user))
+       ,spSmallButton "Anmelden" (nextController (loginUserController user))
+       ,spSmallButton "Module" (nextController (searchUserModController user))]]

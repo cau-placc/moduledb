@@ -33,6 +33,7 @@ wPresence =
                                 p, htxt "Praktikum ", s, htxt "Seminar"]))
  where
    wSWS = wSelect show [0..15]
+            `withRendering` (\ [s] -> inline [s `addClass` "numwidth"])
 
    showPresence (vor,ueb,prk,sem) =
     show vor ++ "V " ++ show ueb ++ "Ü " ++ show prk ++ "P " ++ show sem ++ "S"
@@ -56,7 +57,7 @@ wCatList spcats =
                  short = maybe "?" categoryShortName mbcat
               in ehref "?showcats" [htxt short]
 
-  renderCats hexps = table (split2rows spcats hexps)
+  renderCats hexps = spTable (split2rows spcats hexps)
 
   split2rows [] _ = []
   split2rows ((sp,cats):sps) hexps =
@@ -74,8 +75,8 @@ wModData admin allowchangemcode userList spcats =
   withRendering
    (w12Tuple (if allowchangemcode then wRequiredStringSize 15
                                   else wConstant htxt)
-             wReqStr wStr wCycle wPresence wECTS
-             wReqStr (wSelect show [1,2,3]) wURL wVisible wResp wCats)
+             wLargeRequiredString wLargeString wCycle wPresence wECTS
+             wLargeRequiredString wLength wURL wVisible wResp wCats)
    (renderLabels (if admin then labelList else take 10 labelList))
  where
   labelList = if allowchangemcode
@@ -83,22 +84,24 @@ wModData admin allowchangemcode userList spcats =
                       "Code (Vorsicht beim Ändern!)"] : drop 1 modDataLabelList
               else modDataLabelList
 
-  wECTS = if admin then wSelect showDiv10 [0,5..300]
-                   else wConstant (htxt . showDiv10)
+  wECTS = (if admin then wSelect showDiv10 [0,5..300]
+                    else wConstant (htxt . showDiv10))
+             `withRendering` numwidthRendering
+
+  wLength = wSelect show [1,2,3]
+             `withRendering` numwidthRendering
 
   wCats = if admin
           then wCatList spcats
           else wConstant (htxt . unwords . map categoryToShortView)
 
 
-  wURL = if admin then wStr else wConstant htxt
+  wURL = if admin then wLargeString else wConstant htxt
 
   wResp = if admin then wSelect userToShortView (mergeSort leqUser userList)
                    else wConstant (stringToHtml . userToShortView)
 
-  wStr = wStringSize 70
-  wReqStr = wRequiredStringSize 70
-
+  numwidthRendering [s] = inline [s `addClass` "numwidth"]
 
 --- Transformation from data of a WUI form to entity type ModData.
 tuple2ModData
@@ -231,7 +234,7 @@ editModDataView admin (modData ,categorys) relatedUser possibleUsers
 showModDataView :: ModData -> User -> [Category] -> Controller -> [HtmlExp]
 showModDataView modData relatedUser categorys controller =
   modDataToDetailsView modData relatedUser categorys ++
-   [button "back to ModData list" (nextController controller)]
+   [spButton "back to ModData list" (nextController controller)]
 
 --- A view for searching modules.
 copyModView :: ModData -> (String -> Controller) -> [HtmlExp]
@@ -243,7 +246,7 @@ copyModView oldmod controller =
                "kopiert!"],
    par [htxt "Neuer Modulcode für das kopierte Modul: ",
         textfield newcode "" `addAttr` ("size","20"),
-        button "Modul kopieren" copyHandler]]
+        spPrimButton "Modul kopieren" copyHandler]]
  where
   newcode free
 
@@ -275,16 +278,18 @@ listModDataView
 listModDataView admin title modDatas showModDataController editModDataController
                 deleteModDataController =
   [h1 [htxt title]
-  ,table
+  ,spTable
     ([take 2 modDataLabelList ++ [[htxt "ECTS"]]] ++
      map listModData (mergeSort leqModData modDatas))]
   where listModData :: ModData -> [[HtmlExp]]
         listModData modData =
           modDataToListView modData ++
             if not admin then [] else
-            [[button "show" (nextController (showModDataController modData)),
-              button "edit" (nextController (editModDataController modData)),
-              button "delete"
+            [[spSmallButton "show"
+               (nextController (showModDataController modData)),
+              spSmallButton "edit"
+               (nextController (editModDataController modData)),
+              spSmallButton "delete"
               (confirmNextController
                 (h3
                   [htxt
@@ -337,26 +342,26 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
              [imageNB "images/pdf.png" "Convert to PDF"], nbsp,
        ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
   [par $ (if admin || editallowed
-          then [button "Semester hinzufügen"
+          then [spSmallButton "Semester hinzufügen"
                        (nextController modinstaddController),
-                button "Semesterangaben ändern"
+                spSmallButton "Semesterangaben ändern"
                        (nextController modinsteditController),
-                button "Moduldaten/Sichtbarkeit ändern"
+                spSmallButton "Moduldaten/Sichtbarkeit ändern"
                        (nextController (editModDataController modData))] ++
                 maybe []
                       (\desc ->
-                        [button "Modulbeschreibung ändern"
+                        [spSmallButton "Modulbeschreibung ändern"
                              (nextController (editModDescrController desc))] ++
                         if admin
-                        then [button "Modul kopieren"
+                        then [spSmallButton "Modul kopieren"
                               (nextController (copyModController modData desc))]
                         else [])
                       maybedesc
           else []) ++
          (if admin
-          then [button "Email"
+          then [spSmallButton "Email"
                     (nextController (emailController modData responsibleUser)),
-                button "Modul löschen"
+                spSmallButton "Modul löschen"
                  (confirmNextController
                     (h3 [htxt (concat
                          ["Really delete entity \"",modDataToShortView modData
@@ -364,7 +369,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
                     (deleteModDataController modData))]
           else [])] ++
   [h2 [htxt $ "Titel: "++ modDataNameG modData],
-   table $
+   spTable $
     [[[bold [stringToHtml "Englische Bezeichnung:"]],
       [stringToHtml (modDataNameE modData)]],
      [[bold [stringToHtml "Modulverantwortliche(r):"]],

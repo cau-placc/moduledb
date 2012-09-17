@@ -26,17 +26,17 @@ loginView :: Controller -> Maybe String -> [HtmlExp]
 loginView controller currlogin =
   case currlogin of
    Nothing -> [h3 [htxt "Anmeldung zur Moduldatenbank"],
-               table [[[htxt "Benutzername:"], [textfield loginfield ""]],
-                      [[htxt "Passwort:"],     [password passfield]]], hrule,
-               par [button "Anmelden" loginHandler],
+               spTable [[[htxt "Benutzername:"], [textfield loginfield ""]],
+                        [[htxt "Passwort:"],     [password passfield]]], hrule,
+               par [spPrimButton "Anmelden" loginHandler],
                hrule,
-               par [button "Login-Daten vergessen?" (const sendLoginDataForm)]]
+               par [spButton "Login-Daten vergessen?" (const sendLoginDataForm)]]
    Just _  -> [h3 [htxt "Wirklich abmelden?"],
-               par [button "Abmelden"  (logoutHandler True),
-                    button "Abbrechen" (logoutHandler False)],
+               par [spPrimButton "Abmelden"  (logoutHandler True),
+                    spButton "Abbrechen" (logoutHandler False)],
                hrule,
                h3 [htxt "Sie können auch nur Ihr ",
-                   button "Passwort ändern" (const passwdForm)]]
+                   spButton "Passwort ändern" (const passwdForm)]]
  where
   loginfield,passfield free
 
@@ -82,12 +82,13 @@ passwdForm = do
   login <- getSessionLogin
   getForm
     [h1 [htxt "Passwort ändern"],
-     table [[[htxt "Altes Passwort:"], [password oldpass]],
-            [[htxt "Neues Passwort:"], [password newpass1]],
-            [[htxt "Neues Passwort wiederholen:"], [password newpass2]]],
+     spTable [[[htxt "Altes Passwort:"], [password oldpass]],
+              [[htxt "Neues Passwort:"], [password newpass1]],
+              [[htxt "Neues Passwort wiederholen:"], [password newpass2]]],
      hrule,
-     button "Passwort ändern" (\ e -> passwdHandler login e >>= getForm), nbsp,
-     button "Abbrechen"
+     spPrimButton "Passwort ändern" (\ e -> passwdHandler login e >>= getForm),
+     nbsp,
+     spButton "Abbrechen"
             (const (cancelOperation >> defaultController >>= getForm))]
  where
   oldpass,newpass1,newpass2 free
@@ -116,8 +117,8 @@ sendLoginDataForm =
           htxt " zusenden lassen, sofern Sie im System registriert sind."],
      par [htxt "Ihre Email-Adresse: ", textfield emailref ""],
      hrule,
-     button "Neues Passwort senden" sendHandler,
-     button "Abbrechen"
+     spPrimButton "Neues Passwort senden" sendHandler,
+     spButton "Abbrechen"
             (const (cancelOperation >> defaultController >>= getForm))]
  where
   emailref free

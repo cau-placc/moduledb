@@ -12,7 +12,7 @@ import List
 --- This view is used in a row of a table of all entities.
 studyProgramToListView :: StudyProgram -> [[HtmlExp]]
 studyProgramToListView studyProgram =
-  [[href ("?listCategory/"++showStudyProgramKey studyProgram)
+  [[hrefStudyProgram ("?listCategory/"++showStudyProgramKey studyProgram)
          [textstyle "studyprogram" (studyProgramName studyProgram)]]
   ,[stringToHtml (studyProgramShortName studyProgram)]
   ,[stringToHtml (studyProgramProgKey studyProgram)]
@@ -27,7 +27,7 @@ studyProgramToShortView studyProgram = studyProgramShortName studyProgram
 --- The detailed view of a StudyProgram entity in HTML format.
 studyProgramToDetailsView :: StudyProgram -> [HtmlExp]
 studyProgramToDetailsView studyProgram =
-  [table
+  [spTable
     (map (\ (label ,value) -> [label,value])
       (zip studyProgramLabelList detailedView))]
   where detailedView = [[stringToHtml (studyProgramName studyProgram)]
@@ -49,8 +49,8 @@ studyProgramLabelList =
 --- This view is used in a row of a table of all entities.
 categoryToListView :: Category -> [[HtmlExp]]
 categoryToListView category =
-  [[href ("?listCategory/"++showCategoryKey category)
-         [stringToHtml (categoryName category)]]
+  [[hrefCategory ("?listCategory/"++showCategoryKey category)
+                   [stringToHtml (categoryName category)]]
   ,[stringToHtml (categoryShortName category)]
   ,[stringToHtml (categoryCatKey category)]
   ,[intToHtml (categoryPosition category)]]
@@ -58,8 +58,8 @@ categoryToListView category =
 --- The HTML view of a Category entity.
 categoryToHtmlView :: Category -> HtmlExp
 categoryToHtmlView category =
-  ehref ("?listCategory/"++showCategoryKey category)
-        [htxt (categoryCatKey category)]
+  smallHrefCategory ("?listCategory/"++showCategoryKey category)
+    [htxt (categoryCatKey category)]
 
 --- The short view of a Category entity as a string.
 --- This view is used in menus and comments to refer to a Category entity.
@@ -70,7 +70,7 @@ categoryToShortView category = categoryCatKey category
 --- It also takes associated entities for every associated entity type.
 categoryToDetailsView :: Category -> StudyProgram -> [HtmlExp]
 categoryToDetailsView category relatedStudyProgram =
-  [table
+  [spTable
     (map (\ (label ,value) -> [label,value])
       (zip categoryLabelList detailedView))]
   where detailedView = [[stringToHtml (categoryName category)]
@@ -107,7 +107,7 @@ masterCoreAreaToShortView masterCoreArea =
 --- The detailed view of a MasterCoreArea entity in HTML format.
 masterCoreAreaToDetailsView :: MasterCoreArea -> [HtmlExp]
 masterCoreAreaToDetailsView masterCoreArea =
-  [table
+  [spTable
     (map (\ (label ,value) -> [label,value])
       (zip masterCoreAreaLabelList detailedView))]
   where detailedView = [[stringToHtml (masterCoreAreaName masterCoreArea)]
@@ -155,7 +155,7 @@ userToShortView user =
 --- The detailed view of a User entity in HTML format.
 userToDetailsView :: User -> [HtmlExp]
 userToDetailsView user =
-  [table
+  [spTable
     (map (\ (label ,value) -> [label,value])
       (zip userLabelList detailedView))]
   where detailedView = [[stringToHtml (userLogin user)]
@@ -190,8 +190,8 @@ modDataToListView modData =
    withHref hexp =
      let txtelem = [if modDataVisible modData then hexp else italic [hexp]]
       in  if null (modDataURL modData)
-          then href ("?listModData/"++showModDataKey modData) txtelem
-                   else ehref (modDataURL modData) txtelem
+          then hrefModule ("?listModData/"++showModDataKey modData) txtelem
+          else hrefExtModule (modDataURL modData) txtelem
 
 --- A more compact list view of a ModData entity in HTML format
 --- where code and title is shown in one column.
@@ -203,8 +203,8 @@ modDataToCompactListView modData =
    withHref hexp =
      let txtelem = [if modDataVisible modData then hexp else italic [hexp]]
       in if null (modDataURL modData)
-         then href ("?listModData/"++showModDataKey modData) txtelem
-         else ehref (modDataURL modData) txtelem
+         then hrefModule ("?listModData/"++showModDataKey modData) txtelem
+         else hrefExtModule (modDataURL modData) txtelem
 
 
 --- The short view of a ModData entity as a string.
@@ -216,7 +216,7 @@ modDataToShortView modData = modDataCode modData
 --- It also takes associated entities for every associated entity type.
 modDataToDetailsView :: ModData -> User -> [Category] -> [HtmlExp]
 modDataToDetailsView modData relatedUser categorys =
-  [table
+  [spTable
     (map (\ (label ,value) -> [label,value])
       (zip modDataLabelList detailedView))]
   where detailedView = [[stringToHtml (modDataCode modData)]
@@ -273,7 +273,7 @@ modDescrToShortView modDescr = modDescrLanguage modDescr
 --- It also takes associated entities for every associated entity type.
 modDescrToDetailsView :: ModDescr -> ModData -> [HtmlExp]
 modDescrToDetailsView modDescr relatedModData =
-  [table
+  [spTable
     (map (\ (label ,value) -> [label,value])
       (zip modDescrLabelList detailedView))]
   where detailedView = [[stringToHtml (modDescrLanguage modDescr)]
@@ -324,7 +324,7 @@ modInstToShortView modInst = modInstTerm modInst
 --- It also takes associated entities for every associated entity type.
 modInstToDetailsView :: ModInst -> ModData -> User -> [HtmlExp]
 modInstToDetailsView modInst relatedModData relatedUser =
-  [table
+  [spTable
     (map (\ (label ,value) -> [label,value])
       (zip modInstLabelList detailedView))]
   where detailedView = [[stringToHtml (modInstTerm modInst)]
@@ -344,7 +344,7 @@ modInstLabelList =
 --- This view is used in a row of a table of all entities.
 masterProgramToListView :: MasterProgram -> HtmlExp
 masterProgramToListView masterProgram =
-  href ("?listMasterProgram/"++showMasterProgramKey masterProgram)
+  spHref ("?listMasterProgram/"++showMasterProgramKey masterProgram)
        [if masterProgramVisible masterProgram
         then stringToHtml (masterProgramName masterProgram)
         else italic [stringToHtml (masterProgramName masterProgram)]]
@@ -361,7 +361,7 @@ masterProgramToShortView mprog =
 masterProgramToDetailsView
  :: MasterProgram -> MasterCoreArea -> User -> [HtmlExp]
 masterProgramToDetailsView masterProgram relatedMasterCoreArea relatedUser =
-  [table
+  [spTable
     (map (\ (label ,value) -> [label,value])
       (zip masterProgramLabelList detailedView))]
   where detailedView = [[stringToHtml (masterProgramName masterProgram)]
@@ -409,7 +409,7 @@ masterProgInfoToShortView masterProgInfo =
 --- It also takes associated entities for every associated entity type.
 masterProgInfoToDetailsView :: MasterProgInfo -> MasterProgram -> [HtmlExp]
 masterProgInfoToDetailsView masterProgInfo relatedMasterProgram =
-  [table
+  [spTable
     (map (\ (label ,value) -> [label,value])
       (zip masterProgInfoLabelList detailedView))]
   where detailedView = [[stringToHtml
@@ -455,7 +455,7 @@ univisInfoToShortView univisInfo = univisInfoCode univisInfo
 --- The detailed view of a UnivisInfo entity in HTML format.
 univisInfoToDetailsView :: UnivisInfo -> [HtmlExp]
 univisInfoToDetailsView univisInfo =
-  [table
+  [spTable
     (map (\ (label ,value) -> [label,value])
       (zip univisInfoLabelList detailedView))]
   where detailedView = [[stringToHtml (univisInfoCode univisInfo)]
@@ -483,9 +483,9 @@ showStudyProgCategories sprogs cats =
 showStudyProgCategoriesAsHtml :: [StudyProgram] -> [Category] -> HtmlExp
 showStudyProgCategoriesAsHtml sprogs cats =
   inline
-    (intersperse (stringToHtml ", ")
-       (map (\c -> ehref ("?listCategory/"++showCategoryKey c)
-                         [stringToHtml (showStudyProgCategory sprogs c)])
+    (intersperse nbsp --(stringToHtml " ")
+       (map (\c -> smallHrefCategory ("?listCategory/"++showCategoryKey c)
+                     [stringToHtml (showStudyProgCategory sprogs c)])
             cats))
 
 showStudyProgCategory :: [StudyProgram] -> Category -> String

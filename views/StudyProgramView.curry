@@ -94,7 +94,7 @@ editStudyProgramView studyProgram controller =
 showStudyProgramView :: StudyProgram -> Controller -> [HtmlExp]
 showStudyProgramView studyProgram controller =
   studyProgramToDetailsView studyProgram ++
-   [button "back to StudyProgram list" (nextController controller)]
+   [spButton "back to StudyProgram list" (nextController controller)]
 
 --- Compares two StudyProgram entities. This order is used in the list view.
 leqStudyProgram :: StudyProgram -> StudyProgram -> Bool
@@ -113,19 +113,19 @@ listStudyProgramView admin studyPrograms showStudyProgramController
                      editStudyProgramController deleteStudyProgramController =
   if admin
   then [h1 [htxt "Studiengänge"],
-        table ([take 5 studyProgramLabelList] ++
-               map listStudyProgram (mergeSort leqStudyProgram studyPrograms))]
+        spTable ([take 5 studyProgramLabelList] ++
+                map listStudyProgram (mergeSort leqStudyProgram studyPrograms))]
   else [h1 [htxt "Studiengänge"],
-        table (map (\sp -> [head (studyProgramToListView sp)])
-                   (mergeSort leqStudyProgram studyPrograms))]
+        spTable (map (\sp -> [head (studyProgramToListView sp)])
+                     (mergeSort leqStudyProgram studyPrograms))]
  where listStudyProgram :: StudyProgram -> [[HtmlExp]]
        listStudyProgram studyProgram =
           studyProgramToListView studyProgram ++
-           [[button "show"
+           [[spSmallButton "show"
               (nextController (showStudyProgramController studyProgram)),
-             button "edit"
+             spSmallButton "edit"
               (nextController (editStudyProgramController studyProgram)),
-             button "delete"
+             spSmallButton "delete"
               (confirmNextController
                 (h3
                   [htxt

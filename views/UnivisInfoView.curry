@@ -85,7 +85,7 @@ editUnivisInfoView univisInfo controller =
 showUnivisInfoView :: UnivisInfo -> Controller -> [HtmlExp]
 showUnivisInfoView univisInfo controller =
   univisInfoToDetailsView univisInfo ++
-   [button "back to UnivisInfo list" (nextController controller)]
+   [spButton "back to UnivisInfo list" (nextController controller)]
 
 --- Compares two UnivisInfo entities. This order is used in the list view.
 leqUnivisInfo :: UnivisInfo -> UnivisInfo -> Bool
@@ -103,19 +103,19 @@ listUnivisInfoView
 listUnivisInfoView univisInfos showUnivisInfoController
                    editUnivisInfoController deleteUnivisInfoController =
   [h1 [htxt "UnivisInfo list"]
-  ,table
+  ,spTable
     ([take 4 univisInfoLabelList] ++
      map listUnivisInfo (mergeSort leqUnivisInfo univisInfos))]
   where listUnivisInfo :: UnivisInfo -> [[HtmlExp]]
         listUnivisInfo univisInfo =
           univisInfoToListView univisInfo ++
            if True then [] else -- only show list, no changes allowed
-           [[button "show"
+           [[spSmallButton "show"
               (nextController (showUnivisInfoController univisInfo))
-            ,button "edit"
+            ,spSmallButton "edit"
               (nextController (editUnivisInfoController univisInfo))
             
-            ,button "delete"
+            ,spSmallButton "delete"
               (confirmNextController
                 (h3
                   [htxt
@@ -137,14 +137,14 @@ showUnivisLinks md sem lecturer urls admin emailcontroller =
   if null urls
    then [par [htxt "Keine Einträge im UnivIS gefunden."]] ++
         if admin
-        then [par [button mailButtonTitle
+        then [par [spButton mailButtonTitle
                      (nextController
                        (emailcontroller (missingUnivISMessage md sem)))]]
         else []
    else [h3 [htxt "Links zu Einträgen im UnivIS:"],
          ulist (map (\url -> [ehref url [htxt url]]) urls)] ++
         if admin && lecturer==Nothing
-        then [par [button mailButtonTitle
+        then [par [spButton mailButtonTitle
                      (nextController
                        (emailcontroller (missingMDBMessage md sem)))]]
         else []
@@ -176,8 +176,8 @@ loadUnivisView :: ((String,Int) -> Controller) -> [HtmlExp]
 loadUnivisView loadcontroller =
     [h1 [htxt "Daten aus dem UnivIS der CAU laden"],
      par [htxt "Daten aus dem UnivIS für das Semester ",
-          selectionInitial insem semSelection lowerSemesterSelection,
-          button "jetzt übernehmen" loadData,
+          spShortSelectionInitial insem semSelection lowerSemesterSelection,
+          spButton "jetzt übernehmen" loadData,
           htxt " (dauert etwas länger!)"]]
  where
   insem free

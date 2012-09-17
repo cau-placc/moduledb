@@ -96,7 +96,7 @@ editMasterCoreAreaView masterCoreArea controller =
 showMasterCoreAreaView :: MasterCoreArea -> Controller -> [HtmlExp]
 showMasterCoreAreaView masterCoreArea controller =
   masterCoreAreaToDetailsView masterCoreArea ++
-   [button "back to MasterCoreArea list" (nextController controller)]
+   [spButton "back to MasterCoreArea list" (nextController controller)]
 
 --- Compares two MasterCoreArea entities. This order is used in the list view.
 leqMasterCoreArea :: MasterCoreArea -> MasterCoreArea -> Bool
@@ -116,9 +116,9 @@ listMasterCoreAreaView admin masterCoreAreas showMasterCoreAreaController
                        deleteMasterCoreAreaController =
   [h1 [htxt "Schwerpunktbereiche im Masterstudiengang Informatik"]] ++
   if admin
-  then [table ([take 5 masterCoreAreaLabelList] ++
-               map listMasterCoreArea
-                   (mergeSort leqMasterCoreArea masterCoreAreas))]
+  then [spTable ([take 5 masterCoreAreaLabelList] ++
+                 map listMasterCoreArea
+                     (mergeSort leqMasterCoreArea masterCoreAreas))]
   else concatMap (\mca -> [h2 [htxt (masterCoreAreaName mca ++ " (" ++
                                      masterCoreAreaShortName mca ++ ")")],
                            par [HtmlText
@@ -127,13 +127,13 @@ listMasterCoreAreaView admin masterCoreAreas showMasterCoreAreaController
   where listMasterCoreArea :: MasterCoreArea -> [[HtmlExp]]
         listMasterCoreArea masterCoreArea =
           masterCoreAreaToListView masterCoreArea ++
-           [[button "show"
+           [[spSmallButton "show"
               (nextController (showMasterCoreAreaController masterCoreArea))] ++
             if not admin then [] else
-            [button "edit"
+            [spSmallButton "edit"
               (nextController (editMasterCoreAreaController masterCoreArea))
             
-            ,button "delete"
+            ,spSmallButton "delete"
               (confirmNextController
                 (h3
                   [htxt

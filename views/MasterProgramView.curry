@@ -25,7 +25,7 @@ wMasterProgram
   -> WuiSpec (String,String,Int,String,String,String,Bool,MasterCoreArea,User)
 wMasterProgram admin masterCoreAreaList userList =
   withRendering
-   (w9Tuple wReqStr wTrm wYr wStr wStr wStr
+   (w9Tuple wLargeRequiredString wTrm wYr wStr wStr wStr
      wVisible
      (wSelect masterCoreAreaToShortView masterCoreAreaList)
      wAdvisor)
@@ -38,7 +38,6 @@ wMasterProgram admin masterCoreAreaList userList =
                       else wConstant (stringToHtml . userToShortView)
 
   wStr = wTextArea (6,70)
-  wReqStr = wRequiredStringSize 70
 
 --- Transformation from data of a WUI form to entity type MasterProgram.
 tuple2MasterProgram
@@ -119,7 +118,7 @@ blankMasterProgramView user mprogs possibleMasterCoreAreas controller =
 wMasterProgramTitle :: [MasterProgram] -> [MasterCoreArea]
            -> WuiSpec (String,Maybe MasterProgram,String,Int,MasterCoreArea)
 wMasterProgramTitle mprogs possibleMasterCoreAreas =
-  w5Tuple (wStringSize 70)
+  w5Tuple wLargeString
           (wSelect (maybe "" masterProgramToShortView)
                    (Nothing : map Just mprogs))
           wTerm wYear
@@ -167,7 +166,7 @@ showMasterProgramView
 showMasterProgramView masterProgram relatedMasterCoreArea relatedUser
                       controller =
   masterProgramToDetailsView masterProgram relatedMasterCoreArea relatedUser
-   ++ [button "back to MasterProgram list" (nextController controller)]
+   ++ [spButton "back to MasterProgram list" (nextController controller)]
 
 --- Compares two MasterProgram entities. This order is used in the list view.
 leqMasterProgram :: MasterProgram -> MasterProgram -> Bool
@@ -200,12 +199,12 @@ listMasterProgramView listall mpinfos allcoreareas =
      let (_,_,term,year,_,_) = head allmpinfos
       in catSems (term,year) allmpinfos ++
          if listall then [] else
-          [par [style "buttonhref"
-                      [href "?listMasterProgram/all"
-                        [htxt "Alle (auch ältere) Masterprogramme anzeigen"]]]]
+          [hrule,
+           par [spHref "?listMasterProgram/all"
+                       [htxt "Alle (auch ältere) Masterprogramme anzeigen"]]]
     where
      catSems sem progs = if null progs then [] else
-       [h2 [htxt ("Beginn: " ++ showSemester sem)]] ++
+       [hrule, h2 [htxt ("Beginn: " ++ showSemester sem)]] ++
        (if (fst sem == "SS") then [par [italic [htxt ssCmt]]] else []) ++
        let (semprogs,remprogs) =
                span (\ (_,_,term,year,_,_) -> (term,year) == sem)
@@ -246,11 +245,11 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
    h2 [htxt $ "Beginn: " ++ showSemester (startSem,startYear) ++
               " / Research advisor: " ++ userToShortView advisor],
    par $ (if admin || editallowed
-          then [button "Beschreibung/Sichtbarkeit ändern"
+          then [spButton "Beschreibung/Sichtbarkeit ändern"
                        (nextController (editMasterProgramController mprog))]
           else []) ++
          (if admin
-          then [button "Masterprogramm löschen"
+          then [spButton "Masterprogramm löschen"
                  (confirmNextController
                     (h3 [htxt (concat
                          ["Masterprogramm \"",
@@ -265,8 +264,8 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
    par [HtmlText (docText2html (masterProgramComments mprog))],
    h2 [htxt "Masterprogrammübersicht"],
    par $ if admin || editallowed
-         then [button "Modulempfehlungen ändern"
-                      (nextController (editMasterProgInfoController mpinfo))]
+         then [spButton "Modulempfehlungen ändern"
+                        (nextController (editMasterProgInfoController mpinfo))]
          else [],
    semTable,
    h2 [htxt "Masterprogrammübersicht nach Studienbereichen"]
@@ -290,7 +289,7 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
    descTitles = ["Praktikum","Seminar","Masterarbeit",
                  "Allgemeine Grundlagen","Anwendungsfach"]
 
-   semTable = table $
+   semTable = spTable $
      map (\ (s,mss) -> [[bold [htxt $ showSemester s]],
                         concatMap showProgMod mss])
          (map filterSem (take 3 (iterate nextSemester (startSem,startYear))))
@@ -299,8 +298,8 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
 
      showProgMod (_,p,mod,_,_) =
        [nbsp,
-        (opt2tag p) [ehref ("?listModData/"++showModDataKey mod)
-                           [htxt (modDataCode mod)]]]
+        (opt2tag p) [smallHrefModule ("?listModData/"++showModDataKey mod)
+                                     [htxt (modDataCode mod)]]]
 
    opt2tag p = if p then bold else italic
 

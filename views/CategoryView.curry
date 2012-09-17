@@ -113,7 +113,7 @@ editCategoryView category relatedStudyProgram possibleStudyPrograms
 showCategoryView :: Category -> StudyProgram -> Controller -> [HtmlExp]
 showCategoryView category relatedStudyProgram controller =
   categoryToDetailsView category relatedStudyProgram ++
-   [button "back to Category list" (nextController controller)]
+   [spButton "back to Category list" (nextController controller)]
 
 --- Compares two Category entities. This order is used in the list view.
 leqCategory :: Category -> Category -> Bool
@@ -153,61 +153,61 @@ listCategoryView admin login mbsprog catmods semperiod users
                  showCategoryPlanController formatCatModsController
                  showEmailCorrectionController =
   [h1 [htxt $ either studyProgramName id mbsprog],
-   table (if admin && null (concatMap snd catmods)
-          then [take 4 categoryLabelList] ++
-               map listCategory
-                    (mergeSort leqCategory
-                     (concatMap (\ (c,_) -> either (:[]) (const []) c) catmods))
-          else concatMap
-                 (\ (mbcat,mods) ->
-                    (either (\c->[style "category" (head (listCategory c))])
-                            (\s->[style "category" [htxt s]])
-                            mbcat :
-                     if null mods then []
-                     else map (\s -> [style "category" [stringToHtml s]])
-                              ("ECTS":map showSemester semperiod)) :
-                     map (\ (md,mis,univs) -> modDataToCompactListView md ++
-                            if null univs
-                            then map (maybe [] showModInst) mis
-                            else map (showUnivisInst md)
-                                     (zip3 semperiod mis univs))
-                         (mergeSort (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2)
-                                    mods))
-                 catmods)] ++
+   spTable
+    (if admin && null (concatMap snd catmods)
+     then [take 4 categoryLabelList] ++
+          map listCategory
+              (mergeSort leqCategory
+               (concatMap (\ (c,_) -> either (:[]) (const []) c) catmods))
+     else concatMap
+           (\ (mbcat,mods) ->
+              (either (\c->[style "category" (head (listCategory c))])
+                      (\s->[style "category" [htxt s]])
+                      mbcat :
+               if null mods then []
+               else map (\s -> [style "category" [stringToHtml s]])
+                        ("ECTS":map showSemester semperiod)) :
+               map (\ (md,mis,univs) -> modDataToCompactListView md ++
+                      if null univs
+                      then map (maybe [] showModInst) mis
+                      else map (showUnivisInst md)
+                               (zip3 semperiod mis univs))
+                   (mergeSort (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2)
+                              mods))
+           catmods)] ++
    (if null (concatMap snd catmods)
     then either
           (\sprog ->
-            [par [style "buttonhref"
-                   [href ("?listCategory/"++showStudyProgramKey sprog++"/all")
-                     [htxt "Alle Module in diesem Studienprogramm anzeigen"]]]])
+            [par [spHref ("?listCategory/"++showStudyProgramKey sprog++"/all")
+                    [htxt "Alle Module in diesem Studienprogramm anzeigen"]]])
           (const [])
           mbsprog
     else
      [par ([bold [htxt "Semesterplanung"], htxt " von ",
-            selectionInitial fromsem semSelection lowerSemesterSelection,
+            spShortSelectionInitial fromsem semSelection lowerSemesterSelection,
             htxt " bis ",
-            selectionInitial tosem semSelection  upperSemesterSelection,
+            spShortSelectionInitial tosem semSelection upperSemesterSelection,
             htxt ": ",
-            button "Anzeigen" (showPlan False False mbsprog)] ++
+            spSmallButton "Anzeigen" (showPlan False False mbsprog)] ++
            (maybe []
-                  (\_ -> [button "mit UnivIS-Abgleich"
-                                 (showPlan True False mbsprog),
-                          button "mit Masterprogrammverwendungen"
-                                 (showPlan False True mbsprog)])
+                  (\_ -> [spSmallButton "mit UnivIS-Abgleich"
+                                   (showPlan True False mbsprog),
+                          spSmallButton "mit Masterprogrammverwendungen"
+                                   (showPlan False True mbsprog)])
                   login) ++
            (if admin
-            then [button "UnivIS-Abgleich Emails senden"
-                         (showCorrectionEmails mbsprog)]
+            then [spSmallButton "UnivIS-Abgleich Emails senden"
+                           (showCorrectionEmails mbsprog)]
             else []))]) ++
    (if admin
-    then [par [button "Alle Module formatieren"
+    then [par [spSmallButton "Alle Module formatieren"
                       (nextController
                          (formatCatModsController
                             (map (\ (cat,mods) -> 
                                       (either categoryName id cat,
                                        map (\ (md,_,_)->md) mods))
                                  catmods))),
-               button "Alle sichtbaren Module formatieren"
+               spSmallButton "Alle sichtbaren Module formatieren"
                       (nextController
                          (formatCatModsController
                             (map (\ (cat,mods) -> 
@@ -225,15 +225,15 @@ listCategoryView admin login mbsprog catmods semperiod users
      | hasinst                  = [univisRef [textstyle "alertentry" "!UnivIS!"]]
      | mbmi/=Nothing            = [univisRef [italic [htxt "???"]]]
      | otherwise                = [nbsp]
-    where univisRef = ehref ("?listUnivisInfo/"++showModDataKey md++"/"
-                                               ++term++"/"++show year)
+    where univisRef = hrefUnivis ("?listUnivisInfo/"++showModDataKey md++"/"
+                                                    ++term++"/"++show year)
 
    showModInst (mi,num) =
      let miuserkey = modInstUserLecturerModsKey mi
          showUser u = let name = userName u
                        in if length name > 6 then take 5 name ++ "." else name
       in [italic
-           [ehref ("?listModInst/"++showModInstKey mi)
+           [hrefModInst ("?listModInst/"++showModInstKey mi)
                   [htxt (maybe "???" showUser
                                (find (\u -> userKey u == miuserkey) users)),
                    htxt (if num==0 then "" else '(':show num++")")]]]
@@ -259,9 +259,11 @@ listCategoryView admin login mbsprog catmods semperiod users
    listCategory :: Category -> [[HtmlExp]]
    listCategory category =
       categoryToListView category ++
-       [[button "show" (nextController (showCategoryController category)),
-         button "edit" (nextController (editCategoryController category)),
-         button "delete"
+       [[spSmallButton "show"
+          (nextController (showCategoryController category)),
+         spSmallButton "edit"
+          (nextController (editCategoryController category)),
+         spSmallButton "delete"
           (confirmNextController
             (h3
               [htxt
@@ -284,8 +286,8 @@ listEmailCorrectionView
   -> [HtmlExp]
 listEmailCorrectionView mbsprog modinsts semperiod users =
   [h1 [htxt $ either studyProgramName id mbsprog],
-   table (map showUnivisInst problemmods),
-   button "UnivIS-Korrektur-Emails jetzt an alle versenden" sendMails]
+   spTable (map showUnivisInst problemmods),
+   spButton "UnivIS-Korrektur-Emails jetzt an alle versenden" sendMails]
   where
    -- show UnivIS instance of a semester
    showUnivisInst (md,sem,reason) =

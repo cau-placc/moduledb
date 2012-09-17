@@ -13,7 +13,11 @@ module Helpers(LogEvent(..),logEvent,
                showSemester, nextSemester, prevSemester, leqSemester,
                semesterSelection, lowerSemesterSelection, upperSemesterSelection,
                currentUpperSemester,
-               imageNB, wTerm, wYear, wVisible)
+               imageNB, wTerm, wYear, wVisible,
+               wLargeString, wLargeRequiredString,
+               wMediumString, wMediumRequiredString,
+               largetextinputRendering, mediumtextinputRendering,
+               shorttextinputRendering )
   where
 
 import ConfigMDB
@@ -281,14 +285,36 @@ imageNB r a = image r a `addAttr` ("border","0")
 --- The WUI specification for a term.
 wTerm :: WuiSpec String
 wTerm = wSelect id ["WS","SS"]
+         `withRendering` shorttextinputRendering
 
 --- The WUI specification for a year.
 wYear :: WuiSpec Int
 wYear = wSelect show [(currentYear-4)..(currentYear+6)]
+         `withRendering` shorttextinputRendering
 
 --- A WUI for the visibility of a module:
 wVisible :: WuiSpec Bool
 wVisible = wRadioBool [htxt "öffentlich sichtbar"]
                       [htxt "nur zur internen Bearbeitung"]
+
+--- A WUI for a large input text line
+wLargeString = wStringSize 70 `withRendering` largetextinputRendering
+
+--- A WUI for a large required input text line
+wLargeRequiredString = wRequiredStringSize 70
+                         `withRendering` largetextinputRendering
+
+--- A WUI for a medium input text line
+wMediumString = wStringSize 70 `withRendering` mediumtextinputRendering
+
+--- A WUI for a medium required input text line
+wMediumRequiredString = wRequiredStringSize 70
+                         `withRendering` mediumtextinputRendering
+
+largetextinputRendering [s] = inline [s `addClass` "largetextinput"]
+
+mediumtextinputRendering [s] = inline [s `addClass` "mediumtextinput"]
+
+shorttextinputRendering [s] = inline [s `addClass` "shorttextinput"]
 
 -----------------------------------------------------------------------------
