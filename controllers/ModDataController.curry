@@ -100,8 +100,8 @@ updateModDataController True (modData,newcats) = do
     if admin
     then updateModData modData |>>
          getModDataCategorys modData |>>= \oldcats ->
-         removeCategorizing (filter (`notElem` newcats) oldcats) modData |>>
-         addCategorizing (filter (`notElem` oldcats) newcats) modData
+         addCategorizing (filter (`notElem` oldcats) newcats) modData |>>
+         removeCategorizing (filter (`notElem` newcats) oldcats) modData
     else updateModData modData
   either (\ _ -> logEvent (UpdateModData modData) >>
                  nextInProcessOr listModDataController Nothing)
