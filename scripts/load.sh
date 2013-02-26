@@ -2,7 +2,7 @@
 # shell script to load the complete application into the interactive
 # Curry environment in order to test individual functions.
 
-# Definition of PAKCS installation to be used:
+# Definition of Curry installation to be used:
 #CURRYEXEC=/opt/pakcs/bin/pakcs
 CURRYEXEC=/opt/kics2/bin/kics2
 

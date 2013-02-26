@@ -483,12 +483,14 @@ mod2xml md responsibleUser users sprogs categorys modinsts (Just desc) =
               modDescrPrereq,modDescrExam,modDescrMethods,modDescrUse,
               modDescrLiterature,modDescrLinks,modDescrComments]) ++
     [xml "studiengaenge"
-         (map (\key -> xml "studiengang"
-                           [xtxt (showLongStudyProgramWithKey key)])
+         (map (\key -> XElem "studiengang"
+                             [("key",showStudyProgramKey key)]
+                             [xtxt (showLongStudyProgramWithKey key)])
               (map categoryStudyProgramProgramCategoriesKey categorys)),
      xml "kategorien"
-         (map (\c ->  xml "kategorie"
-                          [xtxt (showLongCategory c)])
+         (map (\c ->  XElem "kategorie"
+                            [("key",showCategoryKey c)]
+                            [xtxt (showLongCategory c)])
               categorys),
      xml "durchfuehrung"
       ([xml "praesenz" [xtxt (modDataPresence md)],
@@ -496,8 +498,18 @@ mod2xml md responsibleUser users sprogs categorys modinsts (Just desc) =
         xml "turnus"   [xtxt (modDataCycle md)]] ++
        map modinst2xml (mergeSort leqModInst modinsts))])
  where
+   showStudyProgramKey spk =
+     maybe "?" studyProgramProgKey
+           (find (\p -> studyProgramKey p == spk) sprogs)
+
    showLongStudyProgramWithKey spk =
      maybe "?" studyProgramName (find (\p -> studyProgramKey p == spk) sprogs)
+
+   showCategoryKey cat =
+     let pkey = categoryStudyProgramProgramCategoriesKey cat
+      in (maybe "?" studyProgramProgKey
+                    (find (\p -> studyProgramKey p == pkey) sprogs))
+         ++ "_" ++ categoryShortName cat
 
    showLongCategory cat =
      let pkey = categoryStudyProgramProgramCategoriesKey cat
