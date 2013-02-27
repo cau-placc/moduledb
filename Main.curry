@@ -12,6 +12,7 @@ import Routes
 import RoutesData
 import Processes
 import ModDataController
+import MasterProgramController(showXmlMasterProgram,showAllXmlMasterPrograms)
 import KeyDatabase
 import MDB
 import MDBEntitiesToHtml
@@ -43,6 +44,11 @@ main = do
                                                                  >>= getForm
     ('x':'m':'l':'=':code) -> showXmlModule (urlencoded2string code)
     "xml"                  -> showXmlIndex
+    ('x':'m':'l':'p':'r':'o':'g':'=':code)
+        -> maybe (displayError "Illegal URL" >>= getForm)
+                 showXmlMasterProgram
+                 (readMasterProgramKey (urlencoded2string code))
+    "xmlprogs"             -> showAllXmlMasterPrograms
     "csv"                  -> allModuleCSV
     _ -> dispatcher
 
@@ -78,3 +84,9 @@ moduleCSV mods = do
                          (c1/="G" && c1/="A" && c1 <= c2)
 
 -------------------------------------------------------------------------
+-- For benchmarking:
+benchMDB = allModuleCSV >>= print . length . show
+--> lussac/pakcs: 13.8s
+--> lussac/kics2: 0.88s
+--> lascombes/pakcs: 7.26
+--> lascombes/kics2: 0.6

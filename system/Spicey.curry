@@ -207,13 +207,13 @@ addLayout viewblock = do
   return $
     stdNavBar usermenu login ++
     [blockstyle "container-fluid" $
-      [HtmlStruct "header" [("class","hero-unit")] [h1 [htxt spiceyTitle]],
+      [HtmlStruct "header" [("class","hero-unit")] [h1 mainTitle],
        if null msg
         then HtmlStruct "header" [("class","pagemessage pagemessage-empty")]
                         [nbsp]
         else HtmlStruct "header" [("class","pagemessage")] [htxt msg],
        blockstyle "row-fluid"
-        [blockstyle "span12" viewblock]] ++
+        [blockstyle "span12" mainDoc]] ++
        (if admin then adminNavBar routemenu1 ++ adminNavBar routemenu2
                  else []) ++
       [hrule,
@@ -223,6 +223,11 @@ addLayout viewblock = do
                    [image "images/spicey-logo.png" "Spicey"]
                  `addAttr` ("target","_blank"),
               htxt "Framework"]]]]
+ where
+  (mainTitle,mainDoc) =
+    case viewblock of
+      (HtmlStruct "h1" [] t : hexps) -> (t,hexps)
+      _ -> ([htxt spiceyTitle], viewblock)
 
 -- Standard navigation bar at the top.
 -- The first argument is the route menu (a ulist).
@@ -233,7 +238,8 @@ stdNavBar routemenu login =
     [blockstyle "navbar-inner"
       [blockstyle "container-fluid"
          [addDropdownItem routemenu `addClass` "nav",
-          par [userIcon, nbsp, htxt $ maybe "nicht angemeldet" id login]
+          par [--bold [href "?main" [htxt spiceyTitle]], nbsp, nbsp, nbsp,
+               userIcon, nbsp, htxt $ maybe "nicht angemeldet" id login]
             `addClass` "navbar-text pull-right"]
       ]
     ]

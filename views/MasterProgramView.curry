@@ -231,18 +231,21 @@ listMasterProgramView listall mpinfos allcoreareas =
 --- Supplies a view for a given MasterProgram entity.
 singleMasterProgramView
  :: Bool -> Bool -> User -> MasterProgram -> MasterProgInfo
-  -> [(String,Bool,ModData,String,Int)] -> MasterCoreArea
+  -> [(String,Bool,ModData,String,Int)] -> MasterCoreArea -> String
   -> (MasterProgram -> Controller)
   -> (MasterProgram -> Controller) -> (MasterProgram -> Bool -> Controller)
   -> (MasterProgInfo -> Controller) -> [HtmlExp]
-singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
+singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
+   xmlurl _
    editMasterProgramController deleteMasterProgramController
    editMasterProgInfoController =
-  [h1 [htxt ("Masterprogramm "++masterProgramName mprog)]] ++
+  [h1 [htxt (masterProgramName mprog)
+  ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]
+  ]] ++
   (if masterProgramVisible mprog then []
-   else [h3 [htxt "(nicht öffentlich sichtbar)"]]) ++
-  [h2 [htxt ("Schwerpunktbereich: "++masterCoreAreaName mcarea)],
-   h2 [htxt $ "Beginn: " ++ showSemester (startSem,startYear) ++
+   else [h4 [htxt "(nicht öffentlich sichtbar)"]]) ++
+  [h3 [htxt ("Masterprogramm im Schwerpunktbereich: "++masterCoreAreaName mcarea)],
+   h3 [htxt $ "Beginn: " ++ showSemester (startSem,startYear) ++
               " / Research advisor: " ++ userToShortView advisor],
    par $ (if admin || editallowed
           then [spButton "Beschreibung/Sichtbarkeit ändern"
@@ -256,19 +259,19 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea _
                           masterProgramToShortView mprog,"\" löschen?"])])
                     (deleteMasterProgramController mprog))]
           else [])] ++
-  [h3 [htxt "Beschreibung:"],
+  [h4 [htxt "Beschreibung:"],
    par [HtmlText (docText2html (masterProgramDesc mprog))],
-   h3 [htxt "Voraussetzungen:"],
+   h4 [htxt "Voraussetzungen:"],
    par [HtmlText (docText2html (masterProgramPrereq mprog))],
-   h3 [htxt "Kommentare:"],
+   h4 [htxt "Kommentare:"],
    par [HtmlText (docText2html (masterProgramComments mprog))],
-   h2 [htxt "Masterprogrammübersicht"],
+   h3 [htxt "Masterprogrammübersicht"],
    par $ if admin || editallowed
          then [spButton "Modulempfehlungen ändern"
                         (nextController (editMasterProgInfoController mpinfo))]
          else [],
    semTable,
-   h2 [htxt "Masterprogrammübersicht nach Studienbereichen"]
+   h3 [htxt "Masterprogrammübersicht nach Studienbereichen"]
   ] ++
   concatMap (\ (ms,ml) -> [h4 [htxt $ ml++" ("++ms++")"]] ++
               let mods = filter (\ (c,_,_,_,_) -> c==ms) modinfo

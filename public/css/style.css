@@ -128,3 +128,11 @@ textarea {
   width: 4em;
 }
 
+.navbar-text a {
+  color: #bbbbbb;
+}
+
+.navbar-text a:hover {
+  text-decoration: none;
+  color: #ffffff;
+}

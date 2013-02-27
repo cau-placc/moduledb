@@ -335,7 +335,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
      editModDescrController
      modinstaddController modinsteditController copyModController
      emailController =
-  [h1 [htxt ("Modul " ++ modDataCode modData), nbsp,
+  [h1 [htxt (modDataNameG modData), nbsp,
        ehref ("?listModData/"++showModDataKey modData++"/url")
              [imageNB "images/url.png" "Show URL"], nbsp,
        ehref ("?listModData/"++showModDataKey modData++"/pdf")
@@ -368,9 +368,10 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
                           ,"\"?"])])
                     (deleteModDataController modData))]
           else [])] ++
-  [h2 [htxt $ "Titel: "++ modDataNameG modData],
-   spTable $
-    [[[bold [stringToHtml "Englische Bezeichnung:"]],
+  [spTable $
+    [[[bold [stringToHtml "Modulcode:"]],
+      [stringToHtml (modDataCode modData)]],
+     [[bold [stringToHtml "Englische Bezeichnung:"]],
       [stringToHtml (modDataNameE modData)]],
      [[bold [stringToHtml "Modulverantwortliche(r):"]],
       [userToHtmlView responsibleUser]],
