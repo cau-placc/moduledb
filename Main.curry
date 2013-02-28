@@ -45,12 +45,13 @@ main = do
     ('x':'m':'l':'=':code) -> showXmlModule (urlencoded2string code)
     "xml"                  -> showXmlIndex
     ('x':'m':'l':'p':'r':'o':'g':'=':code)
-        -> maybe (displayError "Illegal URL" >>= getForm)
-                 showXmlMasterProgram
-                 (readMasterProgramKey (urlencoded2string code))
-    "xmlprogs"             -> showAllXmlMasterPrograms
-    "csv"                  -> allModuleCSV
-    _ -> dispatcher
+        -> if code=="all"
+           then showAllXmlMasterPrograms
+           else maybe (displayError "Illegal URL" >>= getForm)
+                      showXmlMasterProgram
+                      (readMasterProgramKey (urlencoded2string code))
+    "csv" -> allModuleCSV
+    _     -> dispatcher
 
 
 -------------------------------------------------------------------------
