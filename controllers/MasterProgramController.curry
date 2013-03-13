@@ -250,6 +250,11 @@ getMasterModInstInSemesters semyear n =
 xmlURL :: MasterProgram -> String
 xmlURL mp = baseURL++"?xmlprog="++string2urlencoded (showMasterProgramKey mp)
 
+-- URL of a master program:
+masterProgURL :: MasterProgram -> String
+masterProgURL mp =
+  baseURL++"?listMasterProgram/"++string2urlencoded (showMasterProgramKey mp)
+
 showAllXmlMasterPrograms :: IO HtmlForm
 showAllXmlMasterPrograms = do
   allmprogs <- runQ queryAllMasterPrograms
@@ -278,10 +283,11 @@ getMasterProgramXML mprog =
 mprog2xml :: MasterProgram -> User -> [(String,Bool,ModData,String,Int)]
           -> XmlExp
 mprog2xml mprog advisor modinfo =
-  xml "studyprogram" $
+  XElem "studyprogram" [("ID",showMasterProgramKey mprog)] $
    [xml "title"         [xtxt (masterProgramName mprog)]
    ,xml "advisor"       [xtxt (userToShortView advisor)]
    ,xml "start"         [xtxt (showSemester (startSem,startYear))]
+   ,xml "url"           [xtxt (masterProgURL mprog)]
    ,xml "description"   [xtxt (masterProgramDesc mprog)]
    ,xml "prerequisites" [xtxt (masterProgramPrereq mprog)]
    ,xml "comments"      [xtxt (masterProgramComments mprog)]

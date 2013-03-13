@@ -204,7 +204,7 @@ listMasterProgramView listall mpinfos allcoreareas =
                        [htxt "Alle (auch ältere) Masterprogramme anzeigen"]]]
     where
      catSems sem progs = if null progs then [] else
-       [hrule, h2 [htxt ("Beginn: " ++ showSemester sem)]] ++
+       [hrule, h2 [htxt ("Beginn: " ++ showLongSemester sem)]] ++
        (if (fst sem == "SS") then [par [italic [htxt ssCmt]]] else []) ++
        let (semprogs,remprogs) =
                span (\ (_,_,term,year,_,_) -> (term,year) == sem)
