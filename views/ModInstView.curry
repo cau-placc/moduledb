@@ -166,4 +166,4 @@ singleModInstView modinst moddata user mprogs =
    "Dieses Modul ist für dieses Semester in folgenden Masterprogrammen eingeplant:"
 
   notusedcmt =
-   "Dieses Modul ist für dieses Semester in keinem Masterprogramm eingeplant."
+   "Dieses Modul ist für dieses Semester in keinem Masterprogramm des Masterstudiengangs Informatik eingeplant."
