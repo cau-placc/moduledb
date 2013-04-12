@@ -438,9 +438,10 @@ mod2latex md mis responsibleUser sprogs categorys (Just desc) =
 xmlURL :: ModData -> String
 xmlURL md = baseURL++"?xml="++string2urlencoded (modDataCode md)
 
+-- Shows XML index of all modules (also invisible ones).
 showXmlIndex :: IO HtmlForm
 showXmlIndex = do
-  allmods <- runQ (transformQ (filter modDataVisible) queryAllModDatas)
+  allmods <- runQ queryAllModDatas
   return (HtmlAnswer "text/xml"
            (showXmlDoc (xml "index"
                             (map mod2index (filter isNotImported allmods)))))
