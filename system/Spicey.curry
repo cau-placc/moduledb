@@ -11,6 +11,7 @@ module Spicey (
   nextController, nextControllerForData, confirmNextController,
   getControllerURL,getControllerParams, showControllerURL,
   getForm, wDateType, wBoolean, wUncheckMaybe,
+  mainContentsWithSideMenu,
   displayError, cancelOperation,
   wuiEditForm, wuiEditFormWithText, wuiFrameToForm, nextInProcessOr,
   renderLabels,
@@ -228,6 +229,22 @@ addLayout viewblock = do
     case viewblock of
       (HtmlStruct "h1" [] t : hexps) -> (t,hexps)
       _ -> ([htxt spiceyTitle], viewblock)
+
+--- Create a side menu containing a (possibly empty) title and a list of items:
+titledSideMenu :: String -> [[HtmlExp]] -> [HtmlExp]
+titledSideMenu title items =
+  (if null title
+   then []
+   else [HtmlStruct "small" [] [htxt title]]) ++
+  [ulist items `addClass` "nav nav-list"]
+
+--- Create contents in the main page area with a side menu.
+mainContentsWithSideMenu :: [[HtmlExp]] -> [HtmlExp] -> [HtmlExp]
+mainContentsWithSideMenu menuitems contents =
+  [blockstyle "row-fluid"
+    [blockstyle "span3"
+      [blockstyle "well sidebar-nav" (titledSideMenu "" menuitems)],
+       blockstyle "span9" contents]]
 
 -- Standard navigation bar at the top.
 -- The first argument is the route menu (a ulist).

@@ -368,7 +368,9 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
                           ,"\"?"])])
                     (deleteModDataController modData))]
           else [])] ++
-  [spTable $
+  mainContentsWithSideMenu
+   (map (\t -> [href ('#':t) [htxt t]]) descTitles)
+  ([spTable $
     [[[bold [stringToHtml "Modulcode:"]],
       [stringToHtml (modDataCode modData)]],
      [[bold [stringToHtml "Englische Bezeichnung:"]],
@@ -404,7 +406,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
   maybe []
    (\moddesc ->
      concatMap (\ (title,cnt) ->
-                  [h3 [htxt $ title++":"],
+                  [HtmlStruct "section" [("id",title)] [h3 [htxt $ title++":"]],
                    par [HtmlText (if title=="Verweise"
                                   then docText2html (hrefs2markdown cnt)
                                   else docText2html cnt)]])
@@ -413,7 +415,7 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
                       [modDescrShortDesc,modDescrObjectives,modDescrContents,
                        modDescrPrereq,modDescrExam,modDescrMethods,modDescrUse,
                        modDescrLiterature,modDescrLinks,modDescrComments])))
-   maybedesc
+   maybedesc)
  where
    descTitles = ["Kurzfassung","Lernziele","Lehrinhalte","Voraussetzungen",
                  "Prüfungsleistung","Lehr- und Lernmethoden","Verwendbarkeit",

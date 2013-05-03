@@ -136,3 +136,8 @@ textarea {
   text-decoration: none;
   color: #ffffff;
 }
+
+/* padding for in-page bookmarks and fixed navbar */
+section {
+  padding-top: 20px;
+}
