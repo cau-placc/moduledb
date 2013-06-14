@@ -255,9 +255,11 @@ masterProgURL :: MasterProgram -> String
 masterProgURL mp =
   baseURL++"?listMasterProgram/"++string2urlencoded (showMasterProgramKey mp)
 
+-- Show XML document containing all visible master programs
 showAllXmlMasterPrograms :: IO HtmlForm
 showAllXmlMasterPrograms = do
-  allmprogs <- runQ queryAllMasterPrograms
+  allmprogs <- runQ $ transformQ (filter masterProgramVisible)
+                                 queryAllMasterPrograms
   mpxmls <- mapIO getMasterProgramXML allmprogs
   return (HtmlAnswer "text/xml"
              (showXmlDoc (xml "studyprograms" (catMaybes mpxmls))))
