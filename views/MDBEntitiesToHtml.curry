@@ -7,6 +7,7 @@ import Spicey
 import MDB
 import Helpers
 import List
+import UserPreferences
 
 --- The list view of a StudyProgram entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -195,9 +196,11 @@ modDataToListView modData =
 
 --- A more compact list view of a ModData entity in HTML format
 --- where code and title is shown in one column.
-modDataToCompactListView :: ModData -> [[HtmlExp]]
-modDataToCompactListView modData =
-  [[withHref (stringToHtml (modDataCode modData++": "++modDataNameG modData))],
+modDataToCompactListView :: UserPrefs -> ModData -> [[HtmlExp]]
+modDataToCompactListView prefs modData =
+  [[withHref (stringToHtml
+                 (modDataCode modData ++ ": " ++
+                  (langSelect prefs modDataNameE modDataNameG) modData))],
    [stringToHtml (showDiv10 (modDataECTS modData))]]
  where
    withHref hexp =

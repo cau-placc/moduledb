@@ -160,22 +160,22 @@ listCategoryView admin login prefs mbsprog catmods semperiod users
           map listCategory
               (mergeSort leqCategory
                (concatMap (\ (c,_) -> either (:[]) (const []) c) catmods))
-     else concatMap
-           (\ (mbcat,mods) ->
-              (either (\c->[style "category" (head (listCategory c))])
-                      (\s->[style "category" [htxt s]])
-                      mbcat :
-               if null mods then []
-               else map (\s -> [style "category" [stringToHtml s]])
-                        ("ECTS":map showSemester semperiod)) :
-               map (\ (md,mis,univs) -> modDataToCompactListView md ++
-                      if null univs
-                      then map (maybe [] showModInst) mis
-                      else map (showUnivisInst md)
-                               (zip3 semperiod mis univs))
-                   (mergeSort (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2)
-                              mods))
-           catmods)] ++
+     else
+      concatMap
+        (\ (mbcat,mods) ->
+           (either (\c->[style "category" (head (listCategory c))])
+                   (\s->[style "category" [htxt s]])
+                   mbcat
+            : if null mods then []
+              else map (\s -> [style "category" [stringToHtml s]])
+                       ("ECTS":map showSemester semperiod)) :
+           map (\ (md,mis,univs) -> modDataToCompactListView prefs md ++
+                  if null univs
+                  then map (maybe [] showModInst) mis
+                  else map (showUnivisInst md)
+                           (zip3 semperiod mis univs))
+               (mergeSort (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2) mods))
+        catmods)] ++
    (if null (concatMap snd catmods)
     then either
           (\sprog ->

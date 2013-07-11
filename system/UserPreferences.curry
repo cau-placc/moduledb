@@ -62,7 +62,7 @@ translate userprefs s =
     English -> s
     German  -> toGerman s
 
---- Select the string in the right language (first english, second german)
+--- Select the item in the right language (first english, second german)
 langSelect :: UserPrefs -> a -> a -> a
 langSelect userprefs es gs =
   case preferredLanguage userprefs of
@@ -84,7 +84,7 @@ english2german =
  ,("Core areas"         ,"Schwerpunktbereiche")
  ,("Cycle:"             ,"Turnus:")
  ,("Duration:"          ,"Dauer:")
- ,("English title:"     ,"Englische Bezeichnung:")
+ ,("German title:"      ,"Englische Bezeichnung:") -- wegen ModDataView!!!
  ,("every year"         ,"jedes Jahr")
  ,("every year in summer term","jedes Jahr im SS")
  ,("every year in winter term","jedes Jahr im WS")
@@ -120,6 +120,7 @@ english2german =
  ,("programming language","Programmiersprache")
  ,("Search modules"     ,"Modulsuche")
  ,("Search all modules containing","Alle Module mit Zeichenfolge")
+ ,("search"             ,"suchen")
  ,("semester"           ,"Semester")
  ,("Semester planning"  ,"Semesterplanung")
  ,("Show"               ,"Anzeigen")
@@ -130,7 +131,6 @@ english2german =
    "Alle Module in diesem Studienprogramm anzeigen")
  ,("Start: "            ,"Beginn: ")
  ,("Study programs"     ,"Studiengänge")
- ,("suchen"             ,"search")
  ,("Supported by:"      ,"Unterstützt durch:")
  ,(" to "               ," bis ")
  ,("Teaching language:" ,"Lehrsprache:")

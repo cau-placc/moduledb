@@ -337,7 +337,7 @@ singleModDataView prefs admin editallowed modData responsibleUser
      editModDescrController
      modinstaddController modinsteditController copyModController
      emailController =
-  [h1 [htxt (modDataNameG modData), nbsp,
+  [h1 [htxt ((langSelect prefs modDataNameE modDataNameG) modData), nbsp,
        ehref ("?listModData/"++showModDataKey modData++"/url")
              [imageNB "images/url.png" "Show URL"], nbsp,
        ehref ("?listModData/"++showModDataKey modData++"/pdf")
@@ -375,8 +375,8 @@ singleModDataView prefs admin editallowed modData responsibleUser
   ([spTable $
     [[[bold [stringToHtml $ t "Module code:"]],
       [stringToHtml (modDataCode modData)]],
-     [[bold [stringToHtml $ t "English title:"]],
-      [stringToHtml (modDataNameE modData)]],
+     [[bold [stringToHtml $ t "German title:"]],
+      [stringToHtml ((langSelect prefs modDataNameG modDataNameE) modData)]],
      [[bold [stringToHtml $ t "Person in charge:"]],
       [userToHtmlView responsibleUser]],
      [[bold [stringToHtml $ t "Cycle:"]],
