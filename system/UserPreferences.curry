@@ -30,7 +30,7 @@ data UserPrefs = UserPrefs Language
 
 --- The default user preferences.
 defaultUserPrefs :: UserPrefs
-defaultUserPrefs = UserPrefs English --German
+defaultUserPrefs = UserPrefs German
 
 -- The language of the user preferences.
 preferredLanguage :: UserPrefs -> Language
