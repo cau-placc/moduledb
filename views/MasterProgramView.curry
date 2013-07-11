@@ -17,6 +17,7 @@ import ConfigMDB
 import List
 import Maybe
 import MasterCoreAreaView
+import UserPreferences
 
 --- The WUI specification for the entity type MasterProgram.
 --- It also includes fields for associated entities.
@@ -179,12 +180,16 @@ leqMasterProgram x1 x2 =
 --- The arguments are the list of MasterProgram entities
 --- and the controller functions to show, delete and edit entities.
 listMasterProgramView
-  :: Bool -> [(MasterProgramKey,String,String,Int,Bool,MasterCoreAreaKey)]
+  :: UserPrefs -> Bool
+  -> [(MasterProgramKey,String,String,Int,Bool,MasterCoreAreaKey)]
   -> [MasterCoreArea] -> [HtmlExp]
-listMasterProgramView listall mpinfos allcoreareas =
-  [h1 [htxt "Programme im Masterstudiengang Informatik"]] ++
+listMasterProgramView prefs listall mpinfos allcoreareas =
+  [h1 [htxt $ t "Master programs in informatics"]] ++
+  masterStudyNote prefs ++
   categorizeMasterProgs mpListView sortedmpinfos
  where
+   t = translate prefs
+
    mpListView (mpkey,name,_,_,vis,_) =
      [href ("?listMasterProgram/"++masterProgramKeyToString mpkey)
            [if vis then stringToHtml name
@@ -201,11 +206,12 @@ listMasterProgramView listall mpinfos allcoreareas =
          if listall then [] else
           [hrule,
            par [spHref "?listMasterProgram/all"
-                       [htxt "Alle (auch ältere) Masterprogramme anzeigen"]]]
+                       [htxt $ t "Show all master programs"]]]
     where
      catSems sem progs = if null progs then [] else
-       [hrule, h2 [htxt ("Beginn: " ++ showLongSemester sem)]] ++
-       (if (fst sem == "SS") then [par [italic [htxt ssCmt]]] else []) ++
+       [hrule, h2 [htxt $ t "Start: " ++ showLongSemester sem]] ++
+       (if (fst sem == "SS") then [par [italic [htxt $ ssComment prefs]]]
+                             else []) ++
        let (semprogs,remprogs) =
                span (\ (_,_,term,year,_,_) -> (term,year) == sem)
                     progs
@@ -216,7 +222,7 @@ listMasterProgramView listall mpinfos allcoreareas =
         in concatMap
              (\mca ->
                [h3 [ehref "?listMasterCoreArea"
-                      [htxt ("Schwerpunktbereich: "++masterCoreAreaName mca)]],
+                      [htxt $ t "Core area: " ++ masterCoreAreaName mca]],
                 ulist
                  (map formatprog
                    (filter (\ (_,_,_,_,_,mcak) -> mcak == masterCoreAreaKey mca)
@@ -224,9 +230,6 @@ listMasterProgramView listall mpinfos allcoreareas =
              (mergeSort leqMasterCoreArea mcas) ++
            catSems (prevSemester sem) remprogs
 
-   ssCmt = "Bei Beginn im Sommersemester können auch Programme der "++
-           "benachbarten Wintersemester gewählt werden. "++
-           "Bei der Anpassung berät Sie der Academic Advisor."
 
 --- Supplies a view for a given MasterProgram entity.
 singleMasterProgramView

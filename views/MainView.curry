@@ -13,32 +13,31 @@ import MDB
 import MDBEntitiesToHtml
 import StudyProgramView
 import Sort
+import UserPreferences
 
 -----------------------------------------------------------------------------
 --- A view for the main page.
-mainPageView :: [StudyProgram] -> [HtmlExp]
-mainPageView studyPrograms =
-  [h1 [htxt "Module und Studienprogramme des Instituts für Informatik"],
-   par [htxt $ "Auf diesen Webseiten sind die Module aller Studienprogramme "++
-               "des Instituts für Informatik sowie alle vom Institut "++
-               "angebotenen Module beschrieben. "++
-               "Außerdem befindet sich hier eine Übersicht über alle "++
-               "angebotenen Masterprogramme."],
-   h2 [htxt "Studiengänge"],
+mainPageView :: UserPrefs -> [StudyProgram] -> [HtmlExp]
+mainPageView prefs studyPrograms =
+  [h1 [htxt $ mainTitle prefs],
+   par [htxt $ mainExplanation prefs],
+   h2 [htxt $ t "Study programs"],
    spTable (map (\sp -> [head (studyProgramToListView sp)])
                 (mergeSort leqStudyProgram studyPrograms)),
-   h2 [htxt "Masterstudium Informatik:", nbsp,
-       spHref "?listMasterCoreArea" [htxt "Schwerpunktbereiche"], nbsp,
-       spHref "?listMasterProgram" [htxt "Masterprogramme"]],
-   par [htxt "Weitere Informationen:"],
+   h2 [htxt $ t "Master studies in informatics:", nbsp,
+       spHref "?listMasterCoreArea" [htxt $ t "Core areas"], nbsp,
+       spHref "?listMasterProgram" [htxt $ t "Master programs"]],
+   par [htxt $ t "Further information:"],
    ulist
-    [[bold [htxt "Für Modulverantwortliche: "],
-      htxt "Allgemeine ",
+    [[bold [htxt $ t "For persons in charge for modules: "],
+      htxt $ t "General ",
       ehref "edit_infos.html"
-            [htxt "Hinweise zu Modulbeschreibungen und deren Bearbeitung"]],
-     [bold [htxt "Für Programmierer: "],
-      ehref "?xml" [htxt "XML-Index aller Module"],
+            [htxt $ t "notes on module descriptions and their preparation"]],
+     [bold [htxt $ t "For programmers:"], nbsp,
+      ehref "?xml" [htxt $ t "XML index to all modules"],
       htxt " | ",
-      ehref "?xmlprog=all" [htxt "XML-Dokument aller Masterprogramme"]]]]
+      ehref "?xmlprog=all" [htxt $ t "XML document with all master programs"]]]]
+ where
+  t = translate prefs
 
 -----------------------------------------------------------------------------

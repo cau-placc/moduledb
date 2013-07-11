@@ -141,3 +141,15 @@ textarea {
 section {
   padding-top: 20px;
 }
+
+@media print {
+  .navbar {
+   display: none;
+  }
+  img {
+   display: none;
+  }
+  footer {
+   display: none;
+  }
+}

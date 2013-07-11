@@ -20,6 +20,7 @@ import Helpers
 import List
 import Sort
 import CSV
+import UserPreferences
 
 dispatcher :: IO HtmlForm
 dispatcher = do
@@ -50,10 +51,17 @@ main = do
            else maybe (displayError "Illegal URL" >>= getForm)
                       showXmlMasterProgram
                       (readMasterProgramKey (urlencoded2string code))
+    ['l','a','n','g',l1,l2] -> setLanguage [l1,l2] >> dispatcher
     "csv" -> allModuleCSV
     _     -> dispatcher
 
-
+setLanguage langcode = do
+  let lang = if langcode=="EN" then English else German
+  setPreferredLanguage lang
+  setPageMessage $ if lang==English then "Language: English"
+                                    else "Sprache: Deutsch"
+  getLastUrl >>= setEnviron "QUERY_STRING"
+  
 -------------------------------------------------------------------------
 -- Script for generating csv of module infos:
 allModuleCSV :: IO HtmlForm

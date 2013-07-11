@@ -9,12 +9,14 @@ import Spicey
 import MainView
 import MDB
 import KeyDatabase
+import UserPreferences
 
 -----------------------------------------------------------------------------
 --- Controller for the main page.
 mainPageController :: Controller
 mainPageController = do
+  userprefs <- getSessionUserPrefs
   studyPrograms <- runQ queryAllStudyPrograms
-  return (mainPageView studyPrograms)
+  return (mainPageView userprefs studyPrograms)
 
 -----------------------------------------------------------------------------

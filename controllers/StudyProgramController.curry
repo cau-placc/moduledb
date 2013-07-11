@@ -14,6 +14,7 @@ import Authorization
 import AuthorizedControllers
 import UserProcesses
 import Authentication
+import UserPreferences
 
 --- Shows a form to create a new StudyProgram entity.
 newStudyProgramController :: Controller
@@ -68,9 +69,11 @@ listStudyProgramController :: Controller
 listStudyProgramController =
   checkAuthorization (studyProgramOperationAllowed ListEntities) $
    (do admin <- isAdmin
+       userprefs <- getSessionUserPrefs
        studyPrograms <- runQ queryAllStudyPrograms
        return
-        (listStudyProgramView admin studyPrograms showStudyProgramController
+        (listStudyProgramView admin userprefs studyPrograms
+          showStudyProgramController
           editStudyProgramController deleteStudyProgramController))
 
 --- Shows a StudyProgram entity.

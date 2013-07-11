@@ -21,6 +21,7 @@ import DefaultController
 import List
 import Helpers
 import XML
+import UserPreferences
 
 --- Shows a form to create a new MasterProgram entity.
 newMasterProgramController :: Controller
@@ -130,6 +131,7 @@ listMasterProgramController :: Controller
 listMasterProgramController =
   checkAuthorization (masterProgramOperationAllowed ListEntities) $ do
     login <- getSessionLogin
+    userprefs <- getSessionUserPrefs
     args <- getControllerParams
     if null args || args == ["all"]
      then do allmpinfos <- runQ queryMasterProgramMainInfos
@@ -137,7 +139,7 @@ listMasterProgramController =
                            then filter currentProgram allmpinfos
                            else allmpinfos
              coreareas <- runQ queryAllMasterCoreAreas
-             return (listMasterProgramView (not (null args))
+             return (listMasterProgramView userprefs (not (null args))
                        (maybe (filter visibleProgram mpinfos)
                               (const mpinfos) login)
                        coreareas)

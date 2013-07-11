@@ -19,6 +19,7 @@ import Mail
 import ConfigMDB
 import DefaultController
 import UserView(leqUser)
+import UserPreferences
 
 --- The WUI specification of the module cycle:
 wCycle = wSelect id ["unregelmäßig","jedes Semester","jedes Jahr"]
@@ -323,14 +324,15 @@ getUniqueTerm mis
 --- The arguments are the list of ModData entities
 --- and the controller functions to show, delete and edit entities.
 singleModDataView
- :: Bool -> Bool -> ModData -> User -> [StudyProgram] -> [Category]
+ :: UserPrefs -> Bool -> Bool -> ModData -> User -> [StudyProgram] -> [Category]
   -> [ModInst] -> Maybe ModDescr -> String
   -> (ModData -> Controller)
   -> (ModData -> Bool -> Controller) -> (ModDescr -> Controller)
   -> Controller -> Controller
   -> (ModData -> ModDescr -> Controller)
   -> (ModData -> User -> Controller) -> [HtmlExp]
-singleModDataView admin editallowed modData responsibleUser sprogs categorys
+singleModDataView prefs admin editallowed modData responsibleUser
+     sprogs categorys
      modinsts maybedesc xmlurl editModDataController deleteModDataController
      editModDescrController
      modinstaddController modinsteditController copyModController
@@ -369,29 +371,29 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
                     (deleteModDataController modData))]
           else [])] ++
   mainContentsWithSideMenu
-   (map (\t -> [href ('#':t) [htxt t]]) descTitles)
+   (map (\tag -> [href ('#':tag) [htxt tag]]) descTitles)
   ([spTable $
-    [[[bold [stringToHtml "Modulcode:"]],
+    [[[bold [stringToHtml $ t "Module code:"]],
       [stringToHtml (modDataCode modData)]],
-     [[bold [stringToHtml "Englische Bezeichnung:"]],
+     [[bold [stringToHtml $ t "English title:"]],
       [stringToHtml (modDataNameE modData)]],
-     [[bold [stringToHtml "Modulverantwortliche(r):"]],
+     [[bold [stringToHtml $ t "Person in charge:"]],
       [userToHtmlView responsibleUser]],
-     [[bold [stringToHtml "Turnus:"]],
-      [stringToHtml (improveCycle modData modinsts)] ++
+     [[bold [stringToHtml $ t "Cycle:"]],
+      [stringToHtml $ t (toEnglish (improveCycle modData modinsts))] ++
         if null modinsts then []
         else htxt " ": showSemsOfModInstances (mergeSort leqModInst modinsts)],
-     [[bold [stringToHtml "Präsenzzeiten:"]],
+     [[bold [stringToHtml $ t "Presence:"]],
       [stringToHtml (formatPresence (modDataPresence modData))]],
      [[bold [stringToHtml "ECTS:"]],
       [stringToHtml $ showDiv10 (modDataECTS modData)]],
      [[bold [stringToHtml "Workload:"]],
       [stringToHtml (modDataWorkload modData)]],
-     [[bold [stringToHtml "Dauer:"]],
-      [stringToHtml $ showLen (modDataLength modData) ++ " Semester"]],
-     [[bold [stringToHtml "Modulkategorien:"]],
+     [[bold [stringToHtml $ t "Duration:"]],
+      [stringToHtml $ showLen (modDataLength modData) ++ " " ++ t "semester"]],
+     [[bold [stringToHtml $ t "Module categories:"]],
       [showStudyProgCategoriesAsHtml sprogs categorys]],
-     [[bold [stringToHtml "Lehrsprache:"]],
+     [[bold [stringToHtml $ t "Teaching language:"]],
       [stringToHtml (maybe "" modDescrLanguage maybedesc)]]] ++
      (let url = modDataURL modData
        in if null url then [] else
@@ -417,12 +419,18 @@ singleModDataView admin editallowed modData responsibleUser sprogs categorys
                        modDescrLiterature,modDescrLinks,modDescrComments])))
    maybedesc)
  where
-   descTitles = ["Kurzfassung","Lernziele","Lehrinhalte","Voraussetzungen",
-                 "Prüfungsleistung","Lehr- und Lernmethoden","Verwendbarkeit",
-                 "Literatur","Verweise","Kommentar"]
+   t = translate prefs
 
-   showLen l | l==1 = "ein"
-             | l==2 = "zwei"
+   descTitles = langSelect prefs
+      ["Abstract","Objectives","Contents","Prerequisites",
+       "Examination","Learning methods","Usage",
+       "Literature","Links","Comments"]
+      ["Kurzfassung","Lernziele","Lehrinhalte","Voraussetzungen",
+       "Prüfungsleistung","Lehr- und Lernmethoden","Verwendbarkeit",
+       "Literatur","Verweise","Kommentar"]
+
+   showLen l | l==1 = t "one"
+             | l==2 = t "two"
              | otherwise = show l
 
 -- show the semesters of module instances enclosed in brackets:

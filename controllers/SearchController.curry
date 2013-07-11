@@ -19,29 +19,36 @@ import SearchView
 import ModDataView
 import Helpers
 import MDBEntitiesToHtml
+import UserPreferences
 
 -----------------------------------------------------------------------------
 --- Controller for the main page.
 searchController :: Controller
 searchController = do
   login <- getSessionLogin
-  return (searchPageView login searchModules showExamController
-                         showAllModulesController)
+  prefs <- getSessionUserPrefs
+  return (searchPageView login prefs searchModules showExamController
+                         showAllModulesController
+                         showAllEnglishModulesController)
 
 --- Controller for searching modules
 searchModules :: String -> Controller
 searchModules pat = do
-    admin <- isAdmin
-    login <- getSessionLogin
-    modcodes <- runQ $ transformQ (filter isMatching) queryModDataCodeName
-    mods <- runJustT $ mapT (\ (k,_,_) -> getModData k) modcodes
-    let vismods = maybe (filter modDataVisible mods) (const mods) login
-    return (listCategoryView admin login (Right "Gefundene Module")
-              [(Right $ "...mit Muster: "++pat, map (\m->(m,[],[])) vismods)]
-              [] [] showCategoryController
-              editCategoryController deleteCategoryController
-              showCategoryPlanController formatCatModulesForm
-              showEmailCorrectionController)
+  admin <- isAdmin
+  login <- getSessionLogin
+  prefs <- getSessionUserPrefs
+  let t = translate prefs
+  modcodes <- runQ $ transformQ (filter isMatching) queryModDataCodeName
+  mods <- runJustT $ mapT (\ (k,_,_) -> getModData k) modcodes
+  let vismods = maybe (filter modDataVisible mods) (const mods) login
+  return (listCategoryView admin login prefs
+            (Right $ t "Found modules")
+            [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat,
+              map (\m->(m,[],[])) vismods)]
+            [] [] showCategoryController
+            editCategoryController deleteCategoryController
+            showCategoryPlanController formatCatModulesForm
+            showEmailCorrectionController)
  where
    isMatching (_,code,name) = match pat (map toLower code) ||
                               match pat (map toLower name)
@@ -64,9 +71,11 @@ searchUserModules :: User -> Controller
 searchUserModules user = do
   admin <- isAdmin
   login <- getSessionLogin
+  prefs <- getSessionUserPrefs
+  let t = translate prefs
   mods <- runQ $ queryModDataOfUser (userKey user)
-  return (listCategoryView admin login
-               (Right ("Module von " ++ (userToShortView user)))
+  return (listCategoryView admin login prefs
+               (Right (t "Modules of" ++ " " ++ (userToShortView user)))
                [(Right "",map (\m->(m,[],[])) mods)]
                [] [] showCategoryController
                editCategoryController deleteCategoryController
@@ -78,19 +87,42 @@ searchUserModules user = do
 --- Controller to list all (visible) modules.
 showAllModulesController :: Controller
 showAllModulesController = do
+  mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
+  showModulesController mods
+
+--- Controller to list all (visible) modules taught in English.
+showAllEnglishModulesController :: Controller
+showAllEnglishModulesController = do
+  mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
+  emods <- mapIO checkEnglishMod mods
+  showModulesController (concat emods)
+ where
+  checkEnglishMod md = do
+    moddesc <- runQ $ queryDescriptionOfMod (modDataKey md)
+    return (maybe [] (\desc -> if modDescrLanguage desc == "Englisch"
+                               then [md]
+                               else [])
+                     moddesc)
+
+--- Controller to list given modules.
+showModulesController :: [ModData] -> Controller
+showModulesController mods = do
   admin <- isAdmin
   login <- getSessionLogin
-  mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
-  let (pmods,wmods) = partition isMandatoryModule mods
-  return (listCategoryView admin login
-            (Right "Alle Module")
-            [(Right "Pflichtmodule (Informatik, Wirtschaftsinformatik, Nebenfach)",
+  prefs <- getSessionUserPrefs
+  let t = translate prefs
+      (pmods,wmods) = partition isMandatoryModule mods
+  return (listCategoryView admin login prefs
+            (Right $ t "All modules")
+            [(Right (t "Mandatary modules" ++
+                     " (Informatik, Wirtschaftsinformatik, Nebenfach)"),
               map (\m->(m,[],[])) pmods),
-             (Right "Weitere Module", map (\m->(m,[],[])) wmods)]
+             (Right $ t "Further modules", map (\m->(m,[],[])) wmods)]
             [] [] showCategoryController
             editCategoryController deleteCategoryController
             showCategoryPlanController formatCatModulesForm
             showEmailCorrectionController)
+ where
 
 isMandatoryModule :: ModData -> Bool
 isMandatoryModule md = modDataCode md `elem` mandatoryModulCodes

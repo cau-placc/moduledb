@@ -21,6 +21,7 @@ import ModDataController
 import Helpers
 import List
 import Sort
+import UserPreferences
 
 --- Shows a form to create a new Category entity.
 newCategoryController :: Controller
@@ -88,19 +89,24 @@ listCategoryController =
 runListCategoyController admin login args
  | null args
   = do categorys <- runQ queryAllCategorys
-       return (listCategoryView admin login (Right "Alle Kategorien")
-                      (map (\c -> (Left c,[])) (mergeSort leqCategory categorys))
-                      [] [] showCategoryController
-                      editCategoryController deleteCategoryController
-                      showCategoryPlanController formatCatModulesForm
-                      showEmailCorrectionController)
+       prefs <- getSessionUserPrefs
+       let t = translate prefs
+       return (listCategoryView admin login prefs (Right $ t "All categories")
+                 (map (\c -> (Left c,[])) (mergeSort leqCategory categorys))
+                 [] [] showCategoryController
+                 editCategoryController deleteCategoryController
+                 showCategoryPlanController formatCatModulesForm
+                 showEmailCorrectionController)
  | take 5 (head args) == "user="
   = do let lname = drop 5 (head args)
        -- get user entries with a given login name
        users <- runQ $ queryCondUser (\u -> userLogin u == lname)
        if null users then return [h1 [htxt "Illegal URL"]] else
         do mods <- runQ $ queryModDataOfUser (userKey (head users))
-           return (listCategoryView admin login (Right "Eigene Module")
+           prefs <- getSessionUserPrefs
+           let t = translate prefs
+           return (listCategoryView admin login prefs
+                        (Right $ t "My modules")
                         [(Right "",map (\m->(m,[],[])) mods)]
                         [] [] showCategoryController
                         editCategoryController deleteCategoryController
@@ -114,7 +120,8 @@ runListCategoyController admin login args
               let spk = categoryStudyProgramProgramCategoriesKey cat
                   mbsprog = find (\p -> studyProgramKey p == spk) sprogs
               mods <- runJustT $ getModDataOfCategory catkey
-              return (listCategoryView admin login
+              prefs <- getSessionUserPrefs
+              return (listCategoryView admin login prefs
                         (maybe (Right "???") Left mbsprog)
                         [(Left cat,map (\m->(m,[],[]))
                                        (maybe (filter modDataVisible mods)
@@ -140,7 +147,8 @@ runListCategoyController admin login args
                                                     login)))
                          categorys
                else mapT (\c -> returnT (Left c,[])) categorys
-              return (listCategoryView admin login (Left studyprog)
+              prefs <- getSessionUserPrefs
+              return (listCategoryView admin login prefs (Left studyprog)
                          catmods [] [] showCategoryController
                          editCategoryController deleteCategoryController
                          showCategoryPlanController
@@ -156,6 +164,7 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem
                            withunivis withmprogs = do
   admin <- isAdmin
   login <- getSessionLogin
+  prefs <- getSessionUserPrefs
   users <- runQ queryAllUsers
   catmodinsts <- runJustT $
                    mapT (\ (c,mods) ->
@@ -165,7 +174,7 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem
                                            login              ) |>>= \mmis ->
                                returnT (c,mmis))
                         catmods
-  return (listCategoryView admin login mbstudyprog
+  return (listCategoryView admin login prefs mbstudyprog
              catmodinsts semPeriod users
              showCategoryController
              editCategoryController deleteCategoryController

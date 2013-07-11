@@ -14,29 +14,35 @@ import MDB
 import MDBEntitiesToHtml
 import Sort
 import ModDataView
+import UserPreferences
 
 -----------------------------------------------------------------------------
 --- A view for searching modules.
-searchPageView :: Maybe String -> (String -> Controller)
-               -> ((String,Int) -> Controller) -> Controller
+searchPageView :: Maybe String -> UserPrefs -> (String -> Controller)
+               -> ((String,Int) -> Controller) -> Controller -> Controller
                -> [HtmlExp]
-searchPageView login searchcontroller showExamController showAllMods =
-  [h1 [htxt "Modulsuche"],
+searchPageView login prefs searchcontroller showExamController showAllMods
+               showAllEnglishMods =
+  [h1 [htxt $ t "Search modules"],
    blockstyle "widelist" [ulist $
-      [[htxt "Alle Module mit Zeichenfolge ",
-        textfield scode "" `addAttr` ("size","20"),
-        htxt " im Modulcode oder -titel ",
-        spButton "suchen" searchHandler],
-       [htxt "Alle Module ",
-        spButton "anzeigen" (nextController showAllMods)]] ++
+      [[htxt $ t "Search all modules containing", nbsp,
+        textfield scode "" `addAttr` ("size","20"), nbsp,
+        htxt $ t "in the module code or title", nbsp,
+        spButton (t "search") searchHandler],
+       [htxt $ t "Show", nbsp,
+        spButton (t "all modules") (nextController showAllMods), nbsp,
+        spButton (t "all English modules")
+                 (nextController showAllEnglishMods)]] ++
       if login==Nothing
       then []
       else [[htxt "Prüfungsanforderungen aller Module im ",
             spShortSelectionInitial insem semSelection lowerSemesterSelection,
-            spButton "anzeigen" showExams]]
+            spButton (t "show") showExams]]
       ]]
  where
   scode,insem free
+
+  t = translate prefs
 
   searchHandler env = searchcontroller (map toLower (env scode)) >>= getForm
 

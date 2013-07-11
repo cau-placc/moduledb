@@ -31,6 +31,7 @@ import ModInstView
 import FileGoodies(baseName)
 import Mail
 import Directory
+import UserPreferences
 
 --- Shows a form to create a new ModData entity.
 newModDataController :: Controller
@@ -189,9 +190,10 @@ listModDataController =
               sprogs <- runQ queryAllStudyPrograms
               moddesc <- runQ $ queryDescriptionOfMod mdkey
               modinsts <- runQ $ queryInstancesOfMod mdkey
+              userprefs <- getSessionUserPrefs
               let lname = maybe "" id login
               if null (tail args)
-               then return (singleModDataView admin
+               then return (singleModDataView userprefs admin
                         (userLogin responsibleUser == lname)
                         modData responsibleUser
                         sprogs categories modinsts moddesc (xmlURL modData)
@@ -221,8 +223,9 @@ showModDataWithCode mcode = do
     sprogs <- runQ queryAllStudyPrograms
     moddesc <- runQ $ queryDescriptionOfMod (modDataKey modData)
     modinsts <- runQ $ queryInstancesOfMod (modDataKey modData)
+    userprefs <- getSessionUserPrefs
     lname <- getSessionLogin >>= return . maybe "" id
-    return (singleModDataView admin
+    return (singleModDataView userprefs admin
               (userLogin responsibleUser == lname)
               modData responsibleUser
               sprogs categories modinsts moddesc (xmlURL modData)

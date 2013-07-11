@@ -18,6 +18,7 @@ import ConfigMDB
 import UnivisInfoView
 import Mail
 import System(sleep)
+import UserPreferences
 
 --- The WUI specification for the entity type Category.
 --- It also includes fields for associated entities.
@@ -136,7 +137,7 @@ leqCategory x1 x2 =
 ---   has a UnivIS entry (if this list is empty, UnivIS entries should not
 ---   be shown)
 listCategoryView
- :: Bool -> Maybe String -> Either StudyProgram String
+ :: Bool -> Maybe String -> UserPrefs -> Either StudyProgram String
   -> [(Either Category String,[(ModData,[Maybe (ModInst,Int)],[Bool])])]
   -> [(String,Int)] -> [User]
   -> (Category -> Controller) -> (Category -> Controller)
@@ -147,7 +148,7 @@ listCategoryView
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Controller)
   -> [HtmlExp]
-listCategoryView admin login mbsprog catmods semperiod users
+listCategoryView admin login prefs mbsprog catmods semperiod users
                  showCategoryController
                  editCategoryController deleteCategoryController
                  showCategoryPlanController formatCatModsController
@@ -179,20 +180,20 @@ listCategoryView admin login mbsprog catmods semperiod users
     then either
           (\sprog ->
             [par [spHref ("?listCategory/"++showStudyProgramKey sprog++"/all")
-                    [htxt "Alle Module in diesem Studienprogramm anzeigen"]]])
+                    [htxt $ t "Show all modules in this study program"]]])
           (const [])
           mbsprog
     else
-     [par ([bold [htxt "Semesterplanung"], htxt " von ",
+     [par ([bold [htxt $ t "Semester planning"], htxt " from ",
             spShortSelectionInitial fromsem semSelection lowerSemesterSelection,
-            htxt " bis ",
+            htxt " to ",
             spShortSelectionInitial tosem semSelection upperSemesterSelection,
             htxt ": ",
-            spSmallButton "Anzeigen" (showPlan False False mbsprog)] ++
+            spSmallButton (t "Show") (showPlan False False mbsprog)] ++
            (maybe []
-                  (\_ -> [spSmallButton "mit UnivIS-Abgleich"
+                  (\_ -> [spSmallButton (t "with UnivIS comparison")
                                    (showPlan True False mbsprog),
-                          spSmallButton "mit Masterprogrammverwendungen"
+                          spSmallButton (t "with master program usage")
                                    (showPlan False True mbsprog)])
                   login) ++
            (if admin
@@ -218,6 +219,8 @@ listCategoryView admin login mbsprog catmods semperiod users
     else [])
   where
    fromsem,tosem free
+
+   t = translate prefs
 
    -- show UnivIS instance of a semester
    showUnivisInst md ((term,year),mbmi,hasinst)

@@ -23,7 +23,7 @@ module Spicey (
   spHref, spButton, spPrimButton, spSmallButton, spTable, spHeadedTable,
   spShortSelectionInitial,
   setPageMessage, getPageMessage,
-  saveLastUrl, getLastUrl, getLastUrls
+  saveLastUrl, getLastUrl, getLastUrlParameters, getLastUrls
   ) where
 
 import System
@@ -40,6 +40,7 @@ import Global
 import Authentication
 import Helpers
 import Distribution
+import UserPreferences
 
 ---------------- vvvv -- Framework functions -- vvvv -----------------------
 
@@ -177,21 +178,21 @@ wUncheckMaybe defval wspec =
          defval
 
 --- The standard menu for all users.
-getUserMenu :: IO HtmlExp
-getUserMenu = do
-  login <- getSessionLogin
+getUserMenu :: Maybe String -> UserPrefs -> IO HtmlExp
+getUserMenu login prefs = do
+  let t = translate prefs
   return $
      ulist $
       [--[href "?main" [htxt "Hauptseite"]],
-       [href "?listStudyProgram" [htxt "Studiengänge"]],
-       [href "?listMasterProgram" [htxt "Masterprogramme"]],
-       [href "?search" [htxt "Modulsuche"]]] ++
+       [href "?listStudyProgram" [htxt $ t "Study programs"]],
+       [href "?listMasterProgram" [htxt $ t "Master programs"]],
+       [href "?search" [htxt $ t "Search modules"]]] ++
       (maybe []
-         (\lname -> [[href ("?listCategory/"++"user="++lname)
-                           [htxt "Eigene Module"]],
-                     [href "?newMasterProgram" [htxt "Neues Masterprogram"]]])
-         login) ++
-      [[href "?login" [htxt (maybe "An" (const "Ab") login ++ "melden")]]]
+        (\lname -> [[href ("?listCategory/"++"user="++lname)
+                           [htxt $ t "My modules"]],
+                    [href "?newMasterProgram" [htxt $ t "New master program"]]])
+        login) ++
+      [[href "?login" [htxt $ t ("Log" ++ maybe "in" (const "out") login)]]]
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String
@@ -200,13 +201,15 @@ spiceyTitle = "Modulinformationssystem Informatik"
 --- Adds the basic page layout to a view.
 addLayout :: ViewBlock -> IO ViewBlock
 addLayout viewblock = do
-  usermenu   <- getUserMenu
+  login      <- getSessionLogin
+  prefs      <- getSessionUserPrefs
+  usermenu   <- getUserMenu login prefs
   (routemenu1,routemenu2) <- getRouteMenus
   msg        <- getPageMessage
   admin      <- isAdmin
-  login      <- getSessionLogin
+  lurls <- getLastUrls
   return $
-    stdNavBar usermenu login ++
+    stdNavBar usermenu login prefs ++
     [blockstyle "container-fluid" $
       [HtmlStruct "header" [("class","hero-unit")] [h1 mainTitle],
        if null msg
@@ -249,45 +252,52 @@ mainContentsWithSideMenu menuitems contents =
 -- Standard navigation bar at the top.
 -- The first argument is the route menu (a ulist).
 -- The second argument is the possible login name.
-stdNavBar :: HtmlExp -> Maybe String -> [HtmlExp]
-stdNavBar routemenu login =
+stdNavBar :: HtmlExp -> Maybe String -> UserPrefs -> [HtmlExp]
+stdNavBar routemenu login prefs =
   [blockstyle "navbar navbar-inverse navbar-fixed-top"
     [blockstyle "navbar-inner"
       [blockstyle "container-fluid"
          [addDropdownItem routemenu `addClass` "nav",
-          par [--bold [href "?main" [htxt spiceyTitle]], nbsp, nbsp, nbsp,
-               userIcon, nbsp, htxt $ maybe "nicht angemeldet" id login]
+          par [bold [if preferredLanguage prefs == English
+                     then href "?langDE" [htxt "[Deutsch]"]
+                     else href "?langEN" [htxt "[English]"]], nbsp, nbsp, nbsp,
+               userIcon, nbsp, htxt $ maybe (t "not logged in") id login]
             `addClass` "navbar-text pull-right"]
       ]
     ]
   ]
  where
+  t = translate prefs
+
   userIcon = HtmlText "<i class=\"icon-user icon-white\"></i>"
 
-  addDropdownItem (HtmlStruct t ats items) =
-    HtmlStruct t ats (dropDownMenuItem : items)
+  addDropdownItem (HtmlStruct tag ats items) =
+    HtmlStruct tag ats (dropDownMenuItem : items)
 
   dropDownMenuItem =
     HtmlStruct "li" [("class","dropdown")]
-     [href "#" [htxt "Gehe zu", bold [htxt " "] `addClass` "caret"]
+     [href "#" [htxt $ t "Go to", bold [htxt " "] `addClass` "caret"]
        `addAttrs` [("class","dropdown-toggle"),("data-toggle","dropdown")],
       HtmlStruct "ul" []
-        (litem [href "?main" [htxt "Hauptseite der Moduldatenbank"]] : extUrls)
+        (litem [href "?main"
+                     [htxt $ t "Main page of the module information system"]]
+           : extUrls)
         `addClass` "dropdown-menu"]
 
   extUrls =
    [toEHref "http://www.informatik.uni-kiel.de" "Institut für Informatik"
    ,toEHref "http://www.uni-kiel.de" "CAU Kiel"
    ,litem [htxt " "] `addClass` "divider"
-   ,litem [htxt "Unterstützt durch:"] `addClass` "nav-header"
-   ,toEHref "http://www.curry-language.org" "Curry (Programmiersprache)"
+   ,litem [htxt $ t "Supported by:"] `addClass` "nav-header"
+   ,toEHref "http://www.curry-language.org"
+            ("Curry ("++t "programming language"++")")
    ,toEHref "http://www.informatik.uni-kiel.de/~pakcs/spicey"
             "Spicey (Web Framework)"
    ,toEHref "http://twitter.github.com/bootstrap/"
             "Twitter Bootstrap (Style Sheets)"
    ]
 
-  toEHref url t = litem [ehref url [arrowIcon, nbsp, htxt t]]
+  toEHref url s = litem [ehref url [arrowIcon, nbsp, htxt s]]
 
   arrowIcon = HtmlText "<i class=\"icon-arrow-right\"></i>"
 
@@ -524,11 +534,12 @@ setPageMessage msg = putSessionData msg pageMessage
 
 --------------------------------------------------------------------------
 -- Another example for using sessions.
--- We store the list of selected URLs into  the current session.
+-- We store the list of last selected URLs (maximal 3)
+-- into  the current session.
 
 --- Definition of the session state to store the last URL (as a string).
 lastUrls :: Global (SessionStore [String])
-lastUrls = global emptySessionStore Temporary
+lastUrls = global emptySessionStore (Persistent "sessionUrls")
 
 --- Gets the list of URLs of the current session.
 getLastUrls :: IO [String]
@@ -539,10 +550,18 @@ getLastUrl :: IO String
 getLastUrl = do urls <- getLastUrls
                 return (if null urls then "?" else head urls)
 
+--- Gets the parameters of the last URL of the current session.
+getLastUrlParameters :: IO (String,[String])
+getLastUrlParameters = do
+  urls <- getLastUrls
+  return $ if null urls
+           then ("",[])
+           else parseUrl (head urls)
+
 --- Saves the last URL of the current session.
 saveLastUrl :: String -> IO ()
 saveLastUrl url = do
   urls <- getLastUrls
-  putSessionData (url:urls) lastUrls
+  putSessionData (url : take 2 urls) lastUrls
 
 --------------------------------------------------------------------------

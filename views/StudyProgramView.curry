@@ -11,6 +11,7 @@ import Sort
 import Spicey
 import MDB
 import MDBEntitiesToHtml
+import UserPreferences
 
 --- The WUI specification for the entity type StudyProgram.
 wStudyProgram :: WuiSpec (String,String,String,String,Int)
@@ -106,19 +107,21 @@ leqStudyProgram x1 x2 =
 --- The arguments are the list of StudyProgram entities
 --- and the controller functions to show, delete and edit entities.
 listStudyProgramView
- :: Bool -> [StudyProgram] -> (StudyProgram -> Controller)
+ :: Bool -> UserPrefs -> [StudyProgram] -> (StudyProgram -> Controller)
   -> (StudyProgram -> Controller) -> (StudyProgram -> Bool -> Controller)
   -> [HtmlExp]
-listStudyProgramView admin studyPrograms showStudyProgramController
+listStudyProgramView admin prefs studyPrograms showStudyProgramController
                      editStudyProgramController deleteStudyProgramController =
   if admin
-  then [h1 [htxt "Studiengänge"],
+  then [h1 [htxt $ t "Study programs"],
         spTable ([take 5 studyProgramLabelList] ++
                 map listStudyProgram (mergeSort leqStudyProgram studyPrograms))]
-  else [h1 [htxt "Studiengänge"],
+  else [h1 [htxt $ t "Study programs"],
         spTable (map (\sp -> [head (studyProgramToListView sp)])
                      (mergeSort leqStudyProgram studyPrograms))]
- where listStudyProgram :: StudyProgram -> [[HtmlExp]]
+ where t = translate prefs
+
+       listStudyProgram :: StudyProgram -> [[HtmlExp]]
        listStudyProgram studyProgram =
           studyProgramToListView studyProgram ++
            [[spSmallButton "show"
