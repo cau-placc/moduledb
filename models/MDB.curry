@@ -1448,6 +1448,10 @@ modData'Code = dbAttr modData'Table 0
 modData'NameG :: DBAttr ModData String
 modData'NameG = dbAttr modData'Table 1
 
+--- Attribute NameE of entity ModData.
+modData'NameE :: DBAttr ModData String
+modData'NameE = dbAttr modData'Table 2
+
 --- Attribute UserResponsibleKey of entity ModData.
 modData'UserResponsibleKey :: DBAttr ModData UserKey
 modData'UserResponsibleKey = dbKeyAttr modData'Table 10 userKeyToKey UserKey
@@ -1463,8 +1467,9 @@ queryModDataOfUser ukey =
   selectFrom modData'Table `whereQ` modData'UserResponsibleKey @== ukey
 
 --- Query the key/code/name of all ModData entities.
-queryModDataCodeName :: KeyDatabase.Query [(ModDataKey,String,String)]
-queryModDataCodeName = selectAll3 modData'Key modData'Code modData'NameG
+queryModDataCodeName :: KeyDatabase.Query [(ModDataKey,String,String,String)]
+queryModDataCodeName =
+  selectAll4 modData'Key modData'Code modData'NameG modData'NameE
 
 
 --- Database predicate representing the relation between keys and ModDescr tuple entities.

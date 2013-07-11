@@ -39,7 +39,7 @@ searchModules pat = do
   prefs <- getSessionUserPrefs
   let t = translate prefs
   modcodes <- runQ $ transformQ (filter isMatching) queryModDataCodeName
-  mods <- runJustT $ mapT (\ (k,_,_) -> getModData k) modcodes
+  mods <- runJustT $ mapT (\ (k,_,_,_) -> getModData k) modcodes
   let vismods = maybe (filter modDataVisible mods) (const mods) login
   return (listCategoryView admin login prefs
             (Right $ t "Found modules")
@@ -50,8 +50,10 @@ searchModules pat = do
             showCategoryPlanController formatCatModulesForm
             showEmailCorrectionController)
  where
-   isMatching (_,code,name) = match pat (map toLower code) ||
-                              match pat (map toLower name)
+   isMatching (_,code,nameG,nameE) =
+     match pat (map toLower code) ||
+     match pat (map toLower nameG) ||
+     match pat (map toLower nameE)
 
 
 -- simple generic string pattern matcher:

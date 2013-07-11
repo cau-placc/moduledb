@@ -47,8 +47,9 @@
 module KeyDatabaseQuery
         (DBTable,dbTable,DBAttr,dbAttr,dbKeyAttr,
          (@==),(@&&),whereQ,
-         selectAllFrom,selectAll1,selectAll2,selectAll3,selectAll6,
-         selectFrom,select1,select2,select3,select6)
+         selectAllFrom,selectAll1,selectAll2,selectAll3,selectAll4,
+         selectAll5,selectAll6,
+         selectFrom,select1,select2,select3,select4,select5,select6)
  where
 
 import KeyDatabase
@@ -163,6 +164,21 @@ selectAll3 :: DBAttr e atype1 -> DBAttr e atype2
 selectAll3 dbattr1 dbattr2 dbattr3 =
   select3 dbattr1 dbattr2 dbattr3 `whereQ` WhereCondTrue
 
+-- Projection on four attributes without a condition.
+selectAll4 :: DBAttr e atype1 -> DBAttr e atype2
+           -> DBAttr e atype3 -> DBAttr e atype4
+           -> Query [(atype1,atype2,atype3,atype4)]
+selectAll4 dbattr1 dbattr2 dbattr3 dbattr4 =
+  select4 dbattr1 dbattr2 dbattr3 dbattr4 `whereQ` WhereCondTrue
+
+-- Projection on five attributes without a condition.
+selectAll5 :: DBAttr e atype1 -> DBAttr e atype2
+           -> DBAttr e atype3 -> DBAttr e atype4
+           -> DBAttr e atype5
+           -> Query [(atype1,atype2,atype3,atype4,atype5)]
+selectAll5 dbattr1 dbattr2 dbattr3 dbattr4 dbattr5 =
+  select5 dbattr1 dbattr2 dbattr3 dbattr4 dbattr5 `whereQ` WhereCondTrue
+
 -- Projection on six attributes without a condition.
 selectAll6 :: DBAttr e atype1 -> DBAttr e atype2
            -> DBAttr e atype3 -> DBAttr e atype4
@@ -201,6 +217,28 @@ select3 (DBAttr (DBTable _ condqueryproject) i1 _ f1) (DBAttr _ i2 _ f2)
         (DBAttr _ i3 _ f3) wcond =
   transformQ (map (readTInfo (readTuple3 f1 f2 f3)))
              (condqueryproject [i1,i2,i3] (whereCond2ColVals wcond))
+
+-- Projection on four attributes.
+select4 :: DBAttr e atype1 -> DBAttr e atype2
+        -> DBAttr e atype3 -> DBAttr e atype4
+        -> WhereCond e
+        -> Query [(atype1,atype2,atype3,atype4)]
+select4 (DBAttr (DBTable _ condqueryproject) i1 _ f1) (DBAttr _ i2 _ f2)
+        (DBAttr _ i3 _ f3) (DBAttr _ i4 _ f4) wcond =
+  transformQ (map (readTInfo (readTuple4 f1 f2 f3 f4)))
+             (condqueryproject [i1,i2,i3,i4]  (whereCond2ColVals wcond))
+
+-- Projection on five attributes.
+select5 :: DBAttr e atype1 -> DBAttr e atype2
+        -> DBAttr e atype3 -> DBAttr e atype4
+        -> DBAttr e atype5
+        -> WhereCond e
+        -> Query [(atype1,atype2,atype3,atype4,atype5)]
+select5 (DBAttr (DBTable _ condqueryproject) i1 _ f1) (DBAttr _ i2 _ f2)
+        (DBAttr _ i3 _ f3) (DBAttr _ i4 _ f4)
+        (DBAttr _ i5 _ f5) wcond =
+  transformQ (map (readTInfo (readTuple5 f1 f2 f3 f4 f5)))
+             (condqueryproject [i1,i2,i3,i4,i5]  (whereCond2ColVals wcond))
 
 -- Projection on six attributes.
 select6 :: DBAttr e atype1 -> DBAttr e atype2
