@@ -184,9 +184,9 @@ listCategoryView admin login prefs mbsprog catmods semperiod users
           (const [])
           mbsprog
     else
-     [par ([bold [htxt $ t "Semester planning"], htxt " from ",
+     [par ([bold [htxt $ t "Semester planning"], htxt $ t " from ",
             spShortSelectionInitial fromsem semSelection lowerSemesterSelection,
-            htxt " to ",
+            htxt $ t " to ",
             spShortSelectionInitial tosem semSelection upperSemesterSelection,
             htxt ": ",
             spSmallButton (t "Show") (showPlan False False mbsprog)] ++

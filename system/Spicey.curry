@@ -207,7 +207,6 @@ addLayout viewblock = do
   (routemenu1,routemenu2) <- getRouteMenus
   msg        <- getPageMessage
   admin      <- isAdmin
-  lurls <- getLastUrls
   return $
     stdNavBar usermenu login prefs ++
     [blockstyle "container-fluid" $
