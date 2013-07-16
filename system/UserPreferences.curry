@@ -125,7 +125,7 @@ english2german =
  ,("Person in charge:"  ,"Modulverantwortliche(r):")
  ,("Presence:"          ,"Präsenzzeiten:")
  ,("programming language","Programmiersprache")
- ,("Really logoout?"    ,"Wirklich abmelden?")
+ ,("Really logout?"     ,"Wirklich abmelden?")
  ,("Search modules"     ,"Modulsuche")
  ,("Search all modules containing","Alle Module mit Zeichenfolge")
  ,("search"             ,"suchen")

@@ -34,7 +34,7 @@ loginView controller currlogin prefs =
                hrule,
                par [spButton (t "Forgot your login data?")
                              (const sendLoginDataForm)]]
-   Just _  -> [h3 [htxt $ t "Really logoout?"],
+   Just _  -> [h3 [htxt $ t "Really logout?"],
                par [spPrimButton (t "Logout")  (logoutHandler True),
                     spButton "Cancel" (logoutHandler False)],
                hrule,
