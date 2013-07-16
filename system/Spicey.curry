@@ -196,7 +196,7 @@ getUserMenu login prefs = do
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String
-spiceyTitle = "Modulinformationssystem Informatik"
+spiceyTitle = "Module Information System"
 
 --- Adds the basic page layout to a view.
 addLayout :: ViewBlock -> IO ViewBlock
@@ -207,6 +207,10 @@ addLayout viewblock = do
   (routemenu1,routemenu2) <- getRouteMenus
   msg        <- getPageMessage
   admin      <- isAdmin
+  let (mainTitle,mainDoc) =
+          case viewblock of
+            (HtmlStruct "h1" [] t : hexps) -> (t,hexps)
+            _ -> ([htxt (translate prefs spiceyTitle)], viewblock)
   return $
     stdNavBar usermenu login prefs ++
     [blockstyle "container-fluid" $
@@ -226,11 +230,6 @@ addLayout viewblock = do
                    [image "images/spicey-logo.png" "Spicey"]
                  `addAttr` ("target","_blank"),
               htxt "Framework"]]]]
- where
-  (mainTitle,mainDoc) =
-    case viewblock of
-      (HtmlStruct "h1" [] t : hexps) -> (t,hexps)
-      _ -> ([htxt spiceyTitle], viewblock)
 
 --- Create a side menu containing a (possibly empty) title and a list of items:
 titledSideMenu :: String -> [[HtmlExp]] -> [HtmlExp]

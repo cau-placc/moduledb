@@ -18,34 +18,39 @@ import DefaultController
 import Mail
 import Time
 import ConfigMDB
+import UserPreferences
 
 -----------------------------------------------------------------------------
 --- View for login/logout. If the passed login name is the empty string,
 --- we offer a login dialog, otherwise a logout dialog.
-loginView :: Controller -> Maybe String -> [HtmlExp]
-loginView controller currlogin =
+loginView :: Controller -> Maybe String -> UserPrefs -> [HtmlExp]
+loginView controller currlogin prefs =
   case currlogin of
-   Nothing -> [h3 [htxt "Anmeldung zur Moduldatenbank"],
-               spTable [[[htxt "Benutzername:"], [textfield loginfield ""]],
-                        [[htxt "Passwort:"],     [password passfield]]], hrule,
-               par [spPrimButton "Anmelden" loginHandler],
+   Nothing -> [h3 [htxt "Login to module database"],
+               spTable [[[htxt $ t "Login name:"], [textfield loginfield ""]],
+                        [[htxt $ t "Password:"],   [password passfield]]],
                hrule,
-               par [spButton "Login-Daten vergessen?" (const sendLoginDataForm)]]
-   Just _  -> [h3 [htxt "Wirklich abmelden?"],
-               par [spPrimButton "Abmelden"  (logoutHandler True),
-                    spButton "Abbrechen" (logoutHandler False)],
+               par [spPrimButton (t "Login") loginHandler],
                hrule,
-               h3 [htxt "Sie können auch nur Ihr ",
-                   spButton "Passwort ändern" (const passwdForm)]]
+               par [spButton (t "Forgot your login data?")
+                             (const sendLoginDataForm)]]
+   Just _  -> [h3 [htxt $ t "Really logoout?"],
+               par [spPrimButton (t "Logout")  (logoutHandler True),
+                    spButton "Cancel" (logoutHandler False)],
+               hrule,
+               h3 [htxt $ t "You can also ",
+                   spButton (t "change your password") (const passwdForm)]]
  where
   loginfield,passfield free
+
+  t = translate prefs
 
   loginHandler env = do
     let loginname = env loginfield
     hashpass <- getUserHash loginname (env passfield)
     users <- runQ $ queryUserByLoginPass loginname hashpass
     if null users
-      then do setPageMessage "Falsche Login-Daten!"
+      then do setPageMessage $ t "Wrong login data!"
               nextInProcessOr controller Nothing >>= getForm
       else do loginToSession loginname
               ctime <- getLocalTime
@@ -80,6 +85,8 @@ queryUserByLoginPass login pass = seq login $ seq pass $
 passwdForm :: IO HtmlForm
 passwdForm = do
   login <- getSessionLogin
+  prefs <- getSessionUserPrefs
+  let t = translate prefs
   getForm
     [h1 [htxt "Passwort ändern"],
      spTable [[[htxt "Altes Passwort:"], [password oldpass]],
@@ -88,7 +95,7 @@ passwdForm = do
      hrule,
      spPrimButton "Passwort ändern" (\ e -> passwdHandler login e >>= getForm),
      nbsp,
-     spButton "Abbrechen"
+     spButton (t "Cancel")
             (const (cancelOperation >> defaultController >>= getForm))]
  where
   oldpass,newpass1,newpass2 free
@@ -110,7 +117,9 @@ passwdForm = do
 ------------------------------------------------------------------------
 -- send login data to a new user
 sendLoginDataForm :: IO HtmlForm
-sendLoginDataForm =
+sendLoginDataForm = do
+  prefs <- getSessionUserPrefs
+  let t = translate prefs
   getForm
     [h1 [htxt "Login-Daten zusenden"],
      par [htxt "Sie können sich ein neues Password an Ihre Email-Adresse ",
@@ -118,7 +127,7 @@ sendLoginDataForm =
      par [htxt "Ihre Email-Adresse: ", textfield emailref ""],
      hrule,
      spPrimButton "Neues Passwort senden" sendHandler,
-     spButton "Abbrechen"
+     spButton (t "Cancel")
             (const (cancelOperation >> defaultController >>= getForm))]
  where
   emailref free
