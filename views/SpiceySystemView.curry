@@ -26,7 +26,7 @@ import UserPreferences
 loginView :: Controller -> Maybe String -> UserPrefs -> [HtmlExp]
 loginView controller currlogin prefs =
   case currlogin of
-   Nothing -> [h3 [htxt "Login to module database"],
+   Nothing -> [h3 [htxt $ t "Login to module database"],
                spTable [[[htxt $ t "Login name:"], [textfield loginfield ""]],
                         [[htxt $ t "Password:"],   [password passfield]]],
                hrule,
@@ -36,7 +36,7 @@ loginView controller currlogin prefs =
                              (const sendLoginDataForm)]]
    Just _  -> [h3 [htxt $ t "Really logout?"],
                par [spPrimButton (t "Logout")  (logoutHandler True),
-                    spButton "Cancel" (logoutHandler False)],
+                    spButton (t "Cancel") (logoutHandler False)],
                hrule,
                h3 [htxt $ t "You can also ",
                    spButton (t "change your password") (const passwdForm)]]
@@ -55,23 +55,18 @@ loginView controller currlogin prefs =
       else do loginToSession loginname
               ctime <- getLocalTime
               runT (updateUser (setUserLastLogin (head users) ctime))
-              setPageMessage ("Angemeldet als: "++loginname)
+              setPageMessage (t "Logged in as: " ++ loginname)
               urls <- getLastUrls
               getForm $
-               [h1 [htxt "Anmeldung erfolgreich"],
-                par [htxt $ "Sie sind als Benutzer '" ++ loginname ++
-                            "' angemeldet und können Ihre Module und " ++
-                     "Programme bearbeiten."],
-                par [htxt timeoutText]] ++
+               [h1 [htxt $ t "Login successful"],
+                par [htxt $ loginText prefs loginname],
+                par [htxt $ timeoutText prefs]] ++
                 if length urls > 1
-                then [par [href ('?':urls!!1) [htxt "Zurück zur letzten Seite"]]]
+                then [par [href ('?':urls!!1) [htxt "Back to last page"]]]
                 else []
 
-  timeoutText = "Bitte beachten Sie, dass Sie bei mehr als 60 Minuten "++
-                "Inaktivität automatisch wieder abgemeldet werden."
-
   logoutHandler confirm _ = do
-    if confirm then logoutFromSession >> setPageMessage "Abgemeldet"
+    if confirm then logoutFromSession >> setPageMessage (t "Logged out")
                else cancelOperation
     nextInProcessOr controller Nothing >>= getForm
 
@@ -88,30 +83,31 @@ passwdForm = do
   prefs <- getSessionUserPrefs
   let t = translate prefs
   getForm
-    [h1 [htxt "Passwort ändern"],
-     spTable [[[htxt "Altes Passwort:"], [password oldpass]],
-              [[htxt "Neues Passwort:"], [password newpass1]],
-              [[htxt "Neues Passwort wiederholen:"], [password newpass2]]],
+    [h1 [htxt $ t "Change password"],
+     spTable [[[htxt $ t "Old password:"],        [password oldpass]],
+              [[htxt $ t "New password:"],        [password newpass1]],
+              [[htxt $ t "Repeat new password:"], [password newpass2]]],
      hrule,
-     spPrimButton "Passwort ändern" (\ e -> passwdHandler login e >>= getForm),
+     spPrimButton (t "Change password")
+                  (\ e -> passwdHandler t login e >>= getForm),
      nbsp,
      spButton (t "Cancel")
             (const (cancelOperation >> defaultController >>= getForm))]
  where
   oldpass,newpass1,newpass2 free
 
-  passwdHandler Nothing _ = cancelOperation >> defaultController
-  passwdHandler (Just lname) env = do
+  passwdHandler _ Nothing _ = cancelOperation >> defaultController
+  passwdHandler t (Just lname) env = do
     hashpass <- getUserHash lname (env oldpass)
     users <- runQ $ queryUserByLoginPass lname hashpass
     if null users
-     then displayError "Falsches Passwort!"
+     then displayError $ t "Wrong password!"
      else do let u = head users
              newhashpass <- getUserHash lname (env newpass1)
              if env newpass1 /= env newpass2
-              then displayError "Neue Passwörter sind verschieden!"
+              then displayError $ t "New passwords are different!"
               else do runT (updateUser (setUserPassword u newhashpass))
-                      setPageMessage "Passwort geändert"
+                      setPageMessage $ t "Passwort changed"
                       defaultController
 
 ------------------------------------------------------------------------
@@ -121,41 +117,33 @@ sendLoginDataForm = do
   prefs <- getSessionUserPrefs
   let t = translate prefs
   getForm
-    [h1 [htxt "Login-Daten zusenden"],
-     par [htxt "Sie können sich ein neues Password an Ihre Email-Adresse ",
-          htxt " zusenden lassen, sofern Sie im System registriert sind."],
-     par [htxt "Ihre Email-Adresse: ", textfield emailref ""],
+    [h1 [htxt $ t "Send login data"],
+     par [htxt $ sendPasswordCmt prefs],
+     par [htxt $ t "Your email address: ", textfield emailref ""],
      hrule,
-     spPrimButton "Neues Passwort senden" sendHandler,
+     spPrimButton (t "Send new password") (sendHandler prefs),
      spButton (t "Cancel")
             (const (cancelOperation >> defaultController >>= getForm))]
  where
   emailref free
 
-  sendHandler env = do
+  sendHandler prefs env = do
     users <- runQ $ queryCondUser (\u -> userEmail u == env emailref)
-    let err = "Ein Benutzer mit dieser Email-Adresse ist im System nicht bekannt!"
     if null users
-     then displayError err >>= getForm
-     else sendNewEmail (head users)
+     then displayError (unknownUser prefs) >>= getForm
+     else sendNewEmail prefs (head users)
 
-  sendNewEmail user = do
+  sendNewEmail prefs user = do
+    let t = translate prefs
     newpass <- randomPassword 10
     hashpass <- getUserHash (userLogin user) newpass
     sendMail adminEmail
       (userEmail user)
-      "Moduldatenbankzugangsdaten"
-      ("Ihre Zugangsdaten sind:\n\nLogin-Name: " ++ userLogin user ++
-       "\nNeues Passwort: " ++ newpass ++
-       "\n\nMit diesen Daten koennen Sie sich in der Moduldatenbank\n\n"++
-       "http://www-ps.informatik.uni-kiel.de/~mh/studiengaenge/\n\n"++
-       "anmelden und Ihre Module und Masterprogramme aendern.\n\n"++
-       "Sie koennen das Passwort aendern, indem Sie sich anmelden\n"++
-       "und dann nach Auswahl von 'Abmelden' den Punkt\n"++
-       "'Passwort aendern' waehlen.")
+      (t "Login data for module database")
+      (loginEmailText prefs (userLogin user) newpass)
     runT $ updateUser (setUserPassword user hashpass)
-    getForm [h1 [htxt "Bestätigung"],
-             h3 [htxt "Ihr neues Passwort wurde Ihnen zugesandt"]]
+    getForm [h1 [htxt $ t "Acknowledgment"],
+             h3 [htxt $ t "Your new password has been sent"]]
 
 ------------------------------------------------------------------------
 --- A view for all processes contained in a given process specification.

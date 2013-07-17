@@ -11,7 +11,9 @@ module UserPreferences (
   Language(..), UserPrefs, preferredLanguage,
   getSessionUserPrefs, setPreferredLanguage,
   toEnglish,
-  translate, langSelect, mainTitle, mainExplanation, masterStudyNote, ssComment
+  translate, langSelect, loginEmailText, loginText, mainTitle, mainExplanation,
+  masterStudyNote, sendPasswordCmt, ssComment,
+  timeoutText, unknownUser
  ) where
 
 import Session
@@ -76,11 +78,14 @@ toEnglish :: String -> String
 toEnglish s = maybe s id (lookup s (map (\ (x,y) -> (y,x)) english2german))
 
 english2german =
- [("All categories"     ,"Alle Kategorien")
+ [("Acknowledgment"     ,"Bestätigung")
+ ,("All categories"     ,"Alle Kategorien")
  ,("All modules"        ,"Alle Module")
  ,("all modules"        ,"alle Module")
  ,("all English modules","alle englischen Module")
+ ,("Back to last page"  ,"Zurück zur letzten Seite")
  ,("Cancel"             ,"Abbrechen")
+ ,("Change password"    ,"Passwort ändern")
  ,("change your password","Passwort ändern")
  ,("Core area: "        ,"Schwerpunktbereich: ")
  ,("Core areas"         ,"Schwerpunktbereiche")
@@ -102,9 +107,13 @@ english2german =
  ,("Go to"              ,"Gehe zu")
  ,("in the module code or title","im Modulcode oder -titel")
  ,("irregular"          ,"unregelmäßig")
+ ,("Logged in as: "     ,"Angemeldet als: ")
+ ,("Logged out"         ,"Abgemeldet")
  ,("Login"              ,"Anmelden")
  ,("Login name:"        ,"Benutzername:")
+ ,("Login successful"   ,"Anmeldung erfolgreich")
  ,("Login to module database","Anmeldung zur Moduldatenbank")
+ ,("Login data for module database","Moduldatenbankzugangsdaten")
  ,("Logout"             ,"Abmelden")
  ,("Main page of the module information system","Hauptseite der Moduldatenbank")
  ,("Mandatary modules"  ,"Pflichtmodule")
@@ -117,19 +126,26 @@ english2german =
  ,("Modules of"         ,"Module von")
  ,("My modules"         ,"Eigene Module")
  ,("New master program" ,"Neues Masterprogramm")
+ ,("New password:"      ,"Neues Passwort:")
+ ,("New passwords are different!","Neue Passwörter sind verschieden!")
  ,("not logged in"      ,"nicht angemeldet")
  ,("notes on module descriptions and their preparation",
    "Hinweise zu Modulbeschreibungen und deren Bearbeitung")
  ,("one"                ,"ein")
+ ,("Old password:"      ,"Altes Passwort:")
  ,("Password:"          ,"Passwort:")
+ ,("Password changed"   ,"Passwort geändert")
  ,("Person in charge:"  ,"Modulverantwortliche(r):")
  ,("Presence:"          ,"Präsenzzeiten:")
  ,("programming language","Programmiersprache")
  ,("Really logout?"     ,"Wirklich abmelden?")
+ ,("Repeat new password:","Neues Passwort wiederholen:")
  ,("Search modules"     ,"Modulsuche")
  ,("Search all modules containing","Alle Module mit Zeichenfolge")
  ,("search"             ,"suchen")
  ,("semester"           ,"Semester")
+ ,("Send login data"    ,"Login-Daten zusenden")
+ ,("Send new password"  ,"Neues Passwort senden")
  ,("Semester planning"  ,"Semesterplanung")
  ,("Show"               ,"Anzeigen")
  ,("show"               ,"anzeigen")
@@ -147,10 +163,36 @@ english2german =
  ,("with UnivIS comparison","mit UnivIS-Abgleich")
  ,("with pattern"       ,"mit Muster")
  ,("Wrong login data!"  ,"Falsche Login-Daten!")
+ ,("Wrong password!"    ,"Falsches Passwort!")
  ,("XML index to all modules","XML-Index aller Module")
  ,("XML document with all master programs","XML-Dokument aller Masterprogramme")
  ,("You can also "      ,"Sie können auch nur Ihr ")
+ ,("Your email address: ","Ihre Email-Adresse: ")
+ ,("Your new password has been sent","Ihr neues Passwort wurde Ihnen zugesandt")
  ]
+
+loginText prefs loginname = langSelect prefs
+  ("You are logged in as user '" ++ loginname ++
+   "' and are allowed to change your modules and programs.")
+  ("Sie sind als Benutzer '" ++ loginname ++
+   "' angemeldet und können Ihre Module und Programme bearbeiten.")
+
+loginEmailText prefs loginname passwd = langSelect prefs
+  ("Your login data:\n\nLogin name: " ++ loginname ++
+   "\nNew password: " ++ passwd ++
+   "\n\nYou can use this data to login into the module database\n\n"++
+   "http://www-ps.informatik.uni-kiel.de/~mh/studiengaenge/\n\n"++
+   "and work on your modules and master programs.\n\n"++
+   "You can change your password after the login by selecting 'Logout'\n"++
+   "followed by 'Change password'.")
+  ("Ihre Zugangsdaten sind:\n\nLogin-Name: " ++ loginname ++
+   "\nNeues Passwort: " ++ passwd ++
+   "\n\nMit diesen Daten koennen Sie sich in der Moduldatenbank\n\n"++
+   "http://www-ps.informatik.uni-kiel.de/~mh/studiengaenge/\n\n"++
+   "anmelden und Ihre Module und Masterprogramme aendern.\n\n"++
+   "Sie koennen das Passwort aendern, indem Sie sich anmelden\n"++
+   "und dann nach Auswahl von 'Abmelden' den Punkt\n"++
+   "'Passwort aendern' waehlen.")
 
 mainTitle prefs = langSelect prefs
   "Modules and study programs of the Institut für Informatik"
@@ -180,6 +222,11 @@ masterStudyNote prefs = langSelect prefs
    htxt "Damit wird weitgehend gewährleistet, dass das geplante Studium ",
    htxt "auch wirklich durchführbar ist."]
    
+sendPasswordCmt prefs = langSelect prefs
+  ("You can send a new password to your email address "++
+   "if you are registered in the system.")
+  ("Sie können sich ein neues Password an Ihre Email-Adresse " ++
+   "zusenden lassen, sofern Sie im System registriert sind.")
   
 ssComment prefs = langSelect prefs
   ("If the master studies are started in the summer term, "++
@@ -188,6 +235,16 @@ ssComment prefs = langSelect prefs
   ("Bei Beginn im Sommersemester können auch Programme der "++
    "benachbarten Wintersemester gewählt werden. "++
    "Bei der Anpassung berät Sie der Academic Advisor.")
+
+timeoutText prefs = langSelect prefs
+  ("Please note that you are automatically logged out "++
+   "if you are inactive for more than 60 minutes.")
+  ("Bitte beachten Sie, dass Sie bei mehr als 60 Minuten "++
+   "Inaktivität automatisch wieder abgemeldet werden.")
+
+unknownUser prefs = langSelect prefs
+  "There is no user with this email address!"
+  "Ein Benutzer mit dieser Email-Adresse ist im System nicht bekannt!"
 
 --------------------------------------------------------------------------
 -- Auxiliaries:
