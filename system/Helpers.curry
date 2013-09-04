@@ -270,7 +270,8 @@ leqSemester (s1,y1) (s2,y2) = y1 < y2 || (y1 == y2 && (s1 == s2 || s1 == "SS"))
 
 -- a list of semesters to select in some WUIs
 semesterSelection :: [(String,Int)]
-semesterSelection = take 14 (iterate nextSemester ("WS",2008))
+semesterSelection =
+  take 14 (iterate nextSemester (iterate prevSemester currentSemester !! 6))
 
 -- preselected lower and upper bound index of a semester list:
 lowerSemesterSelection =
