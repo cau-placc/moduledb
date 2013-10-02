@@ -106,6 +106,7 @@ english2german =
  ,("General "           ,"Allgemeine ")
  ,("Go to"              ,"Gehe zu")
  ,("in the module code or title","im Modulcode oder -titel")
+ ,("Institute of Informatics","Institut für Informatik")
  ,("irregular"          ,"unregelmäßig")
  ,("Logged in as: "     ,"Angemeldet als: ")
  ,("Logged out"         ,"Abgemeldet")
@@ -154,6 +155,7 @@ english2german =
  ,("Show all modules in this study program",
    "Alle Module in diesem Studienprogramm anzeigen")
  ,("Start: "            ,"Beginn: ")
+ ,("Study planner"      ,"Studienplaner")
  ,("Study programs"     ,"Studiengänge")
  ,("Supported by:"      ,"Unterstützt durch:")
  ,(" to "               ," bis ")
@@ -195,14 +197,14 @@ loginEmailText prefs loginname passwd = langSelect prefs
    "'Passwort aendern' waehlen.")
 
 mainTitle prefs = langSelect prefs
-  "Modules and study programs of the Institut für Informatik"
+  "Modules and study programs of the Institute of Informatics"
   "Module und Studienprogramme des Instituts für Informatik"
 
 mainExplanation prefs = langSelect prefs
   ("This web site provides an overview on all modules and "++
-   "study programs offered by the Institut für Informatik. "++
+   "study programs offered by the Institute of Informatics. "++
    "Additionally, it contains an overiew on all master programs "++
-   "in computer science. A list of all modules offered in English "++
+   "in informatics. A list of all modules offered in English "++
    "can be found in the category \"Search modules\".")
   ("Auf diesen Webseiten sind die Module aller Studienprogramme "++
    "des Instituts für Informatik sowie alle vom Institut "++

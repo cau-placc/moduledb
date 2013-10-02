@@ -24,10 +24,12 @@ mainPageView prefs studyPrograms =
    h2 [htxt $ t "Study programs"],
    spTable (map (\sp -> [head (studyProgramToListView sp)])
                 (mergeSort leqStudyProgram studyPrograms)),
-   h2 [htxt $ t "Master studies in informatics:", nbsp,
-       spHref "?listMasterCoreArea" [htxt $ t "Core areas"], nbsp,
-       spHref "?listMasterProgram" [htxt $ t "Master programs"]],
-   par [htxt $ t "Further information:"],
+   h2 [htxt $ t "Master studies in informatics:"],
+   par [spHref "?listMasterCoreArea" [htxt $ t "Core areas"], nbsp,
+        spHref "?listMasterProgram" [htxt $ t "Master programs"], nbsp,
+        spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
+                [htxt $ t "Study planner"]],
+   h3 [htxt $ t "Further information:"],
    ulist
     [[bold [htxt $ t "For persons in charge for modules: "],
       htxt $ t "General ",

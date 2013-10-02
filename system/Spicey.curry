@@ -20,7 +20,8 @@ module Spicey (
   boolToHtml, maybeBoolToHtml, calendarTimeToHtml, maybeCalendarTimeToHtml,
   hrefStudyProgram, hrefCategory, smallHrefCategory,
   hrefModule, smallHrefModule, hrefExtModule, hrefModInst, hrefUnivis,
-  spHref, spButton, spPrimButton, spSmallButton, spTable, spHeadedTable,
+  spHref, spEHref,
+  spButton, spPrimButton, spSmallButton, spTable, spHeadedTable,
   spShortSelectionInitial,
   setPageMessage, getPageMessage,
   saveLastUrl, getLastUrl, getLastUrlParameters, getLastUrls
@@ -283,7 +284,8 @@ stdNavBar routemenu login prefs =
         `addClass` "dropdown-menu"]
 
   extUrls =
-   [toEHref "http://www.informatik.uni-kiel.de" "Institut für Informatik"
+   [toEHref "http://www.informatik.uni-kiel.de"
+            (t "Institute of Informatics")
    ,toEHref "http://www.uni-kiel.de" "CAU Kiel"
    ,litem [htxt " "] `addClass` "divider"
    ,litem [htxt $ t "Supported by:"] `addClass` "nav-header"
@@ -339,19 +341,6 @@ getForm viewBlock =
                                   [("rel","shortcut icon"),
                                    ("href","favicon.ico")] [])
 
--- standard header for master management pages:
-mdbHeader =
-  table [map (\i->[i]) headerItems]
- where
-  headerItems =
-   [href "?"
-      [imageNB "images/MDB_Logo_small.gif" "Moduldatenbank"],
-    blockstyle "headertitle"
-      [nbsp, htxt "Modulinformationssystem Informatik", nbsp],
-    ehref "http://www.informatik.uni-kiel.de"
-      [imageNB "images/ifilogo.gif" "Institut für Informatik"],
-    ehref "http://www.uni-kiel.de"
-      [imageNB "images/caulogo.gif" "Christian-Albrechts-Universität zu Kiel"]]
 
 -------------------------------------------------------------------------
 -- Action performed when a "cancel" button is pressed.
