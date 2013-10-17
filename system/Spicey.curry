@@ -284,7 +284,7 @@ stdNavBar routemenu login prefs =
         `addClass` "dropdown-menu"]
 
   extUrls =
-   [toEHref "http://www.informatik.uni-kiel.de"
+   [toEHref "http://www.inf.uni-kiel.de"
             (t "Institute of Informatics")
    ,toEHref "http://www.uni-kiel.de" "CAU Kiel"
    ,litem [htxt " "] `addClass` "divider"
