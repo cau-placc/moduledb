@@ -252,7 +252,7 @@ saveDBTerms path ename dynpred toentity = do
       terms = map (uncurry toentity) keyinfos
   if null path
    then putStrLn (unlines (map showQTerm terms)) -- show only
-   else do putStrLn $ "Saving into "++savefile
+   else do --putStrLn $ "Saving into "++savefile
            writeQTermListFile savefile terms
 
 restoreDBTerms :: String -> String -> (Key -> a -> Dynamic)
