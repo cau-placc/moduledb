@@ -4,7 +4,7 @@
 --- access.
 ---
 --- @author Michael Hanus
---- @version July 2013
+--- @version November 2013
 ----------------------------------------------------------------------------
 
 module UserPreferences (
@@ -13,7 +13,7 @@ module UserPreferences (
   toEnglish,
   translate, langSelect, loginEmailText, loginText, mainTitle, mainExplanation,
   masterStudyNote, sendPasswordCmt, ssComment,
-  timeoutText, unknownUser
+  timeoutText, unknownUser, useURLText
  ) where
 
 import Session
@@ -91,6 +91,7 @@ english2german =
  ,("Core areas"         ,"Schwerpunktbereiche")
  ,("Cycle:"             ,"Turnus:")
  ,("Duration:"          ,"Dauer:")
+ ,("External URL for module","Externe URL für das Modul")
  ,("German title:"      ,"Englische Bezeichnung:") -- wegen ModDataView!!!
  ,("every year"         ,"jedes Jahr")
  ,("every year in summer term","jedes Jahr im SS")
@@ -247,6 +248,10 @@ timeoutText prefs = langSelect prefs
 unknownUser prefs = langSelect prefs
   "There is no user with this email address!"
   "Ein Benutzer mit dieser Email-Adresse ist im System nicht bekannt!"
+
+useURLText prefs = langSelect prefs
+  "Please use the following URL to refer to this module from other web pages:"
+  "Bitte verwenden Sie die folgende URL, um das Modul aus anderen Webseiten zu referenzieren:"
 
 --------------------------------------------------------------------------
 -- Auxiliaries:

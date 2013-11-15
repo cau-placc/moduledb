@@ -323,11 +323,12 @@ emailModuleMessageController cntcontroller mdata user msg = return
 -- Show the permanent URL of a module
 moduleUrlForm :: ModData -> IO [HtmlExp]
 moduleUrlForm md = do
-  let url = baseURL ++ "?mod=" ++ string2urlencoded (modDataCode md)
+  prefs <- getSessionUserPrefs
+  let t   = translate prefs
+      url = baseURL ++ "?mod=" ++ string2urlencoded (modDataCode md)
   return
-    [h1 [htxt ("Externe URL für das Modul \""++modDataNameG md++"\"")],
-     par [htxt $ "Bitte verwenden Sie die folgende URL, um das Modul aus "++
-                 "anderen Webseiten zu referenzieren:"],
+    [h1 [htxt (t"External URL for module"++" \""++modDataNameG md++"\"")],
+     par [htxt (useURLText prefs)],
      h3 [ehref url [htxt url]]]
 
 ----------------------------------------------------------------------
