@@ -103,11 +103,29 @@ editUserView user controller =
    in wuiframe hexp handler
 
 --- Supplies a view to show the details of a User.
-showUserView :: User -> Controller -> [HtmlExp]
-showUserView user controller =
+--- Shows also buttons to show, delete, or edit entries.
+--- The arguments are the list of User entities
+--- and the controller functions to show, delete and edit entities.
+showUserView :: User -> (User -> Controller)
+  -> (User -> Bool -> Controller) -> (User -> Controller)
+  -> (User -> Controller) -> [HtmlExp]
+showUserView user editUserController deleteUserController
+             loginUserController searchUserModController =
   [h1 [htxt $ "Benutzer " ++ userLogin user]] ++
   userToDetailsView user ++
-  [par [spButton "Zurück zur Benutzerliste" (nextController controller)]]
+  [par
+       [spSmallButton "Ändern" (nextController (editUserController user))
+       ,spSmallButton "Löschen"
+         (confirmNextController
+           (h3
+             [htxt
+               (concat
+                 ["Benutzer \"",userToShortView user
+                 ,"\" wirklich löschen?"])])
+           (deleteUserController user))
+       ,spSmallButton "Anmelden" (nextController (loginUserController user))
+       ,spSmallButton "Module" (nextController (searchUserModController user))]
+  ]
 
 --- Compares two User entities. This order is used in the list view.
 leqUser :: User -> User -> Bool
@@ -118,31 +136,15 @@ leqUser x1 x2 =
    ,userPassword x2,userLastLogin x2)
 
 --- Supplies a list view for a given list of User entities.
---- Shows also buttons to show, delete, or edit entries.
---- The arguments are the list of User entities
---- and the controller functions to show, delete and edit entities.
-listUserView
- :: [User] -> (User -> Controller) -> (User -> Controller)
-  -> (User -> Bool -> Controller) -> (User -> Controller)
-  -> (User -> Controller) -> [HtmlExp]
-listUserView users showUserController editUserController
-             deleteUserController loginUserController searchUserModController =
-  [h1 [htxt "Lister aller Benutzer"]
+listUserView :: [User] -> [HtmlExp]
+listUserView users =
+  [h1 [htxt "Liste aller Benutzer"]
   ,spTable ([take 3 userLabelList ++ [userLabelList!!7]] ++
             map listUser (mergeSort leqUser users))]
   where
    listUser :: User -> [[HtmlExp]]
    listUser user =
-     userToListView user ++
-      [[spSmallButton "Anzeigen" (nextController (showUserController user))
-       ,spSmallButton "Ändern" (nextController (editUserController user))
-       ,spSmallButton "Löschen"
-         (confirmNextController
-           (h3
-             [htxt
-               (concat
-                 ["Benutzer \"",userToShortView user
-                 ,"\" wirklich löschen?"])])
-           (deleteUserController user))
-       ,spSmallButton "Anmelden" (nextController (loginUserController user))
-       ,spSmallButton "Module" (nextController (searchUserModController user))]]
+      userToListView user ++
+      [[ehref ("?listUser/"++showUserKey user)
+              [htxt "Details / Bearbeiten"]
+           `addClass` "btn btn-primary btn-small"]]

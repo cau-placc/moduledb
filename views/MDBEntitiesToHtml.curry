@@ -133,7 +133,8 @@ masterCoreAreaLabelList =
 --- This view is used in a row of a table of all entities.
 userToListView :: User -> [[HtmlExp]]
 userToListView user =
-  [[stringToHtml (userLogin user)],[stringToHtml (userName user)]
+  [[stringToHtml (userLogin user)]
+  ,[stringToHtml (userName user)]
   ,[stringToHtml (userFirst user)]
   ,[calendarTimeToHtml (userLastLogin user)]]
 

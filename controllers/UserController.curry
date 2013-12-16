@@ -71,18 +71,25 @@ loginUserController user = do
   setPageMessage ("Angemeldet als: "++loginname)
   defaultController
 
---- Lists all User entities with buttons to show, delete,
---- or edit an entity.
+--- Lists all User entities.
 listUserController :: Controller
 listUserController =
-  checkAuthorization (userOperationAllowed ListEntities) $
-   (do users <- runQ queryAllUsers
-       return
-        (listUserView users showUserController editUserController
-          deleteUserController loginUserController searchUserModules))
+  checkAuthorization (userOperationAllowed ListEntities) $ do
+   args <- getControllerParams
+   if null args
+    then runQ queryAllUsers >>= return . listUserView
+    else
+      maybe (displayError "Illegal URL")
+            (\userkey -> do
+               userData <- runJustT $ getUser userkey
+               showUserController userData
+            )
+            (readUserKey (head args))
 
 --- Shows a User entity.
 showUserController :: User -> Controller
 showUserController user =
   checkAuthorization (userOperationAllowed (ShowEntity user)) $
-   (do return (showUserView user listUserController))
+   (do return (showUserView user editUserController
+                            deleteUserController loginUserController
+                            searchUserModules))
