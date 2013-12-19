@@ -1,5 +1,5 @@
 module MasterCoreAreaController (
- newMasterCoreAreaController, editMasterCoreAreaController,
+ masterCoreAreaController, editMasterCoreAreaController,
  deleteMasterCoreAreaController, listMasterCoreAreaController
  ) where
 
@@ -14,6 +14,23 @@ import Authorization
 import AuthorizedControllers
 import UserProcesses
 import Authentication
+import MDBEntitiesToHtml
+
+--- Choose the controller for a MasterCoreArea entity according to the URL parameter.
+masterCoreAreaController :: Controller
+masterCoreAreaController = do
+  args <- getControllerParams
+  case args of
+    ["list"] -> listMasterCoreAreaController
+    ["new"]  -> newMasterCoreAreaController
+    ["show",s] -> applyControllerOn (readMasterCoreAreaKey s)
+                    getMasterCoreArea showMasterCoreAreaController
+    ["edit",s] -> applyControllerOn (readMasterCoreAreaKey s)
+                    getMasterCoreArea editMasterCoreAreaController
+    ["delete",s] -> applyControllerOn (readMasterCoreAreaKey s)
+                      getMasterCoreArea askAndDeleteMasterCoreAreaController
+    _ -> displayError "Illegal URL for MasterCoreArea"
+
 
 --- Shows a form to create a new MasterCoreArea entity.
 newMasterCoreAreaController :: Controller
@@ -46,17 +63,27 @@ editMasterCoreAreaController masterCoreAreaToEdit =
 --- database depending on the Boolean argument. If the Boolean argument
 --- is False, nothing is changed.
 updateMasterCoreAreaController :: Bool -> MasterCoreArea -> Controller
-updateMasterCoreAreaController False _ = listMasterCoreAreaController
-updateMasterCoreAreaController True masterCoreArea =
-  do transResult <- runT (updateMasterCoreArea masterCoreArea)
-     either (\ _ -> nextInProcessOr listMasterCoreAreaController Nothing)
+updateMasterCoreAreaController False mca = showMasterCoreAreaController mca
+updateMasterCoreAreaController True mca =
+  do transResult <- runT (updateMasterCoreArea mca)
+     either (\ _ -> nextInProcessOr (showMasterCoreAreaController mca) Nothing)
       (\ error -> displayError (showTError error)) transResult
+
+--- Deletes a given MasterCoreArea entity (after asking for acknowledgment)
+--- and proceeds with the show controller.
+askAndDeleteMasterCoreAreaController :: MasterCoreArea -> Controller
+askAndDeleteMasterCoreAreaController mca =
+  confirmController
+    (h3 [htxt (concat ["Really delete entity \""
+                      ,masterCoreAreaToShortView mca,"\"?"])])
+    (\ack -> if ack
+             then deleteMasterCoreAreaController mca
+             else showMasterCoreAreaController mca)
 
 --- Deletes a given MasterCoreArea entity (depending on the Boolean
 --- argument) and proceeds with the list controller.
-deleteMasterCoreAreaController :: MasterCoreArea -> Bool -> Controller
-deleteMasterCoreAreaController _ False = listMasterCoreAreaController
-deleteMasterCoreAreaController masterCoreArea True =
+deleteMasterCoreAreaController :: MasterCoreArea -> Controller
+deleteMasterCoreAreaController masterCoreArea =
   checkAuthorization
    (masterCoreAreaOperationAllowed (DeleteEntity masterCoreArea)) $
    (do transResult <- runT (deleteMasterCoreArea masterCoreArea)
@@ -70,14 +97,11 @@ listMasterCoreAreaController =
   checkAuthorization (masterCoreAreaOperationAllowed ListEntities) $
    (do admin <- isAdmin
        masterCoreAreas <- runQ queryAllMasterCoreAreas
-       return
-        (listMasterCoreAreaView admin masterCoreAreas showMasterCoreAreaController
-          editMasterCoreAreaController deleteMasterCoreAreaController))
+       return (listMasterCoreAreaView admin masterCoreAreas))
 
 --- Shows a MasterCoreArea entity.
 showMasterCoreAreaController :: MasterCoreArea -> Controller
 showMasterCoreAreaController masterCoreArea =
   checkAuthorization
    (masterCoreAreaOperationAllowed (ShowEntity masterCoreArea)) $
-   (do return
-        (showMasterCoreAreaView masterCoreArea listMasterCoreAreaController))
+   (do return (showMasterCoreAreaView masterCoreArea))

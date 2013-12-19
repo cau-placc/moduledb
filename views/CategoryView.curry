@@ -111,10 +111,10 @@ editCategoryView category relatedStudyProgram possibleStudyPrograms
    in wuiframe hexp handler
 
 --- Supplies a view to show the details of a Category.
-showCategoryView :: Category -> StudyProgram -> Controller -> [HtmlExp]
-showCategoryView category relatedStudyProgram controller =
+showCategoryView :: Category -> StudyProgram -> [HtmlExp]
+showCategoryView category relatedStudyProgram =
   categoryToDetailsView category relatedStudyProgram ++
-   [spButton "back to Category list" (nextController controller)]
+   [spHref "?Category/list" [htxt "back to Category list"]]
 
 --- Compares two Category entities. This order is used in the list view.
 leqCategory :: Category -> Category -> Bool
@@ -140,8 +140,6 @@ listCategoryView
  :: Bool -> Maybe String -> UserPrefs -> Either StudyProgram String
   -> [(Either Category String,[(ModData,[Maybe (ModInst,Int)],[Bool])])]
   -> [(String,Int)] -> [User]
-  -> (Category -> Controller) -> (Category -> Controller)
-  -> (Category -> Bool -> Controller)
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Bool -> Bool -> Controller)
   -> ([(String,[ModData])] -> Controller)
@@ -149,8 +147,6 @@ listCategoryView
         -> (String,Int) -> (String,Int) -> Controller)
   -> [HtmlExp]
 listCategoryView admin login prefs mbsprog catmods semperiod users
-                 showCategoryController
-                 editCategoryController deleteCategoryController
                  showCategoryPlanController formatCatModsController
                  showEmailCorrectionController =
   [h1 [htxt $ either studyProgramName id mbsprog],
@@ -262,20 +258,10 @@ listCategoryView admin login prefs mbsprog catmods semperiod users
    listCategory :: Category -> [[HtmlExp]]
    listCategory category =
       categoryToListView category ++
-       [[spSmallButton "show"
-          (nextController (showCategoryController category)),
-         spSmallButton "edit"
-          (nextController (editCategoryController category)),
-         spSmallButton "delete"
-          (confirmNextController
-            (h3
-              [htxt
-                (concat
-                  ["Really delete entity \"",categoryToShortView category
-                  ,"\"?"])])
-            (deleteCategoryController category))]]
-
-
+      [[spHref ("?Category/show/"++showCategoryKey category) [htxt "Anzeigen"]]
+      ,[spHref ("?Category/edit/"++showCategoryKey category) [htxt "Ändern"]]
+      ,[spHref ("?Category/delete/"++showCategoryKey category) [htxt "Löschen"]]
+      ]
 
 
 --- Supplies a list view for a given list of Category entities.

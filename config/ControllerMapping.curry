@@ -29,11 +29,9 @@ getController fktref =
    ListStudyProgramController -> listStudyProgramController
    NewStudyProgramController -> newStudyProgramController
    ListCategoryController -> listCategoryController
-   NewCategoryController -> newCategoryController
-   ListMasterCoreAreaController -> listMasterCoreAreaController
-   NewMasterCoreAreaController -> newMasterCoreAreaController
-   ListUserController -> listUserController
-   NewUserController -> newUserController
+   CategoryController -> categoryController
+   MasterCoreAreaController -> masterCoreAreaController
+   UserController -> userController
    ListModDataController -> listModDataController
    NewModDataController -> newModDataController
    NewImpModDataController -> newImportModDataController

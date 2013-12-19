@@ -1,5 +1,5 @@
 module CategoryController (
- newCategoryController, editCategoryController, deleteCategoryController,
+ categoryController, editCategoryController, deleteCategoryController,
  listCategoryController, showCategoryController, showCategoryPlanController,
  showEmailCorrectionController
  ) where
@@ -22,6 +22,22 @@ import Helpers
 import List
 import Sort
 import UserPreferences
+import MDBEntitiesToHtml
+
+--- Choose the controller for a Category entity according to the URL parameter.
+categoryController :: Controller
+categoryController = do
+  args <- getControllerParams
+  case args of
+    ["list"] -> newListCategoryController
+    ["new"]  -> newCategoryController
+    ["show",s] -> applyControllerOn (readCategoryKey s)
+                    getCategory showCategoryController
+    ["edit",s] -> applyControllerOn (readCategoryKey s)
+                    getCategory editCategoryController
+    ["delete",s] -> applyControllerOn (readCategoryKey s)
+                      getCategory askAndDeleteCategoryController
+
 
 --- Shows a form to create a new Category entity.
 newCategoryController :: Controller
@@ -60,21 +76,39 @@ editCategoryController categoryToEdit =
 --- database depending on the Boolean argument. If the Boolean argument
 --- is False, nothing is changed.
 updateCategoryController :: Bool -> Category -> Controller
-updateCategoryController False _ = listCategoryController
+updateCategoryController False category = showCategoryController category
 updateCategoryController True category =
   do transResult <- runT (updateCategory category)
-     either (\ _ -> nextInProcessOr listCategoryController Nothing)
+     either (\ _ -> nextInProcessOr (showCategoryController category) Nothing)
       (\ error -> displayError (showTError error)) transResult
 
---- Deletes a given Category entity (depending on the Boolean
---- argument) and proceeds with the list controller.
-deleteCategoryController :: Category -> Bool -> Controller
-deleteCategoryController _ False = listCategoryController
-deleteCategoryController category True =
+--- Deletes a given Category entity (after asking for acknowledgment)
+--- and proceeds with the show controller.
+askAndDeleteCategoryController :: Category -> Controller
+askAndDeleteCategoryController cat =
+  confirmController
+    (h3 [htxt (concat ["Kategorie \"",categoryToShortView cat
+                      ,"\" wirklich löschen?"])])
+    (\ack -> if ack
+             then deleteCategoryController cat
+             else showCategoryController cat)
+
+--- Deletes a given Category entity and proceeds with the list controller.
+deleteCategoryController :: Category -> Controller
+deleteCategoryController category =
   checkAuthorization (categoryOperationAllowed (DeleteEntity category)) $
    (do transResult <- runT (deleteCategory category)
        either (\ _ -> listCategoryController)
         (\ error -> displayError (showTError error)) transResult)
+
+--- Lists all Category entities with buttons to show, delete,
+--- or edit an entity.
+newListCategoryController :: Controller
+newListCategoryController =
+  checkAuthorization (categoryOperationAllowed ListEntities) $
+    do admin <- isAdmin
+       login <- getSessionLogin
+       runListCategoryController admin login []
 
 --- Lists all Category entities with buttons to show, delete,
 --- or edit an entity.
@@ -84,17 +118,16 @@ listCategoryController =
     do admin <- isAdmin
        login <- getSessionLogin
        args  <- getControllerParams
-       runListCategoyController admin login args
+       runListCategoryController admin login args
 
-runListCategoyController admin login args
+runListCategoryController admin login args
  | null args
   = do categorys <- runQ queryAllCategorys
        prefs <- getSessionUserPrefs
        let t = translate prefs
        return (listCategoryView admin login prefs (Right $ t "All categories")
                  (map (\c -> (Left c,[])) (mergeSort leqCategory categorys))
-                 [] [] showCategoryController
-                 editCategoryController deleteCategoryController
+                 [] []
                  showCategoryPlanController formatCatModulesForm
                  showEmailCorrectionController)
  | take 5 (head args) == "user="
@@ -108,8 +141,7 @@ runListCategoyController admin login args
            return (listCategoryView admin login prefs
                         (Right $ t "My modules")
                         [(Right "",map (\m->(m,[],[])) mods)]
-                        [] [] showCategoryController
-                        editCategoryController deleteCategoryController
+                        [] []
                         showCategoryPlanController
                         formatCatModulesForm showEmailCorrectionController)
  | head (head args) == 'C'
@@ -127,8 +159,7 @@ runListCategoyController admin login args
                                        (maybe (filter modDataVisible mods)
                                               (const mods)
                                               login))]
-                        [] [] showCategoryController
-                        editCategoryController deleteCategoryController
+                        [] []
                         showCategoryPlanController
                         formatCatModulesForm showEmailCorrectionController))
             (readCategoryKey (head args))
@@ -149,8 +180,7 @@ runListCategoyController admin login args
                else mapT (\c -> returnT (Left c,[])) categorys
               prefs <- getSessionUserPrefs
               return (listCategoryView admin login prefs (Left studyprog)
-                         catmods [] [] showCategoryController
-                         editCategoryController deleteCategoryController
+                         catmods [] []
                          showCategoryPlanController
                          formatCatModulesForm showEmailCorrectionController))
             (readStudyProgramKey (head args))
@@ -176,8 +206,6 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem
                         catmods
   return (listCategoryView admin login prefs mbstudyprog
              catmodinsts semPeriod users
-             showCategoryController
-             editCategoryController deleteCategoryController
              showCategoryPlanController
              formatCatModulesForm showEmailCorrectionController)
  where
@@ -237,8 +265,7 @@ showCategoryController category =
                                          (getProgramCategoriesStudyProgram
                                            category)
        return
-        (showCategoryView category programCategoriesStudyProgram
-          listCategoryController))
+        (showCategoryView category programCategoriesStudyProgram))
 
 --- Gets the associated StudyProgram entity for a given Category entity.
 getProgramCategoriesStudyProgram :: Category -> Transaction StudyProgram

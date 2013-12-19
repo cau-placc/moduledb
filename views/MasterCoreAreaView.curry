@@ -93,10 +93,10 @@ editMasterCoreAreaView masterCoreArea controller =
    in wuiframe hexp handler
 
 --- Supplies a view to show the details of a MasterCoreArea.
-showMasterCoreAreaView :: MasterCoreArea -> Controller -> [HtmlExp]
-showMasterCoreAreaView masterCoreArea controller =
+showMasterCoreAreaView :: MasterCoreArea -> [HtmlExp]
+showMasterCoreAreaView masterCoreArea =
   masterCoreAreaToDetailsView masterCoreArea ++
-   [spButton "back to MasterCoreArea list" (nextController controller)]
+   [spHref "?mca/list" [htxt "back to MasterCoreArea list"]]
 
 --- Compares two MasterCoreArea entities. This order is used in the list view.
 leqMasterCoreArea :: MasterCoreArea -> MasterCoreArea -> Bool
@@ -105,15 +105,9 @@ leqMasterCoreArea x1 x2 =
 
 --- Supplies a list view for a given list of MasterCoreArea entities.
 --- Shows also buttons to show, delete, or edit entries.
---- The arguments are the list of MasterCoreArea entities
---- and the controller functions to show, delete and edit entities.
-listMasterCoreAreaView
- :: Bool -> [MasterCoreArea] -> (MasterCoreArea -> Controller)
-  -> (MasterCoreArea -> Controller) -> (MasterCoreArea -> Bool -> Controller)
-  -> [HtmlExp]
-listMasterCoreAreaView admin masterCoreAreas showMasterCoreAreaController
-                       editMasterCoreAreaController
-                       deleteMasterCoreAreaController =
+--- The arguments are the list of MasterCoreArea entities.
+listMasterCoreAreaView :: Bool -> [MasterCoreArea] -> [HtmlExp]
+listMasterCoreAreaView admin masterCoreAreas =
   [h1 [htxt "Schwerpunktbereiche im Masterstudiengang Informatik"]] ++
   if admin
   then [spTable ([take 5 masterCoreAreaLabelList] ++
@@ -125,19 +119,11 @@ listMasterCoreAreaView admin masterCoreAreas showMasterCoreAreaController
                                 (docText2html (masterCoreAreaDescription mca))]])
                  (mergeSort leqMasterCoreArea masterCoreAreas)
   where listMasterCoreArea :: MasterCoreArea -> [[HtmlExp]]
-        listMasterCoreArea masterCoreArea =
-          masterCoreAreaToListView masterCoreArea ++
-           [[spSmallButton "show"
-              (nextController (showMasterCoreAreaController masterCoreArea))] ++
-            if not admin then [] else
-            [spSmallButton "edit"
-              (nextController (editMasterCoreAreaController masterCoreArea))
-            
-            ,spSmallButton "delete"
-              (confirmNextController
-                (h3
-                  [htxt
-                    (concat
-                      ["Really delete entity \""
-                      ,masterCoreAreaToShortView masterCoreArea,"\"?"])])
-                (deleteMasterCoreAreaController masterCoreArea))]]
+        listMasterCoreArea mca =
+          masterCoreAreaToListView mca ++
+           [[spHref ("?mca/show/"++showMasterCoreAreaKey mca)
+                    [htxt "Anzeigen"]],
+            [spHref ("?mca/edit/"++showMasterCoreAreaKey mca)
+                    [htxt "Ändern"]],
+            [spHref ("?mca/delete/"++showMasterCoreAreaKey mca)
+                    [htxt "Löschen"]]]

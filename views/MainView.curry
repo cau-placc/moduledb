@@ -25,7 +25,7 @@ mainPageView prefs studyPrograms =
    spTable (map (\sp -> [head (studyProgramToListView sp)])
                 (mergeSort leqStudyProgram studyPrograms)),
    h2 [htxt $ t "Master studies in informatics:"],
-   par [spHref "?listMasterCoreArea" [htxt $ t "Core areas"], nbsp,
+   par [spHref "?mca/list" [htxt $ t "Core areas"], nbsp,
         spHref "?listMasterProgram" [htxt $ t "Master programs"], nbsp,
         spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
                 [htxt $ t "Study planner"]],

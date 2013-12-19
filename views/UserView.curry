@@ -106,25 +106,14 @@ editUserView user controller =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of User entities
 --- and the controller functions to show, delete and edit entities.
-showUserView :: User -> (User -> Controller)
-  -> (User -> Bool -> Controller) -> (User -> Controller)
-  -> (User -> Controller) -> [HtmlExp]
-showUserView user editUserController deleteUserController
-             loginUserController searchUserModController =
+showUserView :: User -> [HtmlExp]
+showUserView user =
   [h1 [htxt $ "Benutzer " ++ userLogin user]] ++
   userToDetailsView user ++
-  [par
-       [spSmallButton "Ändern" (nextController (editUserController user))
-       ,spSmallButton "Löschen"
-         (confirmNextController
-           (h3
-             [htxt
-               (concat
-                 ["Benutzer \"",userToShortView user
-                 ,"\" wirklich löschen?"])])
-           (deleteUserController user))
-       ,spSmallButton "Anmelden" (nextController (loginUserController user))
-       ,spSmallButton "Module" (nextController (searchUserModController user))]
+  [par [spHref ("?User/edit/"++showUserKey user) [htxt "Ändern"], nbsp
+       ,spHref ("?User/delete/"++showUserKey user) [htxt "Löschen"], nbsp
+       ,spHref ("?User/login/"++showUserKey user) [htxt "Anmelden"], nbsp
+       ,spHref ("?User/modules/"++showUserKey user) [htxt "Module"]]
   ]
 
 --- Compares two User entities. This order is used in the list view.
@@ -145,6 +134,8 @@ listUserView users =
    listUser :: User -> [[HtmlExp]]
    listUser user =
       userToListView user ++
-      [[ehref ("?listUser/"++showUserKey user)
-              [htxt "Details / Bearbeiten"]
-           `addClass` "btn btn-primary btn-small"]]
+      [[spHref ("?User/show/"++showUserKey user) [htxt "Anzeigen"]],
+       [spHref ("?User/edit/"++showUserKey user) [htxt "Ändern"]],
+       [spHref ("?User/delete/"++showUserKey user) [htxt "Löschen"]],
+       [spHref ("?User/login/"++showUserKey user) [htxt "Anmelden"]],
+       [spHref ("?User/modules/"++showUserKey user) [htxt "Module"]]]

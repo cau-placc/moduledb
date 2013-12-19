@@ -13,11 +13,11 @@ module Authentication (
   isAdmin
  ) where
 
-import Random
 import IO
 import IOExts
 import Session
 import Global
+import Crypto
 import Distribution
 
 --------------------------------------------------------------------------
@@ -30,33 +30,11 @@ getUserHash username userpassword = do
   let systemkey = "4caumdb2" -- change this key for every spicey instance
   getHash (username++userpassword++systemkey)
 
---- Default hashing function.
---- @param toHash - string which should be hashed
---- @return the hashSum of this str
-getHash :: String -> IO String
-getHash = getHashWith "md5sum"
---getHash = getHashWith "sha1sum"
-
---- Hashes a string with an explicit Unix hash command.
---- @param hashcmd - Unix command for hasing
---- @param toHash - string which should be hashed
---- @return the hashed string
-getHashWith :: String -> String -> IO String
-getHashWith hashcmd toHash = do
-  (sin, sout, _) <- execCmd hashcmd
-  hPutStrLn sin toHash
-  hClose sin
-  result <- hGetLine sout
-  return (head (words result))
-
 --- Returns a random password (a hexadecimal string) of a particular length.
 --- @param length - length of the desired password
 --- @return the random password
 randomPassword :: Int -> IO String
-randomPassword n = do
-  seed <- getRandomSeed
-  ranString <- getHash (show (head (nextInt seed)))
-  return (take n ranString)
+randomPassword = randomString
 
 --------------------------------------------------------------------------
 -- Operations for storing logins in the current session.

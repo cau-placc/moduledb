@@ -45,8 +45,7 @@ searchModules pat = do
             (Right $ t "Found modules")
             [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat,
               map (\m->(m,[],[])) vismods)]
-            [] [] showCategoryController
-            editCategoryController deleteCategoryController
+            [] []
             showCategoryPlanController formatCatModulesForm
             showEmailCorrectionController)
  where
@@ -79,8 +78,7 @@ searchUserModules user = do
   return (listCategoryView admin login prefs
                (Right (t "Modules of" ++ " " ++ (userToShortView user)))
                [(Right "",map (\m->(m,[],[])) mods)]
-               [] [] showCategoryController
-               editCategoryController deleteCategoryController
+               [] []
                showCategoryPlanController
                formatCatModulesForm showEmailCorrectionController)
 
@@ -120,8 +118,7 @@ showModulesController mods = do
                      " (Informatik, Wirtschaftsinformatik, Nebenfach)"),
               map (\m->(m,[],[])) pmods),
              (Right $ t "Further modules", map (\m->(m,[],[])) wmods)]
-            [] [] showCategoryController
-            editCategoryController deleteCategoryController
+            [] []
             showCategoryPlanController formatCatModulesForm
             showEmailCorrectionController)
  where

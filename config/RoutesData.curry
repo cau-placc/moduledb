@@ -5,16 +5,19 @@ import Authentication
 data ControllerReference
  = MainPageController | SearchController
  | ProcessListController | LoginController | ListStudyProgramController 
- | NewStudyProgramController | ListCategoryController | NewCategoryController 
- | ListMasterCoreAreaController | NewMasterCoreAreaController 
- | ListUserController | NewUserController | ListModDataController 
+ | NewStudyProgramController
+ | CategoryController | ListCategoryController
+ | MasterCoreAreaController
+ | UserController
+ | ListModDataController 
  | NewModDataController | NewImpModDataController
  | ListModInstController | ListMasterProgramController 
  | NewMasterProgramController | ListMasterProgInfoController 
  | ListUnivisInfoController | NewUnivisInfoController 
  | LoadUnivisController
 
-data UrlMatch = Exact String | Matcher (String -> Bool) | Always 
+data UrlMatch = Exact String | Prefix String String
+              | Matcher (String -> Bool) | Always 
 type Route = (String,UrlMatch,ControllerReference)
 
 --- This constant specifies the association of URLs to controllers.
@@ -34,16 +37,16 @@ getRoutes =
         [("Neues Modul",Exact "newModData",NewModDataController),
          ("Neues Importmodul",Exact "newImpModData",
           NewImpModDataController),
-         ("Alle Benutzer",Exact "listUser",ListUserController)
-          ,("Neuer Benutzer",Exact "newUser",NewUserController),
+         ("Alle Benutzer",Prefix "User" "list",UserController),
+         ("Neuer Benutzer",Prefix "User" "new",UserController),
          ("Neuer Studiengang",Exact "newStudyProgram",
           NewStudyProgramController),
-         ("Neue Kategorie",Exact "newCategory",NewCategoryController),
-         ("Neuer Masterbereich",Exact "newMasterCoreArea"
-          ,NewMasterCoreAreaController)] ++
+         ("Neue Kategorie",Prefix "Category" "new",CategoryController),
+         ("Neuer Masterbereich",Prefix "mca" "new"
+          ,MasterCoreAreaController)] ++
       [("Alle Kategorien",Exact "listCategory",ListCategoryController)
-      ,("Masterbereiche",Exact "listMasterCoreArea"
-       ,ListMasterCoreAreaController)
+      ,("Masterbereiche",Prefix "mca" "list"
+       ,MasterCoreAreaController)
       ,("List ModData",Exact "listModData",ListModDataController)
       ,("List ModInst",Exact "listModInst",ListModInstController)
       --,("New ModInst",Exact "newModInst",NewModInstController)

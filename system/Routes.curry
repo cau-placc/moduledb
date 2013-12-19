@@ -27,6 +27,9 @@ getControllerReference url = getRoutes >>= return . findControllerReference
         Exact string -> if (url == string)
                         then Just fktref
                         else findControllerReference restroutes
+        Prefix pre _ -> if (url == pre)
+                        then Just fktref
+                        else findControllerReference restroutes
         Matcher fkt  -> if (fkt url)
                         then Just fktref
                         else findControllerReference restroutes
@@ -40,10 +43,12 @@ getRouteMenus :: IO (HtmlExp,HtmlExp)
 getRouteMenus = do
   routes <- getRoutes
   let links = getLinks routes
-      (newlinks,otherlinks) = partition (\l -> take 3 (fst l) == "new") links
+      (newlinks,otherlinks) = partition (isNewLink . fst) links
   return $ (ulist (map snd newlinks),
             ulist (map snd otherlinks))
  where
+   isNewLink s = take 3 s == "new" || snd (break (=='/') s) == "/new"
+
    getLinks :: [Route] -> [(String,[HtmlExp])]
    getLinks ((name, matcher, _):restroutes) =
      case matcher of
@@ -53,6 +58,9 @@ getRouteMenus = do
                             "login","listModData","listModInst"]
                        then getLinks restroutes
                        else (string,[(href ("?" ++ string) [htxt name])])
+                             : getLinks restroutes
+       Prefix s1 s2 -> let url = s1++"/"++s2
+                        in (url,[(href ("?"++url) [htxt name])])
                              : getLinks restroutes
        _ -> getLinks restroutes
    getLinks [] = []

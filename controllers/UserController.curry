@@ -1,7 +1,4 @@
-module UserController (
- newUserController, editUserController, deleteUserController,
- listUserController
- ) where
+module UserController (userController) where
 
 import Spicey
 import KeyDatabase
@@ -16,6 +13,27 @@ import UserProcesses
 import DefaultController
 import Authentication
 import SearchController
+import MDBEntitiesToHtml ---!!!!!NEW!!!!
+
+--- Choose the controller for a User entity according to the URL parameter.
+userController :: Controller
+userController = do
+  args <- getControllerParams
+  case args of
+    ["list"] -> listUserController
+    ["new"]  -> newUserController
+    ["show",keystr] ->
+      applyControllerOn (readUserKey keystr) getUser showUserController
+    ["edit",keystr] ->
+      applyControllerOn (readUserKey keystr) getUser editUserController
+    ["delete",keystr] ->
+      applyControllerOn (readUserKey keystr) getUser askAndDeleteUserController
+    ["login",keystr] ->
+      applyControllerOn (readUserKey keystr) getUser loginUserController
+    ["modules",keystr] ->
+      applyControllerOn (readUserKey keystr) getUser searchUserModules
+    _ -> displayError "Illegal URL"
+
 
 --- Shows a form to create a new User entity.
 newUserController :: Controller
@@ -47,17 +65,26 @@ editUserController userToEdit =
 --- database depending on the Boolean argument. If the Boolean argument
 --- is False, nothing is changed.
 updateUserController :: Bool -> User -> Controller
-updateUserController False _ = listUserController
+updateUserController False user = showUserController user
 updateUserController True user =
   do transResult <- runT (updateUser user)
-     either (\ _ -> nextInProcessOr listUserController Nothing)
+     either (\ _ -> nextInProcessOr (showUserController user) Nothing)
       (\ error -> displayError (showTError error)) transResult
 
---- Deletes a given User entity (depending on the Boolean
---- argument) and proceeds with the list controller.
-deleteUserController :: User -> Bool -> Controller
-deleteUserController _ False = listUserController
-deleteUserController user True =
+--- Deletes a given User entity (after asking for acknowledgment)
+--- and proceeds with the show controller.
+askAndDeleteUserController :: User -> Controller
+askAndDeleteUserController user =
+  confirmController
+    (h3 [htxt (concat ["Benutzer \"",userToShortView user
+                      ,"\" wirklich löschen?"])])
+    (\ack -> if ack
+             then deleteUserController user
+             else showUserController user)
+
+--- Deletes a given User entity and proceeds with the list controller.
+deleteUserController :: User -> Controller
+deleteUserController user =
   checkAuthorization (userOperationAllowed (DeleteEntity user)) $
    (do transResult <- runT (deleteUser user)
        either (\ _ -> listUserController)
@@ -65,15 +92,20 @@ deleteUserController user True =
 
 --- Login as a given User entity.
 loginUserController :: User -> Controller
-loginUserController user = do
-  let loginname = userLogin user
-  loginToSession loginname
-  setPageMessage ("Angemeldet als: "++loginname)
-  defaultController
+loginUserController user =
+  checkAuthorization checkAdmin $ do
+    let loginname = userLogin user
+    loginToSession loginname
+    setPageMessage ("Angemeldet als: "++loginname)
+    defaultController
 
 --- Lists all User entities.
 listUserController :: Controller
 listUserController =
+  checkAuthorization (userOperationAllowed ListEntities) $ do
+    runQ queryAllUsers >>= return . listUserView
+
+listUserController' =
   checkAuthorization (userOperationAllowed ListEntities) $ do
    args <- getControllerParams
    if null args
@@ -90,6 +122,4 @@ listUserController =
 showUserController :: User -> Controller
 showUserController user =
   checkAuthorization (userOperationAllowed (ShowEntity user)) $
-   (do return (showUserView user editUserController
-                            deleteUserController loginUserController
-                            searchUserModules))
+   (do return (showUserView user))
