@@ -9,7 +9,8 @@ module Helpers(LogEvent(..),logEvent,
                ehref, stripSpaces,
                showDigit2,showDiv10, formatPresence,
                hrefs2markdown,
-               docText2html, docText2latex, quoteUnknownLatexCmd,
+               docText2html, docText2latex, escapeLaTeXSpecials,
+               quoteUnknownLatexCmd,
                showSemester, showLongSemester,
                nextSemester, prevSemester, leqSemester,
                semesterSelection, lowerSemesterSelection, upperSemesterSelection,
@@ -143,12 +144,14 @@ hrefs2markdown s =
 -- translate a document text (containing some standard latex markups
 -- as well as markdown markups) into HTML:
 docText2html :: String -> String
-docText2html = showHtmlExps . markdownText2HTML  . latex2html
+docText2html = showHtmlExps . markdownText2HTML  . latex2MD
 
 -- translate string containing some standard latex markups into HTML:
 latex2html [] = []
 latex2html (c:cs) | c=='\\' = tryTrans c cs slashtrans
                   | c=='"'  = tryTrans c cs apotrans
+                  | c=='{'  = '\\' : '{' : latex2html cs
+                  | c=='}'  = '\\' : '}' : latex2html cs
                   | otherwise = htmlIsoUmlauts [c] ++ latex2html cs
  where
   tryTrans x xs [] = x : latex2html xs
@@ -168,74 +171,76 @@ latex2html (c:cs) | c=='\\' = tryTrans c cs slashtrans
               ("A","&Auml;"),("O","&Ouml;"),("U","&Uuml;"),
               ("\'","\""),("`","\"")]
          
+-- Translate a string containing some standard latex markups into
+-- markdown syntax (i.e., also HTML markupds):
+latex2MD :: String -> String
+latex2MD [] = []
+latex2MD (c:cs) | c=='\\' = tryTrans cs slashtrans
+                | c=='{'  = '\\' : '{' : latex2MD cs
+                | c=='}'  = '\\' : '}' : latex2MD cs
+                | otherwise = htmlIsoUmlauts [c] ++ latex2MD cs
+ where
+  tryTrans [] [] = "\\\\" -- quote backslash
+  tryTrans (x:xs) [] = -- no translatable LaTeX element found:
+    if x `elem` markdownEscapeChars
+    then '\\' : x : latex2MD xs
+    else '\\' : '\\' : x: latex2MD xs -- quote backslash
+  tryTrans xs ((lmacro,hmacro) : ms) = let l = length lmacro in
+    if take l xs == lmacro then hmacro ++ latex2MD (drop l xs)
+                           else tryTrans xs ms
+
+  slashtrans = [("begin{itemize}","<ul>"),("end{itemize}","</ul>"),
+                ("begin{enumerate}","<ol>"),("end{enumerate}","</ol>"),
+                ("item","<li>"),
+                ("\"a","&auml;"),("\"o","&ouml;"),("\"u","&uuml;"),
+                ("\"A","&Auml;"),("\"O","&Ouml;"),("\"U","&Uuml;"),
+                ("ss{}","&szlig;"),("-",""),("\\","\n\n"),(" "," "),
+                ("%","%")]
+         
 -- translate a document text (containing some standard latex markups
 -- as well as markdown markups) into LaTeX:
 docText2latex :: String -> String
-docText2latex =
-  htmlLists2latexLists . markdownText2LaTeXWithFormat html2latex . latex2html
+docText2latex = markdownText2LaTeX . latex2MD
 
-html2latex =
-  escapeLaTeXSpecials . htmlSpecialChars2tex . translateMDSpecials2LaTeX
- where
-  escapeLaTeXSpecials s = case s of
-    [] -> []
-    ('#':cs) -> "\\#" ++ escapeLaTeXSpecials cs
-    ('%':cs) -> "\\%" ++ escapeLaTeXSpecials cs
-    ('&':cs) -> "\\&" ++ escapeLaTeXSpecials cs
-    ('\\':'#':cs) -> "\\#" ++ escapeLaTeXSpecials cs
-    ('\\':'%':cs) -> "\\%" ++ escapeLaTeXSpecials cs
-    ('\\':'&':cs) -> "\\&" ++ escapeLaTeXSpecials cs
-    ('\\':'\\':cs) -> "\\\\" ++ escapeLaTeXSpecials cs
-    ('\\':cs) -> "\\" ++ escapeLaTeXSpecials cs
-    (c:cs) -> c : escapeLaTeXSpecials cs
+--- Escape all characters with a special meaning in LaTeX into quoted
+--- LaTeX characters.
+escapeLaTeXSpecials :: String -> String
+escapeLaTeXSpecials [] = []
+escapeLaTeXSpecials (c:cs)
+  | c=='^'      = "{\\tt\\char94}" ++ escapeLaTeXSpecials cs
+  | c=='~'      = "{\\tt\\char126}" ++ escapeLaTeXSpecials cs
+  | c=='\\'     = "{\\textbackslash}" ++ escapeLaTeXSpecials cs
+  | c=='<'      = "{\\tt\\char60}" ++ escapeLaTeXSpecials cs
+  | c=='>'      = "{\\tt\\char62}" ++ escapeLaTeXSpecials cs
+  | c=='_'      = "\\_" ++ escapeLaTeXSpecials cs
+  | c=='#'      = "\\#" ++ escapeLaTeXSpecials cs
+  | c=='$'      = "\\$" ++ escapeLaTeXSpecials cs
+  | c=='%'      = "\\%" ++ escapeLaTeXSpecials cs
+  | c=='{'      = "\\{" ++ escapeLaTeXSpecials cs
+  | c=='}'      = "\\}" ++ escapeLaTeXSpecials cs
+  | c=='&'      = "\\&" ++ escapeLaTeXSpecials cs
+  | otherwise   = c : escapeLaTeXSpecials cs
 
-  -- by removing the backslash
-  translateMDSpecials2LaTeX :: String -> String
-  translateMDSpecials2LaTeX s = case s of
-    []          -> []
-    ('\\':'\\':cs) -> '\\' : '\\' : translateMDSpecials2LaTeX cs
-                      --"{\\tt\\char92}" ++ translateMDSpecials2LaTeX cs
-    ('\\':'_':cs) -> '\\' : '_' : translateMDSpecials2LaTeX cs
-    ('\\':c:cs) -> if c `elem` mdEscapeChars
-                   then c : translateMDSpecials2LaTeX cs
-                   else '\\' : translateMDSpecials2LaTeX (c:cs)
-    (c:cs)      -> c : translateMDSpecials2LaTeX cs
-
-  mdEscapeChars =
-    ['\\','`','*','_','{','}','[',']','(',')','#','+','-','.',' ','!']
-
--- translate HTML markups for lists in a string into latex equivalents:
-htmlLists2latexLists [] = []
-htmlLists2latexLists (c:cs) | c=='<' = tryTrans c cs htmltrans
-                  | otherwise = c : htmlLists2latexLists cs
- where
-  tryTrans x xs [] = x : htmlLists2latexLists xs
-  tryTrans x xs ((hmacro,lmacro) : ms) = let l = length hmacro in
-    if take l xs == hmacro then lmacro ++ htmlLists2latexLists (drop l xs)
-                           else tryTrans x xs ms
-
-  htmltrans = [("ul>","\\begin{itemize}"),("/ul>","\\end{itemize}"),
-               ("ol>","\\begin{enumerate}"),("/ol>","\\end{enumerate}"),
-               ("li>","\\item{}"),("/li>","")]
          
 -----------------------------------------------------------------------------
 -- Transform a latex string into a latex string where all latex
 -- commands that are not explicitly allowed are quoted, e.g.,
 -- "\input{/etc/passwd}" is translated into
--- "{\char92}{/etc/passwd}"
+-- "{\textbackslash}input{/etc/passwd}"
 quoteUnknownLatexCmd [] = []
 quoteUnknownLatexCmd (c:cs) | c=='\\'   = tryQuote cs allowedLatexCommands
                             | otherwise = c : quoteUnknownLatexCmd cs
  where
   tryQuote xs [] = logUnknownLatex xs `seq`
-                     "{\\char92}" ++ quoteUnknownLatexCmd xs
+                     "{\\textbackslash}" ++ quoteUnknownLatexCmd xs
   tryQuote xs (cmd:cmds) =
     if cmd `isPrefixOf` xs
     then '\\' : cmd ++ quoteUnknownLatexCmd (drop (length cmd) xs)
     else tryQuote xs cmds
 
 allowedLatexCommands =
-  ["\\","%","&","\"","ss","begin","end","item",
+  ["\\","#","$","%","{","}","&","\"","ss","begin","end","item",
+   "textbackslash",
    "module","descmain","descrest","importmodule",
    "ite","url","em","texttt","textbf","par","bf","href",
    "leftarrow","rightarrow"]

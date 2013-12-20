@@ -405,16 +405,19 @@ mod2latex :: ModData -> [ModInst] -> User -> [StudyProgram] -> [Category]
 
 mod2latex md _ _ _ _ Nothing =
     "%%%%%%%%%% "++modDataCode md++" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"++
-    "\\importmodule{"++modDataCode md++"}{"++modDataNameG md++"}{"++
+    "\\importmodule{"++modDataCode md++"}{"++
+    escapeLaTeXSpecials (modDataNameG md)++"}{"++
     modDataURL md++"}{"++baseName (modDataURL md)++"}\n\n"
 
 mod2latex md mis responsibleUser sprogs categorys (Just desc) =
     "%%%%%%%%%% "++modDataCode md++" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"++
-    "\\module{"++modDataCode md++"}{"++modDataNameG md++"}{"++
+    "\\module{"++modDataCode md++"}{"++
+    escapeLaTeXSpecials (modDataNameG md)++"}{"++
     userToShortView responsibleUser++"}{"++
     improveCycle md mis++"}{"++
     formatPresence (modDataPresence md)++"}{"++
-    showDiv10 (modDataECTS md)++"}{"++modDataWorkload md++"}{"++
+    showDiv10 (modDataECTS md)++"}{"++
+    escapeLaTeXSpecials (modDataWorkload md)++"}{"++
     showLen (modDataLength md)++" Semester}{"++
     (showStudyProgCategories sprogs categorys)++
     "}\n\\descmain{"++
