@@ -272,12 +272,8 @@ leqModData x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of ModData entities
 --- and the controller functions to show, delete and edit entities.
-listModDataView
- :: Bool -> String -> [ModData]
-  -> (ModData -> Controller) -> (ModData -> Controller)
-  -> (ModData -> Bool -> Controller) -> [HtmlExp]
-listModDataView admin title modDatas showModDataController editModDataController
-                deleteModDataController =
+listModDataView :: Bool -> String -> [ModData] -> [HtmlExp]
+listModDataView admin title modDatas =
   [h1 [htxt title]
   ,spTable
     ([take 2 modDataLabelList ++ [[htxt "ECTS"]]] ++
@@ -286,18 +282,12 @@ listModDataView admin title modDatas showModDataController editModDataController
         listModData modData =
           modDataToListView modData ++
             if not admin then [] else
-            [[spSmallButton "show"
-               (nextController (showModDataController modData)),
-              spSmallButton "edit"
-               (nextController (editModDataController modData)),
-              spSmallButton "delete"
-              (confirmNextController
-                (h3
-                  [htxt
-                    (concat
-                      ["Really delete entity \"",modDataToShortView modData
-                      ,"\"?"])])
-                (deleteModDataController modData))]]
+              [[spHref ("?ModData/show/" ++ showModDataKey modData)
+                 [htxt "show"]]
+              ,[spHref ("?ModData/edit/" ++ showModDataKey modData)
+                 [htxt "edit"]]
+              ,[spHref ("?ModData/delete/" ++ showModDataKey modData)
+                 [htxt "delete"]]]
 
 --- Improves the cycle information of a module w.r.t. a given list
 --- of module instances.
@@ -326,21 +316,16 @@ getUniqueTerm mis
 singleModDataView
  :: UserPrefs -> Bool -> Bool -> ModData -> User -> [StudyProgram] -> [Category]
   -> [ModInst] -> Maybe ModDescr -> String
-  -> (ModData -> Controller)
-  -> (ModData -> Bool -> Controller) -> (ModDescr -> Controller)
+  -> (ModDescr -> Controller)
   -> Controller -> Controller
-  -> (ModData -> ModDescr -> Controller)
-  -> (ModData -> User -> Controller) -> [HtmlExp]
+  -> [HtmlExp]
 singleModDataView prefs admin editallowed modData responsibleUser
-     sprogs categorys
-     modinsts maybedesc xmlurl editModDataController deleteModDataController
-     editModDescrController
-     modinstaddController modinsteditController copyModController
-     emailController =
+     sprogs categorys modinsts maybedesc xmlurl
+     editModDescrController modinstaddController modinsteditController =
   [h1 [htxt ((langSelect prefs modDataNameE modDataNameG) modData), nbsp,
-       ehref ("?listModData/"++showModDataKey modData++"/url")
+       ehref ("?ModData/url/"++showModDataKey modData)
              [imageNB "images/url.png" "Show URL"], nbsp,
-       ehref ("?listModData/"++showModDataKey modData++"/pdf")
+       ehref ("?ModData/pdf/"++showModDataKey modData)
              [imageNB "images/pdf.png" "Convert to PDF"], nbsp,
        ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
   [par $ (if admin || editallowed
@@ -348,27 +333,23 @@ singleModDataView prefs admin editallowed modData responsibleUser
                        (nextController modinstaddController),
                 spSmallButton "Semesterangaben ändern"
                        (nextController modinsteditController),
-                spSmallButton "Moduldaten/Sichtbarkeit ändern"
-                       (nextController (editModDataController modData))] ++
+                spHref ("?ModData/edit/" ++ showModDataKey modData)
+                       [htxt "Moduldaten/Sichtbarkeit ändern"] ] ++
                 maybe []
                       (\desc ->
                         [spSmallButton "Modulbeschreibung ändern"
                              (nextController (editModDescrController desc))] ++
                         if admin
-                        then [spSmallButton "Modul kopieren"
-                              (nextController (copyModController modData desc))]
+                        then [spHref ("?ModData/copy/"++showModDataKey modData)
+                                     [htxt $ t "Copy module"], nbsp ]
                         else [])
                       maybedesc
           else []) ++
          (if admin
-          then [spSmallButton "Email"
-                    (nextController (emailController modData responsibleUser)),
-                spSmallButton "Modul löschen"
-                 (confirmNextController
-                    (h3 [htxt (concat
-                         ["Really delete entity \"",modDataToShortView modData
-                          ,"\"?"])])
-                    (deleteModDataController modData))]
+          then [spHref ("?ModData/email/" ++ showModDataKey modData)
+                       [htxt $ t "Email"], nbsp,
+                spHref ("?ModData/delete/" ++ showModDataKey modData)
+                       [htxt $ t "Delete module"]]
           else [])] ++
   mainContentsWithSideMenu
    (map (\tag -> [href ('#':tag) [htxt tag]]) descTitles)

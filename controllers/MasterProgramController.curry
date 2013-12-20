@@ -9,6 +9,7 @@ import HTML
 import Time
 import ConfigMDB
 import MDB
+import MDBExts
 import MDBEntitiesToHtml
 import MasterProgramView
 import Maybe
@@ -200,10 +201,6 @@ getAreaProgramsMasterCoreArea :: MasterProgram -> Transaction MasterCoreArea
 getAreaProgramsMasterCoreArea mMasterCoreArea =
   getMasterCoreArea
    (masterProgramMasterCoreAreaAreaProgramsKey mMasterCoreArea)
-
---- Gets the associated User entity for a given MasterProgram entity.
-getAdvisingUser :: MasterProgram -> Transaction User
-getAdvisingUser mUser = getUser (masterProgramUserAdvisingKey mUser)
 
 
 --- Get module instances of next n semesters from a given one:

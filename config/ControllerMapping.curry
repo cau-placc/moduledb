@@ -32,9 +32,7 @@ getController fktref =
    CategoryController -> categoryController
    MasterCoreAreaController -> masterCoreAreaController
    UserController -> userController
-   ListModDataController -> listModDataController
-   NewModDataController -> newModDataController
-   NewImpModDataController -> newImportModDataController
+   ModDataController -> mainModDataController
    ListModInstController -> listModInstController
    ListMasterProgramController -> listMasterProgramController
    NewMasterProgramController -> newMasterProgramController

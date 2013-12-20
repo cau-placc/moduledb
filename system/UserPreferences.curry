@@ -87,9 +87,11 @@ english2german =
  ,("Cancel"             ,"Abbrechen")
  ,("Change password"    ,"Passwort ändern")
  ,("change your password","Passwort ändern")
+ ,("Copy module"        ,"Modul kopieren")
  ,("Core area: "        ,"Schwerpunktbereich: ")
  ,("Core areas"         ,"Schwerpunktbereiche")
  ,("Cycle:"             ,"Turnus:")
+ ,("Delete module"      ,"Modul löschen")
  ,("Duration:"          ,"Dauer:")
  ,("External URL for module","Externe URL für das Modul")
  ,("German title:"      ,"Englische Bezeichnung:") -- wegen ModDataView!!!

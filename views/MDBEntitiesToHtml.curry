@@ -192,7 +192,7 @@ modDataToListView modData =
    withHref hexp =
      let txtelem = [if modDataVisible modData then hexp else italic [hexp]]
       in  if null (modDataURL modData)
-          then hrefModule ("?listModData/"++showModDataKey modData) txtelem
+          then hrefModule ("?ModData/show/"++showModDataKey modData) txtelem
           else hrefExtModule (modDataURL modData) txtelem
 
 --- A more compact list view of a ModData entity in HTML format
@@ -207,7 +207,7 @@ modDataToCompactListView prefs modData =
    withHref hexp =
      let txtelem = [if modDataVisible modData then hexp else italic [hexp]]
       in if null (modDataURL modData)
-         then hrefModule ("?listModData/"++showModDataKey modData) txtelem
+         then hrefModule ("?ModData/show/"++showModDataKey modData) txtelem
          else hrefExtModule (modDataURL modData) txtelem
 
 

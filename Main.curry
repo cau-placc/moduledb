@@ -15,6 +15,7 @@ import ModDataController
 import MasterProgramController(showXmlMasterProgram,showAllXmlMasterPrograms)
 import KeyDatabase
 import MDB
+import MDBExts
 import MDBEntitiesToHtml
 import Helpers
 import List
@@ -39,8 +40,12 @@ dispatcher = do
 main = do
   params <- getUrlParameter
   case params of
-    ('M':_:_:code)         -> showModDataWithCode (urlencoded2string code)
+    ('M':s1:s2:code) -> if [s1,s2] `elem`
+                            ["BS","BW","B2","MS","MW","ME","M2","NF","EX","OI"]
+                        -- for compatibility with old URLs...
+                        then showModDataWithCode (urlencoded2string code)
                                                                  >>= getForm
+                        else dispatcher
     ('m':'o':'d':'=':code) -> showModDataWithCode (urlencoded2string code)
                                                                  >>= getForm
     ('x':'m':'l':'=':code) -> showXmlModule (urlencoded2string code)

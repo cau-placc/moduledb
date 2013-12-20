@@ -96,7 +96,7 @@ editMasterCoreAreaView masterCoreArea controller =
 showMasterCoreAreaView :: MasterCoreArea -> [HtmlExp]
 showMasterCoreAreaView masterCoreArea =
   masterCoreAreaToDetailsView masterCoreArea ++
-   [spHref "?mca/list" [htxt "back to MasterCoreArea list"]]
+   [spHref "?MCA/list" [htxt "back to MasterCoreArea list"]]
 
 --- Compares two MasterCoreArea entities. This order is used in the list view.
 leqMasterCoreArea :: MasterCoreArea -> MasterCoreArea -> Bool
@@ -121,9 +121,9 @@ listMasterCoreAreaView admin masterCoreAreas =
   where listMasterCoreArea :: MasterCoreArea -> [[HtmlExp]]
         listMasterCoreArea mca =
           masterCoreAreaToListView mca ++
-           [[spHref ("?mca/show/"++showMasterCoreAreaKey mca)
+           [[spHref ("?MCA/show/"++showMasterCoreAreaKey mca)
                     [htxt "Anzeigen"]],
-            [spHref ("?mca/edit/"++showMasterCoreAreaKey mca)
+            [spHref ("?MCA/edit/"++showMasterCoreAreaKey mca)
                     [htxt "Ändern"]],
-            [spHref ("?mca/delete/"++showMasterCoreAreaKey mca)
+            [spHref ("?MCA/delete/"++showMasterCoreAreaKey mca)
                     [htxt "Löschen"]]]

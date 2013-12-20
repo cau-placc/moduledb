@@ -47,7 +47,7 @@ getRouteMenus = do
   return $ (ulist (map snd newlinks),
             ulist (map snd otherlinks))
  where
-   isNewLink s = take 3 s == "new" || snd (break (=='/') s) == "/new"
+   isNewLink s = take 3 s == "new" || "/new" `isPrefixOf` snd (break (=='/') s)
 
    getLinks :: [Route] -> [(String,[HtmlExp])]
    getLinks ((name, matcher, _):restroutes) =
@@ -59,8 +59,10 @@ getRouteMenus = do
                        then getLinks restroutes
                        else (string,[(href ("?" ++ string) [htxt name])])
                              : getLinks restroutes
-       Prefix s1 s2 -> let url = s1++"/"++s2
-                        in (url,[(href ("?"++url) [htxt name])])
-                             : getLinks restroutes
+       Prefix s1 s2 -> if (s1,s2) `elem` [("ModData","list")]
+                       then getLinks restroutes
+                       else let url = s1++"/"++s2
+                             in (url,[(href ("?"++url) [htxt name])])
+                                  : getLinks restroutes
        _ -> getLinks restroutes
    getLinks [] = []

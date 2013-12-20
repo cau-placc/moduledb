@@ -304,7 +304,7 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
 
      showProgMod (_,p,mod,_,_) =
        [nbsp,
-        (opt2tag p) [smallHrefModule ("?listModData/"++showModDataKey mod)
+        (opt2tag p) [smallHrefModule ("?ModData/show/"++showModDataKey mod)
                                      [htxt (modDataCode mod)]]]
 
    opt2tag p = if p then bold else italic
@@ -312,7 +312,7 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
    formatMods (_,p,md,_,_) =
      [opt2tag p [modtitle, htxt $ if p then " (Pflicht)" else " (empfohlen)"]]
     where
-      modtitle = ehref ("?listModData/"++showModDataKey md)
+      modtitle = ehref ("?ModData/show/"++showModDataKey md)
                        [htxt $ modDataCode md ++": "++ modDataNameG md]
 
 

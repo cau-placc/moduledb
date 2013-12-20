@@ -9,8 +9,7 @@ data ControllerReference
  | CategoryController | ListCategoryController
  | MasterCoreAreaController
  | UserController
- | ListModDataController 
- | NewModDataController | NewImpModDataController
+ | ModDataController
  | ListModInstController | ListMasterProgramController 
  | NewMasterProgramController | ListMasterProgInfoController 
  | ListUnivisInfoController | NewUnivisInfoController 
@@ -34,20 +33,19 @@ getRoutes =
       ,("Modulsuche",Exact "search",SearchController)
       ,("Studiengänge",Exact "listStudyProgram",ListStudyProgramController)] ++
       addIf admin
-        [("Neues Modul",Exact "newModData",NewModDataController),
-         ("Neues Importmodul",Exact "newImpModData",
-          NewImpModDataController),
+        [("Neues Modul",Prefix "ModData" "new",ModDataController),
+         ("Neues Importmodul",Prefix "ModData" "newimp",ModDataController),
          ("Alle Benutzer",Prefix "User" "list",UserController),
          ("Neuer Benutzer",Prefix "User" "new",UserController),
          ("Neuer Studiengang",Exact "newStudyProgram",
           NewStudyProgramController),
          ("Neue Kategorie",Prefix "Category" "new",CategoryController),
-         ("Neuer Masterbereich",Prefix "mca" "new"
+         ("Neuer Masterbereich",Prefix "MCA" "new"
           ,MasterCoreAreaController)] ++
       [("Alle Kategorien",Exact "listCategory",ListCategoryController)
-      ,("Masterbereiche",Prefix "mca" "list"
+      ,("Masterbereiche",Prefix "MCA" "list"
        ,MasterCoreAreaController)
-      ,("List ModData",Exact "listModData",ListModDataController)
+      ,("List ModData",Prefix "ModData" "list",ModDataController)
       ,("List ModInst",Exact "listModInst",ListModInstController)
       --,("New ModInst",Exact "newModInst",NewModInstController)
       ,("List MasterProgram",Exact "listMasterProgram"

@@ -1,8 +1,6 @@
 module ModDataController (
- newModDataController, newImportModDataController,
- showModDataController, editModDataController, deleteModDataController,
- listModDataController, getModDataOfCategory, showModDataWithCode,
- getResponsibleUser, showXmlIndex, showXmlModule,
+ mainModDataController, getModDataOfCategory, showModDataWithCode,
+ showXmlIndex, showXmlModule,
  formatCatModulesForm, emailModuleMessageController
  ) where
 
@@ -13,6 +11,7 @@ import HTML
 import XML
 import Time
 import MDB
+import MDBExts
 import ModDataView
 import ModDescrController
 import ModInstController
@@ -32,6 +31,32 @@ import FileGoodies(baseName)
 import Mail
 import Directory
 import UserPreferences
+
+--- Choose the controller for a ModData entity according to the URL parameter.
+mainModDataController :: Controller
+mainModDataController =
+  do args <- getControllerParams
+     case args of
+      [] -> listAllModDataController
+      ["list"]   -> listAllModDataController
+      ["new"]    -> newModDataController
+      ["newimp"] -> newImportModDataController
+      ["show" ,s] ->
+       applyControllerOn (readModDataKey s) getModData showModDataController
+      ["edit" ,s] ->
+       applyControllerOn (readModDataKey s) getModData editModDataController
+      ["delete" ,s] ->
+       applyControllerOn (readModDataKey s) getModData
+        confirmDeleteModDataController
+      ["url" ,s] ->
+       applyControllerOn (readModDataKey s) getModData moduleUrlForm
+      ["pdf" ,s] ->
+       applyControllerOn (readModDataKey s) getModData pdfModDataController
+      ["email" ,s] ->
+       applyControllerOn (readModDataKey s) getModData emailModuleController
+      ["copy" ,s] ->
+       applyControllerOn (readModDataKey s) getModData copyModuleController
+      _ -> displayError "Illegal URL"
 
 --- Shows a form to create a new ModData entity.
 newModDataController :: Controller
@@ -94,7 +119,7 @@ editModDataController modDataToEdit =
 --- database depending on the Boolean argument. If the Boolean argument
 --- is False, nothing is changed.
 updateModDataController :: Bool -> (ModData,[Category]) -> Controller
-updateModDataController False _ = listModDataController
+updateModDataController False (modData,_) = showModDataController modData
 updateModDataController True (modData,newcats) = do
   admin <- isAdmin
   tr <- runT $
@@ -105,15 +130,26 @@ updateModDataController True (modData,newcats) = do
          removeCategorizing (filter (`notElem` newcats) oldcats) modData
     else updateModData modData
   either (\ _ -> logEvent (UpdateModData modData) >>
-                 nextInProcessOr listModDataController Nothing)
+                 nextInProcessOr (showModDataController modData) Nothing)
          (\ error -> displayError (showTError error)) tr
+
+--- Deletes a given ModData entity (after asking for confirmation)
+--- and proceeds with the list controller.
+confirmDeleteModDataController :: ModData -> Controller
+confirmDeleteModDataController modData =
+  confirmController
+   (h3
+     [htxt
+       (concat ["Really delete entity \"",modDataToShortView modData,"\"?"])])
+   (\ ack -> if ack
+              then deleteModDataController modData
+              else showModDataController modData)
 
 --- Deletes a given ModData entity (depending on the Boolean
 --- argument) and proceeds with the list controller.
-deleteModDataController :: ModData -> Bool -> Controller
-deleteModDataController _ False = listModDataController
-deleteModDataController modData True =
-  checkAuthorization (modDataOperationAllowed (DeleteEntity modData)) $
+deleteModDataController :: ModData -> Controller
+deleteModDataController modData =
+  checkAuthorization checkAdmin $
     runT (getModDataCategorys modData |>>= \oldCategorizingCategorys ->
           removeCategorizing oldCategorizingCategorys modData |>>
           getDB (queryDescriptionOfMod (modDataKey modData)) |>>= \mbdescr ->
@@ -126,9 +162,14 @@ deleteModDataController modData True =
            (\ error -> displayError (showTError error))
 
 --- Controller for copying a module with a new code:
-copyModController :: ModData -> ModDescr -> Controller
-copyModController mdata mdesc =
-  return (copyModView mdata (storeCopiedModController mdata mdesc))
+copyModuleController :: ModData -> Controller
+copyModuleController mdata =
+ checkAuthorization checkAdmin $ do
+  maybemdesc <- runQ $ queryDescriptionOfMod (modDataKey mdata)
+  maybe (displayError "Illegal URL: cannot copy external module")
+        (\mdesc ->
+           return (copyModView mdata (storeCopiedModController mdata mdesc)))
+        maybemdesc
 
 --- Controller for copying a module with a new code:
 storeCopiedModController :: ModData -> ModDescr -> String -> Controller
@@ -168,6 +209,19 @@ storeCopiedModController mdata mdesc newcode = do
 
 --- Lists all ModData entities with buttons to show, delete,
 --- or edit an entity.
+listAllModDataController :: Controller
+listAllModDataController =
+  checkAuthorization (modDataOperationAllowed ListEntities) $ do
+    admin <- isAdmin
+    login <- getSessionLogin
+    modDatas <- runQ queryAllModDatas
+    return (listModDataView admin "Alle Module"
+                            (maybe (filter modDataVisible modDatas)
+                                   (const modDatas)
+                                   login))
+
+--- Lists all ModData entities with buttons to show, delete,
+--- or edit an entity.
 listModDataController :: Controller
 listModDataController =
   checkAuthorization (modDataOperationAllowed ListEntities) $ do
@@ -178,67 +232,55 @@ listModDataController =
      then do modDatas <- runQ queryAllModDatas
              return (listModDataView admin "Alle Module"
                         (maybe (filter modDataVisible modDatas) (const modDatas)
-                               login)
-                        showModDataController
-                        editModDataController deleteModDataController)
+                               login))
      else
       maybe (displayError "Illegal URL")
-            (\mdkey -> do
-              modData <- runJustT $ getModData mdkey
-              responsibleUser <- runJustT (getResponsibleUser modData)
-              categories <- runJustT (getModDataCategorys modData)
-              sprogs <- runQ queryAllStudyPrograms
-              moddesc <- runQ $ queryDescriptionOfMod mdkey
-              modinsts <- runQ $ queryInstancesOfMod mdkey
-              userprefs <- getSessionUserPrefs
-              let lname = maybe "" id login
-              if null (tail args)
-               then return (singleModDataView userprefs admin
-                        (userLogin responsibleUser == lname)
-                        modData responsibleUser
-                        sprogs categories modinsts moddesc (xmlURL modData)
-                        editModDataController deleteModDataController
-                        (editModDescrController listModDataController)
-                        (addModInstController modData responsibleUser
-                                              listModDataController)
-                        (editAllModInstController modData
-                                                  listModDataController)
-                        copyModController emailModuleController)
-               else case args!!1 of
-                      "pdf" -> formatModuleForm modData modinsts
-                                  responsibleUser sprogs categories moddesc
-                      "url" -> moduleUrlForm modData
-                      _ -> displayError "Illegal URL"
-            )
+            (\mdkey -> runJustT (getModData mdkey) >>= showModDataController)
             (readModDataKey (head args))
 
-showModDataWithCode :: String -> Controller
-showModDataWithCode mcode = do
-   admin <- isAdmin
-   modDatas <- runQ $ queryModDataWithCode mcode
-   if null modDatas then displayError "Illegal URL" else do
-    let modData = head modDatas
+--- Controller to generate the PDF of a module.
+pdfModDataController :: ModData -> Controller
+pdfModDataController modData =
+  checkAuthorization (modDataOperationAllowed (ShowEntity modData)) $ do
     responsibleUser <- runJustT (getResponsibleUser modData)
     categories <- runJustT (getModDataCategorys modData)
     sprogs <- runQ queryAllStudyPrograms
-    moddesc <- runQ $ queryDescriptionOfMod (modDataKey modData)
-    modinsts <- runQ $ queryInstancesOfMod (modDataKey modData)
-    userprefs <- getSessionUserPrefs
-    lname <- getSessionLogin >>= return . maybe "" id
-    return (singleModDataView userprefs admin
-              (userLogin responsibleUser == lname)
-              modData responsibleUser
-              sprogs categories modinsts moddesc (xmlURL modData)
-              editModDataController deleteModDataController
-              (editModDescrController listModDataController)
-              (addModInstController modData responsibleUser
-                                    listModDataController)
-              (editAllModInstController modData listModDataController)
-              copyModController emailModuleController)
+    let mdkey = modDataKey modData
+    moddesc <- runQ $ queryDescriptionOfMod mdkey
+    modinsts <- runQ $ queryInstancesOfMod mdkey
+    formatModuleForm modData modinsts responsibleUser sprogs categories moddesc
+
+--- Controller to show a module with a given module code.
+showModDataWithCode :: String -> Controller
+showModDataWithCode mcode = do
+   modDatas <- runQ $ queryModDataWithCode mcode
+   if null modDatas
+    then displayError "Illegal URL: illegal module code"
+    else showModDataController (head modDatas)
 
 --- Shows a ModData entity.
 showModDataController :: ModData -> Controller
-showModDataController modData =
+showModDataController modData = do
+  admin <- isAdmin
+  responsibleUser <- runJustT (getResponsibleUser modData)
+  categories <- runJustT (getModDataCategorys modData)
+  sprogs <- runQ queryAllStudyPrograms
+  moddesc <- runQ $ queryDescriptionOfMod (modDataKey modData)
+  modinsts <- runQ $ queryInstancesOfMod (modDataKey modData)
+  userprefs <- getSessionUserPrefs
+  lname <- getSessionLogin >>= return . maybe "" id
+  return (singleModDataView userprefs admin
+            (userLogin responsibleUser == lname)
+            modData responsibleUser
+            sprogs categories modinsts moddesc (xmlURL modData)
+            (editModDescrController (showModDataController modData))
+            (addModInstController modData responsibleUser
+                                  (showModDataController modData))
+            (editAllModInstController modData (showModDataController modData)))
+
+
+-- old version
+showModDataController' modData =
   checkAuthorization (modDataOperationAllowed (ShowEntity modData)) $
    (do responsibleUser <- runJustT (getResponsibleUser modData)
        categorizingCategorys <- runJustT (getModDataCategorys modData)
@@ -257,10 +299,6 @@ removeCategorizing :: [Category] -> ModData -> Transaction ()
 removeCategorizing categorys modData =
   mapT_ (\ t -> deleteCategorizing (modDataKey modData) (categoryKey t))
    categorys
-
---- Gets the associated User entity for a given ModData entity.
-getResponsibleUser :: ModData -> Transaction User
-getResponsibleUser mUser = getUser (modDataUserResponsibleKey mUser)
 
 --- Query the module descriptions of a given category.
 getModDataOfCategory :: CategoryKey -> Transaction [ModData]
@@ -282,9 +320,11 @@ getStudyProgramsWithCats = do
 
 -------------------------------------------------------------------------
 -- A controller (and view) to send an email:
-emailModuleController :: ModData -> User -> IO [HtmlExp]
-emailModuleController mdata user =
-  emailModuleMessageController listModDataController mdata user
+emailModuleController :: ModData -> Controller
+emailModuleController mdata =
+ checkAuthorization checkAdmin $ do
+  user <- runJustT (getResponsibleUser mdata)
+  emailModuleMessageController (showModDataController mdata) mdata user
     "Lieber Modulverantwortlicher,\n\n\nViele Gruesse\n\n"
 
 emailModuleMessageController :: Controller -> ModData -> User -> String
