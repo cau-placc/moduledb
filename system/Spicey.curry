@@ -42,7 +42,8 @@ import Global
 import Authentication
 import Helpers
 import Distribution
-import UserPreferences
+import MultiLang
+import SessionInfo
 
 ---------------- vvvv -- Framework functions -- vvvv -----------------------
 
@@ -195,9 +196,9 @@ wUncheckMaybe defval wspec =
          defval
 
 --- The standard menu for all users.
-getUserMenu :: Maybe String -> UserPrefs -> IO HtmlExp
-getUserMenu login prefs = do
-  let t = translate prefs
+getUserMenu :: Maybe String -> UserSessionInfo -> IO HtmlExp
+getUserMenu login sinfo = do
+  let t = translate sinfo
   return $
      ulist $
       [--[href "?main" [htxt "Hauptseite"]],
@@ -219,17 +220,17 @@ spiceyTitle = "Module Information System"
 addLayout :: ViewBlock -> IO ViewBlock
 addLayout viewblock = do
   login      <- getSessionLogin
-  prefs      <- getSessionUserPrefs
-  usermenu   <- getUserMenu login prefs
+  sinfo      <- getUserSessionInfo
+  usermenu   <- getUserMenu login sinfo
   (routemenu1,routemenu2) <- getRouteMenus
   msg        <- getPageMessage
   admin      <- isAdmin
   let (mainTitle,mainDoc) =
           case viewblock of
             (HtmlStruct "h1" [] t : hexps) -> (t,hexps)
-            _ -> ([htxt (translate prefs spiceyTitle)], viewblock)
+            _ -> ([htxt (translate sinfo spiceyTitle)], viewblock)
   return $
-    stdNavBar usermenu login prefs ++
+    stdNavBar usermenu login sinfo ++
     [blockstyle "container-fluid" $
       [HtmlStruct "header" [("class","hero-unit")] [h1 mainTitle],
        if null msg
@@ -267,13 +268,13 @@ mainContentsWithSideMenu menuitems contents =
 -- Standard navigation bar at the top.
 -- The first argument is the route menu (a ulist).
 -- The second argument is the possible login name.
-stdNavBar :: HtmlExp -> Maybe String -> UserPrefs -> [HtmlExp]
-stdNavBar routemenu login prefs =
+stdNavBar :: HtmlExp -> Maybe String -> UserSessionInfo -> [HtmlExp]
+stdNavBar routemenu login sinfo =
   [blockstyle "navbar navbar-inverse navbar-fixed-top"
     [blockstyle "navbar-inner"
       [blockstyle "container-fluid"
          [addDropdownItem routemenu `addClass` "nav",
-          par [bold [if preferredLanguage prefs == English
+          par [bold [if languageOfSession sinfo == English
                      then href "?langDE" [htxt "[Deutsch]"]
                      else href "?langEN" [htxt "[English]"]], nbsp, nbsp, nbsp,
                userIcon, nbsp, htxt $ maybe (t "not logged in") id login]
@@ -282,7 +283,7 @@ stdNavBar routemenu login prefs =
     ]
   ]
  where
-  t = translate prefs
+  t = translate sinfo
 
   userIcon = HtmlText "<i class=\"icon-user icon-white\"></i>"
 

@@ -21,7 +21,8 @@ import ModDataController
 import Helpers
 import List
 import Sort
-import UserPreferences
+import SessionInfo
+import MultiLang
 import MDBEntitiesToHtml
 
 --- Choose the controller for a Category entity according to the URL parameter.
@@ -106,26 +107,23 @@ deleteCategoryController category =
 newListCategoryController :: Controller
 newListCategoryController =
   checkAuthorization (categoryOperationAllowed ListEntities) $
-    do admin <- isAdmin
-       login <- getSessionLogin
-       runListCategoryController admin login []
+    do sinfo <- getUserSessionInfo
+       runListCategoryController sinfo []
 
 --- Lists all Category entities with buttons to show, delete,
 --- or edit an entity.
 listCategoryController :: Controller
 listCategoryController =
   checkAuthorization (categoryOperationAllowed ListEntities) $
-    do admin <- isAdmin
-       login <- getSessionLogin
+    do sinfo <- getUserSessionInfo
        args  <- getControllerParams
-       runListCategoryController admin login args
+       runListCategoryController sinfo args
 
-runListCategoryController admin login args
+runListCategoryController sinfo args
  | null args
   = do categorys <- runQ queryAllCategorys
-       prefs <- getSessionUserPrefs
-       let t = translate prefs
-       return (listCategoryView admin login prefs (Right $ t "All categories")
+       let t = translate sinfo
+       return (listCategoryView sinfo (Right $ t "All categories")
                  (map (\c -> (Left c,[])) (mergeSort leqCategory categorys))
                  [] []
                  showCategoryPlanController formatCatModulesForm
@@ -136,9 +134,8 @@ runListCategoryController admin login args
        users <- runQ $ queryCondUser (\u -> userLogin u == lname)
        if null users then return [h1 [htxt "Illegal URL"]] else
         do mods <- runQ $ queryModDataOfUser (userKey (head users))
-           prefs <- getSessionUserPrefs
-           let t = translate prefs
-           return (listCategoryView admin login prefs
+           let t = translate sinfo
+           return (listCategoryView sinfo
                         (Right $ t "My modules")
                         [(Right "",map (\m->(m,[],[])) mods)]
                         [] []
@@ -152,13 +149,12 @@ runListCategoryController admin login args
               let spk = categoryStudyProgramProgramCategoriesKey cat
                   mbsprog = find (\p -> studyProgramKey p == spk) sprogs
               mods <- runJustT $ getModDataOfCategory catkey
-              prefs <- getSessionUserPrefs
-              return (listCategoryView admin login prefs
+              return (listCategoryView sinfo
                         (maybe (Right "???") Left mbsprog)
                         [(Left cat,map (\m->(m,[],[]))
                                        (maybe (filter modDataVisible mods)
                                               (const mods)
-                                              login))]
+                                              (userLoginOfSession sinfo)))]
                         [] []
                         showCategoryPlanController
                         formatCatModulesForm showEmailCorrectionController))
@@ -175,11 +171,10 @@ runListCategoryController admin login args
                             returnT (Left c,map (\m->(m,[],[]))
                                              (maybe (filter modDataVisible mods)
                                                     (const mods)
-                                                    login)))
+                                                    (userLoginOfSession sinfo))))
                          categorys
                else mapT (\c -> returnT (Left c,[])) categorys
-              prefs <- getSessionUserPrefs
-              return (listCategoryView admin login prefs (Left studyprog)
+              return (listCategoryView sinfo (Left studyprog)
                          catmods [] []
                          showCategoryPlanController
                          formatCatModulesForm showEmailCorrectionController))
@@ -192,19 +187,17 @@ showCategoryPlanController
   -> (String,Int) -> (String,Int) -> Bool -> Bool -> Controller
 showCategoryPlanController mbstudyprog catmods startsem stopsem
                            withunivis withmprogs = do
-  admin <- isAdmin
-  login <- getSessionLogin
-  prefs <- getSessionUserPrefs
+  sinfo <- getUserSessionInfo
   users <- runQ queryAllUsers
   catmodinsts <- runJustT $
                    mapT (\ (c,mods) ->
                                mapT getModInsts
                                     (maybe (filter modDataVisible mods)
                                            (const mods)
-                                           login              ) |>>= \mmis ->
+                                           (userLoginOfSession sinfo)) |>>= \mmis ->
                                returnT (c,mmis))
                         catmods
-  return (listCategoryView admin login prefs mbstudyprog
+  return (listCategoryView sinfo mbstudyprog
              catmodinsts semPeriod users
              showCategoryPlanController
              formatCatModulesForm showEmailCorrectionController)
@@ -232,14 +225,14 @@ showEmailCorrectionController
   :: Either StudyProgram String -> [(Either Category String,[ModData])]
   -> (String,Int) -> (String,Int) -> Controller
 showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
-  login <- getSessionLogin
+  sinfo <- getUserSessionInfo
   users <- runQ queryAllUsers
   modinsts <- runJustT $
                    mapT (\ (_,mods) ->
                                mapT getModInsts
                                     (maybe (filter modDataVisible mods)
                                            (const mods)
-                                           login              ) |>>= \mmis ->
+                                           (userLoginOfSession sinfo)) |>>= \mmis ->
                                returnT mmis)
                         catmods
   return (listEmailCorrectionView mbstudyprog

@@ -18,14 +18,15 @@ import DefaultController
 import Mail
 import Time
 import ConfigMDB
-import UserPreferences
+import SessionInfo
+import MultiLang
 
 -----------------------------------------------------------------------------
 --- View for login/logout. If the passed login name is the empty string,
 --- we offer a login dialog, otherwise a logout dialog.
-loginView :: Controller -> Maybe String -> UserPrefs -> [HtmlExp]
-loginView controller currlogin prefs =
-  case currlogin of
+loginView :: Controller -> UserSessionInfo -> [HtmlExp]
+loginView controller sinfo =
+  case userLoginOfSession sinfo of
    Nothing -> [h3 [htxt $ t "Login to module database"],
                spTable [[[htxt $ t "Login name:"], [textfield loginfield ""]],
                         [[htxt $ t "Password:"],   [password passfield]]],
@@ -43,7 +44,7 @@ loginView controller currlogin prefs =
  where
   loginfield,passfield free
 
-  t = translate prefs
+  t = translate sinfo
 
   loginHandler env = do
     let loginname = env loginfield
@@ -59,8 +60,8 @@ loginView controller currlogin prefs =
               urls <- getLastUrls
               getForm $
                [h1 [htxt $ t "Login successful"],
-                par [htxt $ loginText prefs loginname],
-                par [htxt $ timeoutText prefs]] ++
+                par [htxt $ loginText sinfo loginname],
+                par [htxt $ timeoutText sinfo]] ++
                 if length urls > 1
                 then [par [href ('?':urls!!1) [htxt "Back to last page"]]]
                 else []
@@ -79,9 +80,8 @@ queryUserByLoginPass login pass = seq login $ seq pass $
 -- a form to change the password
 passwdForm :: IO HtmlForm
 passwdForm = do
-  login <- getSessionLogin
-  prefs <- getSessionUserPrefs
-  let t = translate prefs
+  sinfo <- getUserSessionInfo
+  let t = translate sinfo
   getForm
     [h1 [htxt $ t "Change password"],
      spTable [[[htxt $ t "Old password:"],        [password oldpass]],
@@ -89,7 +89,8 @@ passwdForm = do
               [[htxt $ t "Repeat new password:"], [password newpass2]]],
      hrule,
      spPrimButton (t "Change password")
-                  (\ e -> passwdHandler t login e >>= getForm),
+                  (\ e -> passwdHandler t (userLoginOfSession sinfo) e
+                                                             >>= getForm),
      nbsp,
      spButton (t "Cancel")
             (const (cancelOperation >> defaultController >>= getForm))]
@@ -114,33 +115,33 @@ passwdForm = do
 -- send login data to a new user
 sendLoginDataForm :: IO HtmlForm
 sendLoginDataForm = do
-  prefs <- getSessionUserPrefs
-  let t = translate prefs
+  sinfo <- getUserSessionInfo
+  let t = translate sinfo
   getForm
     [h1 [htxt $ t "Send login data"],
-     par [htxt $ sendPasswordCmt prefs],
+     par [htxt $ sendPasswordCmt sinfo],
      par [htxt $ t "Your email address: ", textfield emailref ""],
      hrule,
-     spPrimButton (t "Send new password") (sendHandler prefs),
+     spPrimButton (t "Send new password") (sendHandler sinfo),
      spButton (t "Cancel")
             (const (cancelOperation >> defaultController >>= getForm))]
  where
   emailref free
 
-  sendHandler prefs env = do
+  sendHandler sinfo env = do
     users <- runQ $ queryCondUser (\u -> userEmail u == env emailref)
     if null users
-     then displayError (unknownUser prefs) >>= getForm
-     else sendNewEmail prefs (head users)
+     then displayError (unknownUser sinfo) >>= getForm
+     else sendNewEmail sinfo (head users)
 
-  sendNewEmail prefs user = do
-    let t = translate prefs
+  sendNewEmail sinfo user = do
+    let t = translate sinfo
     newpass <- randomPassword 10
     hashpass <- getUserHash (userLogin user) newpass
     sendMail adminEmail
       (userEmail user)
       (t "Login data for module database")
-      (loginEmailText prefs (userLogin user) newpass)
+      (loginEmailText sinfo (userLogin user) newpass)
     runT $ updateUser (setUserPassword user hashpass)
     getForm [h1 [htxt $ t "Acknowledgment"],
              h3 [htxt $ t "Your new password has been sent"]]

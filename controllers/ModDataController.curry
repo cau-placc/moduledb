@@ -30,7 +30,8 @@ import ModInstView
 import FileGoodies(baseName)
 import Mail
 import Directory
-import UserPreferences
+import SessionInfo
+import MultiLang
 
 --- Choose the controller for a ModData entity according to the URL parameter.
 mainModDataController :: Controller
@@ -261,16 +262,14 @@ showModDataWithCode mcode = do
 --- Shows a ModData entity.
 showModDataController :: ModData -> Controller
 showModDataController modData = do
-  admin <- isAdmin
   responsibleUser <- runJustT (getResponsibleUser modData)
   categories <- runJustT (getModDataCategorys modData)
   sprogs <- runQ queryAllStudyPrograms
   moddesc <- runQ $ queryDescriptionOfMod (modDataKey modData)
   modinsts <- runQ $ queryInstancesOfMod (modDataKey modData)
-  userprefs <- getSessionUserPrefs
-  lname <- getSessionLogin >>= return . maybe "" id
-  return (singleModDataView userprefs admin
-            (userLogin responsibleUser == lname)
+  sinfo <- getUserSessionInfo
+  return (singleModDataView sinfo
+            (Just (userLogin responsibleUser) == userLoginOfSession sinfo)
             modData responsibleUser
             sprogs categories modinsts moddesc (xmlURL modData)
             (editModDescrController (showModDataController modData))
@@ -278,15 +277,6 @@ showModDataController modData = do
                                   (showModDataController modData))
             (editAllModInstController modData (showModDataController modData)))
 
-
--- old version
-showModDataController' modData =
-  checkAuthorization (modDataOperationAllowed (ShowEntity modData)) $
-   (do responsibleUser <- runJustT (getResponsibleUser modData)
-       categorizingCategorys <- runJustT (getModDataCategorys modData)
-       return
-        (showModDataView modData responsibleUser categorizingCategorys
-          listModDataController))
 
 --- Associates given entities with the ModData entity.
 addCategorizing :: [Category] -> ModData -> Transaction ()
@@ -363,12 +353,12 @@ emailModuleMessageController cntcontroller mdata user msg = return
 -- Show the permanent URL of a module
 moduleUrlForm :: ModData -> IO [HtmlExp]
 moduleUrlForm md = do
-  prefs <- getSessionUserPrefs
-  let t   = translate prefs
+  sinfo <- getUserSessionInfo
+  let t   = translate sinfo
       url = baseURL ++ "?mod=" ++ string2urlencoded (modDataCode md)
   return
     [h1 [htxt (t"External URL for module"++" \""++modDataNameG md++"\"")],
-     par [htxt (useURLText prefs)],
+     par [htxt (useURLText sinfo)],
      h3 [ehref url [htxt url]]]
 
 ----------------------------------------------------------------------

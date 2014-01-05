@@ -19,7 +19,8 @@ import Mail
 import ConfigMDB
 import DefaultController
 import UserView(leqUser)
-import UserPreferences
+import SessionInfo
+import MultiLang
 
 --- The WUI specification of the module cycle:
 wCycle = wSelect id ["unregelmäßig","jedes Semester","jedes Jahr"]
@@ -314,15 +315,15 @@ getUniqueTerm mis
 --- The arguments are the list of ModData entities
 --- and the controller functions to show, delete and edit entities.
 singleModDataView
- :: UserPrefs -> Bool -> Bool -> ModData -> User -> [StudyProgram] -> [Category]
+ :: UserSessionInfo -> Bool -> ModData -> User -> [StudyProgram] -> [Category]
   -> [ModInst] -> Maybe ModDescr -> String
   -> (ModDescr -> Controller)
   -> Controller -> Controller
   -> [HtmlExp]
-singleModDataView prefs admin editallowed modData responsibleUser
+singleModDataView sinfo editallowed modData responsibleUser
      sprogs categorys modinsts maybedesc xmlurl
      editModDescrController modinstaddController modinsteditController =
-  [h1 [htxt ((langSelect prefs modDataNameE modDataNameG) modData), nbsp,
+  [h1 [htxt ((langSelect sinfo modDataNameE modDataNameG) modData), nbsp,
        ehref ("?ModData/url/"++showModDataKey modData)
              [imageNB "images/url.png" "Show URL"], nbsp,
        ehref ("?ModData/pdf/"++showModDataKey modData)
@@ -357,7 +358,7 @@ singleModDataView prefs admin editallowed modData responsibleUser
     [[[bold [stringToHtml $ t "Module code:"]],
       [stringToHtml (modDataCode modData)]],
      [[bold [stringToHtml $ t "German title:"]],
-      [stringToHtml ((langSelect prefs modDataNameG modDataNameE) modData)]],
+      [stringToHtml ((langSelect sinfo modDataNameG modDataNameE) modData)]],
      [[bold [stringToHtml $ t "Person in charge:"]],
       [userToHtmlView responsibleUser]],
      [[bold [stringToHtml $ t "Cycle:"]],
@@ -400,9 +401,11 @@ singleModDataView prefs admin editallowed modData responsibleUser
                        modDescrLiterature,modDescrLinks,modDescrComments])))
    maybedesc)
  where
-   t = translate prefs
+   admin = isAdminSession sinfo
 
-   descTitles = langSelect prefs
+   t = translate sinfo
+
+   descTitles = langSelect sinfo
       ["Abstract","Objectives","Contents","Prerequisites",
        "Examination","Learning methods","Usage",
        "Literature","Links","Comments"]

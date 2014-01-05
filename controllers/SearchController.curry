@@ -19,29 +19,28 @@ import SearchView
 import ModDataView
 import Helpers
 import MDBEntitiesToHtml
-import UserPreferences
+import MultiLang
+import SessionInfo
 
 -----------------------------------------------------------------------------
 --- Controller for the main page.
 searchController :: Controller
 searchController = do
-  login <- getSessionLogin
-  prefs <- getSessionUserPrefs
-  return (searchPageView login prefs searchModules showExamController
+  sinfo <- getUserSessionInfo
+  return (searchPageView sinfo searchModules showExamController
                          showAllModulesController
                          showAllEnglishModulesController)
 
 --- Controller for searching modules
 searchModules :: String -> Controller
 searchModules pat = do
-  admin <- isAdmin
-  login <- getSessionLogin
-  prefs <- getSessionUserPrefs
-  let t = translate prefs
+  sinfo <- getUserSessionInfo
+  let t = translate sinfo
   modcodes <- runQ $ transformQ (filter isMatching) queryModDataCodeName
   mods <- runJustT $ mapT (\ (k,_,_,_) -> getModData k) modcodes
-  let vismods = maybe (filter modDataVisible mods) (const mods) login
-  return (listCategoryView admin login prefs
+  let vismods = maybe (filter modDataVisible mods) (const mods)
+                      (userLoginOfSession sinfo)
+  return (listCategoryView sinfo
             (Right $ t "Found modules")
             [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat,
               map (\m->(m,[],[])) vismods)]
@@ -70,12 +69,10 @@ match pattern string = loop pattern string pattern string
 --- Controller to list all modules of a user.
 searchUserModules :: User -> Controller
 searchUserModules user = do
-  admin <- isAdmin
-  login <- getSessionLogin
-  prefs <- getSessionUserPrefs
-  let t = translate prefs
+  sinfo <- getUserSessionInfo
+  let t = translate sinfo
   mods <- runQ $ queryModDataOfUser (userKey user)
-  return (listCategoryView admin login prefs
+  return (listCategoryView sinfo
                (Right (t "Modules of" ++ " " ++ (userToShortView user)))
                [(Right "",map (\m->(m,[],[])) mods)]
                [] []
@@ -107,12 +104,10 @@ showAllEnglishModulesController = do
 --- Controller to list given modules.
 showModulesController :: [ModData] -> Controller
 showModulesController mods = do
-  admin <- isAdmin
-  login <- getSessionLogin
-  prefs <- getSessionUserPrefs
-  let t = translate prefs
+  sinfo <- getUserSessionInfo
+  let t = translate sinfo
       (pmods,wmods) = partition isMandatoryModule mods
-  return (listCategoryView admin login prefs
+  return (listCategoryView sinfo
             (Right $ t "All modules")
             [(Right (t "Mandatary modules" ++
                      " (Informatik, Wirtschaftsinformatik, Nebenfach)"),

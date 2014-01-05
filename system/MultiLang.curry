@@ -1,73 +1,34 @@
 ----------------------------------------------------------------------------
---- This module supports the handling of user preferences in the web
---- presentation. Currently, it contains support for multi-language
---- access.
+--- This module contains support for multi-language access.
 ---
 --- @author Michael Hanus
---- @version November 2013
+--- @version January 2014
 ----------------------------------------------------------------------------
 
-module UserPreferences (
-  Language(..), UserPrefs, preferredLanguage,
-  getSessionUserPrefs, setPreferredLanguage,
+module MultiLang (
   toEnglish,
-  translate, langSelect, loginEmailText, loginText, mainTitle, mainExplanation,
+  translate, langSelect,
+  loginEmailText, loginText, mainTitle, mainExplanation,
   masterStudyNote, sendPasswordCmt, ssComment,
   timeoutText, unknownUser, useURLText
  ) where
 
-import Session
-import Global
+import SessionInfo
 import HTML
 
 --------------------------------------------------------------------------
--- Definition of user preferences.
-
---- The languages which are currently supported.
-data Language = German | English
-
---- The user preferences supported by the web application.
---- Currently, these are the selection of a preferred language.
-data UserPrefs = UserPrefs Language
-
---- The default user preferences.
-defaultUserPrefs :: UserPrefs
-defaultUserPrefs = UserPrefs German
-
--- The language of the user preferences.
-preferredLanguage :: UserPrefs -> Language
-preferredLanguage (UserPrefs lang) = lang
-
---------------------------------------------------------------------------
--- Operations for storing user preferences in the current session.
-
---- Definition of the session state to store the user preferences.
-sessionUserPrefs :: Global (SessionStore UserPrefs)
-sessionUserPrefs = global emptySessionStore (Persistent "sessionPreferences")
-
---- Gets the user preferences of the current session
---- (or the Nothing if there is no login).
-getSessionUserPrefs :: IO UserPrefs
-getSessionUserPrefs =
-  getSessionData sessionUserPrefs >>= return . maybe defaultUserPrefs id
-
---- Stores a preferred language in the current session.
-setPreferredLanguage :: Language -> IO ()
-setPreferredLanguage lang = putSessionData (UserPrefs lang) sessionUserPrefs
-
---------------------------------------------------------------------------
---- Translates a string w.r.t. given user preferences.
+--- Translates a string w.r.t. given user session info.
 --- We assume that the given string is in English.
-translate :: UserPrefs -> String -> String
-translate userprefs s =
-  case preferredLanguage userprefs of
+translate :: UserSessionInfo -> String -> String
+translate sinfo s =
+  case languageOfSession sinfo of
     English -> s
     German  -> toGerman s
 
 --- Select the item in the right language (first english, second german)
-langSelect :: UserPrefs -> a -> a -> a
-langSelect userprefs es gs =
-  case preferredLanguage userprefs of
+langSelect :: UserSessionInfo -> a -> a -> a
+langSelect sinfo es gs =
+  case languageOfSession sinfo of
     English -> es
     German  -> gs
 
@@ -176,13 +137,13 @@ english2german =
  ,("Your new password has been sent","Ihr neues Passwort wurde Ihnen zugesandt")
  ]
 
-loginText prefs loginname = langSelect prefs
+loginText sinfo loginname = langSelect sinfo
   ("You are logged in as user '" ++ loginname ++
    "' and are allowed to change your modules and programs.")
   ("Sie sind als Benutzer '" ++ loginname ++
    "' angemeldet und können Ihre Module und Programme bearbeiten.")
 
-loginEmailText prefs loginname passwd = langSelect prefs
+loginEmailText sinfo loginname passwd = langSelect sinfo
   ("Your login data:\n\nLogin name: " ++ loginname ++
    "\nNew password: " ++ passwd ++
    "\n\nYou can use this data to login into the module database\n\n"++
@@ -199,11 +160,11 @@ loginEmailText prefs loginname passwd = langSelect prefs
    "und dann nach Auswahl von 'Abmelden' den Punkt\n"++
    "'Passwort aendern' waehlen.")
 
-mainTitle prefs = langSelect prefs
+mainTitle sinfo = langSelect sinfo
   "Modules and study programs of the Institute of Informatics"
   "Module und Studienprogramme des Instituts für Informatik"
 
-mainExplanation prefs = langSelect prefs
+mainExplanation sinfo = langSelect sinfo
   ("This web site provides an overview on all modules and "++
    "study programs offered by the Institute of Informatics. "++
    "Additionally, it contains an overiew on all master programs "++
@@ -215,7 +176,7 @@ mainExplanation prefs = langSelect prefs
    "Außerdem befindet sich hier eine Übersicht über alle "++
    "angebotenen Masterprogramme.")
 
-masterStudyNote prefs = langSelect prefs
+masterStudyNote sinfo = langSelect sinfo
   [italic [htxt "Important note: "],
    htxt "All master students should plan their individual studies with the ",
    spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
@@ -227,13 +188,13 @@ masterStudyNote prefs = langSelect prefs
    htxt "Damit wird weitgehend gewährleistet, dass das geplante Studium ",
    htxt "auch wirklich durchführbar ist."]
    
-sendPasswordCmt prefs = langSelect prefs
+sendPasswordCmt sinfo = langSelect sinfo
   ("You can send a new password to your email address "++
    "if you are registered in the system.")
   ("Sie können sich ein neues Password an Ihre Email-Adresse " ++
    "zusenden lassen, sofern Sie im System registriert sind.")
   
-ssComment prefs = langSelect prefs
+ssComment sinfo = langSelect sinfo
   ("If the master studies are started in the summer term, "++
    "one can also choose a master program from an adjacent winter term. "++
    "Ask your academic advisor to adapt such a master program.")
@@ -241,17 +202,17 @@ ssComment prefs = langSelect prefs
    "benachbarten Wintersemester gewählt werden. "++
    "Bei der Anpassung berät Sie der Academic Advisor.")
 
-timeoutText prefs = langSelect prefs
+timeoutText sinfo = langSelect sinfo
   ("Please note that you are automatically logged out "++
    "if you are inactive for more than 60 minutes.")
   ("Bitte beachten Sie, dass Sie bei mehr als 60 Minuten "++
    "Inaktivität automatisch wieder abgemeldet werden.")
 
-unknownUser prefs = langSelect prefs
+unknownUser sinfo = langSelect sinfo
   "There is no user with this email address!"
   "Ein Benutzer mit dieser Email-Adresse ist im System nicht bekannt!"
 
-useURLText prefs = langSelect prefs
+useURLText sinfo = langSelect sinfo
   "Please use the following URL to refer to this module from other web pages:"
   "Bitte verwenden Sie die folgende URL, um das Modul aus anderen Webseiten zu referenzieren:"
 

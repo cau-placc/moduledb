@@ -13,14 +13,15 @@ import MDB
 import MDBEntitiesToHtml
 import StudyProgramView
 import Sort
-import UserPreferences
+import SessionInfo
+import MultiLang
 
 -----------------------------------------------------------------------------
 --- A view for the main page.
-mainPageView :: UserPrefs -> [StudyProgram] -> [HtmlExp]
-mainPageView prefs studyPrograms =
-  [h1 [htxt $ mainTitle prefs],
-   par [htxt $ mainExplanation prefs],
+mainPageView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
+mainPageView sinfo studyPrograms =
+  [h1 [htxt $ mainTitle sinfo],
+   par [htxt $ mainExplanation sinfo],
    h2 [htxt $ t "Study programs"],
    spTable (map (\sp -> [head (studyProgramToListView sp)])
                 (mergeSort leqStudyProgram studyPrograms)),
@@ -40,6 +41,6 @@ mainPageView prefs studyPrograms =
       htxt " | ",
       ehref "?xmlprog=all" [htxt $ t "XML document with all master programs"]]]]
  where
-  t = translate prefs
+  t = translate sinfo
 
 -----------------------------------------------------------------------------

@@ -21,7 +21,8 @@ import Helpers
 import List
 import Sort
 import CSV
-import UserPreferences
+import MultiLang
+import SessionInfo
 
 dispatcher :: IO HtmlForm
 dispatcher = do
@@ -64,7 +65,7 @@ main = do
 
 setLanguage langcode = do
   let lang = if langcode=="EN" then English else German
-  setPreferredLanguage lang
+  updateUserSessionInfo (setLanguageOfSession lang)
   setPageMessage $ if lang==English then "Language: English"
                                     else "Sprache: Deutsch"
   getLastUrl >>= setEnviron "QUERY_STRING"

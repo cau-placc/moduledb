@@ -17,7 +17,8 @@ import ConfigMDB
 import List
 import Maybe
 import MasterCoreAreaView
-import UserPreferences
+import SessionInfo
+import MultiLang
 
 --- The WUI specification for the entity type MasterProgram.
 --- It also includes fields for associated entities.
@@ -180,15 +181,15 @@ leqMasterProgram x1 x2 =
 --- The arguments are the list of MasterProgram entities
 --- and the controller functions to show, delete and edit entities.
 listMasterProgramView
-  :: UserPrefs -> Bool
+  :: UserSessionInfo -> Bool
   -> [(MasterProgramKey,String,String,Int,Bool,MasterCoreAreaKey)]
   -> [MasterCoreArea] -> [HtmlExp]
-listMasterProgramView prefs listall mpinfos allcoreareas =
+listMasterProgramView sinfo listall mpinfos allcoreareas =
   [h1 [htxt $ t "Master programs in informatics"]] ++
-  masterStudyNote prefs ++
+  masterStudyNote sinfo ++
   categorizeMasterProgs mpListView sortedmpinfos
  where
-   t = translate prefs
+   t = translate sinfo
 
    mpListView (mpkey,name,_,_,vis,_) =
      [href ("?listMasterProgram/"++masterProgramKeyToString mpkey)
@@ -210,7 +211,7 @@ listMasterProgramView prefs listall mpinfos allcoreareas =
     where
      catSems sem progs = if null progs then [] else
        [hrule, h2 [htxt $ t "Start: " ++ showLongSemester sem]] ++
-       (if (fst sem == "SS") then [par [italic [htxt $ ssComment prefs]]]
+       (if (fst sem == "SS") then [par [italic [htxt $ ssComment sinfo]]]
                              else []) ++
        let (semprogs,remprogs) =
                span (\ (_,_,term,year,_,_) -> (term,year) == sem)

@@ -17,15 +17,14 @@ import SpiceySystemView
 import ReadNumeric
 import Authentication
 import DefaultController
-import UserPreferences
+import SessionInfo
 
 -----------------------------------------------------------------------------
 --- Controller for login/logout.
 loginController :: Controller
 loginController = do
-  login <- getSessionLogin
-  prefs <- getSessionUserPrefs
-  return $ loginView defaultController login prefs
+  sinfo <- getUserSessionInfo
+  return $ loginView defaultController sinfo
 
 -----------------------------------------------------------------------------
 --- Controller for showing and selecting user processes.

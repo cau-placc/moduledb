@@ -22,7 +22,8 @@ import DefaultController
 import List
 import Helpers
 import XML
-import UserPreferences
+import SessionInfo
+import MultiLang
 
 --- Shows a form to create a new MasterProgram entity.
 newMasterProgramController :: Controller
@@ -131,8 +132,7 @@ deleteMasterProgramController mprog True =
 listMasterProgramController :: Controller
 listMasterProgramController =
   checkAuthorization (masterProgramOperationAllowed ListEntities) $ do
-    login <- getSessionLogin
-    userprefs <- getSessionUserPrefs
+    sinfo <- getUserSessionInfo
     args <- getControllerParams
     if null args || args == ["all"]
      then do allmpinfos <- runQ queryMasterProgramMainInfos
@@ -140,9 +140,9 @@ listMasterProgramController =
                            then filter currentProgram allmpinfos
                            else allmpinfos
              coreareas <- runQ queryAllMasterCoreAreas
-             return (listMasterProgramView userprefs (not (null args))
+             return (listMasterProgramView sinfo (not (null args))
                        (maybe (filter visibleProgram mpinfos)
-                              (const mpinfos) login)
+                              (const mpinfos) (userLoginOfSession sinfo))
                        coreareas)
      else maybe (displayError "Illegal URL")
             (\mpkey -> do
@@ -156,11 +156,12 @@ listMasterProgramController =
                   mcarea <- runJustT $ getMasterCoreArea
                              (masterProgramMasterCoreAreaAreaProgramsKey mprog)
                   responsibleUser <- runJustT (getAdvisingUser mprog)
-                  lname <- getSessionLogin >>= return . maybe "" id
                   let semyr = (masterProgramTerm mprog,masterProgramYear mprog)
                   return
                     (singleMasterProgramView admin
-                       (userLogin responsibleUser == lname) responsibleUser
+                       (Just (userLogin responsibleUser)
+                           == userLoginOfSession sinfo)
+                       responsibleUser
                        mprog mpinfo tmodinfo mcarea (xmlURL mprog)
                        showMasterProgramController
                        editMasterProgramController

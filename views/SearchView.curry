@@ -14,14 +14,15 @@ import MDB
 import MDBEntitiesToHtml
 import Sort
 import ModDataView
-import UserPreferences
+import MultiLang
+import SessionInfo
 
 -----------------------------------------------------------------------------
 --- A view for searching modules.
-searchPageView :: Maybe String -> UserPrefs -> (String -> Controller)
+searchPageView :: UserSessionInfo -> (String -> Controller)
                -> ((String,Int) -> Controller) -> Controller -> Controller
                -> [HtmlExp]
-searchPageView login prefs searchcontroller showExamController showAllMods
+searchPageView sinfo searchcontroller showExamController showAllMods
                showAllEnglishMods =
   [h1 [htxt $ t "Search modules"],
    blockstyle "widelist" [ulist $
@@ -33,7 +34,7 @@ searchPageView login prefs searchcontroller showExamController showAllMods
         spButton (t "all modules") (nextController showAllMods), nbsp,
         spButton (t "all English modules")
                  (nextController showAllEnglishMods)]] ++
-      if login==Nothing
+      if userLoginOfSession sinfo == Nothing
       then []
       else [[htxt "Prüfungsanforderungen aller Module im ",
             spShortSelectionInitial insem semSelection lowerSemesterSelection,
@@ -42,7 +43,7 @@ searchPageView login prefs searchcontroller showExamController showAllMods
  where
   scode,insem free
 
-  t = translate prefs
+  t = translate sinfo
 
   searchHandler env = searchcontroller (map toLower (env scode)) >>= getForm
 

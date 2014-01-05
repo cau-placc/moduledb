@@ -18,7 +18,8 @@ import ConfigMDB
 import UnivisInfoView
 import Mail
 import System(sleep)
-import UserPreferences
+import SessionInfo
+import MultiLang
 
 --- The WUI specification for the entity type Category.
 --- It also includes fields for associated entities.
@@ -137,7 +138,7 @@ leqCategory x1 x2 =
 ---   has a UnivIS entry (if this list is empty, UnivIS entries should not
 ---   be shown)
 listCategoryView
- :: Bool -> Maybe String -> UserPrefs -> Either StudyProgram String
+  :: UserSessionInfo -> Either StudyProgram String
   -> [(Either Category String,[(ModData,[Maybe (ModInst,Int)],[Bool])])]
   -> [(String,Int)] -> [User]
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
@@ -146,12 +147,12 @@ listCategoryView
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Controller)
   -> [HtmlExp]
-listCategoryView admin login prefs mbsprog catmods semperiod users
+listCategoryView sinfo mbsprog catmods semperiod users
                  showCategoryPlanController formatCatModsController
                  showEmailCorrectionController =
   [h1 [htxt $ either studyProgramName id mbsprog],
    spTable
-    (if admin && null (concatMap snd catmods)
+    (if isAdminSession sinfo && null (concatMap snd catmods)
      then [take 4 categoryLabelList] ++
           map listCategory
               (mergeSort leqCategory
@@ -165,7 +166,7 @@ listCategoryView admin login prefs mbsprog catmods semperiod users
             : if null mods then []
               else map (\s -> [style "category" [stringToHtml s]])
                        ("ECTS":map showSemester semperiod)) :
-           map (\ (md,mis,univs) -> modDataToCompactListView prefs md ++
+           map (\ (md,mis,univs) -> modDataToCompactListView sinfo md ++
                   if null univs
                   then map (maybe [] showModInst) mis
                   else map (showUnivisInst md)
@@ -191,12 +192,12 @@ listCategoryView admin login prefs mbsprog catmods semperiod users
                                    (showPlan True False mbsprog),
                           spSmallButton (t "with master program usage")
                                    (showPlan False True mbsprog)])
-                  login) ++
-           (if admin
+                  (userLoginOfSession sinfo)) ++
+           (if isAdminSession sinfo
             then [spSmallButton "UnivIS-Abgleich Emails senden"
                            (showCorrectionEmails mbsprog)]
             else []))]) ++
-   (if admin
+   (if isAdminSession sinfo
     then [par [spSmallButton "Alle Module formatieren"
                       (nextController
                          (formatCatModsController
@@ -216,7 +217,7 @@ listCategoryView admin login prefs mbsprog catmods semperiod users
   where
    fromsem,tosem free
 
-   t = translate prefs
+   t = translate sinfo
 
    -- show UnivIS instance of a semester
    showUnivisInst md ((term,year),mbmi,hasinst)
