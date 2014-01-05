@@ -147,7 +147,7 @@ listModInstView modInsts showModInstController editModInstController
 singleModInstView :: ModInst -> ModData -> User -> [MasterProgram] -> [HtmlExp]
 singleModInstView modinst moddata user mprogs =
   [h1 [htxt $ "Modul \""++ modDataNameG moddata ++ "\" im " ++
-              showSemester (modInstTerm modinst,modInstYear modinst)],
+              showSemester modinstsem],
    h3 [htxt "Dozent: ", userToHtmlView user]] ++
    if null mprogs
    then [par [htxt notusedcmt]]
@@ -160,8 +160,13 @@ singleModInstView modinst moddata user mprogs =
                            htxt (showSemester (masterProgramTerm mp,
                                                masterProgramYear mp)),
                            htxt ")"]])
-           mprogs)]
+           mprogs),
+         spEHref ("?ModData/number/"++showModDataKey moddata++
+                    "/"++showSemesterCode modinstsem)
+                 [htxt $ "Anzahl der Masterstudierenden"]]
  where
+  modinstsem = (modInstTerm modinst,modInstYear modinst)
+
   usedcmt =
    "Dieses Modul ist für dieses Semester in folgenden Masterprogrammen eingeplant:"
 

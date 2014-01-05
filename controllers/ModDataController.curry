@@ -32,6 +32,7 @@ import Mail
 import Directory
 import SessionInfo
 import MultiLang
+import URL(getContentsOfUrl)
 
 --- Choose the controller for a ModData entity according to the URL parameter.
 mainModDataController :: Controller
@@ -57,6 +58,9 @@ mainModDataController =
        applyControllerOn (readModDataKey s) getModData emailModuleController
       ["copy" ,s] ->
        applyControllerOn (readModDataKey s) getModData copyModuleController
+      ["number" ,s,sem] ->
+       applyControllerOn (readModDataKey s) getModData
+                         (numberModuleController sem)
       _ -> displayError "Illegal URL"
 
 --- Shows a form to create a new ModData entity.
@@ -161,6 +165,13 @@ deleteModDataController modData =
                          maybe done (logEvent . DeleteModDescr) mbdescr >>
                          defaultController)
            (\ error -> displayError (showTError error))
+
+--- Controller for showing the number of students of a module in a semester:
+numberModuleController :: String -> ModData -> Controller
+numberModuleController sem mdata =
+ checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ do
+  nums <- getContentsOfUrl ("http://giscours.informatik.uni-kiel.de/studienplaner/student_count?offers="++sem++":"++modDataCode mdata)
+  return (numberModuleView sem mdata nums)
 
 --- Controller for copying a module with a new code:
 copyModuleController :: ModData -> Controller

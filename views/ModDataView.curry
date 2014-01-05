@@ -1,7 +1,7 @@
 module ModDataView (
  wModData, tuple2ModData, modData2Tuple, wModDataType, blankModDataView,
  createModDataView, editModDataView, showModDataView, listModDataView,
- singleModDataView, leqModData, copyModView, improveCycle
+ singleModDataView, numberModuleView, leqModData, copyModView, improveCycle
  ) where
 
 import WUI
@@ -237,6 +237,14 @@ showModDataView :: ModData -> User -> [Category] -> Controller -> [HtmlExp]
 showModDataView modData relatedUser categorys controller =
   modDataToDetailsView modData relatedUser categorys ++
    [spButton "back to ModData list" (nextController controller)]
+
+--- A view to show the number of students of a module in a semester.
+numberModuleView :: String -> ModData -> String -> [HtmlExp]
+numberModuleView semcode modData nums =
+  [h1 [htxt $ "Modul \""++modDataNameG modData++"\""],
+   par [htxt "Anzahl der Studierenden, die dieses Modul für das Semester '",
+        htxt semcode, htxt "' im Masterstudienplaner eingeplant haben: ",
+        htxt nums]]
 
 --- A view for searching modules.
 copyModView :: ModData -> (String -> Controller) -> [HtmlExp]

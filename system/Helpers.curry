@@ -11,7 +11,7 @@ module Helpers(LogEvent(..),logEvent,
                hrefs2markdown,
                docText2html, docText2latex, escapeLaTeXSpecials,
                quoteUnknownLatexCmd,
-               showSemester, showLongSemester,
+               showSemester, showLongSemester, showSemesterCode,
                nextSemester, prevSemester, leqSemester,
                semesterSelection, lowerSemesterSelection, upperSemesterSelection,
                currentUpperSemester,
@@ -263,6 +263,11 @@ showLongSemester (sem,year) =
   let yr2 = year `mod` 100
    in if sem=="SS" then "Sommersemester 20"++showDigit2 yr2
                    else "Wintersemester 20"++showDigit2 yr2++"/20"++showDigit2 (yr2+1)
+
+-- show a semester as a short code, i.e., in the form "ss13" or "ws14":
+showSemesterCode (sem,year) =
+  let yr2 = year `mod` 100
+   in (if sem=="SS" then "ss" else "ws") ++ showDigit2 yr2
 
 -- compute following semester:
 nextSemester (sem,year) = if sem=="SS" then ("WS",year) else ("SS",year+1)
