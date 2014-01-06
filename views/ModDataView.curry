@@ -239,12 +239,12 @@ showModDataView modData relatedUser categorys controller =
    [spButton "back to ModData list" (nextController controller)]
 
 --- A view to show the number of students of a module in a semester.
-numberModuleView :: String -> ModData -> String -> [HtmlExp]
+numberModuleView :: String -> ModData -> Int -> [HtmlExp]
 numberModuleView semcode modData nums =
   [h1 [htxt $ "Modul \""++modDataNameG modData++"\""],
    par [htxt "Anzahl der Studierenden, die dieses Modul für das Semester '",
         htxt semcode, htxt "' im Masterstudienplaner eingeplant haben: ",
-        htxt nums]]
+        htxt (if nums<0 then "?" else show nums)]]
 
 --- A view for searching modules.
 copyModView :: ModData -> (String -> Controller) -> [HtmlExp]

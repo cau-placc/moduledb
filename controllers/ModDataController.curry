@@ -32,7 +32,7 @@ import Mail
 import Directory
 import SessionInfo
 import MultiLang
-import URL(getContentsOfUrl)
+import StudyPlanner
 
 --- Choose the controller for a ModData entity according to the URL parameter.
 mainModDataController :: Controller
@@ -170,7 +170,7 @@ deleteModDataController modData =
 numberModuleController :: String -> ModData -> Controller
 numberModuleController sem mdata =
  checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ do
-  nums <- getContentsOfUrl ("http://giscours.informatik.uni-kiel.de/studienplaner/student_count?offers="++sem++":"++modDataCode mdata)
+  nums <- getModuleStudents mdata sem
   return (numberModuleView sem mdata nums)
 
 --- Controller for copying a module with a new code:
@@ -368,7 +368,7 @@ moduleUrlForm md = do
   let t   = translate sinfo
       url = baseURL ++ "?mod=" ++ string2urlencoded (modDataCode md)
   return
-    [h1 [htxt (t"External URL for module"++" \""++modDataNameG md++"\"")],
+    [h1 [htxt (t "External URL for module"++" \""++modDataNameG md++"\"")],
      par [htxt (useURLText sinfo)],
      h3 [ehref url [htxt url]]]
 
@@ -377,21 +377,23 @@ moduleUrlForm md = do
 formatModuleForm :: ModData -> [ModInst] -> User -> [StudyProgram] -> [Category]
                  -> Maybe ModDescr -> IO [HtmlExp]
 formatModuleForm md mis respuser sprogs categorys mbdesc = do
+  sinfo <- getUserSessionInfo
   pid <- getPID
   let tmp = "tmp_"++show pid
   writeModulesLatexFile (tmp++".tex")
                         md mis respuser sprogs categorys mbdesc
-  latexFormatForm tmp "Formatierte Modulbeschreibung"
+  latexFormatForm sinfo 2.0 tmp "Formatted module description"
 
 -- Format a list of categories containing modules as PDF
 formatCatModulesForm :: [(String,[ModData])] -> IO [HtmlExp]
 formatCatModulesForm catmods = do
   sprogs <- runQ queryAllStudyPrograms
+  sinfo <- getUserSessionInfo
   pid <- getPID
   let tmp = "tmp_"++show pid
   mstr <- mapIO (formatCatMods sprogs) catmods
   writeStandaloneLatexFile (tmp++".tex") (concat mstr)
-  latexFormatForm tmp "Formatierte Modulbeschreibungen"
+  latexFormatForm sinfo 10.0 tmp "Formatted module descriptions"
  where
   formatCatMods sprogs (catname,mods) = do
     mstr <- mapIO (formatModData sprogs) mods
@@ -405,11 +407,18 @@ formatCatModulesForm catmods = do
     return (quoteUnknownLatexCmd
               (mod2latex md modinsts respuser sprogs categories mbdesc))
 
--- Form to format a file tmp.tex with pdflatex and show the result
-latexFormatForm :: String -> String -> IO [HtmlExp]
-latexFormatForm tmp title = do
-  system ("pdflatex \'\\nonstopmode\\input{"++tmp++".tex}\' 2>&1 > "++
-                                                        tmp++".output")
+-- Form to format a file tmp.tex with pdflatex and show the result.
+-- The second argument is the maximum formatting time in seconds,
+-- otherwise the formatting process is killed (via timeout).
+-- The timout is used to avoid a long blocking of the system
+-- by bad latex sources.
+latexFormatForm :: UserSessionInfo -> Float -> String -> String -> IO [HtmlExp]
+latexFormatForm sinfo tlimit tmp title = do
+  let t = translate sinfo
+  system $ "/usr/bin/timeout " ++ show tlimit ++ "s " ++
+           --"/usr/bin/time -p -o /tmp/xxxMH " ++
+           "pdflatex \'\\nonstopmode\\input{"++tmp++".tex}\' 2>&1 > " ++
+           tmp++".output"
   pdfexist <- doesFileExist (tmp++".pdf")
   if pdfexist then system ("chmod 644 "++tmp++".pdf")
               else return 0
@@ -417,10 +426,10 @@ latexFormatForm tmp title = do
   --system ("/bin/rm -f "++tmp++".tex "++tmp++".aux "++tmp++".log")
   system ("/bin/rm -f "++tmp++".aux "++tmp++".log")
   return
-    [h1 [htxt title],
-     par [href (tmp++".pdf") [htxt (title++" (PDF)")]],
+    [h1 [htxt $ t title],
+     par [href (tmp++".pdf") [htxt (t title ++ " (PDF)")]],
      hrule,
-     h3 [htxt "LaTeX-Ausgaben während des Formatierens"],
+     h3 [htxt $ t "LaTeX output" ++":"],
      verbatim output]
 
 -----------------------------------------------------------------------------

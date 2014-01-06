@@ -142,7 +142,7 @@ listCategoryView
   -> [(Either Category String,[(ModData,[Maybe (ModInst,Int)],[Bool])])]
   -> [(String,Int)] -> [User]
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
-        -> (String,Int) -> (String,Int) -> Bool -> Bool -> Controller)
+        -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller)
   -> ([(String,[ModData])] -> Controller)
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Controller)
@@ -186,16 +186,18 @@ listCategoryView sinfo mbsprog catmods semperiod users
             htxt $ t " to ",
             spShortSelectionInitial tosem semSelection upperSemesterSelection,
             htxt ": ",
-            spSmallButton (t "Show") (showPlan False False mbsprog)] ++
+            spSmallButton (t "Show") (showPlan False False False mbsprog)] ++
            (maybe []
                   (\_ -> [spSmallButton (t "with UnivIS comparison")
-                                   (showPlan True False mbsprog),
+                                        (showPlan True False False mbsprog),
                           spSmallButton (t "with master program usage")
-                                   (showPlan False True mbsprog)])
+                                        (showPlan False True False mbsprog)])
                   (userLoginOfSession sinfo)) ++
            (if isAdminSession sinfo
-            then [spSmallButton "UnivIS-Abgleich Emails senden"
-                           (showCorrectionEmails mbsprog)]
+            then [spSmallButton (t "with student numbers")
+                                   (showPlan False False True mbsprog),
+                  spSmallButton "UnivIS-Abgleich Emails senden"
+                                (showCorrectionEmails mbsprog)]
             else []))]) ++
    (if isAdminSession sinfo
     then [par [spSmallButton "Alle Module formatieren"
@@ -241,13 +243,13 @@ listCategoryView sinfo mbsprog catmods semperiod users
    semSelection = map (\(s,i) -> (showSemester s,show i))
                       (zip semesterSelection [0..])
 
-   showPlan withunivis withmprogs sprog env = do
+   showPlan withunivis withmprogs withstudyplan sprog env = do
     let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
         stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
     showCategoryPlanController sprog
      (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
      (semesterSelection!!start) (semesterSelection!!stop)
-     withunivis withmprogs >>= getForm
+     withunivis withmprogs withstudyplan >>= getForm
 
    showCorrectionEmails sprog env = do
     let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)

@@ -24,6 +24,7 @@ import Sort
 import SessionInfo
 import MultiLang
 import MDBEntitiesToHtml
+import StudyPlanner
 
 --- Choose the controller for a Category entity according to the URL parameter.
 categoryController :: Controller
@@ -184,29 +185,34 @@ runListCategoryController sinfo args
 --- in the given period.
 showCategoryPlanController
   :: Either StudyProgram String -> [(Either Category String,[ModData])]
-  -> (String,Int) -> (String,Int) -> Bool -> Bool -> Controller
+  -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller
 showCategoryPlanController mbstudyprog catmods startsem stopsem
-                           withunivis withmprogs = do
+                           withunivis withmprogs withstudyplan = do
   sinfo <- getUserSessionInfo
+  let filterMods ms = maybe (filter modDataVisible ms)
+                            (const ms)
+                            (userLoginOfSession sinfo)
   users <- runQ queryAllUsers
-  catmodinsts <- runJustT $
-                   mapT (\ (c,mods) ->
-                               mapT getModInsts
-                                    (maybe (filter modDataVisible mods)
-                                           (const mods)
-                                           (userLoginOfSession sinfo)) |>>= \mmis ->
-                               returnT (c,mmis))
-                        catmods
+  catmodinsts <- mapIO (\ (c,mods) ->
+                               mapIO getModInsts (filterMods mods) >>= \mmis ->
+                               return (c,mmis))
+                       catmods
   return (listCategoryView sinfo mbstudyprog
              catmodinsts semPeriod users
              showCategoryPlanController
              formatCatModulesForm showEmailCorrectionController)
  where
    getModInsts md =
+    if withstudyplan
+    then do
+     mis <- runJustT (getDB (queryInstancesOfMod (modDataKey md)))
+     studnums <- getModuleInstancesStudents md mis
+     return (md,map (instOfSem (zip mis studnums)) semPeriod, [])
+    else runJustT $
      getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->
      (if withmprogs
       then getDB (transformQ (map length)
-              $ getMasterProgramKeysOfModInst mis)
+                             (getMasterProgramKeysOfModInst mis))
       else returnT (repeat 0)) |>>= \nummps ->
      (if withunivis
       then mapT (\s -> getDB $ queryHasUnivisEntry (modDataCode md) s) semPeriod
