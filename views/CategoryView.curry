@@ -176,8 +176,9 @@ listCategoryView sinfo mbsprog catmods semperiod users
    (if null (concatMap snd catmods)
     then either
           (\sprog ->
-            [par [spHref ("?listCategory/"++showStudyProgramKey sprog++"/all")
-                    [htxt $ t "Show all modules in this study program"]]])
+            [par
+              [spHref ("?Category/studyprogramall/"++showStudyProgramKey sprog)
+                      [htxt $ t "Show all modules in this study program"]]])
           (const [])
           mbsprog
     else
@@ -235,7 +236,7 @@ listCategoryView sinfo mbsprog catmods semperiod users
          showUser u = let name = userName u
                        in if length name > 6 then take 5 name ++ "." else name
       in [italic
-           [hrefModInst ("?listModInst/"++showModInstKey mi)
+           [hrefModInst ("?ModInst/show/"++showModInstKey mi)
                   [htxt (maybe "???" showUser
                                (find (\u -> userKey u == miuserkey) users)),
                    htxt (if num==0 then "" else '(':show num++")")]]]

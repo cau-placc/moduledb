@@ -26,18 +26,12 @@ getController fktref =
    SearchController -> searchController
    ProcessListController -> processListController
    LoginController -> loginController
-   ListStudyProgramController -> listStudyProgramController
-   NewStudyProgramController -> newStudyProgramController
-   ListCategoryController -> listCategoryController
+   StudyProgramController -> mainStudyProgramController
    CategoryController -> categoryController
    MasterCoreAreaController -> masterCoreAreaController
    UserController -> userController
    ModDataController -> mainModDataController
-   ListModInstController -> listModInstController
-   ListMasterProgramController -> listMasterProgramController
-   NewMasterProgramController -> newMasterProgramController
-   ListMasterProgInfoController -> listMasterProgInfoController
-   ListUnivisInfoController -> listUnivisInfoController
-   NewUnivisInfoController -> newUnivisInfoController
-   LoadUnivisController -> loadUnivisController
+   ModInstController -> mainModInstController
+   MasterProgramController -> mainMasterProgramController
+   UnivisInfoController -> mainUnivisInfoController
    _ -> displayError "getController: no mapping found"

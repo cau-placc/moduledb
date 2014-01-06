@@ -1,7 +1,5 @@
 module UnivisInfoController (
- newUnivisInfoController, editUnivisInfoController,
- deleteUnivisInfoController, listUnivisInfoController,
- loadUnivisController
+ mainUnivisInfoController
  ) where
 
 import Spicey
@@ -20,6 +18,15 @@ import UnivIS
 import Authentication
 import ModDataController
 
+
+--- Choose the controller for a UnivisInfo entity according to the URL parameter.
+mainUnivisInfoController :: Controller
+mainUnivisInfoController =
+  do args <- getControllerParams
+     case args of
+      ["list"] -> listUnivisInfoController
+      ["load"] -> loadUnivisController
+      _ -> displayError "Illegal URL"
 
 --- Shows a form to create a new UnivisInfo entity.
 newUnivisInfoController :: Controller

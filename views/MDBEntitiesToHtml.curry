@@ -14,7 +14,8 @@ import SessionInfo
 --- This view is used in a row of a table of all entities.
 studyProgramToListView :: StudyProgram -> [[HtmlExp]]
 studyProgramToListView studyProgram =
-  [[hrefStudyProgram ("?listCategory/"++showStudyProgramKey studyProgram)
+  [[hrefStudyProgram
+         ("?Category/studyprogram/"++showStudyProgramKey studyProgram)
          [textstyle "studyprogram" (studyProgramName studyProgram)]]
   ,[stringToHtml (studyProgramShortName studyProgram)]
   ,[stringToHtml (studyProgramProgKey studyProgram)]
@@ -51,7 +52,7 @@ studyProgramLabelList =
 --- This view is used in a row of a table of all entities.
 categoryToListView :: Category -> [[HtmlExp]]
 categoryToListView category =
-  [[hrefCategory ("?listCategory/"++showCategoryKey category)
+  [[hrefCategory ("?Category/show/"++showCategoryKey category)
                    [stringToHtml (categoryName category)]]
   ,[stringToHtml (categoryShortName category)]
   ,[stringToHtml (categoryCatKey category)]
@@ -60,7 +61,7 @@ categoryToListView category =
 --- The HTML view of a Category entity.
 categoryToHtmlView :: Category -> HtmlExp
 categoryToHtmlView category =
-  smallHrefCategory ("?listCategory/"++showCategoryKey category)
+  smallHrefCategory ("?Category/show/"++showCategoryKey category)
     [htxt (categoryCatKey category)]
 
 --- The short view of a Category entity as a string.
@@ -349,7 +350,7 @@ modInstLabelList =
 --- This view is used in a row of a table of all entities.
 masterProgramToListView :: MasterProgram -> HtmlExp
 masterProgramToListView masterProgram =
-  spHref ("?listMasterProgram/"++showMasterProgramKey masterProgram)
+  spHref ("?MasterProgram/show/"++showMasterProgramKey masterProgram)
        [if masterProgramVisible masterProgram
         then stringToHtml (masterProgramName masterProgram)
         else italic [stringToHtml (masterProgramName masterProgram)]]
@@ -489,7 +490,7 @@ showStudyProgCategoriesAsHtml :: [StudyProgram] -> [Category] -> HtmlExp
 showStudyProgCategoriesAsHtml sprogs cats =
   inline
     (intersperse nbsp --(stringToHtml " ")
-       (map (\c -> smallHrefCategory ("?listCategory/"++showCategoryKey c)
+       (map (\c -> smallHrefCategory ("?Category/show/"++showCategoryKey c)
                      [stringToHtml (showStudyProgCategory sprogs c)])
             cats))
 

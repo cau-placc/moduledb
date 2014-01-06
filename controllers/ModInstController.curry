@@ -1,7 +1,6 @@
 module ModInstController (
- addModInstController, editAllModInstController, 
- editModInstController, deleteModInstController,
- listModInstController
+ mainModInstController,
+ addModInstController, editAllModInstController
  ) where
 
 import Spicey
@@ -20,6 +19,17 @@ import Sort
 import Authentication
 import Helpers
 import ConfigMDB
+
+--- Choose the controller for a ModInst entity according to the URL parameter.
+mainModInstController :: Controller
+mainModInstController =
+  do args <- getControllerParams
+     case args of
+      --[] -> listModInstController
+      --["list"] -> listModInstController
+      ["show" ,s] ->
+       applyControllerOn (readModInstKey s) getModInst showModInstController
+      _ -> displayError "Illegal URL"
 
 --- Shows a form to add a new ModInst entity for a module.
 addModInstController :: ModData -> User -> Controller -> Controller
@@ -145,13 +155,13 @@ listModInstController =
 
 --- Shows a ModInst entity.
 showModInstController :: ModInst -> Controller
-showModInstController modInst =
-  checkAuthorization (modInstOperationAllowed (ShowEntity modInst)) $
-   (do moduleInstancesModData <- runJustT (getModuleInstancesModData modInst)
-       lecturerModsUser <- runJustT (getLecturerModsUser modInst)
-       return
-        (showModInstView modInst moduleInstancesModData lecturerModsUser
-          listModInstController))
+showModInstController mi =
+  checkAuthorization (modInstOperationAllowed (ShowEntity mi)) $
+   (do user <- runJustT $ getUser (modInstUserLecturerModsKey mi)
+       moddata <- runJustT $ getModData (modInstModDataModuleInstancesKey mi)
+       [mpkeys] <- runQ $ getMasterProgramKeysOfModInst [mi]
+       mps <- runJustT (mapT getMasterProgram mpkeys)
+       return (singleModInstView mi moddata user mps))
 
 --- Gets the associated ModData entity for a given ModInst entity.
 getModuleInstancesModData :: ModInst -> Transaction ModData

@@ -202,14 +202,13 @@ getUserMenu login sinfo = do
   return $
      ulist $
       [--[href "?main" [htxt "Hauptseite"]],
-       [href "?listStudyProgram" [htxt $ t "Study programs"]],
-       [href "?listMasterProgram" [htxt $ t "Master programs"]],
+       [href "?StudyProgram/list" [htxt $ t "Study programs"]],
+       [href "?MasterProgram/list" [htxt $ t "Master programs"]],
        [href "?search" [htxt $ t "Search modules"]]] ++
-      (maybe []
-        (\lname -> [[href ("?listCategory/"++"user="++lname)
-                           [htxt $ t "My modules"]],
-                    [href "?newMasterProgram" [htxt $ t "New master program"]]])
-        login) ++
+      (if login==Nothing
+       then []
+       else [[href ("?Category/user")   [htxt $ t "My modules"]],
+             [href "?MasterProgram/new" [htxt $ t "New master program"]]]) ++
       [[href "?login" [htxt $ t ("Log" ++ maybe "in" (const "out") login)]]]
 
 --- The title of this application (shown in the header).

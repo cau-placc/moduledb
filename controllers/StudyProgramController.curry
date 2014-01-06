@@ -1,6 +1,5 @@
 module StudyProgramController (
- newStudyProgramController, editStudyProgramController,
- deleteStudyProgramController, listStudyProgramController
+ mainStudyProgramController
  ) where
 
 import Spicey
@@ -15,6 +14,26 @@ import AuthorizedControllers
 import UserProcesses
 import Authentication
 import SessionInfo
+import MDBEntitiesToHtml
+
+--- Choose the controller for a StudyProgram entity according to the URL parameter.
+mainStudyProgramController :: Controller
+mainStudyProgramController =
+  do args <- getControllerParams
+     case args of
+      [] -> listStudyProgramController
+      ["list"] -> listStudyProgramController
+      ["new"] -> newStudyProgramController
+      ["show" ,s] ->
+       applyControllerOn (readStudyProgramKey s) getStudyProgram
+        showStudyProgramController
+      ["edit" ,s] ->
+       applyControllerOn (readStudyProgramKey s) getStudyProgram
+        editStudyProgramController
+      ["delete" ,s] ->
+       applyControllerOn (readStudyProgramKey s) getStudyProgram
+        confirmDeleteStudyProgramController
+      _ -> displayError "Illegal URL"
 
 --- Shows a form to create a new StudyProgram entity.
 newStudyProgramController :: Controller
@@ -52,11 +71,26 @@ updateStudyProgramController True studyProgram =
      either (\ _ -> nextInProcessOr listStudyProgramController Nothing)
       (\ error -> displayError (showTError error)) transResult
 
+--- Deletes a given StudyProgram entity (after asking for confirmation)
+--- and proceeds with the list controller.
+confirmDeleteStudyProgramController :: StudyProgram -> Controller
+confirmDeleteStudyProgramController studyProgram =
+  checkAuthorization
+   (studyProgramOperationAllowed (DeleteEntity studyProgram)) $
+   confirmController
+    (h3
+      [htxt
+        (concat
+          ["Really delete entity \"",studyProgramToShortView studyProgram
+          ,"\"?"])])
+    (\ ack -> if ack
+               then deleteStudyProgramController studyProgram
+               else showStudyProgramController studyProgram)
+
 --- Deletes a given StudyProgram entity (depending on the Boolean
 --- argument) and proceeds with the list controller.
-deleteStudyProgramController :: StudyProgram -> Bool -> Controller
-deleteStudyProgramController _ False = listStudyProgramController
-deleteStudyProgramController studyProgram True =
+deleteStudyProgramController :: StudyProgram -> Controller
+deleteStudyProgramController studyProgram =
   checkAuthorization
    (studyProgramOperationAllowed (DeleteEntity studyProgram)) $
    (do transResult <- runT (deleteStudyProgram studyProgram)
@@ -70,14 +104,11 @@ listStudyProgramController =
   checkAuthorization (studyProgramOperationAllowed ListEntities) $
    (do sinfo <- getUserSessionInfo
        studyPrograms <- runQ queryAllStudyPrograms
-       return
-        (listStudyProgramView sinfo studyPrograms
-          showStudyProgramController
-          editStudyProgramController deleteStudyProgramController))
+       return (listStudyProgramView sinfo studyPrograms))
 
 --- Shows a StudyProgram entity.
 showStudyProgramController :: StudyProgram -> Controller
 showStudyProgramController studyProgram =
   checkAuthorization (studyProgramOperationAllowed (ShowEntity studyProgram))
    $
-   (do return (showStudyProgramView studyProgram listStudyProgramController))
+   (do return (showStudyProgramView studyProgram))

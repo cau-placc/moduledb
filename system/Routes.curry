@@ -52,14 +52,14 @@ getRouteMenus = do
    getLinks :: [Route] -> [(String,[HtmlExp])]
    getLinks ((name, matcher, _):restroutes) =
      case matcher of
-       Exact string -> if string `elem`
-                           ["main","search","listStudyProgram",
-                            "listMasterProgram","newMasterProgram",
-                            "login","listModData","listModInst"]
+       Exact string -> if string `elem` ["main","search","login"]
                        then getLinks restroutes
                        else (string,[(href ("?" ++ string) [htxt name])])
                              : getLinks restroutes
-       Prefix s1 s2 -> if (s1,s2) `elem` [("ModData","list")]
+       Prefix s1 s2 -> if (s1,s2) `elem` [("Category","list"),
+                                          ("ModData","list"),
+                                          ("ModInst","list"),
+                                          ("MasterProgram","list")]
                        then getLinks restroutes
                        else let url = s1++"/"++s2
                              in (url,[(href ("?"++url) [htxt name])])

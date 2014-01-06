@@ -1,6 +1,5 @@
 module CategoryController (
- categoryController, editCategoryController, deleteCategoryController,
- listCategoryController, showCategoryController, showCategoryPlanController,
+ categoryController, showCategoryPlanController,
  showEmailCorrectionController
  ) where
 
@@ -31,14 +30,22 @@ categoryController :: Controller
 categoryController = do
   args <- getControllerParams
   case args of
-    ["list"] -> newListCategoryController
+    ["list"] -> listAllCategoryController
+    ["user"] -> listCurrentUserCategoryController
     ["new"]  -> newCategoryController
+    ["studyprogram",s] ->
+       applyControllerOn (readStudyProgramKey s)
+         getStudyProgram (listStudyProgramCategoryController False)
+    ["studyprogramall",s] ->
+       applyControllerOn (readStudyProgramKey s)
+         getStudyProgram (listStudyProgramCategoryController True)
     ["show",s] -> applyControllerOn (readCategoryKey s)
                     getCategory showCategoryController
     ["edit",s] -> applyControllerOn (readCategoryKey s)
                     getCategory editCategoryController
     ["delete",s] -> applyControllerOn (readCategoryKey s)
                       getCategory askAndDeleteCategoryController
+    _ -> displayError "Illegal URL"
 
 
 --- Shows a form to create a new Category entity.
@@ -58,7 +65,7 @@ createCategoryController True (name ,shortName ,catKey ,position
                      (newCategoryWithStudyProgramProgramCategoriesKey name
                        shortName catKey position
                        (studyProgramKey studyProgram))
-     either (\ _ -> nextInProcessOr listCategoryController Nothing)
+     either (\ _ -> nextInProcessOr listAllCategoryController Nothing)
       (\ error -> displayError (showTError error)) transResult
 
 --- Shows a form to edit the given Category entity.
@@ -100,40 +107,32 @@ deleteCategoryController :: Category -> Controller
 deleteCategoryController category =
   checkAuthorization (categoryOperationAllowed (DeleteEntity category)) $
    (do transResult <- runT (deleteCategory category)
-       either (\ _ -> listCategoryController)
+       either (\ _ -> listAllCategoryController)
         (\ error -> displayError (showTError error)) transResult)
 
 --- Lists all Category entities with buttons to show, delete,
 --- or edit an entity.
-newListCategoryController :: Controller
-newListCategoryController =
+listAllCategoryController :: Controller
+listAllCategoryController =
   checkAuthorization (categoryOperationAllowed ListEntities) $
     do sinfo <- getUserSessionInfo
-       runListCategoryController sinfo []
-
---- Lists all Category entities with buttons to show, delete,
---- or edit an entity.
-listCategoryController :: Controller
-listCategoryController =
-  checkAuthorization (categoryOperationAllowed ListEntities) $
-    do sinfo <- getUserSessionInfo
-       args  <- getControllerParams
-       runListCategoryController sinfo args
-
-runListCategoryController sinfo args
- | null args
-  = do categorys <- runQ queryAllCategorys
        let t = translate sinfo
+       categorys <- runQ queryAllCategorys
        return (listCategoryView sinfo (Right $ t "All categories")
                  (map (\c -> (Left c,[])) (mergeSort leqCategory categorys))
                  [] []
                  showCategoryPlanController formatCatModulesForm
                  showEmailCorrectionController)
- | take 5 (head args) == "user="
-  = do let lname = drop 5 (head args)
+
+--- Controller to list all modules of the current user.
+listCurrentUserCategoryController :: Controller
+listCurrentUserCategoryController =
+  checkAuthorization (categoryOperationAllowed ListEntities) $
+    do sinfo <- getUserSessionInfo
+       let lname = maybe "" id (userLoginOfSession sinfo)
        -- get user entries with a given login name
        users <- runQ $ queryCondUser (\u -> userLogin u == lname)
-       if null users then return [h1 [htxt "Illegal URL"]] else
+       if null users then (displayError "Illegal URL") else
         do mods <- runQ $ queryModDataOfUser (userKey (head users))
            let t = translate sinfo
            return (listCategoryView sinfo
@@ -142,45 +141,29 @@ runListCategoryController sinfo args
                         [] []
                         showCategoryPlanController
                         formatCatModulesForm showEmailCorrectionController)
- | head (head args) == 'C'
-  = maybe (displayError "Illegal URL")
-            (\catkey -> do
-              cat <- runJustT $ getCategory catkey
-              sprogs <- runQ queryAllStudyPrograms
-              let spk = categoryStudyProgramProgramCategoriesKey cat
-                  mbsprog = find (\p -> studyProgramKey p == spk) sprogs
-              mods <- runJustT $ getModDataOfCategory catkey
-              return (listCategoryView sinfo
-                        (maybe (Right "???") Left mbsprog)
-                        [(Left cat,map (\m->(m,[],[]))
-                                       (maybe (filter modDataVisible mods)
-                                              (const mods)
-                                              (userLoginOfSession sinfo)))]
-                        [] []
-                        showCategoryPlanController
-                        formatCatModulesForm showEmailCorrectionController))
-            (readCategoryKey (head args))
- | otherwise
-  = maybe (displayError "Illegal URL")
-            (\spkey -> do
-              studyprog <- runJustT (getStudyProgram spkey)
-              categorys <- runQ $ queryCategorysOfStudyProgram spkey
-              catmods <- runJustT $
-               if length args > 1 && args!!1 == "all"
-               then mapT (\c ->
-                            getModDataOfCategory (categoryKey c) |>>= \mods ->
-                            returnT (Left c,map (\m->(m,[],[]))
-                                             (maybe (filter modDataVisible mods)
-                                                    (const mods)
-                                                    (userLoginOfSession sinfo))))
-                         categorys
-               else mapT (\c -> returnT (Left c,[])) categorys
-              return (listCategoryView sinfo (Left studyprog)
-                         catmods [] []
-                         showCategoryPlanController
-                         formatCatModulesForm showEmailCorrectionController))
-            (readStudyProgramKey (head args))
-    
+
+--- Lists a study program with all its Category entities.
+listStudyProgramCategoryController :: Bool -> StudyProgram -> Controller
+listStudyProgramCategoryController listall studyprog =
+  checkAuthorization (categoryOperationAllowed ListEntities) $
+    do sinfo <- getUserSessionInfo
+       categorys <- runQ $ queryCategorysOfStudyProgram
+                                           (studyProgramKey studyprog)
+       catmods <- runJustT $
+        if listall
+        then mapT (\c ->
+                     getModDataOfCategory (categoryKey c) |>>= \mods ->
+                     returnT (Left c,map (\m->(m,[],[]))
+                                      (maybe (filter modDataVisible mods)
+                                             (const mods)
+                                             (userLoginOfSession sinfo))))
+                  categorys
+        else mapT (\c -> returnT (Left c,[])) categorys
+       return (listCategoryView sinfo (Left studyprog)
+                  catmods [] []
+                  showCategoryPlanController
+                  formatCatModulesForm showEmailCorrectionController)
+
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
 showCategoryPlanController
@@ -258,13 +241,22 @@ showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
 
 --- Shows a Category entity.
 showCategoryController :: Category -> Controller
-showCategoryController category =
-  checkAuthorization (categoryOperationAllowed (ShowEntity category)) $
-   (do programCategoriesStudyProgram <- runJustT
-                                         (getProgramCategoriesStudyProgram
-                                           category)
-       return
-        (showCategoryView category programCategoriesStudyProgram))
+showCategoryController cat =
+  checkAuthorization (categoryOperationAllowed (ShowEntity cat)) $
+   (do sinfo <- getUserSessionInfo
+       sprogs <- runQ queryAllStudyPrograms
+       let spk     = categoryStudyProgramProgramCategoriesKey cat
+           mbsprog = find (\p -> studyProgramKey p == spk) sprogs
+       mods <- runJustT $ getModDataOfCategory (categoryKey cat)
+       return (listCategoryView sinfo
+                 (maybe (Right "???") Left mbsprog)
+                 [(Left cat,map (\m->(m,[],[]))
+                                (maybe (filter modDataVisible mods)
+                                       (const mods)
+                                       (userLoginOfSession sinfo)))]
+                 [] []
+                 showCategoryPlanController
+                 formatCatModulesForm showEmailCorrectionController))
 
 --- Gets the associated StudyProgram entity for a given Category entity.
 getProgramCategoriesStudyProgram :: Category -> Transaction StudyProgram

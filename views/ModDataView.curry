@@ -433,7 +433,7 @@ showSemsOfModInstances mis =
                    [htxt ")"]
  where
   showSem mi = 
-    ehref ("?listModInst/"++showModInstKey mi)
+    ehref ("?ModInst/show/"++showModInstKey mi)
           [htxt $ showSemester (modInstTerm mi,modInstYear mi)]
 
 ----------------------------------------------------------------------

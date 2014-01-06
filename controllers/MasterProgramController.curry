@@ -1,6 +1,5 @@
 module MasterProgramController (
- newMasterProgramController, editMasterProgramController,
- deleteMasterProgramController, listMasterProgramController,
+ mainMasterProgramController,
  showAllXmlMasterPrograms,showXmlMasterProgram) where
 
 import Spicey
@@ -24,6 +23,25 @@ import Helpers
 import XML
 import SessionInfo
 import MultiLang
+
+--- Choose the controller for a MasterProgram entity according to the URL parameter.
+mainMasterProgramController :: Controller
+mainMasterProgramController =
+  do args <- getControllerParams
+     case args of
+      [] -> listMasterProgramController False
+      ["list"] -> listMasterProgramController False
+      ["listall"] -> listMasterProgramController True
+      ["new"] -> newMasterProgramController
+      ["show" ,s] -> applyControllerOn (readMasterProgramKey s) getMasterProgram
+                                       showMasterProgramController
+      --["edit" ,s] ->
+      -- applyControllerOn (readMasterProgramKey s) getMasterProgram
+      --  editMasterProgramController
+      --["delete" ,s] ->
+      -- applyControllerOn (readMasterProgramKey s) getMasterProgram
+      --  confirmDeleteMasterProgramController
+      _ -> displayError "Illegal URL"
 
 --- Shows a form to create a new MasterProgram entity.
 newMasterProgramController :: Controller
@@ -68,7 +86,7 @@ createMasterProgramController True
            nextInProcessOr
             (return
               [h2 [htxt "Masterprogramm angelegt. Bitte die weiteren Angaben ",
-                   href ("?listMasterProgram/"++showMasterProgramKey mp)
+                   href ("?MasterProgram/show/"++showMasterProgramKey mp)
                         [htxt "hier"], htxt " ergänzen!"]])
             Nothing)
          (\ error -> displayError (showTError error))
@@ -97,7 +115,7 @@ editMasterProgramController mprog =
 --- database depending on the Boolean argument. If the Boolean argument
 --- is False, nothing is changed.
 updateMasterProgramController :: Bool -> MasterProgram -> Controller
-updateMasterProgramController False _ = listMasterProgramController
+updateMasterProgramController False mprog = showMasterProgramController mprog
 updateMasterProgramController True mprog =
   isAdmin >>= \admin ->
   runT ((if masterProgramVisible mprog
@@ -109,7 +127,7 @@ updateMasterProgramController True mprog =
              returnT ("Masterprogramm nicht sichtbar, denn "++reas)) >>=
   either (\ reas -> logEvent (UpdateMasterProgram mprog) >>
                     (if null reas then done else setPageMessage reas) >>
-                    nextInProcessOr listMasterProgramController Nothing)
+                    nextInProcessOr (showMasterProgramController mprog) Nothing)
          (\ error -> displayError (showTError error))
 
 --- Deletes a given MasterProgram entity (depending on the Boolean
@@ -129,54 +147,25 @@ deleteMasterProgramController mprog True =
 
 --- Lists all MasterProgram entities with buttons to show, delete,
 --- or edit an entity.
-listMasterProgramController :: Controller
-listMasterProgramController =
+listMasterProgramController :: Bool -> Controller
+listMasterProgramController listall =
   checkAuthorization (masterProgramOperationAllowed ListEntities) $ do
     sinfo <- getUserSessionInfo
-    args <- getControllerParams
-    if null args || args == ["all"]
-     then do allmpinfos <- runQ queryMasterProgramMainInfos
-             let mpinfos = if null args
-                           then filter currentProgram allmpinfos
-                           else allmpinfos
-             coreareas <- runQ queryAllMasterCoreAreas
-             return (listMasterProgramView sinfo (not (null args))
-                       (maybe (filter visibleProgram mpinfos)
-                              (const mpinfos) (userLoginOfSession sinfo))
-                       coreareas)
-     else maybe (displayError "Illegal URL")
-            (\mpkey -> do
-              mprog <- runJustT $ getMasterProgram mpkey
-              runQ (queryInfoOfMasterProgram mpkey) >>=
-               maybe (displayError "Illegal URL")
-                (\mpinfo -> do
-                  admin <- isAdmin
-                  let modinfo = progModsOfMasterProgInfo mpinfo
-                  tmodinfo <- runJustT $ mapT getMCodeForInfo modinfo
-                  mcarea <- runJustT $ getMasterCoreArea
-                             (masterProgramMasterCoreAreaAreaProgramsKey mprog)
-                  responsibleUser <- runJustT (getAdvisingUser mprog)
-                  let semyr = (masterProgramTerm mprog,masterProgramYear mprog)
-                  return
-                    (singleMasterProgramView admin
-                       (Just (userLogin responsibleUser)
-                           == userLoginOfSession sinfo)
-                       responsibleUser
-                       mprog mpinfo tmodinfo mcarea (xmlURL mprog)
-                       showMasterProgramController
-                       editMasterProgramController
-                       deleteMasterProgramController
-                       (editMasterProgInfoController semyr
-                                                listMasterProgramController))
-                )
-            )
-            (readMasterProgramKey (head args))
+    allmpinfos <- runQ queryMasterProgramMainInfos
+    let mpinfos = if listall then allmpinfos
+                             else filter currentProgram allmpinfos
+    coreareas <- runQ queryAllMasterCoreAreas
+    return (listMasterProgramView sinfo listall
+              (maybe (filter visibleProgram mpinfos)
+                     (const mpinfos) (userLoginOfSession sinfo))
+              coreareas)
  where
   -- is a master program a current one?
   currentProgram (_,_,term,year,_,_) =
     leqSemester (prevSemester (prevSemester currentSemester)) (term,year)
 
   visibleProgram (_,_,_,_,vis,_) = vis
+
 
 -- Transform the module table by replacing the ModData key with
 -- the actual ModData:
@@ -186,16 +175,32 @@ getMCodeForInfo (c,b,mk,t,y) =
 
 --- Shows a MasterProgram entity.
 showMasterProgramController :: MasterProgram -> Controller
-showMasterProgramController masterProgram =
+showMasterProgramController mprog =
   checkAuthorization
-   (masterProgramOperationAllowed (ShowEntity masterProgram)) $
-   (do areaProgramsMasterCoreArea <- runJustT
-                                      (getAreaProgramsMasterCoreArea
-                                        masterProgram)
-       advisingUser <- runJustT (getAdvisingUser masterProgram)
-       return
-        (showMasterProgramView masterProgram areaProgramsMasterCoreArea
-          advisingUser listMasterProgramController))
+   (masterProgramOperationAllowed (ShowEntity mprog)) $ do
+      sinfo <- getUserSessionInfo
+      runQ (queryInfoOfMasterProgram (masterProgramKey mprog)) >>=
+       maybe (displayError "Illegal Master Program")
+        (\mpinfo -> do
+          admin <- isAdmin
+          let modinfo = progModsOfMasterProgInfo mpinfo
+          tmodinfo <- runJustT $ mapT getMCodeForInfo modinfo
+          mcarea <- runJustT $ getMasterCoreArea
+                     (masterProgramMasterCoreAreaAreaProgramsKey mprog)
+          responsibleUser <- runJustT (getAdvisingUser mprog)
+          let semyr = (masterProgramTerm mprog,masterProgramYear mprog)
+          return
+            (singleMasterProgramView admin
+               (Just (userLogin responsibleUser)
+                   == userLoginOfSession sinfo)
+               responsibleUser
+               mprog mpinfo tmodinfo mcarea (xmlURL mprog)
+               showMasterProgramController
+               editMasterProgramController
+               deleteMasterProgramController
+               (editMasterProgInfoController semyr
+                                       (listMasterProgramController False)))
+        )
 
 --- Gets the associated MasterCoreArea entity for a given MasterProgram entity.
 getAreaProgramsMasterCoreArea :: MasterProgram -> Transaction MasterCoreArea
@@ -253,7 +258,7 @@ xmlURL mp = baseURL++"?xmlprog="++string2urlencoded (showMasterProgramKey mp)
 -- URL of a master program:
 masterProgURL :: MasterProgram -> String
 masterProgURL mp =
-  baseURL++"?listMasterProgram/"++string2urlencoded (showMasterProgramKey mp)
+  baseURL++"?MasterProgram/show/"++string2urlencoded (showMasterProgramKey mp)
 
 -- Show XML document containing all visible master programs
 showAllXmlMasterPrograms :: IO HtmlForm

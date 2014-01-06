@@ -154,7 +154,7 @@ singleModInstView modinst moddata user mprogs =
    else [par [htxt usedcmt],
          ulist
           (map (\mp -> [htxt "Masterprogramm ",
-                   ehref ("?listMasterProgram/"++showMasterProgramKey mp)
+                   ehref ("?MasterProgram/show/"++showMasterProgramKey mp)
                           [htxt (masterProgramName mp), htxt " (",
                            htxt "Beginn : ",
                            htxt (showSemester (masterProgramTerm mp,

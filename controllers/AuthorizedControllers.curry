@@ -89,8 +89,8 @@ modInstOperationAllowed :: AccessType ModInst -> IO AccessResult
 modInstOperationAllowed at =
   case at of
    ListEntities -> return AccessGranted
-   NewEntity -> return AccessGranted
    (ShowEntity _) -> return AccessGranted
+   NewEntity -> return AccessGranted
    (DeleteEntity _) -> return AccessGranted
    (UpdateEntity _) -> return AccessGranted
 
@@ -129,8 +129,4 @@ masterProgInfoOperationAllowed at =
 --- Checks whether the application of an operation to a UnivisInfo
 --- entity is allowed.
 univisInfoOperationAllowed :: AccessType UnivisInfo -> IO AccessResult
-univisInfoOperationAllowed at =
-  case at of
-   ListEntities   -> return AccessGranted
-   (ShowEntity _) -> return AccessGranted
-   _              -> checkAdmin
+univisInfoOperationAllowed at = checkAdmin

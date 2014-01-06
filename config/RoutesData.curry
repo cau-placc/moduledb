@@ -4,16 +4,15 @@ import Authentication
 
 data ControllerReference
  = MainPageController | SearchController
- | ProcessListController | LoginController | ListStudyProgramController 
- | NewStudyProgramController
- | CategoryController | ListCategoryController
+ | ProcessListController | LoginController
+ | StudyProgramController
+ | CategoryController
  | MasterCoreAreaController
  | UserController
  | ModDataController
- | ListModInstController | ListMasterProgramController 
- | NewMasterProgramController | ListMasterProgInfoController 
- | ListUnivisInfoController | NewUnivisInfoController 
- | LoadUnivisController
+ | ModInstController
+ | MasterProgramController
+ | UnivisInfoController 
 
 data UrlMatch = Exact String | Prefix String String
               | Matcher (String -> Bool) | Always 
@@ -31,34 +30,26 @@ getRoutes =
      return $
       [("Hauptseite",Exact "main",MainPageController)
       ,("Modulsuche",Exact "search",SearchController)
-      ,("Studiengänge",Exact "listStudyProgram",ListStudyProgramController)] ++
+      ,("Studiengänge",Prefix "StudyProgram" "list",StudyProgramController)] ++
       addIf admin
         [("Neues Modul",Prefix "ModData" "new",ModDataController),
          ("Neues Importmodul",Prefix "ModData" "newimp",ModDataController),
          ("Alle Benutzer",Prefix "User" "list",UserController),
          ("Neuer Benutzer",Prefix "User" "new",UserController),
-         ("Neuer Studiengang",Exact "newStudyProgram",
-          NewStudyProgramController),
+         ("Neuer Studiengang",Prefix "StudyProgram" "new",
+                              StudyProgramController),
          ("Neue Kategorie",Prefix "Category" "new",CategoryController),
-         ("Neuer Masterbereich",Prefix "MCA" "new"
-          ,MasterCoreAreaController)] ++
-      [("Alle Kategorien",Exact "listCategory",ListCategoryController)
-      ,("Masterbereiche",Prefix "MCA" "list"
-       ,MasterCoreAreaController)
+         ("Neuer Masterbereich",Prefix "MCA" "new",MasterCoreAreaController)] ++
+      [("Alle Kategorien",Prefix "Category" "list",CategoryController)
+      ,("Masterbereiche",Prefix "MCA" "list",MasterCoreAreaController)
       ,("List ModData",Prefix "ModData" "list",ModDataController)
-      ,("List ModInst",Exact "listModInst",ListModInstController)
-      --,("New ModInst",Exact "newModInst",NewModInstController)
-      ,("List MasterProgram",Exact "listMasterProgram"
-       ,ListMasterProgramController)
-      ,("New MasterProgram",Exact "newMasterProgram",NewMasterProgramController)
-      --,("List MasterProgInfo",Exact "listMasterProgInfo"
-      -- ,ListMasterProgInfoController)
-      --,("New MasterProgInfo",Exact "newMasterProgInfo"
-      -- ,NewMasterProgInfoController)
-      ,("Daten aus UnivIS übernehmen",Exact "loadUnivisInfo",
-        LoadUnivisController)
-      ,("Zeige UnivisInfo-Daten",Exact "listUnivisInfo",
-        ListUnivisInfoController)
+      ,("List ModInst",Prefix "ModInst" "list",ModInstController)
+      ,("List MasterProgram",Prefix "MasterProgram" "list",
+                             MasterProgramController)
+      ,("Daten aus UnivIS übernehmen",Prefix "UnivisInfo" "load",
+                                      UnivisInfoController)
+      ,("Zeige UnivisInfo-Daten",Prefix "UnivisInfo" "list",
+                                 UnivisInfoController)
       ,(maybe "An" (const "Ab") login ++ "melden",Exact "login",LoginController)
       ,("default",Always,MainPageController)]
  where

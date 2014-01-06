@@ -93,10 +93,10 @@ editStudyProgramView studyProgram controller =
    in wuiframe hexp handler
 
 --- Supplies a view to show the details of a StudyProgram.
-showStudyProgramView :: StudyProgram -> Controller -> [HtmlExp]
-showStudyProgramView studyProgram controller =
+showStudyProgramView :: StudyProgram -> [HtmlExp]
+showStudyProgramView studyProgram =
   studyProgramToDetailsView studyProgram ++
-   [spButton "back to StudyProgram list" (nextController controller)]
+   [spHref "?StudyProgram/list" [htxt "back to StudyProgram list"]]
 
 --- Compares two StudyProgram entities. This order is used in the list view.
 leqStudyProgram :: StudyProgram -> StudyProgram -> Bool
@@ -107,12 +107,8 @@ leqStudyProgram x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of StudyProgram entities
 --- and the controller functions to show, delete and edit entities.
-listStudyProgramView
- :: UserSessionInfo -> [StudyProgram] -> (StudyProgram -> Controller)
-  -> (StudyProgram -> Controller) -> (StudyProgram -> Bool -> Controller)
-  -> [HtmlExp]
-listStudyProgramView sinfo studyPrograms showStudyProgramController
-                     editStudyProgramController deleteStudyProgramController =
+listStudyProgramView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
+listStudyProgramView sinfo studyPrograms =
   if isAdminSession sinfo
   then [h1 [htxt $ t "Study programs"],
         spTable ([take 5 studyProgramLabelList] ++
@@ -125,15 +121,12 @@ listStudyProgramView sinfo studyPrograms showStudyProgramController
        listStudyProgram :: StudyProgram -> [[HtmlExp]]
        listStudyProgram studyProgram =
           studyProgramToListView studyProgram ++
-           [[spSmallButton "show"
-              (nextController (showStudyProgramController studyProgram)),
-             spSmallButton "edit"
-              (nextController (editStudyProgramController studyProgram)),
-             spSmallButton "delete"
-              (confirmNextController
-                (h3
-                  [htxt
-                    (concat
-                      ["Really delete entity \""
-                      ,studyProgramToShortView studyProgram,"\"?"])])
-                (deleteStudyProgramController studyProgram))]]
+           [[spHref
+              ("?StudyProgram/show/" ++ showStudyProgramKey studyProgram)
+              [htxt "show"]]
+           ,[spHref
+              ("?StudyProgram/edit/" ++ showStudyProgramKey studyProgram)
+              [htxt "edit"]]
+           ,[spHref
+              ("?StudyProgram/delete/" ++ showStudyProgramKey studyProgram)
+              [htxt "delete"]]]

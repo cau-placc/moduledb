@@ -192,7 +192,7 @@ listMasterProgramView sinfo listall mpinfos allcoreareas =
    t = translate sinfo
 
    mpListView (mpkey,name,_,_,vis,_) =
-     [href ("?listMasterProgram/"++masterProgramKeyToString mpkey)
+     [href ("?MasterProgram/show/"++masterProgramKeyToString mpkey)
            [if vis then stringToHtml name
                    else italic [stringToHtml name]]]
 
@@ -206,7 +206,7 @@ listMasterProgramView sinfo listall mpinfos allcoreareas =
       in catSems (term,year) allmpinfos ++
          if listall then [] else
           [hrule,
-           par [spHref "?listMasterProgram/all"
+           par [spHref "?MasterProgram/listall"
                        [htxt $ t "Show all master programs"]]]
     where
      catSems sem progs = if null progs then [] else
@@ -222,8 +222,8 @@ listMasterProgramView sinfo listall mpinfos allcoreareas =
                       mcakeys
         in concatMap
              (\mca ->
-               [h3 [ehref "?listMasterCoreArea"
-                      [htxt $ t "Core area: " ++ masterCoreAreaName mca]],
+               [h3 [ehref "?MCA/list"
+                          [htxt $ t "Core area: " ++ masterCoreAreaName mca]],
                 ulist
                  (map formatprog
                    (filter (\ (_,_,_,_,_,mcak) -> mcak == masterCoreAreaKey mca)
