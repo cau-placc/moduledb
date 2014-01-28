@@ -284,7 +284,7 @@ stdNavBar routemenu login sinfo =
  where
   t = translate sinfo
 
-  userIcon = HtmlText "<i class=\"icon-user icon-white\"></i>"
+  userIcon = italic [] `addClass` "icon-user icon-white"
 
   addDropdownItem (HtmlStruct tag ats items) =
     HtmlStruct tag ats (dropDownMenuItem : items)
@@ -309,13 +309,13 @@ stdNavBar routemenu login sinfo =
             ("Curry ("++t "programming language"++")")
    ,toEHref "http://www.informatik.uni-kiel.de/~pakcs/spicey"
             "Spicey (Web Framework)"
-   ,toEHref "http://twitter.github.com/bootstrap/"
+   ,toEHref "http://getbootstrap.com/"
             "Twitter Bootstrap (Style Sheets)"
    ]
 
   toEHref url s = litem [ehref url [arrowIcon, nbsp, htxt s]]
 
-  arrowIcon = HtmlText "<i class=\"icon-arrow-right\"></i>"
+  arrowIcon = italic [] `addClass` "icon-arrow-right"
 
 -- Admin navigation bar at the bottom.
 -- The first argument is the menu (a ulist).
@@ -333,9 +333,8 @@ getForm :: ViewBlock -> IO HtmlForm
 getForm viewBlock =
   if viewBlock == [HtmlText ""]
   then return $ HtmlForm "forward to Spicey"
-                  [HeadInclude (HtmlStruct "meta"
-                                 [("http-equiv","refresh"),
-                                  ("content","1; url=show.cgi")] [])]
+                  [formMetaInfo [("http-equiv","refresh"),
+                                 ("content","1; url=show.cgi")]]
                   [par [htxt "You will be forwarded..."]]
   else do
     cookie  <- sessionCookie
@@ -349,9 +348,8 @@ getForm viewBlock =
                      body
  where
    responsiveView =
-     HeadInclude (HtmlStruct "meta"
-                    [("name","viewport"),
-                     ("content","width=device-width, initial-scale=1.0")] [])
+     formMetaInfo [("name","viewport"),
+                   ("content","width=device-width, initial-scale=1.0")]
 
    icon = HeadInclude (HtmlStruct "link"
                                   [("rel","shortcut icon"),

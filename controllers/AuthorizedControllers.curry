@@ -129,4 +129,4 @@ masterProgInfoOperationAllowed at =
 --- Checks whether the application of an operation to a UnivisInfo
 --- entity is allowed.
 univisInfoOperationAllowed :: AccessType UnivisInfo -> IO AccessResult
-univisInfoOperationAllowed at = checkAdmin
+univisInfoOperationAllowed _ = checkAdmin

@@ -29,7 +29,7 @@ getRoutes =
      admin <- isAdmin
      return $
       [("Hauptseite",Exact "main",MainPageController)
-      ,("Modulsuche",Exact "search",SearchController)
+      ,("Modulsuche",Prefix "search" "main",SearchController)
       ,("Studiengänge",Prefix "StudyProgram" "list",StudyProgramController)] ++
       addIf admin
         [("Neues Modul",Prefix "ModData" "new",ModDataController),

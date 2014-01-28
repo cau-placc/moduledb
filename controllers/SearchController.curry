@@ -26,10 +26,12 @@ import SessionInfo
 --- Controller for the main page.
 searchController :: Controller
 searchController = do
-  sinfo <- getUserSessionInfo
-  return (searchPageView sinfo searchModules showExamController
-                         showAllModulesController
-                         showAllEnglishModulesController)
+  args <- getControllerParams
+  case args of
+    ["all"]     -> showAllModulesController
+    ["english"] -> showAllEnglishModulesController
+    _ -> do sinfo <- getUserSessionInfo
+            return (searchPageView sinfo searchModules showExamController)
 
 --- Controller for searching modules
 searchModules :: String -> Controller

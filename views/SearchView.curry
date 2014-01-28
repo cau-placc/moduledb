@@ -20,10 +20,8 @@ import SessionInfo
 -----------------------------------------------------------------------------
 --- A view for searching modules.
 searchPageView :: UserSessionInfo -> (String -> Controller)
-               -> ((String,Int) -> Controller) -> Controller -> Controller
-               -> [HtmlExp]
-searchPageView sinfo searchcontroller showExamController showAllMods
-               showAllEnglishMods =
+               -> ((String,Int) -> Controller) -> [HtmlExp]
+searchPageView sinfo searchcontroller showExamController =
   [h1 [htxt $ t "Search modules"],
    blockstyle "widelist" [ulist $
       [[htxt $ t "Search all modules containing", nbsp,
@@ -31,9 +29,8 @@ searchPageView sinfo searchcontroller showExamController showAllMods
         htxt $ t "in the module code or title", nbsp,
         spButton (t "search") searchHandler],
        [htxt $ t "Show", nbsp,
-        spButton (t "all modules") (nextController showAllMods), nbsp,
-        spButton (t "all English modules")
-                 (nextController showAllEnglishMods)]] ++
+        spHref "?search/all"     [htxt $ t "all modules"], nbsp,
+        spHref "?search/english" [htxt $ t "all English modules"]]] ++
       if userLoginOfSession sinfo == Nothing
       then []
       else [[htxt "Prüfungsanforderungen aller Module im ",

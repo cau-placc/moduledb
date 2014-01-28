@@ -47,17 +47,15 @@ wPresence =
 -- a WUI to select a set of category keys from a given list of categories:
 wCatList :: [(StudyProgram,[Category])] -> WuiSpec [Category]
 wCatList spcats =
-  wMultiCheckSelect (\c->[catref (categoryCatKey c),nbsp]) allcats
+  wMultiCheckSelect (\c->[catref c,nbsp]) allcats
        `withCondition` (not . null)
        `withError` "Es muss mindestens eine Kategorie angegeben werden!"
        `withRendering` renderCats
  where
   allcats = concatMap snd spcats
 
-  catref t = let mbcat = find (\c -> categoryCatKey c == t)
-                              allcats
-                 short = maybe "?" categoryShortName mbcat
-              in ehref "?showcats" [htxt short]
+  catref c = ehref ("?Category/show/"++showCategoryKey c)
+                   [htxt (categoryShortName c)]
 
   renderCats hexps = spTable (split2rows spcats hexps)
 

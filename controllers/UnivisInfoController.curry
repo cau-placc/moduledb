@@ -26,6 +26,8 @@ mainUnivisInfoController =
      case args of
       ["list"] -> listUnivisInfoController
       ["load"] -> loadUnivisController
+      ["showmod",s,ts,ys] -> applyControllerOn (readModDataKey s) getModData
+                               (showModDataUnivisInfoController ts ys)
       _ -> displayError "Illegal URL"
 
 --- Shows a form to create a new UnivisInfo entity.
@@ -75,29 +77,27 @@ deleteUnivisInfoController univisInfo True =
 listUnivisInfoController :: Controller
 listUnivisInfoController =
   checkAuthorization (univisInfoOperationAllowed ListEntities) $ do
-    args <- getControllerParams
-    if length args < 3
-     then do univisInfos <- runQ queryAllUnivisInfos
-             return (listUnivisInfoView univisInfos showUnivisInfoController
+    univisInfos <- runQ queryAllUnivisInfos
+    return (listUnivisInfoView univisInfos showUnivisInfoController
                        editUnivisInfoController deleteUnivisInfoController)
-     else
-      maybe (displayError "Illegal URL")
-            (\mdkey -> do
-              admin <- isAdmin
-              md <- runJustT $ getModData mdkey
-              responsible <- runJustT (getResponsibleUser md)
-              let sem = (args!!1, Read.readNat (args!!2))
-              urls <- runQ $ queryUnivisURL (modDataCode md) sem
-              mis <- runQ $ queryInstancesOfMod mdkey
-              let semmis = filter (\mi -> (modInstTerm mi,modInstYear mi)==sem)
-                                  mis
-              lecturer <- if null semmis then return Nothing else
-                runT (getUser (modInstUserLecturerModsKey (head semmis)))
-                     >>= return . either Just (const Nothing)
-              return (showUnivisLinks md sem lecturer urls admin
-                         (emailModuleMessageController listUnivisInfoController
-                                                       md responsible)))
-            (readModDataKey (head args))
+
+--- Lists all UnivisInfo entities for a module in a given term.
+showModDataUnivisInfoController :: String -> String -> ModData -> Controller
+showModDataUnivisInfoController terms years mdata =
+  checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ do
+    admin <- isAdmin
+    responsible <- runJustT (getResponsibleUser mdata)
+    let sem = (terms, Read.readNat years)
+    urls <- runQ $ queryUnivisURL (modDataCode mdata) sem
+    mis <- runQ $ queryInstancesOfMod (modDataKey mdata)
+    let semmis = filter (\mi -> (modInstTerm mi,modInstYear mi) == sem)
+                        mis
+    lecturer <- if null semmis then return Nothing else
+      runT (getUser (modInstUserLecturerModsKey (head semmis)))
+           >>= return . either Just (const Nothing)
+    return (showUnivisLinks mdata sem lecturer urls admin
+               (emailModuleMessageController listUnivisInfoController
+                                             mdata responsible))
 
 --- Shows a UnivisInfo entity.
 showUnivisInfoController :: UnivisInfo -> Controller

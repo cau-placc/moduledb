@@ -228,8 +228,8 @@ listCategoryView sinfo mbsprog catmods semperiod users
      | hasinst                  = [univisRef [textstyle "alertentry" "!UnivIS!"]]
      | mbmi/=Nothing            = [univisRef [italic [htxt "???"]]]
      | otherwise                = [nbsp]
-    where univisRef = hrefUnivis ("?listUnivisInfo/"++showModDataKey md++"/"
-                                                    ++term++"/"++show year)
+    where univisRef = hrefUnivis ("?UnivisInfo/showmod/"++showModDataKey md++"/"
+                                                        ++term++"/"++show year)
 
    showModInst (mi,num) =
      let miuserkey = modInstUserLecturerModsKey mi
