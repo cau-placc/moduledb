@@ -57,7 +57,7 @@ english2german =
  ,("External URL for module","Externe URL für das Modul")
  ,("Formatted module description","Formatierte Modulbeschreibung")
  ,("Formatted module descriptions","Formatierte Modulbeschreibungen")
- ,("German title:"      ,"Englische Bezeichnung:") -- wegen ModDataView!!!
+ ,("English"            ,"Englisch")
  ,("every year"         ,"jedes Jahr")
  ,("every year in summer term","jedes Jahr im SS")
  ,("every year in winter term","jedes Jahr im WS")
@@ -70,6 +70,7 @@ english2german =
  ,("Further information:","Weitere Informationen:")
  ,("Further modules"    ,"Weitere Module")
  ,("General "           ,"Allgemeine ")
+ ,("German"             ,"Deutsch")
  ,("Go to"              ,"Gehe zu")
  ,("in the module code or title","im Modulcode oder -titel")
  ,("Institute of Informatics","Institut für Informatik")

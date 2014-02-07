@@ -313,7 +313,7 @@ modDescrLabelList =
   ,[textstyle "label label_for_type_relation" "Modul"]]
 
 -- Reference to markdown syntax description:
-markdownRef = ehref "edit_infos#markdown" [htxt "(mit Markdown-Syntax)"]
+markdownRef = ehref "edit_infos.html#markdown" [htxt "(mit Markdown-Syntax)"]
 
 --- The list view of a ModInst entity in HTML format.
 --- This view is used in a row of a table of all entities.

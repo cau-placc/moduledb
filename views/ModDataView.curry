@@ -363,7 +363,8 @@ singleModDataView sinfo editallowed modData responsibleUser
   ([spTable $
     [[[bold [stringToHtml $ t "Module code:"]],
       [stringToHtml (modDataCode modData)]],
-     [[bold [stringToHtml $ t "German title:"]],
+     [[bold [stringToHtml $
+               langSelect sinfo "Title:" "Englische Bezeichnung:"]],
       [stringToHtml ((langSelect sinfo modDataNameG modDataNameE) modData)]],
      [[bold [stringToHtml $ t "Person in charge:"]],
       [userToHtmlView responsibleUser]],
@@ -382,7 +383,10 @@ singleModDataView sinfo editallowed modData responsibleUser
      [[bold [stringToHtml $ t "Module categories:"]],
       [showStudyProgCategoriesAsHtml sprogs categorys]],
      [[bold [stringToHtml $ t "Teaching language:"]],
-      [stringToHtml (maybe "" modDescrLanguage maybedesc)]]] ++
+      [stringToHtml
+           (maybe ""
+                  (\md -> langSelect sinfo toEnglish id (modDescrLanguage md))
+                  maybedesc)]]] ++
      (let url = modDataURL modData
        in if null url then [] else
           [[[bold [stringToHtml "URL:"]],[ehref url [stringToHtml url]]]]) ++
