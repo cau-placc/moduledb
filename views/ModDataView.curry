@@ -336,15 +336,15 @@ singleModDataView sinfo editallowed modData responsibleUser
              [imageNB "images/pdf.png" "Convert to PDF"], nbsp,
        ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
   [par $ (if admin || editallowed
-          then [spSmallButton "Semester hinzufügen"
+          then [spSmallButton (t "Add semester")
                        (nextController modinstaddController),
-                spSmallButton "Semesterangaben ändern"
+                spSmallButton (t "Change semesters")
                        (nextController modinsteditController),
                 spHref ("?ModData/edit/" ++ showModDataKey modData)
-                       [htxt "Moduldaten/Sichtbarkeit ändern"] ] ++
+                       [htxt $ t "Change module data/visibility"] ] ++
                 maybe []
                       (\desc ->
-                        [spSmallButton "Modulbeschreibung ändern"
+                        [spSmallButton (t "Change module description")
                              (nextController (editModDescrController desc))] ++
                         if admin
                         then [spHref ("?ModData/copy/"++showModDataKey modData)
@@ -391,10 +391,10 @@ singleModDataView sinfo editallowed modData responsibleUser
        in if null url then [] else
           [[[bold [stringToHtml "URL:"]],[ehref url [stringToHtml url]]]]) ++
      (let vis = if modDataVisible modData
-                then "öffentlich sichtbar"
-                else "nur zur internen Bearbeitung"
+                then t "public"
+                else t "only for internal use"
        in if admin || editallowed
-          then [[[bold [stringToHtml "Sichtbarkeit"]],[stringToHtml vis]]]
+          then [[[bold [stringToHtml $ t "Visibility:"]],[stringToHtml vis]]]
           else [])
   ] ++
   maybe []

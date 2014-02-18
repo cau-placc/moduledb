@@ -60,7 +60,8 @@ getRouteMenus = do
                                           ("ModData","list"),
                                           ("ModInst","list"),
                                           ("MasterProgram","list"),
-                                          ("Search","main")]
+                                          ("StudyProgram","list"),
+                                          ("search","main")]
                        then getLinks restroutes
                        else let url = s1++"/"++s2
                              in (url,[(href ("?"++url) [htxt name])])
