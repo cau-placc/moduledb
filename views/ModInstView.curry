@@ -149,21 +149,22 @@ singleModInstView modinst moddata user mprogs =
   [h1 [htxt $ "Modul \""++ modDataNameG moddata ++ "\" im " ++
               showSemester modinstsem],
    h3 [htxt "Dozent: ", userToHtmlView user]] ++
-   if null mprogs
-   then [par [htxt notusedcmt]]
-   else [par [htxt usedcmt],
-         ulist
-          (map (\mp -> [htxt "Masterprogramm ",
+   (if null mprogs
+    then [par [htxt notusedcmt]]
+    else [par [htxt usedcmt],
+          ulist
+           (map (\mp -> [htxt "Masterprogramm ",
                    ehref ("?MasterProgram/show/"++showMasterProgramKey mp)
                           [htxt (masterProgramName mp), htxt " (",
                            htxt "Beginn : ",
                            htxt (showSemester (masterProgramTerm mp,
                                                masterProgramYear mp)),
                            htxt ")"]])
-           mprogs),
-         spEHref ("?ModData/number/"++showModDataKey moddata++
-                    "/"++showSemesterCode modinstsem)
-                 [htxt $ "Anzahl der Masterstudierenden"]]
+                mprogs)]
+   ) ++
+   [spEHref ("?ModData/number/"++showModDataKey moddata++
+             "/"++showSemesterCode modinstsem)
+            [htxt $ "Anzahl der Masterstudierenden"]]
  where
   modinstsem = (modInstTerm modinst,modInstYear modinst)
 

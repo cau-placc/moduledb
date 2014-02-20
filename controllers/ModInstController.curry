@@ -19,6 +19,7 @@ import Sort
 import Authentication
 import Helpers
 import ConfigMDB
+import StudyPlanner
 
 --- Choose the controller for a ModInst entity according to the URL parameter.
 mainModInstController :: Controller
@@ -82,27 +83,53 @@ editAllModInstController md cntcontroller = do
 updateAllModInstController :: [ModInst] -> Controller
                            -> Bool -> [(ModInst,Bool)] -> Controller
 updateAllModInstController _ cntcontroller False _ = cntcontroller
-updateAllModInstController oldinsts cntcontroller True modinsts =
-  runT (mapT (\ (oi,(ni,b)) ->
-              if b
-              then inUse oi |>>= \useoi ->
+updateAllModInstController oldinsts cntcontroller True modinsts = do
+  takenmodinsts <- getTakenModuleInstances removedModInsts
+  if not (null takenmodinsts)
+   then -- some module instances to be deleted already taken in study planner:
+    do mdata <- runJustT
+                 (getModData (modInstModDataModuleInstancesKey (head oldinsts)))
+       displayHtmlError
+         [h1 [htxt "Fehler: Einige Instanzen nicht veränderbar!"],
+          par [htxt "Die folgenden Instanzen können nicht geändert werden, ",
+               htxt "da einige Studierende diese schon eingeplant haben ",
+               htxt "(vgl. ", spEHref studyPlannerURL [htxt "Studienplaner"],
+               htxt "):"],
+          par [htxt (unwords
+                      (map (showSemester . modInstSemester) takenmodinsts))],
+          spHref ("?ModData/show/" ++ showModDataKey mdata)
+                 [htxt "Zurück zum Modul"]]
+   else
+    runT (mapT (\ (oi,(ni,del)) ->
+                 if del
+                 then inUse oi |>>= \useoi ->
                    if useoi
-                    then returnT [Nothing]
-                    else deleteModInst oi |>> returnT [Just (DeleteModInst oi)]
-              else
-               if oi==ni
-               then returnT []
-               else inUse oi |>>= \useoi ->
+                   then returnT [Nothing]
+                   else deleteModInst oi |>> returnT [Just (DeleteModInst oi)]
+                 else
+                  if oi==ni
+                  then returnT []
+                  else inUse oi |>>= \useoi ->
                     if useoi
-                     then returnT [Nothing]
-                     else updateModInst ni |>> returnT [Just (UpdateModInst ni)])
-             (zip oldinsts modinsts)) >>=
-  either (\ upds  -> mapIO_ (maybe done logEvent) (concat upds) >>
-                     (if all isJust (concat upds) then done
-                                                  else setPageMessage useMsg) >>
-                     nextInProcessOr cntcontroller Nothing)
-         (\ error -> displayError (showTError error))
+                    then returnT [Nothing]
+                    else updateModInst ni |>> returnT [Just (UpdateModInst ni)])
+             oldnewinsts) >>=
+    either (\ upds  -> do
+               mapIO_ (maybe done logEvent) (concat upds)
+               if all isJust (concat upds) then done
+                                           else setPageMessage useMsg
+               nextInProcessOr cntcontroller Nothing )
+           (\ error -> displayError (showTError error))
  where
+  oldnewinsts = zip oldinsts modinsts
+
+  -- compute module instances where a semester should be deleted or moved
+  removedModInsts =
+    map fst
+        (filter
+           (\ (oi,(ni,del)) -> del || modInstSemester oi /= modInstSemester ni)
+           oldnewinsts)
+
   inUse mi = getDB (getMasterProgramKeysOfModInst [mi]) |>>= \[mpkeys] ->
              returnT (not (null mpkeys))
 

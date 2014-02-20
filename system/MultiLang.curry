@@ -15,6 +15,7 @@ module MultiLang (
 
 import SessionInfo
 import HTML
+import ConfigMDB(studyPlannerURL)
 
 --------------------------------------------------------------------------
 --- Translates a string w.r.t. given user session info.
@@ -191,12 +192,11 @@ mainExplanation sinfo = langSelect sinfo
 masterStudyNote sinfo = langSelect sinfo
   [italic [htxt "Important note: "],
    htxt "All master students should plan their individual studies with the ",
-   spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
-           [bold [htxt "study planner"]], htxt "!"]
+   spEHref studyPlannerURL [bold [htxt "study planner"]], htxt "!"]
   [italic [htxt "Wichtiger Hinweis: "],
    htxt "Alle Masterstudierenden sollten ihre individualle Planung mit dem ",
-   spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
-           [bold [htxt "Studienplaner"]], htxt " durchführen! ",
+   spEHref studyPlannerURL [bold [htxt "Studienplaner"]],
+   htxt " durchführen! ",
    htxt "Damit wird weitgehend gewährleistet, dass das geplante Studium ",
    htxt "auch wirklich durchführbar ist."]
    

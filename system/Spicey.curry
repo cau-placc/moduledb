@@ -13,7 +13,7 @@ module Spicey (
   getControllerURL,getControllerParams, showControllerURL,
   getForm, wDateType, wBoolean, wUncheckMaybe,
   mainContentsWithSideMenu,
-  displayError, cancelOperation,
+  displayError, displayHtmlError, cancelOperation,
   wuiEditForm, wuiEditFormWithText, wuiFrameToForm, nextInProcessOr,
   renderLabels,
   stringToHtml, maybeStringToHtml,
@@ -365,7 +365,7 @@ cancelOperation = do
   if inproc then removeCurrentProcess else done
   setPageMessage $ (if inproc then "Process" else "Operation") ++ " cancelled"
 
--- dummy-controller to display an error
+-- dummy-controller to display an error string
 displayError :: String -> Controller
 displayError msg = do
   inproc <- isInProcess
@@ -376,6 +376,15 @@ displayError msg = do
     [h1 [htxt $ if null msg
                 then "General error (shown by function Spicey.displayError)"
                 else msg]]
+
+-- dummy-controller to display an error in HTML format
+displayHtmlError :: [HtmlExp] -> Controller
+displayHtmlError hexps = do
+  inproc <- isInProcess
+  if inproc then removeCurrentProcess else done
+  setPageMessage ("Error occurred!" ++
+                  if inproc then " Process terminated!" else "")
+  return hexps
 
 -- like renderTaggedTuple from WUI Library but takes list of HtmlExp
 -- instead of list of strings
