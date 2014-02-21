@@ -242,7 +242,7 @@ allowedLatexCommands =
   ["\\","#","$","%","{","}","&","\"","ss","begin","end","item",
    "textbackslash",
    "module","descmain","descrest","importmodule",
-   "ite","url","em","texttt","textbf","par","bf","href",
+   "ite","url","em","texttt","textbf","par","bf","href","mbox",
    "leftarrow","rightarrow"]
 
 -- logging for development:
