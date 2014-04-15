@@ -68,7 +68,7 @@ editAllModInstController md cntcontroller = do
    allUsers <- runQ (transformQ (mergeSort leqUser) queryAllUsers)
    -- select instances not used in master programs:
    let editinsts = map fst (filter (null . snd) (zip allinsts allmpkeys))
-   return (editModInstView md editinsts
+   return (editModInstView admin editinsts
              allUsers (updateAllModInstController editinsts cntcontroller))
  where
   filterModInsts admin =

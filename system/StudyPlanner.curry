@@ -40,4 +40,4 @@ getTakenModuleInstances modinsts = do
   getTakenModuleInstance mi = do
     mdata <- runJustT (getModData (modInstModDataModuleInstancesKey mi))
     num <- getModuleStudents mdata (showSemesterCode (modInstSemester mi))
-    return (if num==0 then [] else [mi])
+    return (if num>0 then [mi] else [])

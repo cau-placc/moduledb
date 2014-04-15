@@ -15,7 +15,7 @@ module Helpers(LogEvent(..),logEvent,
                nextSemester, prevSemester, leqSemester,
                semesterSelection, lowerSemesterSelection, upperSemesterSelection,
                currentUpperSemester,
-               imageNB, wTerm, wYear, wVisible,
+               imageNB, wTerm, wCurrentYear, wYear, wVisible,
                wLargeString, wLargeRequiredString,
                wMediumString, wMediumRequiredString,
                largetextinputRendering, mediumtextinputRendering,
@@ -305,10 +305,14 @@ wTerm :: WuiSpec String
 wTerm = wSelect id ["WS","SS"]
          `withRendering` shorttextinputRendering
 
---- The WUI specification for a year.
+--- The WUI specification for an almost current year.
+wCurrentYear :: WuiSpec Int
+wCurrentYear = wSelect show [(currentYear-4)..(currentYear+6)]
+                 `withRendering` shorttextinputRendering
+
+--- The WUI specification for an arbitrary year.
 wYear :: WuiSpec Int
-wYear = wSelect show [(currentYear-4)..(currentYear+6)]
-         `withRendering` shorttextinputRendering
+wYear = wInt `withRendering` shorttextinputRendering
 
 --- A WUI for the visibility of a module:
 wVisible :: WuiSpec Bool

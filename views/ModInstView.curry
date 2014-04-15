@@ -20,16 +20,19 @@ import UserView(leqUser)
 wModInst :: [User] -> WuiSpec (String,Int,User)
 wModInst userList =
   withRendering
-   (wTriple wTerm wYear (wSelect userToShortView (mergeSort leqUser userList)))
+   (wTriple wTerm wCurrentYear
+            (wSelect userToShortView (mergeSort leqUser userList)))
    (renderLabels (map (\s -> [stringToHtml s]) ["Semester","Jahr","Dozent"]))
 
 --- The WUI specification for a list of term/year/user tuples with a deletion
 --- option.
-wListModInst :: [User] -> WuiSpec [(String,Int,User,Bool)]
-wListModInst userList =
+--- If the first argument is true, the year can be arbitrary.
+wListModInst :: Bool -> [User] -> WuiSpec [(String,Int,User,Bool)]
+wListModInst someyear userList =
   wList
-   (w4Tuple wTerm wYear (wSelect userToShortView (mergeSort leqUser userList))
-           (wCheckBool [htxt "Semester löschen"]) )
+   (w4Tuple wTerm (if someyear then wYear else wCurrentYear)
+            (wSelect userToShortView (mergeSort leqUser userList))
+            (wCheckBool [htxt "Semester löschen"]) )
 
 --- Transformation from data of a WUI form to entity type ModInst.
 tuple2ModInst :: ModInst -> (String,Int,User) -> ModInst
@@ -51,14 +54,15 @@ modInst2Tuple users modInst =
    head (filter (\u -> userKey u == modInstUserLecturerModsKey modInst) users))
 
 --- WUI Type for editing a list of ModInst entities.
+--- If the first argument is true, the year can be arbitrary.
 --- Includes fields for associated entities.
-wModInstsType :: ModData -> [ModInst] -> [User] -> WuiSpec [(ModInst,Bool)]
-wModInstsType _ insts userList =
+wModInstsType :: Bool -> [ModInst] -> [User] -> WuiSpec [(ModInst,Bool)]
+wModInstsType someyear insts userList =
   transformWSpec
    (\modinsts -> map (\ (mi,(t,y,u,d)) -> (tuple2ModInst mi (t,y,u),d))
                      (zip insts modinsts),
     map (\ (mi,b) -> add4 b (modInst2Tuple userList mi)))
-   (wListModInst userList)
+   (wListModInst someyear userList)
  where
    add4 b (x,y,z) = (x,y,z,b)
 
@@ -81,16 +85,16 @@ addModInstView defaultUser possibleUsers storecontroller =
 --- Supplies a WUI form to edit the given ModInst entity.
 --- Takes also associated entities and a list of possible associations
 --- for every associated entity type.
-editModInstView :: ModData -> [ModInst] -> [User]
+editModInstView :: Bool -> [ModInst] -> [User]
                 -> (Bool -> [(ModInst,Bool)] -> Controller) -> [HtmlExp]
-editModInstView md insts possibleUsers controller =
+editModInstView admin insts possibleUsers controller =
   let wuiframe = wuiEditFormWithText
                     "Semesterangaben ändern" "Änderungen speichern"
                     [par [htxt modinstcomment]]
                     (controller False (map (\i -> (i,False)) insts))
       
       (hexp ,handler) = wuiWithErrorForm
-                         (wModInstsType md insts possibleUsers)
+                         (wModInstsType admin insts possibleUsers)
                          (map (\i -> (i,False)) insts)
                          (nextControllerForData (controller True))
                          (wuiFrameToForm wuiframe)

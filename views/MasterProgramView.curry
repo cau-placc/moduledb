@@ -123,7 +123,7 @@ wMasterProgramTitle mprogs possibleMasterCoreAreas =
   w5Tuple wLargeString
           (wSelect (maybe "" masterProgramToShortView)
                    (Nothing : map Just mprogs))
-          wTerm wYear
+          wTerm wCurrentYear
           (wSelect masterCoreAreaToShortView possibleMasterCoreAreas)
   `withCondition` (\ (t,mp,_,_,_) -> not (null t && mp==Nothing))
   `withError` "Fehler: Titel eingeben oder altes Masterprogramm auswaehlen!"
