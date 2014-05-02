@@ -32,7 +32,10 @@ mainPageView sinfo studyPrograms =
                 [htxt $ t "Study planner"]],
    h3 [htxt $ t "Further information:"],
    ulist
-    [[bold [htxt $ t "For persons in charge for modules: "],
+    [[htxt $ t "Overview on the ",
+      ehref "lehrplanung.html"
+            [htxt $ t "planning instruments of the institute"]],
+     [bold [htxt $ t "For persons in charge for modules: "],
       htxt $ t "General ",
       ehref "edit_infos.html"
             [htxt $ t "notes on module descriptions and their preparation"]],
