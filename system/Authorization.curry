@@ -1,10 +1,11 @@
 --- This module specifies the access authorization to web pages.
 
 module Authorization(AccessType(..), AccessResult(..),
-                     checkAuthorization) where
+                     checkAuthorization,checkAuthorizationWI) where
 
 import Spicey(Controller,displayError)
 import HTML
+import SessionInfo
 
 --- The various kinds of operations applied to an entity.
 data AccessType a = NewEntity | ShowEntity a | UpdateEntity a | DeleteEntity a
@@ -22,6 +23,19 @@ checkAuthorization getaccess controller = do
   accresult <- getaccess
   case accresult of
     AccessGranted       -> controller
+    AccessDenied reason -> displayError reason
+
+--- Checks the results of an authoriation access.
+--- If the access is granted, we proceed with the given controller
+--- to which the current user session information is passed,
+--- otherwise we display the access error message.
+checkAuthorizationWI :: IO AccessResult
+                     -> (UserSessionInfo -> Controller)
+                     -> Controller
+checkAuthorizationWI getaccess controller = do
+  accresult <- getaccess
+  case accresult of
+    AccessGranted       -> getUserSessionInfo >>= controller
     AccessDenied reason -> displayError reason
 
 entryOperationAllowed :: AccessType _ -> IO AccessResult

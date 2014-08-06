@@ -114,9 +114,8 @@ deleteCategoryController category =
 --- or edit an entity.
 listAllCategoryController :: Controller
 listAllCategoryController =
-  checkAuthorization (categoryOperationAllowed ListEntities) $
-    do sinfo <- getUserSessionInfo
-       let t = translate sinfo
+  checkAuthorizationWI (categoryOperationAllowed ListEntities) $ \sinfo ->
+    do let t = translate sinfo
        categorys <- runQ queryAllCategorys
        return (listCategoryView sinfo (Right $ t "All categories")
                  (map (\c -> (Left c,[])) (mergeSort leqCategory categorys))
@@ -127,9 +126,8 @@ listAllCategoryController =
 --- Controller to list all modules of the current user.
 listCurrentUserCategoryController :: Controller
 listCurrentUserCategoryController =
-  checkAuthorization (categoryOperationAllowed ListEntities) $
-    do sinfo <- getUserSessionInfo
-       let lname = maybe "" id (userLoginOfSession sinfo)
+  checkAuthorizationWI (categoryOperationAllowed ListEntities) $ \sinfo ->
+    do let lname = maybe "" id (userLoginOfSession sinfo)
        -- get user entries with a given login name
        users <- runQ $ queryCondUser (\u -> userLogin u == lname)
        if null users then (displayError "Illegal URL") else
@@ -145,9 +143,8 @@ listCurrentUserCategoryController =
 --- Lists a study program with all its Category entities.
 listStudyProgramCategoryController :: Bool -> StudyProgram -> Controller
 listStudyProgramCategoryController listall studyprog =
-  checkAuthorization (categoryOperationAllowed ListEntities) $
-    do sinfo <- getUserSessionInfo
-       categorys <- runQ $ queryCategorysOfStudyProgram
+  checkAuthorizationWI (categoryOperationAllowed ListEntities) $ \sinfo ->
+    do categorys <- runQ $ queryCategorysOfStudyProgram
                                            (studyProgramKey studyprog)
        catmods <- runJustT $
         if listall
@@ -242,9 +239,8 @@ showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
 --- Shows a Category entity.
 showCategoryController :: Category -> Controller
 showCategoryController cat =
-  checkAuthorization (categoryOperationAllowed (ShowEntity cat)) $
-   (do sinfo <- getUserSessionInfo
-       sprogs <- runQ queryAllStudyPrograms
+  checkAuthorizationWI (categoryOperationAllowed (ShowEntity cat)) $ \sinfo ->
+   (do sprogs <- runQ queryAllStudyPrograms
        let spk     = categoryStudyProgramProgramCategoriesKey cat
            mbsprog = find (\p -> studyProgramKey p == spk) sprogs
        mods <- runJustT $ getModDataOfCategory (categoryKey cat)

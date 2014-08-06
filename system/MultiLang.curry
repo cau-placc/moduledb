@@ -15,7 +15,7 @@ module MultiLang (
 
 import SessionInfo
 import HTML
-import ConfigMDB(studyPlannerURL)
+import ConfigMDB(baseURL,studyPlannerURL)
 
 --------------------------------------------------------------------------
 --- Translates a string w.r.t. given user session info.
@@ -162,14 +162,14 @@ loginEmailText sinfo loginname passwd = langSelect sinfo
   ("Your login data:\n\nLogin name: " ++ loginname ++
    "\nNew password: " ++ passwd ++
    "\n\nYou can use this data to login into the module database\n\n"++
-   "http://www-ps.informatik.uni-kiel.de/~mh/studiengaenge/\n\n"++
+   baseURL++"\n\n"++
    "and work on your modules and master programs.\n\n"++
    "You can change your password after the login by selecting 'Logout'\n"++
    "followed by 'Change password'.")
   ("Ihre Zugangsdaten sind:\n\nLogin-Name: " ++ loginname ++
    "\nNeues Passwort: " ++ passwd ++
    "\n\nMit diesen Daten koennen Sie sich in der Moduldatenbank\n\n"++
-   "http://www-ps.informatik.uni-kiel.de/~mh/studiengaenge/\n\n"++
+   baseURL++"\n\n"++
    "anmelden und Ihre Module und Masterprogramme aendern.\n\n"++
    "Sie koennen das Passwort aendern, indem Sie sich anmelden\n"++
    "und dann nach Auswahl von 'Abmelden' den Punkt\n"++

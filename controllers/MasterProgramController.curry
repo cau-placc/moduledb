@@ -149,8 +149,8 @@ deleteMasterProgramController mprog True =
 --- or edit an entity.
 listMasterProgramController :: Bool -> Controller
 listMasterProgramController listall =
-  checkAuthorization (masterProgramOperationAllowed ListEntities) $ do
-    sinfo <- getUserSessionInfo
+  checkAuthorizationWI (masterProgramOperationAllowed ListEntities) $ \sinfo ->
+   do
     allmpinfos <- runQ queryMasterProgramMainInfos
     let mpinfos = if listall then allmpinfos
                              else filter currentProgram allmpinfos
@@ -176,9 +176,8 @@ getMCodeForInfo (c,b,mk,t,y) =
 --- Shows a MasterProgram entity.
 showMasterProgramController :: MasterProgram -> Controller
 showMasterProgramController mprog =
-  checkAuthorization
-   (masterProgramOperationAllowed (ShowEntity mprog)) $ do
-      sinfo <- getUserSessionInfo
+  checkAuthorizationWI
+   (masterProgramOperationAllowed (ShowEntity mprog)) $ \sinfo -> do
       runQ (queryInfoOfMasterProgram (masterProgramKey mprog)) >>=
        maybe (displayError "Illegal Master Program")
         (\mpinfo -> do
