@@ -185,7 +185,7 @@ listMasterProgramView
   -> [(MasterProgramKey,String,String,Int,Bool,MasterCoreAreaKey)]
   -> [MasterCoreArea] -> [HtmlExp]
 listMasterProgramView sinfo listall mpinfos allcoreareas =
-  [h1 [htxt $ t "Master programs in informatics"]] ++
+  [h1 [htxt $ t "Master programs in computer science"]] ++
   masterStudyNote sinfo ++
   categorizeMasterProgs mpListView sortedmpinfos
  where

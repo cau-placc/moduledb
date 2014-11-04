@@ -9,7 +9,7 @@ module MultiLang (
   toEnglish,
   translate, langSelect,
   loginEmailText, loginText, mainTitle, mainExplanation,
-  masterStudyNote, sendPasswordCmt, ssComment,
+  masterStudyNote, minorSubjectNote, sendPasswordCmt, ssComment,
   timeoutText, unknownUser, useURLText
  ) where
 
@@ -78,7 +78,7 @@ english2german =
  ,("German"             ,"Deutsch")
  ,("Go to"              ,"Gehe zu")
  ,("in the module code or title","im Modulcode oder -titel")
- ,("Institute of Informatics","Institut für Informatik")
+ ,("Department of Computer Science","Institut für Informatik")
  ,("irregular"          ,"unregelmäßig")
  ,("LaTeX output"       ,"LaTeX-Ausgaben")
  ,("Logged in as: "     ,"Angemeldet als: ")
@@ -92,8 +92,8 @@ english2german =
  ,("Main page of the module information system","Hauptseite der Moduldatenbank")
  ,("Mandatary modules"  ,"Pflichtmodule")
  ,("Master programs"    ,"Masterprogramme")
- ,("Master programs in informatics","Programme im Masterstudiengang Informatik")
- ,("Master studies in informatics:","Masterstudium Informatik:")
+ ,("Master programs in computer science","Programme im Masterstudiengang Informatik")
+ ,("Master studies in computer science:","Masterstudium Informatik:")
  ,("Module categories:" ,"Modulkategorien:")
  ,("Module code:"       ,"Modulcode:")
  ,("Module Information System","Modulinformationssystem Informatik")
@@ -176,20 +176,20 @@ loginEmailText sinfo loginname passwd = langSelect sinfo
    "'Passwort aendern' waehlen.")
 
 mainTitle sinfo = langSelect sinfo
-  "Modules and study programs of the Institute of Informatics"
+  "Modules and study programs of the Department of Computer Science"
   "Module und Studienprogramme des Instituts für Informatik"
 
 mainExplanation sinfo = langSelect sinfo
   ("This web site provides an overview on all modules and "++
-   "study programs offered by the Institute of Informatics. "++
+   "study programs offered by the Department of Computer Science. "++
    "Additionally, it contains an overiew on all master programs "++
-   "in informatics. A list of all modules offered in English "++
+   "in computer science. A list of all modules offered in English "++
    "can be found in the category \"Search modules\".")
   ("Auf diesen Webseiten sind die Module aller Studienprogramme "++
    "des Instituts für Informatik sowie alle vom Institut "++
    "angebotenen Module beschrieben. "++
    "Außerdem befindet sich hier eine Übersicht über alle "++
-   "angebotenen Masterprogramme.")
+   "angebotenen Masterprogramme in Informatik.")
 
 masterStudyNote sinfo = langSelect sinfo
   [italic [htxt "Important note: "],
@@ -202,6 +202,17 @@ masterStudyNote sinfo = langSelect sinfo
    htxt "Damit wird weitgehend gewährleistet, dass das geplante Studium ",
    htxt "auch wirklich durchführbar ist."]
    
+minorSubjectNote sinfo = langSelect sinfo
+  [italic [htxt "Note: "],
+   htxt "The possible minor/application subjects and their modules are listed ",
+   spEHref minorURL [htxt "on this page."]]
+  [italic [htxt "Hinweis: "],
+   htxt "Die möglichen Anwendungsgebiete im Bachelor- und Masterstudiengang ",
+   htxt "Informatik sowie die dazugehörigen Module findet man ",
+   spEHref minorURL [htxt "auf dieser Seite."]]
+ where
+  minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf/bsc/anwendungsgebiete"
+
 sendPasswordCmt sinfo = langSelect sinfo
   ("You can send a new password to your email address "++
    "if you are registered in the system.")

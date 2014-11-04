@@ -301,7 +301,7 @@ stdNavBar routemenu login sinfo =
 
   extUrls =
    [toEHref "http://www.inf.uni-kiel.de"
-            (t "Institute of Informatics")
+            (t "Department of Computer Science")
    ,toEHref "http://www.uni-kiel.de" "CAU Kiel"
    ,litem [htxt " "] `addClass` "divider"
    ,litem [htxt $ t "Supported by:"] `addClass` "nav-header"

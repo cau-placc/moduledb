@@ -22,10 +22,11 @@ mainPageView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
 mainPageView sinfo studyPrograms =
   [h1 [htxt $ mainTitle sinfo],
    par [htxt $ mainExplanation sinfo],
+   par $ minorSubjectNote sinfo,
    h2 [htxt $ t "Study programs"],
    spTable (map (\sp -> [head (studyProgramToListView sp)])
                 (mergeSort leqStudyProgram studyPrograms)),
-   h2 [htxt $ t "Master studies in informatics:"],
+   h2 [htxt $ t "Master studies in computer science:"],
    par [spHref "?MCA/list" [htxt $ t "Core areas"], nbsp,
         spHref "?MasterProgram/list" [htxt $ t "Master programs"], nbsp,
         spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
