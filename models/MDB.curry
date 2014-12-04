@@ -87,7 +87,8 @@ module MDB (ex1,ex2,ex3,ex4,ex9,
  getUnivisInfo, queryAllUnivisInfos, queryCondUnivisInfo, queryUnivisURL,
  queryHasUnivisEntry, categorizingModDataCategorizingKey,
  categorizingCategoryCategorizingKey, categorizing, newCategorizing,
- deleteCategorizing, getModDataCategorys, getModDataKeyCategorys,
+ deleteCategorizing, destroyCategorizing,
+ getModDataCategorys, getModDataKeyCategorys,
  queryAllCategorizings, queryCondCategorizing, queryModDataKeysOfCategory,
  programInfo, withProgInfo, programInfoOf,
  areaPrograms, withProgram, ofCoreArea, advising, organizes, organizedBy,
@@ -2145,6 +2146,15 @@ deleteCategorizing key1 key2 =
   ERDGeneric.minTestDelete "Categorizing" categorizingEntry
    keytuple2Categorizing categorizingModDataCategorizingKey 1 key1 |>>
    ERDGeneric.deleteEntryR categorizingEntry (modDataKeyToKey key1)
+    (categoryKeyToKey key2)
+
+--- Destroy an existing Categorizing relation between a ModData entity
+--- and a Category entity without ensuring the minimal constraint.
+--- This can be used instead of `deleteCategorizing` if the corresponding
+--- module is also deleted.
+destroyCategorizing :: ModDataKey -> CategoryKey -> KeyDatabase.Transaction ()
+destroyCategorizing key1 key2 =
+  ERDGeneric.deleteEntryR categorizingEntry (modDataKeyToKey key1)
     (categoryKeyToKey key2)
 
 --- Gets the associated Category entities for a given ModData entity

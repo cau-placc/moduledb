@@ -156,7 +156,7 @@ deleteModDataController :: ModData -> Controller
 deleteModDataController modData =
   checkAuthorization checkAdmin $
     runT (getModDataCategorys modData |>>= \oldCategorizingCategorys ->
-          removeCategorizing oldCategorizingCategorys modData |>>
+          killCategorizing oldCategorizingCategorys |>>
           getDB (queryDescriptionOfMod (modDataKey modData)) |>>= \mbdescr ->
           maybe doneT deleteModDescr mbdescr |>>
           deleteModData modData |>>
@@ -165,6 +165,12 @@ deleteModDataController modData =
                          maybe done (logEvent . DeleteModDescr) mbdescr >>
                          defaultController)
            (\ error -> displayError (showTError error))
+ where
+  killCategorizing categorys =
+    mapT_ (\t -> destroyCategorizing (modDataKey modData) (categoryKey t))
+          categorys
+
+
 
 --- Controller for showing the number of students of a module in a semester:
 numberModuleController :: String -> ModData -> Controller
