@@ -159,24 +159,32 @@ cleanProgMods pms =
          else returnT [])
        pms |>>= returnT . concat
 
---- Checks whether there are enough modules for each category of a master program
+--- Checks whether there are enough modules for each category of a
+--- master program: at least 12 points in IG/TG/IS, 8 points in MV,
+--- and at least 48 points in all categories IG/TG/IS/MV.
+--- The returned string is empty if there are enough modules, otherwise
+--- it contains an explanation about the missing points.
 reasonableMasterProgInfo :: MasterProgInfo -> Transaction String
 reasonableMasterProgInfo mpi =
   mapT getMCodeForInfo (progModsOfMasterProgInfo mpi) |>>= \catmods ->
   let catpoints = map (\ck -> foldr (+) 0 (map (modDataECTS . snd)
                                           (filter (\ (c,_) -> c==ck) catmods)))
-                       ["IG","TG","IS","MV"]
+                      ["IG","TG","IS","MV"]
    in returnT (satisfied catpoints)
  where
   satisfied [ig,tg,is,mv]
-    | ig<160 = msg "IG" ig 160
-    | tg<160 = msg "TG" tg 160
-    | is<160 = msg "IS" is 160
-    | mv<80  = msg "MV" mv  80
+    | ig<120 = msgArea "IG" ig 120
+    | tg<120 = msgArea "TG" tg 120
+    | is<120 = msgArea "IS" is 120
+    | mv<80  = msgArea "MV" mv  80
+    | ig+tg+is+mv<480 = msgAllAreas
     | otherwise = ""
-   where msg ck curr atleast =
-          "der Studienbereich "++ck++" hat noch zu wenig ECTS-Punkte ("++
-          showDiv10 curr++" statt mindestens "++showDiv10 atleast++")."
+   where
+     msgArea ck curr atleast =
+       "der Studienbereich "++ck++" hat noch zu wenig ECTS-Punkte ("++
+       showDiv10 curr++" statt mindestens "++showDiv10 atleast++")."
+     msgAllAreas =
+       "die Studienbereiche haben zusammen weniger als 48 ECTS-Punkte."
 
   getMCodeForInfo (c,_,mk,_,_) =
     getModData (fromJust (readModDataKey mk)) |>>= \mod -> returnT (c,mod)

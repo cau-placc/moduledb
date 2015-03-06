@@ -38,6 +38,7 @@ dispatcher = do
   return form
 
 --- Main function: check for old form of URL parameters or call the dispatcher
+main :: IO HtmlForm
 main = do
   params <- getUrlParameter
   case params of
@@ -63,6 +64,7 @@ main = do
                 return (answerEncText "iso-8859-1" "DB saved to term files")
     _        -> dispatcher
 
+setLanguage :: String -> IO ()
 setLanguage langcode = do
   let lang = if langcode=="EN" then English else German
   updateUserSessionInfo (setLanguageOfSession lang)
@@ -102,8 +104,11 @@ moduleCSV mods = do
 
 -------------------------------------------------------------------------
 -- For benchmarking:
+benchMDB :: IO ()
 benchMDB = allModuleCSV >>= print . length . show
 --> lussac/pakcs: 13.8s
 --> lussac/kics2: 0.88s
 --> lascombes/pakcs: 7.26
 --> lascombes/kics2: 0.6
+--> belair/pakcs: 5.5s (result: 57332)
+--> belair/kics2: 0.7s (result: 57332)

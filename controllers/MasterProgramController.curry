@@ -198,7 +198,7 @@ showMasterProgramController mprog =
                editMasterProgramController
                deleteMasterProgramController
                (editMasterProgInfoController semyr
-                                       (listMasterProgramController False)))
+                  (showMasterProgramController mprog)))
         )
 
 --- Gets the associated MasterCoreArea entity for a given MasterProgram entity.
