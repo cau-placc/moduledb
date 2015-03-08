@@ -62,6 +62,7 @@ main = do
     "csv"    -> allModuleCSV
     "saveDB" -> storeTermDB >>
                 return (answerEncText "iso-8859-1" "DB saved to term files")
+    "ping"   -> pingAnswer -- to check whether the MDB server is alive
     _        -> dispatcher
 
 setLanguage :: String -> IO ()
@@ -71,7 +72,11 @@ setLanguage langcode = do
   setPageMessage $ if lang==English then "Language: English"
                                     else "Sprache: Deutsch"
   getLastUrl >>= setEnviron "QUERY_STRING"
-  
+
+-- Send an alive answer (to check whether the MDB server is alive)
+pingAnswer :: IO HtmlForm
+pingAnswer = return (answerEncText "iso-8859-1" "ALIVE")
+
 -------------------------------------------------------------------------
 -- Script for generating csv of module infos:
 allModuleCSV :: IO HtmlForm
