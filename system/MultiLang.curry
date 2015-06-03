@@ -194,13 +194,24 @@ mainExplanation sinfo = langSelect sinfo
 masterStudyNote sinfo = langSelect sinfo
   [italic [htxt "Important note: "],
    htxt "All master students should plan their individual studies with the ",
-   spEHref studyPlannerURL [bold [htxt "study planner"]], htxt "!"]
+   spEHref studyPlannerURL [bold [htxt "study planner"]], htxt "!",
+   par [bold [htxt $
+    "Due to small structural changes in the study programs, "++
+    "descriptions of master study programs starting at WS 15/16 will be "++
+    "available in October 2015. For a first orientation, use the "++
+    "descriptions of previous years."]]]
   [italic [htxt "Wichtiger Hinweis: "],
    htxt "Alle Masterstudierenden sollten ihre individualle Planung mit dem ",
    spEHref studyPlannerURL [bold [htxt "Studienplaner"]],
    htxt " durchführen! ",
    htxt "Damit wird weitgehend gewährleistet, dass das geplante Studium ",
-   htxt "auch wirklich durchführbar ist."]
+   htxt "auch wirklich durchführbar ist.",
+   par [bold [htxt $
+    "Auf Grund kleiner Strukturänderungen des Masterstudiengangs Informatik "++
+    "werden Masterprogramme für einen Studienbeginn ab WS 15/16 erst im "++
+    "Oktober 2015 verfügbar sein. Für eine erste Orientierung können "++
+    "Studieninteressierte sich an vergangenen Masterprogrammen orientieren, "++
+    "welche voraussichtlich in ähnlicher Form wieder angeboten werden."]]]
    
 minorSubjectNote sinfo = langSelect sinfo
   [italic [htxt "Note: "],

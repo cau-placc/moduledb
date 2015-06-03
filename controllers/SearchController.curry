@@ -57,6 +57,7 @@ searchModules pat = do
 
 
 -- simple generic string pattern matcher:
+match :: [a] -> [a] -> Bool
 match pattern string = loop pattern string pattern string
   where
     loop []     _      _  _  = True
@@ -123,6 +124,7 @@ showModulesController mods = do
 isMandatoryModule :: ModData -> Bool
 isMandatoryModule md = modDataCode md `elem` mandatoryModulCodes
 
+mandatoryModulCodes :: [String]
 mandatoryModulCodes =
   ["Inf-ADS","Inf-BS","Inf-DigiSys","Inf-EinfPP","Inf-FortProg","Inf-HWP",
    "Inf-IS",

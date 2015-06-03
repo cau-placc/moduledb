@@ -105,19 +105,6 @@ listUserController =
   checkAuthorization (userOperationAllowed ListEntities) $ do
     runQ queryAllUsers >>= return . listUserView
 
-listUserController' =
-  checkAuthorization (userOperationAllowed ListEntities) $ do
-   args <- getControllerParams
-   if null args
-    then runQ queryAllUsers >>= return . listUserView
-    else
-      maybe (displayError "Illegal URL")
-            (\userkey -> do
-               userData <- runJustT $ getUser userkey
-               showUserController userData
-            )
-            (readUserKey (head args))
-
 --- Shows a User entity.
 showUserController :: User -> Controller
 showUserController user =
