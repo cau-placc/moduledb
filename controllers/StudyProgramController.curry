@@ -38,25 +38,26 @@ mainStudyProgramController =
 --- Shows a form to create a new StudyProgram entity.
 newStudyProgramController :: Controller
 newStudyProgramController =
-  checkAuthorization (studyProgramOperationAllowed NewEntity) $
-   (do return (blankStudyProgramView createStudyProgramController))
+  checkAuthorization (studyProgramOperationAllowed NewEntity)
+   $ (\sinfo ->
+     do return
+         (blankStudyProgramView sinfo
+           (\entity ->
+             transactionController (createStudyProgramT entity)
+              (nextInProcessOr listStudyProgramController Nothing))
+           listStudyProgramController))
 
---- Persists a new StudyProgram entity to the database.
-createStudyProgramController
- :: Bool -> (String,String,String,String,Int) -> Controller
-createStudyProgramController False _ = listStudyProgramController
-createStudyProgramController True (name ,shortName ,progKey ,uRLKey
-                                   ,position) =
-  do transResult <- runT
-                     (newStudyProgram name shortName progKey uRLKey position)
-     either (\ _ -> nextInProcessOr listStudyProgramController Nothing)
-      (\ error -> displayError (showTError error)) transResult
+--- Transaction to persist a new StudyProgram entity to the database.
+createStudyProgramT
+  :: (String,String,String,String,String,Int) -> Transaction ()
+createStudyProgramT (name,nameE,shortName,progKey,uRLKey,position) =
+  newStudyProgram name nameE shortName progKey uRLKey position |>> returnT ()
 
 --- Shows a form to edit the given StudyProgram entity.
 editStudyProgramController :: StudyProgram -> Controller
 editStudyProgramController studyProgramToEdit =
   checkAuthorization
-   (studyProgramOperationAllowed (UpdateEntity studyProgramToEdit)) $
+   (studyProgramOperationAllowed (UpdateEntity studyProgramToEdit)) $ \_ ->
    (do return
         (editStudyProgramView studyProgramToEdit
           updateStudyProgramController))
@@ -76,8 +77,8 @@ updateStudyProgramController True studyProgram =
 confirmDeleteStudyProgramController :: StudyProgram -> Controller
 confirmDeleteStudyProgramController studyProgram =
   checkAuthorization
-   (studyProgramOperationAllowed (DeleteEntity studyProgram)) $
-   confirmController
+   (studyProgramOperationAllowed (DeleteEntity studyProgram)) $ \_ ->
+   confirmControllerOLD
     (h3
       [htxt
         (concat
@@ -92,7 +93,7 @@ confirmDeleteStudyProgramController studyProgram =
 deleteStudyProgramController :: StudyProgram -> Controller
 deleteStudyProgramController studyProgram =
   checkAuthorization
-   (studyProgramOperationAllowed (DeleteEntity studyProgram)) $
+   (studyProgramOperationAllowed (DeleteEntity studyProgram)) $ \_ ->
    (do transResult <- runT (deleteStudyProgram studyProgram)
        either (\ _ -> listStudyProgramController)
         (\ error -> displayError (showTError error)) transResult)
@@ -101,7 +102,7 @@ deleteStudyProgramController studyProgram =
 --- or edit an entity.
 listStudyProgramController :: Controller
 listStudyProgramController =
-  checkAuthorization (studyProgramOperationAllowed ListEntities) $
+  checkAuthorization (studyProgramOperationAllowed ListEntities) $ \_ ->
    (do sinfo <- getUserSessionInfo
        studyPrograms <- runQ queryAllStudyPrograms
        return (listStudyProgramView sinfo studyPrograms))
@@ -110,5 +111,5 @@ listStudyProgramController =
 showStudyProgramController :: StudyProgram -> Controller
 showStudyProgramController studyProgram =
   checkAuthorization (studyProgramOperationAllowed (ShowEntity studyProgram))
-   $
+   $ \_ ->
    (do return (showStudyProgramView studyProgram))

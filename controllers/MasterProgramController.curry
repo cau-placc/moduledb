@@ -46,7 +46,7 @@ mainMasterProgramController =
 --- Shows a form to create a new MasterProgram entity.
 newMasterProgramController :: Controller
 newMasterProgramController =
-  checkAuthorization (masterProgramOperationAllowed NewEntity) $ do
+  checkAuthorization (masterProgramOperationAllowed NewEntity) $ \_ -> do
     allMasterCoreAreas <- runQ queryAllMasterCoreAreas
     allUsers <- runQ queryAllUsers
     login <- getSessionLogin
@@ -98,7 +98,7 @@ createMasterProgramController True
 editMasterProgramController :: MasterProgram -> Controller
 editMasterProgramController mprog =
   checkAuthorization
-   (masterProgramOperationAllowed (UpdateEntity mprog)) $
+   (masterProgramOperationAllowed (UpdateEntity mprog)) $ \_ ->
    (do allMasterCoreAreas <- runQ queryAllMasterCoreAreas
        allUsers <- runQ queryAllUsers
        admin    <- isAdmin
@@ -136,7 +136,7 @@ deleteMasterProgramController :: MasterProgram -> Bool -> Controller
 deleteMasterProgramController _ False = defaultController
 deleteMasterProgramController mprog True =
   checkAuthorization
-   (masterProgramOperationAllowed (DeleteEntity mprog)) $
+   (masterProgramOperationAllowed (DeleteEntity mprog)) $ \_ ->
      runT (getDB (queryInfoOfMasterProgram (masterProgramKey mprog)) |>>= \mpi->
            maybe doneT deleteMasterProgInfo mpi |>>
            deleteMasterProgram mprog |>> returnT mpi) >>=
@@ -149,7 +149,7 @@ deleteMasterProgramController mprog True =
 --- or edit an entity.
 listMasterProgramController :: Bool -> Controller
 listMasterProgramController listall =
-  checkAuthorizationWI (masterProgramOperationAllowed ListEntities) $ \sinfo ->
+  checkAuthorization (masterProgramOperationAllowed ListEntities) $ \sinfo ->
    do
     allmpinfos <- runQ queryMasterProgramMainInfos
     let mpinfos = if listall then allmpinfos
@@ -176,7 +176,7 @@ getMCodeForInfo (c,b,mk,t,y) =
 --- Shows a MasterProgram entity.
 showMasterProgramController :: MasterProgram -> Controller
 showMasterProgramController mprog =
-  checkAuthorizationWI
+  checkAuthorization
    (masterProgramOperationAllowed (ShowEntity mprog)) $ \sinfo -> do
       runQ (queryInfoOfMasterProgram (masterProgramKey mprog)) >>=
        maybe (displayError "Illegal Master Program")

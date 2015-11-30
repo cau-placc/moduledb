@@ -1,31 +1,21 @@
-{-
-ER model for database to store modules, study programs, categories
-etc for a module database.
 
-Generate application by:
-
-> cd <dir for generated code>
-
-> ../genmdb
-
-> scripts/compile.sh
-
-Configure and execute "scripts/deploy.sh"
-
--}
-
-(ERD "MDB" 
+ (ERD "MDB" 
      [Entity "StudyProgram" 
-     	  [Attribute "Name"      (StringDom Nothing) NoKey  False, 
-     	   Attribute "ShortName" (StringDom Nothing) Unique False,
-     	   Attribute "ProgKey"   (StringDom Nothing) PKey   False,
-     	   Attribute "URLKey"    (StringDom Nothing) Unique False,
-     	   Attribute "Position"  (IntDom Nothing)    NoKey  False],
+     	  [Attribute "Name"        (StringDom Nothing) NoKey  False, 
+           Attribute "NameE"       (StringDom Nothing) NoKey  True, 
+     	   Attribute "ShortName"   (StringDom Nothing) Unique False,
+     	   Attribute "ProgKey"     (StringDom Nothing) PKey   False,
+     	   Attribute "URLKey"      (StringDom Nothing) Unique False,
+     	   Attribute "Position"    (IntDom Nothing)    NoKey  False],
       Entity "Category"
-     	  [Attribute "Name"      (StringDom Nothing) NoKey False, 
-     	   Attribute "ShortName" (StringDom Nothing) NoKey False,
-     	   Attribute "CatKey"    (StringDom Nothing) PKey  False,
-     	   Attribute "Position"  (IntDom Nothing)    NoKey False],
+     	  [Attribute "Name"        (StringDom Nothing) NoKey False, 
+           Attribute "NameE"       (StringDom Nothing) NoKey True, 
+     	   Attribute "ShortName"   (StringDom Nothing) NoKey False,
+     	   Attribute "CatKey"      (StringDom Nothing) PKey  False,
+           Attribute "Comment"     (StringDom Nothing) NoKey True,
+           Attribute "MinECTS"     (IntDom (Just 0))   NoKey False,
+           Attribute "MaxECTS"     (IntDom (Just 180)) NoKey False,
+     	   Attribute "Position"    (IntDom Nothing)    NoKey False],
       Entity "MasterCoreArea"
           [Attribute "Name"        (StringDom Nothing) NoKey False, 
      	   Attribute "ShortName"   (StringDom Nothing) NoKey False,
@@ -67,6 +57,19 @@ Configure and execute "scripts/deploy.sh"
       Entity "ModInst"
           [Attribute "Term"        (StringDom Nothing)  NoKey False, 
            Attribute "Year"        (IntDom (Just 2011)) NoKey False],
+      Entity "AdvisorStudyProgram"
+          [Attribute "Name"        (StringDom Nothing)  NoKey False, 
+           Attribute "Term"        (StringDom Nothing)  NoKey False, 
+           Attribute "Year"        (IntDom (Just 2015)) NoKey False,
+           Attribute "Desc"        (StringDom Nothing)  NoKey True, 
+           Attribute "Prereq"      (StringDom Nothing)  NoKey True, 
+           Attribute "Comments"    (StringDom Nothing)  NoKey True,
+           Attribute "Visible"     (BoolDom Nothing)    NoKey False],
+      Entity "AdvisorCategory"
+     	  [Attribute "Comment"     (StringDom Nothing)  NoKey True,
+     	   Attribute "Position"    (IntDom Nothing)     NoKey False],
+      Entity "AdvisorModule"
+     	  [Attribute "Compulsory"  (BoolDom Nothing)    NoKey True],
       Entity "MasterProgram"
           [Attribute "Name"        (StringDom Nothing)  NoKey False, 
            Attribute "Term"        (StringDom Nothing)  NoKey False, 
@@ -106,6 +109,21 @@ Configure and execute "scripts/deploy.sh"
       Relationship "ModuleInstances"
        [REnd "ModData"  "withModule"   (Exactly 1),
         REnd "ModInst"  "instOfModule" (Between 0 Infinite)],
+      Relationship "StudyAdvising"
+       [REnd "User"                "advisedBy"        (Exactly 1),
+        REnd "AdvisorStudyProgram" "advisesProgram"   (Between 0 Infinite)],
+      Relationship "StudyProgramsAdvised"
+       [REnd "StudyProgram"        "instanceOf"       (Exactly 1),
+        REnd "AdvisorStudyProgram" "advisedProgram"   (Between 0 Infinite)],
+      Relationship "AdvisedProgramCategories"
+       [REnd "AdvisorStudyProgram" "ofAdvisorProgram"    (Exactly 1),
+        REnd "AdvisorCategory"     "withAdvisorCategory" (Between 0 Infinite)],
+      Relationship "AdvisorCategorizing"
+       [REnd "AdvisorCategory" "belongsToAdvisorCat"  (Exactly 1),
+        REnd "AdvisorModule"   "containsAdvisorMods"  (Between 0 Infinite)],
+      Relationship "AdvisedProgramModuleInstances"
+       [REnd "ModInst"         "withModInst"          (Exactly 1),
+        REnd "AdvisorModule"   "advisorUseofModInst"  (Between 0 Infinite)],
       Relationship "Advising"
        [REnd "User"          "organizedBy" (Exactly 1),
         REnd "MasterProgram" "organizes"   (Between 0 Infinite)],
@@ -116,4 +134,4 @@ Configure and execute "scripts/deploy.sh"
        [REnd "MasterProgram"   "programInfoOf" (Exactly 1),
         REnd "MasterProgInfo"  "withProgInfo"  (Between 0 Infinite)]
       ]
-)
+ )

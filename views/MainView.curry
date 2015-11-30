@@ -24,7 +24,9 @@ mainPageView sinfo studyPrograms =
    par [htxt $ mainExplanation sinfo],
    par $ minorSubjectNote sinfo,
    h2 [htxt $ t "Study programs"],
-   spTable (map (\sp -> [head (studyProgramToListView sp)])
+   spTable (map (\sp -> [langSelect sinfo
+                                    (studyProgramToListView sp !! 1)
+                                    (head (studyProgramToListView sp))])
                 (mergeSort leqStudyProgram studyPrograms)),
    h2 [htxt $ t "Master studies in computer science:"],
    par [spHref "?MCA/list" [htxt $ t "Core areas"], nbsp,

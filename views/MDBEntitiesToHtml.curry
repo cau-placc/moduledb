@@ -14,13 +14,17 @@ import SessionInfo
 --- This view is used in a row of a table of all entities.
 studyProgramToListView :: StudyProgram -> [[HtmlExp]]
 studyProgramToListView studyProgram =
-  [[hrefStudyProgram
-         ("?Category/studyprogram/"++showStudyProgramKey studyProgram)
-         [textstyle "studyprogram" (studyProgramName studyProgram)]]
+  [name2href (studyProgramName studyProgram)
+  ,name2href (studyProgramNameE studyProgram)
   ,[stringToHtml (studyProgramShortName studyProgram)]
   ,[stringToHtml (studyProgramProgKey studyProgram)]
   ,[stringToHtml (studyProgramURLKey studyProgram)]
   ,[intToHtml (studyProgramPosition studyProgram)]]
+ where
+  name2href n =
+    [hrefStudyProgram
+       ("?Category/studyprogram/"++showStudyProgramKey studyProgram)
+       [textstyle "studyprogram" n]]
 
 --- The short view of a StudyProgram entity as a string.
 --- This view is used in menus and comments to refer to a StudyProgram entity.
@@ -34,6 +38,7 @@ studyProgramToDetailsView studyProgram =
     (map (\ (label ,value) -> [label,value])
       (zip studyProgramLabelList detailedView))]
   where detailedView = [[stringToHtml (studyProgramName studyProgram)]
+                            -- TODO: use English translation
                        ,[stringToHtml (studyProgramShortName studyProgram)]
                        ,[stringToHtml (studyProgramProgKey studyProgram)]
                        ,[stringToHtml (studyProgramURLKey studyProgram)]
@@ -43,6 +48,7 @@ studyProgramToDetailsView studyProgram =
 studyProgramLabelList :: [[HtmlExp]]
 studyProgramLabelList =
   [[textstyle "label label_for_type_string" "Name"]
+  ,[textstyle "label label_for_type_string" "English name"]
   ,[textstyle "label label_for_type_string" "ShortName"]
   ,[textstyle "label label_for_type_string" "ProgKey"]
   ,[textstyle "label label_for_type_string" "URLKey"]
@@ -52,11 +58,14 @@ studyProgramLabelList =
 --- This view is used in a row of a table of all entities.
 categoryToListView :: Category -> [[HtmlExp]]
 categoryToListView category =
-  [[hrefCategory ("?Category/show/"++showCategoryKey category)
-                   [stringToHtml (categoryName category)]]
+  [name2href (categoryName category)
+  ,name2href (categoryNameE category)
   ,[stringToHtml (categoryShortName category)]
   ,[stringToHtml (categoryCatKey category)]
   ,[intToHtml (categoryPosition category)]]
+ where
+   name2href n = [hrefCategory ("?Category/show/"++showCategoryKey category)
+                               [stringToHtml n]]
 
 --- The HTML view of a Category entity.
 categoryToHtmlView :: Category -> HtmlExp
@@ -77,6 +86,7 @@ categoryToDetailsView category relatedStudyProgram =
     (map (\ (label ,value) -> [label,value])
       (zip categoryLabelList detailedView))]
   where detailedView = [[stringToHtml (categoryName category)]
+                          -- TODO: use English name
                        ,[stringToHtml (categoryShortName category)]
                        ,[stringToHtml (categoryCatKey category)]
                        ,[intToHtml (categoryPosition category)]
@@ -85,9 +95,13 @@ categoryToDetailsView category relatedStudyProgram =
 --- The labels of a Category entity, as used in HTML tables.
 categoryLabelList :: [[HtmlExp]]
 categoryLabelList =
-  [[textstyle "label label_for_type_string" "Name"]
+  [[textstyle "label label_for_type_string" "Deutscher Name"]
+  ,[textstyle "label label_for_type_string" "Englischer Name"]
   ,[textstyle "label label_for_type_string" "ShortName"]
   ,[textstyle "label label_for_type_string" "CatKey"]
+  ,[textstyle "label label_for_type_string" "Kommentar"]
+  ,[textstyle "label label_for_type_int" "Minimale ECTS"]
+  ,[textstyle "label label_for_type_int" "Maximale ECTS"]
   ,[textstyle "label label_for_type_int" "Position"]
   ,[textstyle "label label_for_type_relation" "StudyProgram"]]
 
@@ -345,6 +359,140 @@ modInstLabelList =
   ,[textstyle "label label_for_type_int" "Jahr"]
   ,[textstyle "label label_for_type_relation" "ModData"]
   ,[textstyle "label label_for_type_relation" "Dozent"]]
+
+--- The list view of a AdvisorStudyProgram entity in HTML format.
+--- This view is used in a row of a table of all entities.
+advisorStudyProgramToListView :: AdvisorStudyProgram -> [[HtmlExp]]
+advisorStudyProgramToListView advisorStudyProgram =
+  [[stringToHtml (advisorStudyProgramName advisorStudyProgram)],[stringToHtml
+                                                                  (advisorStudyProgramTerm
+                                                                    advisorStudyProgram)]
+  ,[intToHtml (advisorStudyProgramYear advisorStudyProgram)],[stringToHtml
+                                                               (advisorStudyProgramDesc
+                                                                 advisorStudyProgram)]
+  ,[stringToHtml (advisorStudyProgramPrereq advisorStudyProgram)]
+  ,[stringToHtml (advisorStudyProgramComments advisorStudyProgram)]
+  ,[boolToHtml (advisorStudyProgramVisible advisorStudyProgram)]]
+
+--- The short view of a AdvisorStudyProgram entity as a string.
+--- This view is used in menus and comments to refer to a AdvisorStudyProgram entity.
+advisorStudyProgramToShortView :: AdvisorStudyProgram -> String
+advisorStudyProgramToShortView advisorStudyProgram =
+  advisorStudyProgramName advisorStudyProgram
+
+--- The detailed view of a AdvisorStudyProgram entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+advisorStudyProgramToDetailsView
+  :: AdvisorStudyProgram -> StudyProgram -> User -> [HtmlExp]
+advisorStudyProgramToDetailsView
+    advisorStudyProgram relatedStudyProgram relatedUser =
+  [spTable
+    (map (\(label,value) -> [label,value])
+      (zip advisorStudyProgramLabelList detailedView))]
+  where
+    detailedView =
+      [[stringToHtml (advisorStudyProgramName advisorStudyProgram)]
+      ,[stringToHtml (advisorStudyProgramTerm advisorStudyProgram)],[intToHtml
+                                                                      (advisorStudyProgramYear
+                                                                        advisorStudyProgram)]
+      ,[stringToHtml (advisorStudyProgramDesc advisorStudyProgram)]
+      ,[stringToHtml (advisorStudyProgramPrereq advisorStudyProgram)]
+      ,[stringToHtml (advisorStudyProgramComments advisorStudyProgram)]
+      ,[boolToHtml (advisorStudyProgramVisible advisorStudyProgram)],[htxt
+                                                                       (studyProgramToShortView
+                                                                         relatedStudyProgram)]
+      ,[htxt (userToShortView relatedUser)]]
+
+--- The labels of a AdvisorStudyProgram entity, as used in HTML tables.
+advisorStudyProgramLabelList :: [[HtmlExp]]
+advisorStudyProgramLabelList =
+  [[textstyle "label label_for_type_string" "Name"],[textstyle
+                                                      "label label_for_type_string"
+                                                      "Term"],[textstyle
+                                                                "label label_for_type_int"
+                                                                "Year"]
+  ,[textstyle "label label_for_type_string" "Desc"],[textstyle
+                                                      "label label_for_type_string"
+                                                      "Prereq"],[textstyle
+                                                                  "label label_for_type_string"
+                                                                  "Comments"]
+  ,[textstyle "label label_for_type_bool" "Visible"],[textstyle
+                                                       "label label_for_type_relation"
+                                                       "StudyProgram"]
+  ,[textstyle "label label_for_type_relation" "User"]]
+
+--- The list view of a AdvisorCategory entity in HTML format.
+--- This view is used in a row of a table of all entities.
+advisorCategoryToListView :: AdvisorCategory -> [[HtmlExp]]
+advisorCategoryToListView advisorCategory =
+  [[stringToHtml (advisorCategoryComment advisorCategory)],[intToHtml
+                                                             (advisorCategoryPosition
+                                                               advisorCategory)]]
+
+--- The short view of a AdvisorCategory entity as a string.
+--- This view is used in menus and comments to refer to a AdvisorCategory entity.
+advisorCategoryToShortView :: AdvisorCategory -> String
+advisorCategoryToShortView advisorCategory =
+  advisorCategoryComment advisorCategory
+
+--- The detailed view of a AdvisorCategory entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+advisorCategoryToDetailsView
+  :: AdvisorCategory -> AdvisorStudyProgram -> [HtmlExp]
+advisorCategoryToDetailsView advisorCategory relatedAdvisorStudyProgram =
+  [spTable
+    (map (\(label,value) -> [label,value])
+      (zip advisorCategoryLabelList detailedView))]
+  where
+    detailedView =
+      [[stringToHtml (advisorCategoryComment advisorCategory)],[intToHtml
+                                                                 (advisorCategoryPosition
+                                                                   advisorCategory)]
+      ,[htxt (advisorStudyProgramToShortView relatedAdvisorStudyProgram)]]
+
+--- The labels of a AdvisorCategory entity, as used in HTML tables.
+advisorCategoryLabelList :: [[HtmlExp]]
+advisorCategoryLabelList =
+  [[textstyle "label label_for_type_string" "Comment"],[textstyle
+                                                         "label label_for_type_int"
+                                                         "Position"]
+  ,[textstyle "label label_for_type_relation" "AdvisorStudyProgram"]]
+
+--- The list view of a AdvisorModule entity in HTML format.
+--- This view is used in a row of a table of all entities.
+advisorModuleToListView :: AdvisorModule -> [[HtmlExp]]
+advisorModuleToListView advisorModule =
+  [[maybeBoolToHtml (advisorModuleCompulsory advisorModule)]]
+
+--- The short view of a AdvisorModule entity as a string.
+--- This view is used in menus and comments to refer to a AdvisorModule entity.
+advisorModuleToShortView :: AdvisorModule -> String
+advisorModuleToShortView advisorModule =
+  show (advisorModuleCompulsory advisorModule)
+
+--- The detailed view of a AdvisorModule entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+advisorModuleToDetailsView
+  :: AdvisorModule -> ModInst -> AdvisorCategory -> [HtmlExp]
+advisorModuleToDetailsView
+    advisorModule relatedModInst relatedAdvisorCategory =
+  [spTable
+    (map (\(label,value) -> [label,value])
+      (zip advisorModuleLabelList detailedView))]
+  where
+    detailedView =
+      [[maybeBoolToHtml (advisorModuleCompulsory advisorModule)],[htxt
+                                                                   (modInstToShortView
+                                                                     relatedModInst)]
+      ,[htxt (advisorCategoryToShortView relatedAdvisorCategory)]]
+
+--- The labels of a AdvisorModule entity, as used in HTML tables.
+advisorModuleLabelList :: [[HtmlExp]]
+advisorModuleLabelList =
+  [[textstyle "label label_for_type_bool" "Compulsory"],[textstyle
+                                                          "label label_for_type_relation"
+                                                          "ModInst"]
+  ,[textstyle "label label_for_type_relation" "AdvisorCategory"]]
 
 --- The list view of a MasterProgram entity in HTML format.
 --- This view is used in a row of a table of all entities.

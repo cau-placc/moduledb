@@ -1,1 +1,0 @@
-Prog "MainPageView" ["HTML","Prelude"] [] [Func ("MainPageView","mainPageView") 0 Public (TCons ("Prelude","[]") [TCons ("HTML","HtmlExp") []]) (Rule [] (Var 0))] []

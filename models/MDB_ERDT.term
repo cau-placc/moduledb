@@ -1,4 +1,4 @@
-{- ERD specification transformed from /home/mh/home/kiel/master/newprogs/mdb.erdterm -}
+{- ERD specification transformed from /home/mh/home/curry/applications/MDB/mdbext.erdterm -}
 
  ERD "MDB"
    [Entity "Categorizing"
@@ -7,6 +7,7 @@
     Entity "StudyProgram"
            [Attribute "Key" (IntDom Nothing) PKey False,
             Attribute "Name" (StringDom Nothing) NoKey False,
+            Attribute "NameE" (StringDom Nothing) NoKey True,
             Attribute "ShortName" (StringDom Nothing) Unique False,
             Attribute "ProgKey" (StringDom Nothing) Unique False,
             Attribute "URLKey" (StringDom Nothing) Unique False,
@@ -14,8 +15,12 @@
     Entity "Category"
            [Attribute "Key" (IntDom Nothing) PKey False,
             Attribute "Name" (StringDom Nothing) NoKey False,
+            Attribute "NameE" (StringDom Nothing) NoKey True,
             Attribute "ShortName" (StringDom Nothing) NoKey False,
             Attribute "CatKey" (StringDom Nothing) Unique False,
+            Attribute "Comment" (StringDom Nothing) NoKey True,
+            Attribute "MinECTS" (IntDom (Just 0)) NoKey False,
+            Attribute "MaxECTS" (IntDom (Just 180)) NoKey False,
             Attribute "Position" (IntDom Nothing) NoKey False,
             Attribute "StudyProgramProgramCategoriesKey" (KeyDom "StudyProgram") NoKey False],
     Entity "MasterCoreArea"
@@ -68,6 +73,27 @@
             Attribute "Year" (IntDom (Just 2011)) NoKey False,
             Attribute "UserLecturerModsKey" (KeyDom "User") NoKey False,
             Attribute "ModDataModuleInstancesKey" (KeyDom "ModData") NoKey False],
+    Entity "AdvisorStudyProgram"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Name" (StringDom Nothing) NoKey False,
+            Attribute "Term" (StringDom Nothing) NoKey False,
+            Attribute "Year" (IntDom (Just 2015)) NoKey False,
+            Attribute "Desc" (StringDom Nothing) NoKey True,
+            Attribute "Prereq" (StringDom Nothing) NoKey True,
+            Attribute "Comments" (StringDom Nothing) NoKey True,
+            Attribute "Visible" (BoolDom Nothing) NoKey False,
+            Attribute "UserStudyAdvisingKey" (KeyDom "User") NoKey False,
+            Attribute "StudyProgramStudyProgramsAdvisedKey" (KeyDom "StudyProgram") NoKey False],
+    Entity "AdvisorCategory"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Comment" (StringDom Nothing) NoKey True,
+            Attribute "Position" (IntDom Nothing) NoKey False,
+            Attribute "AdvisorStudyProgramAdvisedProgramCategoriesKey" (KeyDom "AdvisorStudyProgram") NoKey False],
+    Entity "AdvisorModule"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Compulsory" (BoolDom Nothing) NoKey True,
+            Attribute "AdvisorCategoryAdvisorCategorizingKey" (KeyDom "AdvisorCategory") NoKey False,
+            Attribute "ModInstAdvisedProgramModuleInstancesKey" (KeyDom "ModInst") NoKey False],
     Entity "MasterProgram"
            [Attribute "Key" (IntDom Nothing) PKey False,
             Attribute "Name" (StringDom Nothing) NoKey False,
@@ -103,6 +129,21 @@
     Relationship "Advising"
                  [REnd "User" "organizedBy" (Exactly 1),
                   REnd "MasterProgram" "organizes" (Between 0 Infinite)],
+    Relationship "AdvisedProgramModuleInstances"
+                 [REnd "ModInst" "withModInst" (Exactly 1),
+                  REnd "AdvisorModule" "advisorUseofModInst" (Between 0 Infinite)],
+    Relationship "AdvisorCategorizing"
+                 [REnd "AdvisorCategory" "belongsToAdvisorCat" (Exactly 1),
+                  REnd "AdvisorModule" "containsAdvisorMods" (Between 0 Infinite)],
+    Relationship "AdvisedProgramCategories"
+                 [REnd "AdvisorStudyProgram" "ofAdvisorProgram" (Exactly 1),
+                  REnd "AdvisorCategory" "withAdvisorCategory" (Between 0 Infinite)],
+    Relationship "StudyProgramsAdvised"
+                 [REnd "StudyProgram" "instanceOf" (Exactly 1),
+                  REnd "AdvisorStudyProgram" "advisedProgram" (Between 0 Infinite)],
+    Relationship "StudyAdvising"
+                 [REnd "User" "advisedBy" (Exactly 1),
+                  REnd "AdvisorStudyProgram" "advisesProgram" (Between 0 Infinite)],
     Relationship "ModuleInstances"
                  [REnd "ModData" "withModule" (Exactly 1),
                   REnd "ModInst" "instOfModule" (Between 0 Infinite)],

@@ -76,7 +76,7 @@ newImportModDataController = newModuleController True
 --- (without a description)
 newModuleController :: Bool -> Controller
 newModuleController isimport =
-  checkAuthorization (modDataOperationAllowed NewEntity) $
+  checkAuthorization (modDataOperationAllowed NewEntity) $ \_ ->
    (do admin <- isAdmin
        spcats <- getStudyProgramsWithCats
        allUsers <- runQ queryAllUsers
@@ -110,7 +110,7 @@ createModDataController isimport True
 --- Shows a form to edit the given ModData entity.
 editModDataController :: ModData -> Controller
 editModDataController modDataToEdit =
-  checkAuthorization (modDataOperationAllowed (UpdateEntity modDataToEdit)) $
+  checkAuthorization (modDataOperationAllowed (UpdateEntity modDataToEdit)) $     \_ ->
    (do admin <- isAdmin
        spcats <- if admin then getStudyProgramsWithCats else return []
        allUsers <- runQ queryAllUsers
@@ -142,7 +142,7 @@ updateModDataController True (modData,newcats) = do
 --- and proceeds with the list controller.
 confirmDeleteModDataController :: ModData -> Controller
 confirmDeleteModDataController modData =
-  confirmController
+  confirmControllerOLD
    (h3
      [htxt
        (concat ["Really delete entity \"",modDataToShortView modData,"\"?"])])
@@ -154,7 +154,7 @@ confirmDeleteModDataController modData =
 --- argument) and proceeds with the list controller.
 deleteModDataController :: ModData -> Controller
 deleteModDataController modData =
-  checkAuthorization checkAdmin $
+  checkAuthorization checkAdmin $ \_->
     runT (getModDataCategorys modData |>>= \oldCategorizingCategorys ->
           killCategorizing oldCategorizingCategorys |>>
           getDB (queryDescriptionOfMod (modDataKey modData)) |>>= \mbdescr ->
@@ -175,14 +175,14 @@ deleteModDataController modData =
 --- Controller for showing the number of students of a module in a semester:
 numberModuleController :: String -> ModData -> Controller
 numberModuleController sem mdata =
- checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ do
+ checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ \_ -> do
   nums <- getModuleStudents mdata sem
   return (numberModuleView sem mdata nums)
 
 --- Controller for copying a module with a new code:
 copyModuleController :: ModData -> Controller
 copyModuleController mdata =
- checkAuthorization checkAdmin $ do
+ checkAuthorization checkAdmin $ \_ -> do
   maybemdesc <- runQ $ queryDescriptionOfMod (modDataKey mdata)
   maybe (displayError "Illegal URL: cannot copy external module")
         (\mdesc ->
@@ -229,7 +229,7 @@ storeCopiedModController mdata mdesc newcode = do
 --- or edit an entity.
 listAllModDataController :: Controller
 listAllModDataController =
-  checkAuthorization (modDataOperationAllowed ListEntities) $ do
+  checkAuthorization (modDataOperationAllowed ListEntities) $ \_ -> do
     admin <- isAdmin
     login <- getSessionLogin
     modDatas <- runQ queryAllModDatas
@@ -242,7 +242,7 @@ listAllModDataController =
 --- or edit an entity.
 listModDataController :: Controller
 listModDataController =
-  checkAuthorization (modDataOperationAllowed ListEntities) $ do
+  checkAuthorization (modDataOperationAllowed ListEntities) $ \_ -> do
     admin <- isAdmin
     login <- getSessionLogin
     args <- getControllerParams
@@ -259,7 +259,7 @@ listModDataController =
 --- Controller to generate the PDF of a module.
 pdfModDataController :: ModData -> Controller
 pdfModDataController modData =
-  checkAuthorization (modDataOperationAllowed (ShowEntity modData)) $ do
+  checkAuthorization (modDataOperationAllowed (ShowEntity modData)) $ \_ -> do
     responsibleUser <- runJustT (getResponsibleUser modData)
     categories <- runJustT (getModDataCategorys modData)
     sprogs <- runQ queryAllStudyPrograms
@@ -329,7 +329,7 @@ getStudyProgramsWithCats = do
 -- A controller (and view) to send an email:
 emailModuleController :: ModData -> Controller
 emailModuleController mdata =
- checkAuthorization checkAdmin $ do
+ checkAuthorization checkAdmin $ \_ -> do
   user <- runJustT (getResponsibleUser mdata)
   emailModuleMessageController (showModDataController mdata) mdata user
     "Lieber Modulverantwortlicher,\n\n\nViele Gruesse\n\n"

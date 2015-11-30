@@ -34,7 +34,7 @@
 
 module KeyDatabase (
 
-  Key, KeyPred,
+  -- Key, KeyPred,
 
   Query, runQ, transformQ, getDB,
 

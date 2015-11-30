@@ -35,7 +35,7 @@ masterCoreAreaController = do
 --- Shows a form to create a new MasterCoreArea entity.
 newMasterCoreAreaController :: Controller
 newMasterCoreAreaController =
-  checkAuthorization (masterCoreAreaOperationAllowed NewEntity) $
+  checkAuthorization (masterCoreAreaOperationAllowed NewEntity) $ \_ ->
    (do return (blankMasterCoreAreaView createMasterCoreAreaController))
 
 --- Persists a new MasterCoreArea entity to the database.
@@ -54,7 +54,7 @@ createMasterCoreAreaController True (name ,shortName ,description ,areaKey
 editMasterCoreAreaController :: MasterCoreArea -> Controller
 editMasterCoreAreaController masterCoreAreaToEdit =
   checkAuthorization
-   (masterCoreAreaOperationAllowed (UpdateEntity masterCoreAreaToEdit)) $
+   (masterCoreAreaOperationAllowed (UpdateEntity masterCoreAreaToEdit)) $ \_ ->
    (do return
         (editMasterCoreAreaView masterCoreAreaToEdit
           updateMasterCoreAreaController))
@@ -73,7 +73,7 @@ updateMasterCoreAreaController True mca =
 --- and proceeds with the show controller.
 askAndDeleteMasterCoreAreaController :: MasterCoreArea -> Controller
 askAndDeleteMasterCoreAreaController mca =
-  confirmController
+  confirmControllerOLD
     (h3 [htxt (concat ["Really delete entity \""
                       ,masterCoreAreaToShortView mca,"\"?"])])
     (\ack -> if ack
@@ -85,7 +85,7 @@ askAndDeleteMasterCoreAreaController mca =
 deleteMasterCoreAreaController :: MasterCoreArea -> Controller
 deleteMasterCoreAreaController masterCoreArea =
   checkAuthorization
-   (masterCoreAreaOperationAllowed (DeleteEntity masterCoreArea)) $
+   (masterCoreAreaOperationAllowed (DeleteEntity masterCoreArea)) $ \_ ->
    (do transResult <- runT (deleteMasterCoreArea masterCoreArea)
        either (\ _ -> listMasterCoreAreaController)
         (\ error -> displayError (showTError error)) transResult)
@@ -94,7 +94,7 @@ deleteMasterCoreAreaController masterCoreArea =
 --- or edit an entity.
 listMasterCoreAreaController :: Controller
 listMasterCoreAreaController =
-  checkAuthorization (masterCoreAreaOperationAllowed ListEntities) $
+  checkAuthorization (masterCoreAreaOperationAllowed ListEntities) $ \_ ->
    (do admin <- isAdmin
        masterCoreAreas <- runQ queryAllMasterCoreAreas
        return (listMasterCoreAreaView admin masterCoreAreas))
@@ -103,5 +103,5 @@ listMasterCoreAreaController =
 showMasterCoreAreaController :: MasterCoreArea -> Controller
 showMasterCoreAreaController masterCoreArea =
   checkAuthorization
-   (masterCoreAreaOperationAllowed (ShowEntity masterCoreArea)) $
+   (masterCoreAreaOperationAllowed (ShowEntity masterCoreArea)) $ \_ ->
    (do return (showMasterCoreAreaView masterCoreArea))

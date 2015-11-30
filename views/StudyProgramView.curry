@@ -15,33 +15,40 @@ import SessionInfo
 import MultiLang
 
 --- The WUI specification for the entity type StudyProgram.
-wStudyProgram :: WuiSpec (String,String,String,String,Int)
+wStudyProgram :: WuiSpec (String,String,String,String,String,Int)
 wStudyProgram =
   withRendering
-   (w5Tuple wRequiredString wRequiredString wRequiredString wRequiredString
+   (w6Tuple wRequiredString wString wRequiredString wRequiredString
+     wRequiredString
      wInt)
    (renderLabels studyProgramLabelList)
 
 --- Transformation from data of a WUI form to entity type StudyProgram.
 tuple2StudyProgram
- :: StudyProgram -> (String,String,String,String,Int) -> StudyProgram
-tuple2StudyProgram studyProgramToUpdate (name ,shortName ,progKey ,uRLKey
-                                         ,position) =
+  :: StudyProgram -> (String,String,String,String,String,Int) -> StudyProgram
+tuple2StudyProgram
+    studyProgramToUpdate (name,nameE,shortName,progKey,uRLKey,position) =
   setStudyProgramName
-   (setStudyProgramShortName
-     (setStudyProgramProgKey
-       (setStudyProgramURLKey
-         (setStudyProgramPosition studyProgramToUpdate position) uRLKey)
-       progKey)
-     shortName)
+   (setStudyProgramNameE
+     (setStudyProgramShortName
+       (setStudyProgramProgKey
+         (setStudyProgramURLKey
+           (setStudyProgramPosition studyProgramToUpdate position)
+           uRLKey)
+         progKey)
+       shortName)
+     nameE)
    name
 
 --- Transformation from entity type StudyProgram to a tuple
 --- which can be used in WUI specifications.
-studyProgram2Tuple :: StudyProgram -> (String,String,String,String,Int)
+studyProgram2Tuple :: StudyProgram -> (String,String,String,String,String,Int)
 studyProgram2Tuple studyProgram =
-  (studyProgramName studyProgram,studyProgramShortName studyProgram
-  ,studyProgramProgKey studyProgram,studyProgramURLKey studyProgram
+  (studyProgramName studyProgram
+  ,studyProgramNameE studyProgram
+  ,studyProgramShortName studyProgram
+  ,studyProgramProgKey studyProgram
+  ,studyProgramURLKey studyProgram
   ,studyProgramPosition studyProgram)
 
 --- WUI Type for editing or creating StudyProgram entities.
@@ -54,27 +61,45 @@ wStudyProgramType studyProgram =
 --- Supplies a WUI form to create a new StudyProgram entity.
 --- The fields of the entity have some default values.
 blankStudyProgramView
- :: (Bool -> (String,String,String,String,Int) -> Controller) -> [HtmlExp]
-blankStudyProgramView controller =
-  createStudyProgramView [] [] [] [] 0 controller
+  :: UserSessionInfo
+  -> ((String,String,String,String,String,Int) -> Controller)
+  -> Controller -> [HtmlExp]
+blankStudyProgramView sinfo controller cancelcontroller =
+  createStudyProgramView sinfo "" "" "" "" "" 0 controller cancelcontroller
 
 --- Supplies a WUI form to create a new StudyProgram entity.
 --- Takes default values to be prefilled in the form fields.
 createStudyProgramView
- :: String -> String -> String -> String -> Int
-  -> (Bool -> (String,String,String,String,Int) -> Controller) -> [HtmlExp]
-createStudyProgramView defaultName defaultShortName defaultProgKey
-                       defaultURLKey defaultPosition controller =
-  let initdata = (defaultName,defaultShortName,defaultProgKey,defaultURLKey
-                 ,defaultPosition)
-      
-      wuiframe = wuiEditForm "new StudyProgram" "create"
-                  (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm wStudyProgram initdata
-                         (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
+  :: UserSessionInfo
+  -> String
+  -> String
+  -> String
+  -> String
+  -> String
+  -> Int
+  -> ((String,String,String,String,String,Int) -> Controller)
+  -> Controller -> [HtmlExp]
+createStudyProgramView
+    _
+    defaultName
+    defaultNameE
+    defaultShortName
+    defaultProgKey
+    defaultURLKey
+    defaultPosition
+    controller
+    cancelcontroller =
+  renderWuiForm wStudyProgram
+   (defaultName
+   ,defaultNameE
+   ,defaultShortName
+   ,defaultProgKey
+   ,defaultURLKey
+   ,defaultPosition)
+   controller
+   cancelcontroller
+   "Create new StudyProgram"
+   "create"
 
 --- Supplies a WUI form to edit the given StudyProgram entity.
 --- Takes also associated entities and a list of possible associations
@@ -111,10 +136,12 @@ listStudyProgramView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
 listStudyProgramView sinfo studyPrograms =
   if isAdminSession sinfo
   then [h1 [htxt $ t "Study programs"],
-        spTable ([take 5 studyProgramLabelList] ++
+        spTable ([take 6 studyProgramLabelList] ++
                 map listStudyProgram (mergeSort leqStudyProgram studyPrograms))]
   else [h1 [htxt $ t "Study programs"],
-        spTable (map (\sp -> [head (studyProgramToListView sp)])
+        spTable (map (\sp -> [langSelect sinfo
+                                (studyProgramToListView sp !! 1)
+                                (head (studyProgramToListView sp))])
                      (mergeSort leqStudyProgram studyPrograms))]
  where t = translate sinfo
 

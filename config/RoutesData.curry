@@ -2,20 +2,29 @@ module RoutesData where
 
 import Authentication
 
-data ControllerReference
- = MainPageController | SearchController
- | ProcessListController | LoginController
- | StudyProgramController
- | CategoryController
- | MasterCoreAreaController
- | UserController
- | ModDataController
- | ModInstController
- | MasterProgramController
- | UnivisInfoController 
+data ControllerReference = MainPageController
+                         | SearchController
+                         | ProcessListController
+                         | LoginController
+                         | StudyProgramController
+                         | CategoryController
+                         | MasterCoreAreaController
+                         | UserController
+                         | ModDataController
+                         | ModDescrController
+                         | ModInstController
+                         | AdvisorStudyProgramController
+                         | AdvisorCategoryController
+                         | AdvisorModuleController
+                         | MasterProgramController
+                         | MasterProgInfoController
+                         | UnivisInfoController
 
-data UrlMatch = Exact String | Prefix String String
-              | Matcher (String -> Bool) | Always 
+data UrlMatch = Exact String
+              | Prefix String String
+              | Matcher (String -> Bool)
+              | Always
+
 type Route = (String,UrlMatch,ControllerReference)
 
 --- This constant specifies the association of URLs to controllers.
@@ -32,14 +41,14 @@ getRoutes =
       ,("Modulsuche",Prefix "search" "main",SearchController)
       ,("Studiengänge",Prefix "StudyProgram" "list",StudyProgramController)] ++
       addIf admin
-        [("Neues Modul",Prefix "ModData" "new",ModDataController),
-         ("Neues Importmodul",Prefix "ModData" "newimp",ModDataController),
-         ("Alle Benutzer",Prefix "User" "list",UserController),
-         ("Neuer Benutzer",Prefix "User" "new",UserController),
-         ("Neuer Studiengang",Prefix "StudyProgram" "new",
-                              StudyProgramController),
-         ("Neue Kategorie",Prefix "Category" "new",CategoryController),
-         ("Neuer Masterbereich",Prefix "MCA" "new",MasterCoreAreaController)] ++
+        [("Neues Modul",Prefix "ModData" "new",ModDataController)
+        ,("Neues Importmodul",Prefix "ModData" "newimp",ModDataController)
+        ,("Alle Benutzer",Prefix "User" "list",UserController)
+        ,("Neuer Benutzer",Prefix "User" "new",UserController)
+        ,("Neuer Studiengang",Prefix "StudyProgram" "new",
+                              StudyProgramController)
+        ,("Neue Kategorie",Prefix "Category" "new",CategoryController)
+        ,("Neuer Masterbereich",Prefix "MCA" "new",MasterCoreAreaController)] ++
       [("Alle Kategorien",Prefix "Category" "list",CategoryController)
       ,("Masterbereiche",Prefix "MCA" "list",MasterCoreAreaController)
       ,("List ModData",Prefix "ModData" "list",ModDataController)
@@ -50,6 +59,10 @@ getRoutes =
                                       UnivisInfoController)
       ,("Zeige UnivisInfo-Daten",Prefix "UnivisInfo" "list",
                                  UnivisInfoController)
+      --,("List AdvisorStudyProgram",Prefix "AdvisorStudyProgram" "list"
+      --                            ,AdvisorStudyProgramController)
+      --,("New AdvisorStudyProgram" ,Prefix "AdvisorStudyProgram" "new"
+      --                            ,AdvisorStudyProgramController)
       ,(maybe "An" (const "Ab") login ++ "melden",Exact "login",LoginController)
       ,("default",Always,MainPageController)]
  where

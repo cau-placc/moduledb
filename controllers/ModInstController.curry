@@ -35,7 +35,7 @@ mainModInstController =
 --- Shows a form to add a new ModInst entity for a module.
 addModInstController :: ModData -> User -> Controller -> Controller
 addModInstController md user cntcontroller =
-  checkAuthorization (modInstOperationAllowed NewEntity) $ do
+  checkAuthorization (modInstOperationAllowed NewEntity) $ \_ -> do
     allUsers <- runQ (transformQ (mergeSort leqUser) queryAllUsers)
     return (addModInstView user allUsers
                            (createModInstController md cntcontroller))
@@ -156,7 +156,7 @@ updateModInstController True modInst =
 deleteModInstController :: ModInst -> Bool -> Controller
 deleteModInstController _ False = listModInstController
 deleteModInstController modInst True =
-  checkAuthorization (modInstOperationAllowed (DeleteEntity modInst)) $
+  checkAuthorization (modInstOperationAllowed (DeleteEntity modInst)) $ \_ ->
    (do transResult <- runT (deleteModInst modInst)
        either (\ _ -> listModInstController)
         (\ error -> displayError (showTError error)) transResult)
@@ -165,7 +165,7 @@ deleteModInstController modInst True =
 --- or edit an entity.
 listModInstController :: Controller
 listModInstController =
-  checkAuthorization (modInstOperationAllowed ListEntities) $ do
+  checkAuthorization (modInstOperationAllowed ListEntities) $ \_ -> do
     args <- getControllerParams
     if null args
      then displayError "Illegal URL"
@@ -183,7 +183,7 @@ listModInstController =
 --- Shows a ModInst entity.
 showModInstController :: ModInst -> Controller
 showModInstController mi =
-  checkAuthorization (modInstOperationAllowed (ShowEntity mi)) $
+  checkAuthorization (modInstOperationAllowed (ShowEntity mi)) $ \_ ->
    (do user <- runJustT $ getUser (modInstUserLecturerModsKey mi)
        moddata <- runJustT $ getModData (modInstModDataModuleInstancesKey mi)
        [mpkeys] <- runQ $ getMasterProgramKeysOfModInst [mi]

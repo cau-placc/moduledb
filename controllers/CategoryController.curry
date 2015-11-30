@@ -51,28 +51,36 @@ categoryController = do
 --- Shows a form to create a new Category entity.
 newCategoryController :: Controller
 newCategoryController =
-  checkAuthorization (categoryOperationAllowed NewEntity) $
-   (do allStudyPrograms <- runQ queryAllStudyPrograms
-       return (blankCategoryView allStudyPrograms createCategoryController))
+  checkAuthorization (categoryOperationAllowed NewEntity)
+   $ (\sinfo ->
+     do allStudyPrograms <- runQ queryAllStudyPrograms
+        return
+         (blankCategoryView sinfo allStudyPrograms
+           (\entity ->
+             transactionController (createCategoryT entity)
+              (nextInProcessOr listAllCategoryController Nothing))
+           listAllCategoryController))
 
---- Persists a new Category entity to the database.
-createCategoryController
- :: Bool -> (String,String,String,Int,StudyProgram) -> Controller
-createCategoryController False _ = defaultController
-createCategoryController True (name ,shortName ,catKey ,position
-                               ,studyProgram) =
-  do transResult <- runT
-                     (newCategoryWithStudyProgramProgramCategoriesKey name
-                       shortName catKey position
-                       (studyProgramKey studyProgram))
-     either (\ _ -> nextInProcessOr listAllCategoryController Nothing)
-      (\ error -> displayError (showTError error)) transResult
+--- Transaction to persist a new Category entity to the database.
+createCategoryT
+  :: (String,String,String,String,String,Int,Int,Int,StudyProgram)
+  -> Transaction ()
+createCategoryT
+    (name,nameE,shortName,catKey,comment,minECTS,maxECTS,position
+    ,studyProgram) =
+  newCategoryWithStudyProgramProgramCategoriesKey name nameE shortName catKey
+   comment
+   (Just minECTS)
+   (Just maxECTS)
+   position
+   (studyProgramKey studyProgram)
+   |>> returnT ()
 
 --- Shows a form to edit the given Category entity.
 editCategoryController :: Category -> Controller
 editCategoryController categoryToEdit =
   checkAuthorization (categoryOperationAllowed (UpdateEntity categoryToEdit))
-   $
+   $ \_ ->
    (do allStudyPrograms <- runQ queryAllStudyPrograms
        programCategoriesStudyProgram <- runJustT
                                          (getProgramCategoriesStudyProgram
@@ -95,7 +103,7 @@ updateCategoryController True category =
 --- and proceeds with the show controller.
 askAndDeleteCategoryController :: Category -> Controller
 askAndDeleteCategoryController cat =
-  confirmController
+  confirmControllerOLD
     (h3 [htxt (concat ["Kategorie \"",categoryToShortView cat
                       ,"\" wirklich löschen?"])])
     (\ack -> if ack
@@ -105,7 +113,7 @@ askAndDeleteCategoryController cat =
 --- Deletes a given Category entity and proceeds with the list controller.
 deleteCategoryController :: Category -> Controller
 deleteCategoryController category =
-  checkAuthorization (categoryOperationAllowed (DeleteEntity category)) $
+  checkAuthorization (categoryOperationAllowed (DeleteEntity category)) $ \_ ->
    (do transResult <- runT (deleteCategory category)
        either (\ _ -> listAllCategoryController)
         (\ error -> displayError (showTError error)) transResult)
@@ -114,7 +122,7 @@ deleteCategoryController category =
 --- or edit an entity.
 listAllCategoryController :: Controller
 listAllCategoryController =
-  checkAuthorizationWI (categoryOperationAllowed ListEntities) $ \sinfo ->
+  checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
     do let t = translate sinfo
        categorys <- runQ queryAllCategorys
        return (listCategoryView sinfo (Right $ t "All categories")
@@ -126,7 +134,7 @@ listAllCategoryController =
 --- Controller to list all modules of the current user.
 listCurrentUserCategoryController :: Controller
 listCurrentUserCategoryController =
-  checkAuthorizationWI (categoryOperationAllowed ListEntities) $ \sinfo ->
+  checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
     do let lname = maybe "" id (userLoginOfSession sinfo)
        -- get user entries with a given login name
        users <- runQ $ queryCondUser (\u -> userLogin u == lname)
@@ -143,7 +151,7 @@ listCurrentUserCategoryController =
 --- Lists a study program with all its Category entities.
 listStudyProgramCategoryController :: Bool -> StudyProgram -> Controller
 listStudyProgramCategoryController listall studyprog =
-  checkAuthorizationWI (categoryOperationAllowed ListEntities) $ \sinfo ->
+  checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
     do categorys <- runQ $ queryCategorysOfStudyProgram
                                            (studyProgramKey studyprog)
        catmods <- runJustT $
@@ -239,7 +247,7 @@ showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
 --- Shows a Category entity.
 showCategoryController :: Category -> Controller
 showCategoryController cat =
-  checkAuthorizationWI (categoryOperationAllowed (ShowEntity cat)) $ \sinfo ->
+  checkAuthorization (categoryOperationAllowed (ShowEntity cat)) $ \sinfo ->
    (do sprogs <- runQ queryAllStudyPrograms
        let spk     = categoryStudyProgramProgramCategoriesKey cat
            mbsprog = find (\p -> studyProgramKey p == spk) sprogs

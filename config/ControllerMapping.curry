@@ -11,6 +11,9 @@ import UserController
 import ModDataController
 import ModDescrController
 import ModInstController
+import AdvisorStudyProgramController
+import AdvisorCategoryController
+import AdvisorModuleController
 import MasterProgramController
 import MasterProgInfoController
 import UnivisInfoController
@@ -22,16 +25,19 @@ import SearchController
 getController :: ControllerReference -> Controller
 getController fktref =
   case fktref of
-   MainPageController -> mainPageController
-   SearchController -> searchController
-   ProcessListController -> processListController
-   LoginController -> loginController
-   StudyProgramController -> mainStudyProgramController
-   CategoryController -> categoryController
-   MasterCoreAreaController -> masterCoreAreaController
-   UserController -> userController
-   ModDataController -> mainModDataController
-   ModInstController -> mainModInstController
-   MasterProgramController -> mainMasterProgramController
-   UnivisInfoController -> mainUnivisInfoController
-   _ -> displayError "getController: no mapping found"
+    MainPageController -> mainPageController
+    SearchController -> searchController
+    ProcessListController -> processListController
+    LoginController -> loginController
+    StudyProgramController -> mainStudyProgramController
+    CategoryController -> categoryController
+    MasterCoreAreaController -> masterCoreAreaController
+    UserController -> userController
+    ModDataController -> mainModDataController
+    ModInstController -> mainModInstController
+    AdvisorStudyProgramController -> mainAdvisorStudyProgramController
+    AdvisorCategoryController -> mainAdvisorCategoryController
+    AdvisorModuleController -> mainAdvisorModuleController
+    MasterProgramController -> mainMasterProgramController
+    UnivisInfoController -> mainUnivisInfoController
+    _ -> displayError "getController: no mapping found"

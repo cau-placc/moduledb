@@ -36,7 +36,7 @@ createModDescrController True (language ,shortDesc ,objectives ,contents
 editModDescrController :: Controller -> ModDescr -> Controller
 editModDescrController cntcontroller modDescrToEdit =
   checkAuthorization (modDescrOperationAllowed (UpdateEntity modDescrToEdit))
-   $ return (editModDescrView modDescrToEdit
+   $ \_ -> return (editModDescrView modDescrToEdit
                               (updateModDescrController cntcontroller))
 
 --- Persists modifications of a given ModDescr entity to the
@@ -55,7 +55,7 @@ updateModDescrController cntcontroller True modDescr =
 deleteModDescrController :: ModDescr -> Bool -> Controller
 deleteModDescrController _ False = listModDescrController
 deleteModDescrController modDescr True =
-  checkAuthorization (modDescrOperationAllowed (DeleteEntity modDescr)) $
+  checkAuthorization (modDescrOperationAllowed (DeleteEntity modDescr)) $ \_ ->
    (do transResult <- runT (deleteModDescr modDescr)
        either (\ _ -> listModDescrController)
         (\ error -> displayError (showTError error)) transResult)
@@ -64,7 +64,7 @@ deleteModDescrController modDescr True =
 --- or edit an entity.
 listModDescrController :: Controller
 listModDescrController =
-  checkAuthorization (modDescrOperationAllowed ListEntities) $
+  checkAuthorization (modDescrOperationAllowed ListEntities) $ \_ ->
    (do modDescrs <- runQ queryAllModDescrs
        return
         (listModDescrView modDescrs showModDescrController
@@ -74,7 +74,7 @@ listModDescrController =
 --- Shows a ModDescr entity.
 showModDescrController :: ModDescr -> Controller
 showModDescrController modDescr =
-  checkAuthorization (modDescrOperationAllowed (ShowEntity modDescr)) $
+  checkAuthorization (modDescrOperationAllowed (ShowEntity modDescr)) $ \_ ->
    (do dataDescModData <- runJustT (getDataDescModData modDescr)
        return
         (showModDescrView modDescr dataDescModData listModDescrController))

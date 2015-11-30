@@ -33,7 +33,7 @@ mainUnivisInfoController =
 --- Shows a form to create a new UnivisInfo entity.
 newUnivisInfoController :: Controller
 newUnivisInfoController =
-  checkAuthorization (univisInfoOperationAllowed NewEntity) $
+  checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ ->
    (do return (blankUnivisInfoView createUnivisInfoController))
 
 --- Persists a new UnivisInfo entity to the database.
@@ -48,7 +48,7 @@ createUnivisInfoController True (code ,term ,year ,uRL) =
 editUnivisInfoController :: UnivisInfo -> Controller
 editUnivisInfoController univisInfoToEdit =
   checkAuthorization
-   (univisInfoOperationAllowed (UpdateEntity univisInfoToEdit)) $
+   (univisInfoOperationAllowed (UpdateEntity univisInfoToEdit)) $ \_ ->
    (do return
         (editUnivisInfoView univisInfoToEdit updateUnivisInfoController))
 
@@ -67,7 +67,7 @@ updateUnivisInfoController True univisInfo =
 deleteUnivisInfoController :: UnivisInfo -> Bool -> Controller
 deleteUnivisInfoController _ False = listUnivisInfoController
 deleteUnivisInfoController univisInfo True =
-  checkAuthorization (univisInfoOperationAllowed (DeleteEntity univisInfo)) $
+  checkAuthorization (univisInfoOperationAllowed (DeleteEntity univisInfo)) $ \_ ->
    (do transResult <- runT (deleteUnivisInfo univisInfo)
        either (\ _ -> listUnivisInfoController)
         (\ error -> displayError (showTError error)) transResult)
@@ -76,7 +76,7 @@ deleteUnivisInfoController univisInfo True =
 --- or edit an entity.
 listUnivisInfoController :: Controller
 listUnivisInfoController =
-  checkAuthorization (univisInfoOperationAllowed ListEntities) $ do
+  checkAuthorization (univisInfoOperationAllowed ListEntities) $ \_ -> do
     univisInfos <- runQ queryAllUnivisInfos
     return (listUnivisInfoView univisInfos showUnivisInfoController
                        editUnivisInfoController deleteUnivisInfoController)
@@ -84,7 +84,7 @@ listUnivisInfoController =
 --- Lists all UnivisInfo entities for a module in a given term.
 showModDataUnivisInfoController :: String -> String -> ModData -> Controller
 showModDataUnivisInfoController terms years mdata =
-  checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ do
+  checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ \_ -> do
     admin <- isAdmin
     responsible <- runJustT (getResponsibleUser mdata)
     let sem = (terms, Read.readNat years)
@@ -102,13 +102,13 @@ showModDataUnivisInfoController terms years mdata =
 --- Shows a UnivisInfo entity.
 showUnivisInfoController :: UnivisInfo -> Controller
 showUnivisInfoController univisInfo =
-  checkAuthorization (univisInfoOperationAllowed (ShowEntity univisInfo)) $
+  checkAuthorization (univisInfoOperationAllowed (ShowEntity univisInfo)) $ \_ ->
    (do return (showUnivisInfoView univisInfo listUnivisInfoController))
 
 --- Shows a form to load data from UnivisInfo for selectable term.
 loadUnivisController :: Controller
 loadUnivisController =
-  checkAuthorization (univisInfoOperationAllowed NewEntity) $
+  checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ ->
     return (loadUnivisView loadUnivisDataController)
 
 loadUnivisDataController :: (String,Int) -> Controller

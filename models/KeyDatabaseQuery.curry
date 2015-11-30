@@ -60,6 +60,8 @@ infix  4 @==
 infixr 3 @&&
 infix  1 `whereQ`
 
+type Key = Int
+
 ------------------------------------------------------------------------
 -- Basic definitions for database tables, attributes and queries.
 

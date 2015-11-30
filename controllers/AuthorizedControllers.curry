@@ -5,13 +5,14 @@ import MDB
 import MDBExts
 import KeyDatabase
 import Authentication
+import SessionInfo
 
 --- Grants access for the administrator.
-checkAdmin :: IO AccessResult
-checkAdmin = do
-  admin <- isAdmin
-  return $ if admin then AccessGranted
-                    else AccessDenied "Operation only allowed for admin!"
+checkAdmin :: UserSessionInfo -> IO AccessResult
+checkAdmin sinfo =
+  return $ if isAdminSession sinfo
+             then AccessGranted
+             else AccessDenied "Operation only allowed for admin!"
 
 --- Grants access if somebody is logged in.
 isLoggedIn :: IO AccessResult
@@ -21,45 +22,45 @@ isLoggedIn =
 
 --- Checks whether the application of an operation to a StudyProgram
 --- entity is allowed.
-studyProgramOperationAllowed :: AccessType StudyProgram -> IO AccessResult
-studyProgramOperationAllowed at =
+studyProgramOperationAllowed :: AccessType StudyProgram -> UserSessionInfo -> IO AccessResult
+studyProgramOperationAllowed at sinfo =
   case at of
    ListEntities   -> return AccessGranted
    (ShowEntity _) -> return AccessGranted
-   _              -> checkAdmin
+   _              -> checkAdmin sinfo
 
 --- Checks whether the application of an operation to a Category
 --- entity is allowed.
-categoryOperationAllowed :: AccessType Category -> IO AccessResult
-categoryOperationAllowed at =
+categoryOperationAllowed :: AccessType Category -> UserSessionInfo -> IO AccessResult
+categoryOperationAllowed at sinfo =
   case at of
    ListEntities   -> return AccessGranted
    (ShowEntity _) -> return AccessGranted
-   _              -> checkAdmin
+   _              -> checkAdmin sinfo
 
 --- Checks whether the application of an operation to a MasterCoreArea
 --- entity is allowed.
-masterCoreAreaOperationAllowed :: AccessType MasterCoreArea -> IO AccessResult
-masterCoreAreaOperationAllowed at =
+masterCoreAreaOperationAllowed :: AccessType MasterCoreArea -> UserSessionInfo -> IO AccessResult
+masterCoreAreaOperationAllowed at sinfo =
   case at of
    ListEntities   -> return AccessGranted
    (ShowEntity _) -> return AccessGranted
-   _              -> checkAdmin
+   _              -> checkAdmin sinfo
 
 --- Checks whether the application of an operation to a User
 --- entity is allowed.
-userOperationAllowed :: AccessType User -> IO AccessResult
+userOperationAllowed :: AccessType User -> UserSessionInfo -> IO AccessResult
 userOperationAllowed _ = checkAdmin
 
 --- Checks whether the application of an operation to a ModData
 --- entity is allowed.
-modDataOperationAllowed :: AccessType ModData -> IO AccessResult
-modDataOperationAllowed at = do
+modDataOperationAllowed :: AccessType ModData -> UserSessionInfo -> IO AccessResult
+modDataOperationAllowed at sinfo = do
   case at of
    ListEntities -> return AccessGranted
-   NewEntity -> checkAdmin
+   NewEntity -> checkAdmin sinfo
    (ShowEntity _) -> return AccessGranted
-   (DeleteEntity _) -> checkAdmin
+   (DeleteEntity _) -> checkAdmin sinfo
    (UpdateEntity md) -> isAdminOrOwner md
 
 isAdminOrOwner :: ModData -> IO AccessResult
@@ -74,8 +75,8 @@ isAdminOrOwner mdata = do
 
 --- Checks whether the application of an operation to a ModDescr
 --- entity is allowed.
-modDescrOperationAllowed :: AccessType ModDescr -> IO AccessResult
-modDescrOperationAllowed at =
+modDescrOperationAllowed :: AccessType ModDescr -> UserSessionInfo -> IO AccessResult
+modDescrOperationAllowed at _ =
   case at of
    ListEntities -> return AccessGranted
    NewEntity -> return AccessGranted
@@ -85,8 +86,8 @@ modDescrOperationAllowed at =
 
 --- Checks whether the application of an operation to a ModInst
 --- entity is allowed.
-modInstOperationAllowed :: AccessType ModInst -> IO AccessResult
-modInstOperationAllowed at =
+modInstOperationAllowed :: AccessType ModInst -> UserSessionInfo -> IO AccessResult
+modInstOperationAllowed at _ =
   case at of
    ListEntities -> return AccessGranted
    (ShowEntity _) -> return AccessGranted
@@ -94,15 +95,33 @@ modInstOperationAllowed at =
    (DeleteEntity _) -> return AccessGranted
    (UpdateEntity _) -> return AccessGranted
 
+--- Checks whether the application of an operation to a AdvisorStudyProgram
+--- entity is allowed.
+advisorStudyProgramOperationAllowed
+  :: AccessType AdvisorStudyProgram -> UserSessionInfo -> IO AccessResult
+advisorStudyProgramOperationAllowed _ = checkAdmin
+
+--- Checks whether the application of an operation to a AdvisorCategory
+--- entity is allowed.
+advisorCategoryOperationAllowed
+  :: AccessType AdvisorCategory -> UserSessionInfo -> IO AccessResult
+advisorCategoryOperationAllowed _ = checkAdmin
+
+--- Checks whether the application of an operation to a AdvisorModule
+--- entity is allowed.
+advisorModuleOperationAllowed
+  :: AccessType AdvisorModule -> UserSessionInfo -> IO AccessResult
+advisorModuleOperationAllowed _ = checkAdmin
+
 --- Checks whether the application of an operation to a MasterProgram
 --- entity is allowed.
-masterProgramOperationAllowed :: AccessType MasterProgram -> IO AccessResult
-masterProgramOperationAllowed at =
+masterProgramOperationAllowed :: AccessType MasterProgram -> UserSessionInfo -> IO AccessResult
+masterProgramOperationAllowed at sinfo =
   case at of
    ListEntities -> return AccessGranted
    NewEntity -> isLoggedIn
    (ShowEntity _) -> return AccessGranted
-   (DeleteEntity _) -> checkAdmin
+   (DeleteEntity _) -> checkAdmin sinfo
    (UpdateEntity mp) -> isAdminOrAdvisor mp
 
 isAdminOrAdvisor :: MasterProgram -> IO AccessResult
@@ -117,16 +136,16 @@ isAdminOrAdvisor mprog = do
 
 --- Checks whether the application of an operation to a MasterProgInfo
 --- entity is allowed.
-masterProgInfoOperationAllowed :: AccessType MasterProgInfo -> IO AccessResult
-masterProgInfoOperationAllowed at =
+masterProgInfoOperationAllowed :: AccessType MasterProgInfo -> UserSessionInfo -> IO AccessResult
+masterProgInfoOperationAllowed at sinfo =
   case at of
    ListEntities -> return AccessGranted
    NewEntity -> isLoggedIn
    (ShowEntity _) -> return AccessGranted
-   (DeleteEntity _) -> checkAdmin
+   (DeleteEntity _) -> checkAdmin sinfo
    (UpdateEntity _) -> return AccessGranted
 
 --- Checks whether the application of an operation to a UnivisInfo
 --- entity is allowed.
-univisInfoOperationAllowed :: AccessType UnivisInfo -> IO AccessResult
+univisInfoOperationAllowed :: AccessType UnivisInfo -> UserSessionInfo -> IO AccessResult
 univisInfoOperationAllowed _ = checkAdmin

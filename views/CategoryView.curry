@@ -4,6 +4,7 @@ module CategoryView (
  leqCategory, listEmailCorrectionView
  ) where
 
+import Either
 import WUI
 import HTML
 import Time
@@ -23,36 +24,70 @@ import MultiLang
 
 --- The WUI specification for the entity type Category.
 --- It also includes fields for associated entities.
-wCategory :: [StudyProgram] -> WuiSpec (String,String,String,Int,StudyProgram)
+wCategory
+  :: [StudyProgram]
+  -> WuiSpec (String,String,String,String,String,Int,Int,Int,StudyProgram)
 wCategory studyProgramList =
-  withRendering
-   (w5Tuple wRequiredString wRequiredString wRequiredString wInt
-     (wSelect studyProgramToShortView studyProgramList))
-   (renderLabels categoryLabelList)
+   w9Tuple wRequiredString wString wRequiredString wRequiredString
+     (wTextArea (6,70))
+     wECTS
+     wECTS
+     wInt
+     (wSelect studyProgramToShortView studyProgramList)
+   `withCondition`
+       (\ (_,_,_,_,_,mine,maxe,_,_) -> mine <= maxe)
+   `withError`
+      "Minimale ECTS-Punkte müssen kleiner als maximale ECTS-Punkte sein!"
+   `withRendering`
+      (renderLabels categoryLabelList)
+ where
+  wECTS = wSelect showDiv10 [0,5..1800]
+             `withRendering` numwidthRendering
+
+  numwidthRendering [s] = inline [s `addClass` "numwidth"]
 
 --- Transformation from data of a WUI form to entity type Category.
 tuple2Category
- :: Category -> (String,String,String,Int,StudyProgram) -> Category
-tuple2Category categoryToUpdate (name ,shortName ,catKey ,position
-                                 ,studyProgram) =
+  :: Category
+  -> (String,String,String,String,String,Int,Int,Int,StudyProgram) -> Category
+tuple2Category
+    categoryToUpdate
+    (name,nameE,shortName,catKey,comment,minECTS,maxECTS,position
+    ,studyProgram) =
   setCategoryName
-   (setCategoryShortName
-     (setCategoryCatKey
-       (setCategoryPosition
-         (setCategoryStudyProgramProgramCategoriesKey categoryToUpdate
-           (studyProgramKey studyProgram))
-         position)
-       catKey)
-     shortName)
+   (setCategoryNameE
+     (setCategoryShortName
+       (setCategoryCatKey
+         (setCategoryComment
+           (setCategoryMinECTS
+             (setCategoryMaxECTS
+               (setCategoryPosition
+                 (setCategoryStudyProgramProgramCategoriesKey categoryToUpdate
+                   (studyProgramKey studyProgram))
+                 position)
+               maxECTS)
+             minECTS)
+           comment)
+         catKey)
+       shortName)
+     nameE)
    name
 
 --- Transformation from entity type Category to a tuple
 --- which can be used in WUI specifications.
 category2Tuple
- :: StudyProgram -> Category -> (String,String,String,Int,StudyProgram)
+  :: StudyProgram
+  -> Category -> (String,String,String,String,String,Int,Int,Int,StudyProgram)
 category2Tuple studyProgram category =
-  (categoryName category,categoryShortName category,categoryCatKey category
-  ,categoryPosition category,studyProgram)
+  (categoryName category
+  ,categoryNameE category
+  ,categoryShortName category
+  ,categoryCatKey category
+  ,categoryComment category
+  ,categoryMinECTS category
+  ,categoryMaxECTS category
+  ,categoryPosition category
+  ,studyProgram)
 
 --- WUI Type for editing or creating Category entities.
 --- Includes fields for associated entities.
@@ -65,31 +100,62 @@ wCategoryType category studyProgram studyProgramList =
 --- Supplies a WUI form to create a new Category entity.
 --- The fields of the entity have some default values.
 blankCategoryView
- :: [StudyProgram]
-  -> (Bool -> (String,String,String,Int,StudyProgram) -> Controller)
-  -> [HtmlExp]
-blankCategoryView possibleStudyPrograms controller =
-  createCategoryView [] [] [] 0 (head possibleStudyPrograms)
-   possibleStudyPrograms controller
+  :: UserSessionInfo
+  -> [StudyProgram]
+  -> ((String,String,String,String,String,Int,Int,Int,StudyProgram)
+  -> Controller)
+  -> Controller -> [HtmlExp]
+blankCategoryView sinfo possibleStudyPrograms controller cancelcontroller =
+  createCategoryView sinfo "" "" "" "" "" 0 180 0 (head possibleStudyPrograms)
+   possibleStudyPrograms
+   controller
+   cancelcontroller
 
 --- Supplies a WUI form to create a new Category entity.
 --- Takes default values to be prefilled in the form fields.
 createCategoryView
- :: String -> String -> String -> Int -> StudyProgram -> [StudyProgram]
-  -> (Bool -> (String,String,String,Int,StudyProgram) -> Controller)
-  -> [HtmlExp]
-createCategoryView defaultName defaultShortName defaultCatKey defaultPosition
-                   defaultStudyProgram possibleStudyPrograms controller =
-  let initdata = (defaultName,defaultShortName,defaultCatKey,defaultPosition
-                 ,defaultStudyProgram)
-      
-      wuiframe = wuiEditForm "Neue Kategorie" "Anlegen"
-                  (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm (wCategory possibleStudyPrograms)
-                         initdata (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
+  :: UserSessionInfo
+  -> String
+  -> String
+  -> String
+  -> String
+  -> String
+  -> Int
+  -> Int
+  -> Int
+  -> StudyProgram
+  -> [StudyProgram]
+  -> ((String,String,String,String,String,Int,Int,Int,StudyProgram)
+  -> Controller)
+  -> Controller -> [HtmlExp]
+createCategoryView
+    _
+    defaultName
+    defaultNameE
+    defaultShortName
+    defaultCatKey
+    defaultComment
+    defaultMinECTS
+    defaultMaxECTS
+    defaultPosition
+    defaultStudyProgram
+    possibleStudyPrograms
+    controller
+    cancelcontroller =
+  renderWuiForm (wCategory possibleStudyPrograms)
+   (defaultName
+   ,defaultNameE
+   ,defaultShortName
+   ,defaultCatKey
+   ,defaultComment
+   ,defaultMinECTS
+   ,defaultMaxECTS
+   ,defaultPosition
+   ,defaultStudyProgram)
+   controller
+   cancelcontroller
+   "Neue Kategorie"
+   "Anlegen"
 
 --- Supplies a WUI form to edit the given Category entity.
 --- Takes also associated entities and a list of possible associations
@@ -150,17 +216,32 @@ listCategoryView
 listCategoryView sinfo mbsprog catmods semperiod users
                  showCategoryPlanController formatCatModsController
                  showEmailCorrectionController =
-  [h1 [htxt $ either studyProgramName id mbsprog],
-   spTable
+  [h1 [htxt $ either (langSelect sinfo studyProgramNameE studyProgramName)
+                     id mbsprog]] ++
+  (if length catmods == 1 && isLeft (fst (head catmods))
+   then let cat = fromLeft (fst (head catmods))
+            catcmt = categoryComment cat
+            minpts = categoryMinECTS cat
+            maxpts = categoryMaxECTS cat
+         in (if null catcmt then [] else [par [htxt catcmt]]) ++
+            (if minpts==0 && maxpts==0 then []
+               else [par [htxt $
+                           t "Minimal ECTS points" ++": "++ showDiv10 minpts ++
+                           " / " ++
+                           t "Maximal ECTS points" ++": "++ showDiv10 maxpts]])
+   else []) ++
+  [spTable
     (if isAdminSession sinfo && null (concatMap snd catmods)
-     then [take 4 categoryLabelList] ++
+     then [take 4 categoryLabelList ++ [categoryLabelList!!7]] ++
           map listCategory
               (mergeSort leqCategory
                (concatMap (\ (c,_) -> either (:[]) (const []) c) catmods))
      else
       concatMap
         (\ (mbcat,mods) ->
-           (either (\c->[style "category" (head (listCategory c))])
+           (either (\c->[style "category"
+                          (langSelect sinfo (listCategory c !! 1)
+                                            (head (listCategory c)))])
                    (\s->[style "category" [htxt s]])
                    mbcat
             : if null mods then []

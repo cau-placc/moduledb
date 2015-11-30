@@ -23,7 +23,7 @@ editMasterProgInfoController :: (String,Int) -> Controller
    -> MasterProgInfo -> Controller
 editMasterProgInfoController semyear cntcontroller masterProgInfoToEdit =
   checkAuthorization
-   (masterProgInfoOperationAllowed (UpdateEntity masterProgInfoToEdit)) $ do
+   (masterProgInfoOperationAllowed (UpdateEntity masterProgInfoToEdit)) $ \_ -> do
     modinsts <- runJustT (getMasterModInstInSemesters semyear 3)
     return (editMasterProgInfoView masterProgInfoToEdit modinsts
                              (updateMasterProgInfoController cntcontroller))
@@ -70,7 +70,7 @@ deleteMasterProgInfoController :: MasterProgInfo -> Bool -> Controller
 deleteMasterProgInfoController _ False = listMasterProgInfoController
 deleteMasterProgInfoController masterProgInfo True =
   checkAuthorization
-   (masterProgInfoOperationAllowed (DeleteEntity masterProgInfo)) $
+   (masterProgInfoOperationAllowed (DeleteEntity masterProgInfo)) $ \_ ->
    (do transResult <- runT (deleteMasterProgInfo masterProgInfo)
        either (\ _ -> listMasterProgInfoController)
         (\ error -> displayError (showTError error)) transResult)
@@ -79,7 +79,7 @@ deleteMasterProgInfoController masterProgInfo True =
 --- or edit an entity.
 listMasterProgInfoController :: Controller
 listMasterProgInfoController =
-  checkAuthorization (masterProgInfoOperationAllowed ListEntities) $
+  checkAuthorization (masterProgInfoOperationAllowed ListEntities) $ \_ ->
    (do masterProgInfos <- runQ queryAllMasterProgInfos
        return
         (listMasterProgInfoView masterProgInfos showMasterProgInfoController
@@ -90,7 +90,7 @@ listMasterProgInfoController =
 showMasterProgInfoController :: MasterProgInfo -> Controller
 showMasterProgInfoController masterProgInfo =
   checkAuthorization
-   (masterProgInfoOperationAllowed (ShowEntity masterProgInfo)) $
+   (masterProgInfoOperationAllowed (ShowEntity masterProgInfo)) $ \_ ->
    (do programInfoMasterProgram <- runJustT
                                     (getProgramInfoMasterProgram
                                       masterProgInfo)

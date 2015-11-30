@@ -9,16 +9,18 @@ module Spicey (
   module ReadNumeric, 
   Controller, applyControllerOn,
   nextController, nextControllerForData, confirmNextController,
-  confirmController,
+  confirmControllerOLD, confirmController, transactionController,
   getControllerURL,getControllerParams, showControllerURL,
   getForm, wDateType, wBoolean, wUncheckMaybe,
   mainContentsWithSideMenu,
   displayError, displayHtmlError, cancelOperation,
-  wuiEditForm, wuiEditFormWithText, wuiFrameToForm, nextInProcessOr,
-  renderLabels,
+  wuiEditForm, wuiEditFormWithText, wuiFrameToForm,
+  renderWuiForm, renderLabels,
+  nextInProcessOr,
   stringToHtml, maybeStringToHtml,
   intToHtml,maybeIntToHtml, floatToHtml, maybeFloatToHtml,
   boolToHtml, maybeBoolToHtml, calendarTimeToHtml, maybeCalendarTimeToHtml,
+  userDefinedToHtml, maybeUserDefinedToHtml,
   hrefStudyProgram, hrefCategory, smallHrefCategory,
   hrefModule, smallHrefModule, hrefExtModule, hrefModInst, hrefUnivis,
   spHref, spEHref,
@@ -89,11 +91,33 @@ confirmNextController question controller _ = do
 
 --- Call the next controller after a user confirmation.
 --- The Boolean user answer is passed as an argument to the controller.
-confirmController :: HtmlExp -> (Bool -> Controller) -> Controller
-confirmController question controller = do
+confirmControllerOLD :: HtmlExp -> (Bool -> Controller) -> Controller
+confirmControllerOLD question controller = do
   return [question,
            par [spButton "Ja"   (nextController (controller True)),
                 spButton "Nein" (nextController (controller False))]]
+
+--- Ask the user for a confirmation and call the corresponding controller.
+--- @param question - a question asked
+--- @param yescontroller - the controller used if the answer is "yes"
+--- @param nocontroller  - the controller used if the answer is "no"
+confirmController :: [HtmlExp] -> Controller -> Controller -> Controller
+confirmController question yescontroller nocontroller = do
+  return $ question ++
+           [par [spButton "Ja"   (nextController yescontroller),
+                 spButton "Nein" (nextController nocontroller )]]
+
+--- A controller to execute a transaction and proceed with a given
+--- controller if the transaction succeeds. Otherwise, the
+--- transaction error is shown.
+--- @param trans - the transaction to be executed
+--- @param controller - the controller executed in case of success
+transactionController :: (Transaction _) -> Controller -> Controller
+transactionController trans controller = do
+  transResult <- runT trans
+  either (\_     -> controller)
+         (\error -> displayError (showTError error))
+         transResult
 
 --- If we are in a process, execute the next process depending on
 --- the provided information passed in the second argument,
@@ -165,6 +189,28 @@ wuiFrameToForm :: (HtmlExp -> WuiHandler -> [HtmlExp])
                -> HtmlExp -> WuiHandler -> IO HtmlForm
 wuiFrameToForm wframe hexp wuihandler = getForm (wframe hexp wuihandler)
 
+--- Standard rendering for WUI forms to edit data.
+--- @param wuispec    - the associated WUI specification
+--- @param initdata   - initial data to be prefilled in the form
+--- @param ctrl       - the controller that handles the submission of the data
+--- @param cancelctrl - the controller called if submission is cancelled
+--- @param title      - the title of the WUI form
+--- @param buttontag  - the text on the submit button
+renderWuiForm :: WuiSpec a -> a -> (a -> Controller) -> Controller
+              -> String -> String -> [HtmlExp]
+renderWuiForm wuispec initdata controller cancelcontroller title buttontag =
+  wuiframe hexp handler
+ where
+  wuiframe wuihexp hdlr =
+    [h1 [htxt title],
+     blockstyle "editform" [wuihexp],
+     wuiHandler2button buttontag hdlr `addClass` "btn btn-primary",
+     spButton "cancel" (nextController (cancelOperation >> cancelcontroller))]
+      
+  (hexp,handler) = wuiWithErrorForm wuispec
+                     initdata
+                     (nextControllerForData controller)
+                     (\he whdlr -> getForm (wuiframe he whdlr))
 
 --- A WUI for manipulating CalendarTime entities.
 --- It is based on a WUI for dates, i.e., the time is ignored.
@@ -207,8 +253,9 @@ getUserMenu login sinfo = do
        [href "?search" [htxt $ t "Search modules"]]] ++
       (if login==Nothing
        then []
-       else [[href ("?Category/user")   [htxt $ t "My modules"]],
-             [href "?MasterProgram/new" [htxt $ t "New master program"]]]) ++
+       else [[href ("?Category/user")   [htxt $ t "My modules"]]
+            --,[href "?MasterProgram/new" [htxt $ t "New master program"]]
+            ]) ++
       [[href "?login" [htxt $ t ("Log" ++ maybe "in" (const "out") login)]]]
 
 --- The title of this application (shown in the header).
@@ -423,6 +470,12 @@ calendarTimeToHtml ct = textstyle "type_calendartime" (toDayString ct)
 maybeCalendarTimeToHtml :: Maybe CalendarTime -> HtmlExp
 maybeCalendarTimeToHtml ct =
   textstyle "type_calendartime" (maybe "" toDayString ct)
+
+userDefinedToHtml :: _ -> HtmlExp
+userDefinedToHtml ud = textstyle "type_string" (show ud)
+
+maybeUserDefinedToHtml :: Maybe a -> HtmlExp
+maybeUserDefinedToHtml ud = textstyle "type_string" (maybe "" show ud)
 
 --------------------------------------------------------------------------
 -- Auxiliary HTML items:

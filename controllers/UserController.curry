@@ -38,7 +38,7 @@ userController = do
 --- Shows a form to create a new User entity.
 newUserController :: Controller
 newUserController =
-  checkAuthorization (userOperationAllowed NewEntity) $
+  checkAuthorization (userOperationAllowed NewEntity) $ \_ ->
    (do ctime <- getLocalTime
        return (blankUserView ctime createUserController))
 
@@ -58,7 +58,7 @@ createUserController True (login ,name ,first ,title ,email ,url ,password
 --- Shows a form to edit the given User entity.
 editUserController :: User -> Controller
 editUserController userToEdit =
-  checkAuthorization (userOperationAllowed (UpdateEntity userToEdit)) $
+  checkAuthorization (userOperationAllowed (UpdateEntity userToEdit)) $ \_ ->
    (do return (editUserView userToEdit updateUserController))
 
 --- Persists modifications of a given User entity to the
@@ -75,7 +75,7 @@ updateUserController True user =
 --- and proceeds with the show controller.
 askAndDeleteUserController :: User -> Controller
 askAndDeleteUserController user =
-  confirmController
+  confirmControllerOLD
     (h3 [htxt (concat ["Benutzer \"",userToShortView user
                       ,"\" wirklich löschen?"])])
     (\ack -> if ack
@@ -85,7 +85,7 @@ askAndDeleteUserController user =
 --- Deletes a given User entity and proceeds with the list controller.
 deleteUserController :: User -> Controller
 deleteUserController user =
-  checkAuthorization (userOperationAllowed (DeleteEntity user)) $
+  checkAuthorization (userOperationAllowed (DeleteEntity user)) $ \_ ->
    (do transResult <- runT (deleteUser user)
        either (\ _ -> listUserController)
         (\ error -> displayError (showTError error)) transResult)
@@ -93,7 +93,7 @@ deleteUserController user =
 --- Login as a given User entity.
 loginUserController :: User -> Controller
 loginUserController user =
-  checkAuthorization checkAdmin $ do
+  checkAuthorization checkAdmin $ \_ -> do
     let loginname = userLogin user
     loginToSession loginname
     setPageMessage ("Angemeldet als: "++loginname)
@@ -102,11 +102,11 @@ loginUserController user =
 --- Lists all User entities.
 listUserController :: Controller
 listUserController =
-  checkAuthorization (userOperationAllowed ListEntities) $ do
+  checkAuthorization (userOperationAllowed ListEntities) $ \_ -> do
     runQ queryAllUsers >>= return . listUserView
 
 --- Shows a User entity.
 showUserController :: User -> Controller
 showUserController user =
-  checkAuthorization (userOperationAllowed (ShowEntity user)) $
+  checkAuthorization (userOperationAllowed (ShowEntity user)) $ \_ ->
    (do return (showUserView user))
