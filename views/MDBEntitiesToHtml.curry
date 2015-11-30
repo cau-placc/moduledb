@@ -10,6 +10,14 @@ import List
 import MultiLang
 import SessionInfo
 
+--- Shows a reference to a study program with its title according
+--- to the current language.
+studyProgramToHRef :: UserSessionInfo -> StudyProgram -> HtmlExp
+studyProgramToHRef sinfo sprog =
+  href ("?Category/studyprogram/"++showStudyProgramKey sprog)
+       [textstyle "studyprogram"
+               ((langSelect sinfo studyProgramNameE studyProgramName) sprog)]
+
 --- The list view of a StudyProgram entity in HTML format.
 --- This view is used in a row of a table of all entities.
 studyProgramToListView :: StudyProgram -> [[HtmlExp]]

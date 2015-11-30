@@ -216,8 +216,7 @@ listCategoryView
 listCategoryView sinfo mbsprog catmods semperiod users
                  showCategoryPlanController formatCatModsController
                  showEmailCorrectionController =
-  [h1 [htxt $ either (langSelect sinfo studyProgramNameE studyProgramName)
-                     id mbsprog]] ++
+  [h1 [either (studyProgramToHRef sinfo) htxt mbsprog]] ++
   (if length catmods == 1 && isLeft (fst (head catmods))
    then let cat = fromLeft (fst (head catmods))
             catcmt = categoryComment cat
