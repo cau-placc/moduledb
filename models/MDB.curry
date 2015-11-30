@@ -140,7 +140,7 @@ module MDB
   , checkAdvisorStudyProgram, checkAdvisorCategory, checkAdvisorModule
   , checkMasterProgram, checkMasterProgInfo, checkUnivisInfo, saveAllData
   , restoreAllData
-  , storeTermDB
+  , storeTermDB, readTermDB
   , destroyCategorizing, queryModDataWithCode, queryModDataKeysOfCategory
   , queryModDataOfUser, queryHasUnivisEntry, getModDataKeyCategorys
   , masterProgramKeyToString, queryInfoOfMasterProgram
