@@ -5,27 +5,49 @@ module AdvisorStudyProgramView
   , showAdvisorStudyProgramView, listAdvisorStudyProgramView ) where
 
 import WUI
+import Helpers
 import HTML
+import List
 import Time
 import Sort
 import Spicey
+import CategoryView
 import SessionInfo
 import MDB
 import MDBEntitiesToHtml
+import MultiLang
 
 --- The WUI specification for the entity type AdvisorStudyProgram.
 --- It also includes fields for associated entities.
 wAdvisorStudyProgram
-  :: [StudyProgram]
+  :: Bool -> UserSessionInfo -> [StudyProgram]
   -> [User]
   -> WuiSpec (String,String,Int,String,String,String,Bool,StudyProgram,User)
-wAdvisorStudyProgram studyProgramList userList =
+wAdvisorStudyProgram isnewprog sinfo studyProgramList userList =
   withRendering
-   (w9Tuple wRequiredString wRequiredString wInt wString wString wString
-     wBoolean
-     (wSelect studyProgramToShortView studyProgramList)
-     (wSelect userToShortView userList))
-   (renderLabels advisorStudyProgramLabelList)
+   (w9Tuple wLargeRequiredString wTrm wYr wStr wStr wStr
+     wVisible
+     wStudyProg
+     wAdvisor)
+   (renderWithLabels advisorStudyProgramLabelList)
+ where
+  -- render with labels but put row 7 (StudyProgram) at the top:
+  renderWithLabels labels hexps =
+    let rows = map (\(l, h) -> [l, [h]]) (zip labels hexps)
+     in spTable ([rows!!7] ++ take 7 rows ++ drop 8 rows)
+
+  admin = isAdminSession sinfo
+  
+  wTrm = if isnewprog || admin then wTerm        else wConstant stringToHtml
+  wYr  = if isnewprog || admin then wCurrentYear else wConstant intToHtml
+
+  wStudyProg = if isnewprog then wSelect studyProgramName studyProgramList
+                            else wConstant (stringToHtml . studyProgramName)
+                            
+  wAdvisor = if admin then wSelect userToShortView userList
+                      else wConstant (stringToHtml . userToShortView)
+
+  wStr = wTextArea (6,70)
 
 --- Transformation from data of a WUI form to entity type AdvisorStudyProgram.
 tuple2AdvisorStudyProgram
@@ -76,15 +98,15 @@ advisorStudyProgram2Tuple studyProgram user advisorStudyProgram =
 --- WUI Type for editing or creating AdvisorStudyProgram entities.
 --- Includes fields for associated entities.
 wAdvisorStudyProgramType
-  :: AdvisorStudyProgram
+  :: UserSessionInfo -> AdvisorStudyProgram
   -> StudyProgram
   -> User -> [StudyProgram] -> [User] -> WuiSpec AdvisorStudyProgram
-wAdvisorStudyProgramType
+wAdvisorStudyProgramType sinfo
     advisorStudyProgram studyProgram user studyProgramList userList =
   transformWSpec
    (tuple2AdvisorStudyProgram advisorStudyProgram
    ,advisorStudyProgram2Tuple studyProgram user)
-   (wAdvisorStudyProgram studyProgramList userList)
+   (wAdvisorStudyProgram False sinfo studyProgramList userList)
 
 --- Supplies a WUI form to create a new AdvisorStudyProgram entity.
 --- The fields of the entity have some default values.
@@ -98,13 +120,18 @@ blankAdvisorStudyProgramView
 blankAdvisorStudyProgramView
     sinfo possibleStudyPrograms possibleUsers controller cancelcontroller =
   createAdvisorStudyProgramView sinfo "" "" 2015 "" "" "" False
-   (head possibleStudyPrograms)
+   defaultStudyProgram
    (head possibleUsers)
    possibleStudyPrograms
    possibleUsers
    controller
    cancelcontroller
-
+ where
+  defaultStudyProgram =
+    maybe (head possibleStudyPrograms)
+          id
+          (find (\sp -> studyProgramURLKey sp == "MS15") possibleStudyPrograms)
+          
 --- Supplies a WUI form to create a new AdvisorStudyProgram entity.
 --- Takes default values to be prefilled in the form fields.
 createAdvisorStudyProgramView
@@ -124,7 +151,7 @@ createAdvisorStudyProgramView
   -> Controller)
   -> Controller -> [HtmlExp]
 createAdvisorStudyProgramView
-    _
+    sinfo
     defaultName
     defaultTerm
     defaultYear
@@ -138,7 +165,8 @@ createAdvisorStudyProgramView
     possibleUsers
     controller
     cancelcontroller =
-  renderWuiForm (wAdvisorStudyProgram possibleStudyPrograms possibleUsers)
+  renderWuiForm
+   (wAdvisorStudyProgram True sinfo possibleStudyPrograms possibleUsers)
    (defaultName
    ,defaultTerm
    ,defaultYear
@@ -150,8 +178,8 @@ createAdvisorStudyProgramView
    ,defaultUser)
    controller
    cancelcontroller
-   "Create new AdvisorStudyProgram"
-   "create"
+   "Neues Studienprogramm"
+   "Studienprogramm anlegen"
 
 --- Supplies a WUI form to edit the given AdvisorStudyProgram entity.
 --- Takes also associated entities and a list of possible associations
@@ -164,7 +192,7 @@ editAdvisorStudyProgramView
   -> [StudyProgram]
   -> [User] -> (AdvisorStudyProgram -> Controller) -> Controller -> [HtmlExp]
 editAdvisorStudyProgramView
-    _
+    sinfo
     advisorStudyProgram
     relatedStudyProgram
     relatedUser
@@ -173,72 +201,136 @@ editAdvisorStudyProgramView
     controller
     cancelcontroller =
   renderWuiForm
-   (wAdvisorStudyProgramType advisorStudyProgram relatedStudyProgram
+   (wAdvisorStudyProgramType sinfo advisorStudyProgram relatedStudyProgram
      relatedUser
      possibleStudyPrograms
      possibleUsers)
    advisorStudyProgram
    controller
    cancelcontroller
-   "Edit AdvisorStudyProgram"
-   "change"
+   "Studienprogramm ändern"
+   "Ändern"
 
 --- Supplies a view to show the details of a AdvisorStudyProgram.
 showAdvisorStudyProgramView
-  :: UserSessionInfo
-  -> AdvisorStudyProgram -> StudyProgram -> User -> [HtmlExp]
+  :: UserSessionInfo -> Bool -> Bool
+  -> (AdvisorStudyProgram -> Controller)
+  -> Controller
+  -> (Category -> Controller)
+  -> (AdvisorModule -> Controller)
+  -> AdvisorStudyProgram -> StudyProgram
+  -> [(AdvisorModule,ModInst,ModData)]
+  -> [Category]
+  -> User -> [HtmlExp]
 showAdvisorStudyProgramView
-    _ advisorStudyProgram relatedStudyProgram relatedUser =
-  advisorStudyProgramToDetailsView advisorStudyProgram relatedStudyProgram
-   relatedUser
-   ++ [spHref "?AdvisorStudyProgram/list"
-        [htxt "back to AdvisorStudyProgram list"]]
+    sinfo admin editallowed editcontroller showcontroller addcatmodcontroller
+    delmodcontroller
+    asprog relatedsprog amdatas cats advisor =
+  [h1 [htxt (advisorStudyProgramName asprog)]] ++
+  (if advisorStudyProgramVisible asprog then []
+     else [h4 [htxt "(nicht öffentlich sichtbar)"]]) ++
+  [h2 [htxt (t "Study program" ++ ": " ++
+             (langSelect sinfo studyProgramNameE studyProgramName)
+               relatedsprog)]] ++
+  [h3 [htxt $ t "Start: " ++ showSemester (startSem,startYear) ++
+              " / Research advisor: " ++ userToShortView advisor]] ++
+  [par $ (if admin || editallowed
+          then [spButton "Beschreibung/Sichtbarkeit ändern"
+                       (nextController (editcontroller asprog))]
+          else []) ++
+         (if admin then [spHref ("?AdvisorStudyProgram/delete/"
+                                 ++ showAdvisorStudyProgramKey asprog)
+                                 [htxt "Studienprogramm löschen"]]
+                   else [])] ++
+  [h4 [htxt $ t "Description"++":"],
+   par [HtmlText (docText2html (advisorStudyProgramDesc asprog))],
+   h4 [htxt $ t "Prerequisites"++":"],
+   par [HtmlText (docText2html (advisorStudyProgramPrereq asprog))],
+   h4 [htxt $ t "Comments"++":"],
+   par [HtmlText (docText2html (advisorStudyProgramComments asprog))],
+   h3 [htxt $ t "Program overview by categories:"]] ++
+  concatMap
+    (\c -> [h4 ([catRef c] ++
+                (if admin || editallowed
+                 then [spSmallButton "Modul hinzufügen"
+                                     (nextController (addcatmodcontroller c))]
+                 else []))] ++ showCategoryInfo sinfo c ++
+           let camods = filter (isAdvisorModuleOfCat c) amdatas
+            in if null camods then []
+               else [ulist (map showAdvisorModuleData camods)])
+    cats
+ where
+   t = translate sinfo
+   
+   startSem  = advisorStudyProgramTerm asprog
+   startYear = advisorStudyProgramYear asprog
+
+   catRef c = ehref ("?Category/show/"++showCategoryKey c)
+                    [htxt $ (langSelect sinfo categoryNameE categoryName) c]
+                       
+   isAdvisorModuleOfCat cat (am,_,_) =
+     advisorModuleCategoryAdvisorCategorizingKey am == categoryKey cat
+
+   showAdvisorModuleData (am,modinst,md) =
+     [(if mandatory then bold else italic) [modtitle],
+      htxt $ " (" ++ showDiv10 (modDataECTS md) ++ " ECTS, "
+                 ++ showSemester (modInstSemester modinst) ++ ", " ++
+                 (if mandatory then "Pflicht" else "empfohlen")
+                 ++ ")"] ++
+     if admin || editallowed
+       then [spSmallButton "Modul löschen"
+                           (nextController (delmodcontroller am))]
+       else []
+    where
+      mandatory = advisorModuleMandatory am
+      modtitle = ehref ("?ModData/show/"++showModDataKey md)
+                       [htxt $ modDataCode md ++": "++ modDataNameG md]
+
 
 --- Compares two AdvisorStudyProgram entities. This order is used in the list view.
-leqAdvisorStudyProgram :: AdvisorStudyProgram -> AdvisorStudyProgram -> Bool
-leqAdvisorStudyProgram x1 x2 =
-  (advisorStudyProgramName x1
-  ,advisorStudyProgramTerm x1
-  ,advisorStudyProgramYear x1
-  ,advisorStudyProgramDesc x1
-  ,advisorStudyProgramPrereq x1
-  ,advisorStudyProgramComments x1
-  ,advisorStudyProgramVisible x1)
-   <= (advisorStudyProgramName x2
-      ,advisorStudyProgramTerm x2
-      ,advisorStudyProgramYear x2
-      ,advisorStudyProgramDesc x2
-      ,advisorStudyProgramPrereq x2
-      ,advisorStudyProgramComments x2
-      ,advisorStudyProgramVisible x2)
+leqAdvisorStudyProgram
+  :: (AdvisorStudyProgram,StudyProgram)
+  -> (AdvisorStudyProgram,StudyProgram) -> Bool
+leqAdvisorStudyProgram (x1,sp1) (x2,sp2) =
+  (advisorStudyProgramYear x2
+  ,advisorStudyProgramTerm x2
+  ,studyProgramPosition sp1
+  ,advisorStudyProgramName x1)
+   <= (advisorStudyProgramYear x1
+      ,advisorStudyProgramTerm x1
+      ,studyProgramPosition sp2
+      ,advisorStudyProgramName x2)
 
 --- Supplies a list view for a given list of AdvisorStudyProgram entities.
 --- Shows also show/edit/delete buttons if the user is logged in.
 --- The arguments are the session info and the list of AdvisorStudyProgram entities.
 listAdvisorStudyProgramView
-  :: UserSessionInfo -> [AdvisorStudyProgram] -> [HtmlExp]
+  :: UserSessionInfo -> [(AdvisorStudyProgram,StudyProgram)] -> [HtmlExp]
 listAdvisorStudyProgramView sinfo advisorStudyPrograms =
-  [h1 [htxt "AdvisorStudyProgram list"],spTable
-                                         ([take 7
-                                            advisorStudyProgramLabelList]
-                                           ++ map listAdvisorStudyProgram
-                                               (mergeSort
-                                                 leqAdvisorStudyProgram
-                                                 advisorStudyPrograms))]
+  [h1 [htxt $ t "Study programs at the department of computer science"]
+      , hrule] ++
+  if null advisorprogramgroups then [] else
+   concatMap (\ag -> [h2 [htxt $ t "Start: " ++
+                          let asp = fst (head ag) in
+                          showLongSemester (advisorStudyProgramTerm asp,
+                                            advisorStudyProgramYear asp)],
+                      ulist (map listAdvisorStudyProgram ag), hrule])
+       advisorprogramgroups
   where
-    listAdvisorStudyProgram advisorStudyProgram =
-      advisorStudyProgramToListView advisorStudyProgram
-       ++ (if userLoginOfSession sinfo == Nothing
-              then []
-              else [[spHref
-                      ("?AdvisorStudyProgram/show/"
-                        ++ showAdvisorStudyProgramKey advisorStudyProgram)
-                      [htxt "show"]],[spHref
-                                       ("?AdvisorStudyProgram/edit/"
-                                         ++ showAdvisorStudyProgramKey
-                                             advisorStudyProgram)
-                                       [htxt "edit"]],[spHref
-                                                        ("?AdvisorStudyProgram/delete/"
-                                                          ++ showAdvisorStudyProgramKey
-                                                              advisorStudyProgram)
-                                                        [htxt "delete"]]])
+   advisorprogramgroups =
+     groupBy sameSemester
+             (mergeSort leqAdvisorStudyProgram advisorStudyPrograms)
+
+   sameSemester (p1,_) (p2,_) =
+        advisorStudyProgramYear p1 == advisorStudyProgramYear p2
+     && advisorStudyProgramTerm p1 == advisorStudyProgramTerm p2
+                     
+   listAdvisorStudyProgram (asprog,sprog) =
+    [(if advisorStudyProgramVisible asprog then bold else italic)
+      [href ("?AdvisorStudyProgram/show/" ++ showAdvisorStudyProgramKey asprog)
+            [htxt (advisorStudyProgramName asprog)]
+      ,htxt (" " ++ t "in study program" ++ ": " ++
+            (langSelect sinfo studyProgramNameE studyProgramName) sprog)]
+    ]
+
+   t = translate sinfo

@@ -1,7 +1,7 @@
 module CategoryView (
  wCategory, tuple2Category, category2Tuple, wCategoryType, blankCategoryView,
  createCategoryView, editCategoryView, showCategoryView, listCategoryView,
- leqCategory, listEmailCorrectionView
+ leqCategory, showCategoryInfo, listEmailCorrectionView
  ) where
 
 import Either
@@ -188,6 +188,20 @@ leqCategory :: Category -> Category -> Bool
 leqCategory x1 x2 =
   categoryPosition x1 <= categoryPosition x2
 
+showCategoryInfo :: UserSessionInfo -> Category -> [HtmlExp]
+showCategoryInfo sinfo cat =
+  (if null catcmt then [] else [par [htxt catcmt]]) ++
+  (if minpts==0 && maxpts==0 then []
+   else [par [htxt $ t "Minimal ECTS points" ++": "++ showDiv10 minpts ++
+                     " / " ++
+                     t "Maximal ECTS points" ++": "++ showDiv10 maxpts]])
+ where
+  catcmt = categoryComment cat
+  minpts = categoryMinECTS cat
+  maxpts = categoryMaxECTS cat
+
+  t = translate sinfo
+  
 --- Supplies a list view for a given list of Category entities.
 --- Shows also buttons to show, delete, or edit entries.
 --- Various controller functions to show, delete, edit, and format entities
@@ -219,15 +233,7 @@ listCategoryView sinfo mbsprog catmods semperiod users
   [h1 [either (studyProgramToHRef sinfo) htxt mbsprog]] ++
   (if length catmods == 1 && isLeft (fst (head catmods))
    then let cat = fromLeft (fst (head catmods))
-            catcmt = categoryComment cat
-            minpts = categoryMinECTS cat
-            maxpts = categoryMaxECTS cat
-         in (if null catcmt then [] else [par [htxt catcmt]]) ++
-            (if minpts==0 && maxpts==0 then []
-               else [par [htxt $
-                           t "Minimal ECTS points" ++": "++ showDiv10 minpts ++
-                           " / " ++
-                           t "Maximal ECTS points" ++": "++ showDiv10 maxpts]])
+         in showCategoryInfo sinfo cat
    else []) ++
   [spTable
     (if isAdminSession sinfo && null (concatMap snd catmods)

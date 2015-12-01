@@ -18,7 +18,7 @@ checkAdmin sinfo =
 isLoggedIn :: IO AccessResult
 isLoggedIn =
   getSessionLogin >>=
-  return . maybe (AccessDenied "Operation only allowed!") (const AccessGranted)
+  return . maybe (AccessDenied "Operation not allowed!") (const AccessGranted)
 
 --- Checks whether the application of an operation to a StudyProgram
 --- entity is allowed.
@@ -70,7 +70,7 @@ isAdminOrOwner mdata = do
   lname <- getSessionLogin >>= return . maybe "" id
   return $ if admin || userLogin responsibleUser == lname
            then AccessGranted
-           else AccessDenied "Operation only allowed!"
+           else AccessDenied "Operation not allowed!"
 
 
 --- Checks whether the application of an operation to a ModDescr
@@ -99,23 +99,31 @@ modInstOperationAllowed at _ =
 --- entity is allowed.
 advisorStudyProgramOperationAllowed
   :: AccessType AdvisorStudyProgram -> UserSessionInfo -> IO AccessResult
-advisorStudyProgramOperationAllowed _ = checkAdmin
-
---- Checks whether the application of an operation to a AdvisorCategory
---- entity is allowed.
-advisorCategoryOperationAllowed
-  :: AccessType AdvisorCategory -> UserSessionInfo -> IO AccessResult
-advisorCategoryOperationAllowed _ = checkAdmin
+advisorStudyProgramOperationAllowed at sinfo =
+  case at of
+   ListEntities -> return AccessGranted
+   NewEntity -> isLoggedIn
+   (ShowEntity _) -> return AccessGranted
+   (DeleteEntity _) -> checkAdmin sinfo
+   (UpdateEntity asp) -> isAdminOrProgAdvisor asp
+ where
+  isAdminOrProgAdvisor asp = do
+    responsibleUser <- runJustT (getStudyProgAdvisorUser asp)
+    lname <- getSessionLogin >>= return . maybe "" id
+    return $ if isAdminSession sinfo || userLogin responsibleUser == lname
+             then AccessGranted
+             else AccessDenied "Operation not allowed!"
 
 --- Checks whether the application of an operation to a AdvisorModule
 --- entity is allowed.
 advisorModuleOperationAllowed
   :: AccessType AdvisorModule -> UserSessionInfo -> IO AccessResult
-advisorModuleOperationAllowed _ = checkAdmin
+advisorModuleOperationAllowed _ _ = isLoggedIn
 
 --- Checks whether the application of an operation to a MasterProgram
 --- entity is allowed.
-masterProgramOperationAllowed :: AccessType MasterProgram -> UserSessionInfo -> IO AccessResult
+masterProgramOperationAllowed :: AccessType MasterProgram -> UserSessionInfo
+                              -> IO AccessResult
 masterProgramOperationAllowed at sinfo =
   case at of
    ListEntities -> return AccessGranted
@@ -131,7 +139,7 @@ isAdminOrAdvisor mprog = do
   lname <- getSessionLogin >>= return . maybe "" id
   return $ if admin || userLogin responsibleUser == lname
            then AccessGranted
-           else AccessDenied "Operation only allowed!"
+           else AccessDenied "Operation not allowed!"
 
 
 --- Checks whether the application of an operation to a MasterProgInfo

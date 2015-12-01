@@ -6,11 +6,17 @@ import KeyDatabase
 import HTML
 import Time
 import MDB
+import MDBExts
+import AdvisorModuleController
 import AdvisorStudyProgramView
+import StudyProgramView
 import Maybe
 import SessionInfo
+import Sort(mergeSort)
 import Authorization
 import AuthorizedControllers
+import CategoryView(leqCategory)
+import MDBExts
 import UserProcesses
 import MDBEntitiesToHtml
 
@@ -44,16 +50,18 @@ newAdvisorStudyProgramController =
      do allStudyPrograms <- runQ queryAllStudyPrograms
         allUsers <- runQ queryAllUsers
         return
-         (blankAdvisorStudyProgramView sinfo allStudyPrograms allUsers
+         (blankAdvisorStudyProgramView sinfo
+           (mergeSort leqStudyProgram allStudyPrograms)
+           allUsers
            (\entity ->
-             transactionController (createAdvisorStudyProgramT entity)
-              (nextInProcessOr listAdvisorStudyProgramController Nothing))
+             transactionBindController (createAdvisorStudyProgramT entity)
+                                       showAdvisorStudyProgramController)
            listAdvisorStudyProgramController))
 
 --- Transaction to persist a new AdvisorStudyProgram entity to the database.
 createAdvisorStudyProgramT
   :: (String,String,Int,String,String,String,Bool,StudyProgram,User)
-  -> Transaction ()
+  -> Transaction AdvisorStudyProgram
 createAdvisorStudyProgramT
     (name,term,year,desc,prereq,comments,visible,studyProgram,user) =
   newAdvisorStudyProgramWithUserStudyAdvisingKeyWithStudyProgramStudyProgramsAdvisedKey
@@ -66,7 +74,6 @@ createAdvisorStudyProgramT
    visible
    (userKey user)
    (studyProgramKey studyProgram)
-   |>> returnT ()
 
 --- Shows a form to edit the given AdvisorStudyProgram entity.
 editAdvisorStudyProgramController :: AdvisorStudyProgram -> Controller
@@ -82,6 +89,8 @@ editAdvisorStudyProgramController advisorStudyProgramToEdit =
                                                advisorStudyProgramToEdit)
         studyAdvisingUser <- runJustT
                               (getStudyAdvisingUser advisorStudyProgramToEdit)
+        let aspkey = advisorStudyProgramKey advisorStudyProgramToEdit
+            showctrl = showASPController aspkey
         return
          (editAdvisorStudyProgramView sinfo advisorStudyProgramToEdit
            studyProgramsAdvisedStudyProgram
@@ -90,8 +99,14 @@ editAdvisorStudyProgramController advisorStudyProgramToEdit =
            allUsers
            (\entity ->
              transactionController (updateAdvisorStudyProgramT entity)
-              (nextInProcessOr listAdvisorStudyProgramController Nothing))
-           listAdvisorStudyProgramController))
+                                   showctrl)
+           showctrl))
+
+--- A show controller for a given AdvisorStudyProgram key:
+showASPController :: AdvisorStudyProgramKey -> Controller
+showASPController aspkey =
+  runJustT (getAdvisorStudyProgram aspkey)
+                       >>= showAdvisorStudyProgramController
 
 --- Transaction to persist modifications of a given AdvisorStudyProgram entity
 --- to the database.
@@ -110,8 +125,9 @@ deleteAdvisorStudyProgramController advisorStudyProgram =
       [h3
         [htxt
           (concat
-            ["Really delete entity \"",advisorStudyProgramToShortView
-                                        advisorStudyProgram,"\"?"])]]
+            ["Studienprogramm \""
+            ,advisorStudyProgramToShortView advisorStudyProgram
+            ,"\" wirklich löschen?"])]]
       (transactionController (deleteAdvisorStudyProgramT advisorStudyProgram)
         listAdvisorStudyProgramController)
       (showAdvisorStudyProgramController advisorStudyProgram))
@@ -126,25 +142,56 @@ deleteAdvisorStudyProgramT advisorStudyProgram =
 listAdvisorStudyProgramController :: Controller
 listAdvisorStudyProgramController =
   checkAuthorization (advisorStudyProgramOperationAllowed ListEntities)
-   $ (\sinfo ->
-     do advisorStudyPrograms <- runQ queryAllAdvisorStudyPrograms
-        return (listAdvisorStudyProgramView sinfo advisorStudyPrograms))
+   $ \sinfo -> do
+       let visfilter = filter (maybe advisorStudyProgramVisible
+                                     (\_ -> const True)
+                                     (userLoginOfSession sinfo))
+       asprogs <- runQ queryAllAdvisorStudyPrograms >>= return . visfilter
+       sprogs <- runJustT (mapT getStudyProgramsAdvisedStudyProgram asprogs)
+       return (listAdvisorStudyProgramView sinfo (zip asprogs sprogs))
+
+--- Shows a AdvisorStudyProgram entity.
+addCatModController :: AdvisorStudyProgram -> Controller
+                    -> Category -> Controller
+addCatModController asprog nextctrl cat = do
+  modinstdatas <- runJustT (getCatModInstsInSemesters cat startsem 3)
+  selectAdvisorModuleController asprog cat modinstdatas nextctrl
+ where
+  startsem = (advisorStudyProgramTerm asprog,
+              advisorStudyProgramYear asprog)
 
 --- Shows a AdvisorStudyProgram entity.
 showAdvisorStudyProgramController :: AdvisorStudyProgram -> Controller
-showAdvisorStudyProgramController advisorStudyProgram =
+showAdvisorStudyProgramController asprog =
   checkAuthorization
-   (advisorStudyProgramOperationAllowed (ShowEntity advisorStudyProgram))
+   (advisorStudyProgramOperationAllowed (ShowEntity asprog))
    $ (\sinfo ->
-     do studyProgramsAdvisedStudyProgram <- runJustT
-                                             (getStudyProgramsAdvisedStudyProgram
-                                               advisorStudyProgram)
-        studyAdvisingUser <- runJustT
-                              (getStudyAdvisingUser advisorStudyProgram)
+     do studyprog <- runJustT (getStudyProgramsAdvisedStudyProgram
+                                               asprog)
+        categories <- runQ $ transformQ (mergeSort leqCategory) $
+                               queryCategorysOfStudyProgram
+                                           (studyProgramKey studyprog)
+        amods <- runQ $ queryCondAdvisorModule
+           (\am -> advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey am
+                                              == advisorStudyProgramKey asprog)
+        amdatas <- runJustT (getAdvisorModuleData amods)
+        advisor <- runJustT (getStudyAdvisingUser asprog)
+        let showcontroller =
+              showASPController (advisorStudyProgramKey asprog)
         return
-         (showAdvisorStudyProgramView sinfo advisorStudyProgram
-           studyProgramsAdvisedStudyProgram
-           studyAdvisingUser))
+         (showAdvisorStudyProgramView
+           sinfo
+           (isAdminSession sinfo)
+           (Just (userLogin advisor) == userLoginOfSession sinfo)
+           editAdvisorStudyProgramController
+           showcontroller
+           (addCatModController asprog showcontroller)
+           (deleteAdvisorModuleController showcontroller)
+           asprog
+           studyprog
+           amdatas
+           categories
+           advisor))
 
 --- Gets the associated StudyProgram entity for a given AdvisorStudyProgram entity.
 getStudyProgramsAdvisedStudyProgram

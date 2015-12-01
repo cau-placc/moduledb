@@ -1,12 +1,11 @@
 module MDB
   ( ex1, ex2, ex3, ex4, ex9
   , StudyProgram, Category, MasterCoreArea, User, ModData, ModDescr, ModInst
-  , AdvisorStudyProgram, AdvisorCategory, AdvisorModule, MasterProgram
-  , MasterProgInfo, UnivisInfo, StudyProgramKey, CategoryKey
-  , MasterCoreAreaKey, UserKey, ModDataKey, ModDescrKey, ModInstKey
-  , AdvisorStudyProgramKey, AdvisorCategoryKey, AdvisorModuleKey
-  , MasterProgramKey, MasterProgInfoKey, UnivisInfoKey, Categorizing
-  , studyProgramName, setStudyProgramName, studyProgramNameE
+  , AdvisorStudyProgram, AdvisorModule, MasterProgram, MasterProgInfo
+  , UnivisInfo, StudyProgramKey, CategoryKey, MasterCoreAreaKey, UserKey
+  , ModDataKey, ModDescrKey, ModInstKey, AdvisorStudyProgramKey
+  , AdvisorModuleKey, MasterProgramKey, MasterProgInfoKey, UnivisInfoKey
+  , Categorizing, studyProgramName, setStudyProgramName, studyProgramNameE
   , setStudyProgramNameE, studyProgramShortName, setStudyProgramShortName
   , studyProgramProgKey, setStudyProgramProgKey, studyProgramURLKey
   , setStudyProgramURLKey, studyProgramPosition, setStudyProgramPosition
@@ -49,13 +48,11 @@ module MDB
   , setAdvisorStudyProgramUserStudyAdvisingKey
   , advisorStudyProgramStudyProgramStudyProgramsAdvisedKey
   , setAdvisorStudyProgramStudyProgramStudyProgramsAdvisedKey
-  , advisorCategoryComment, setAdvisorCategoryComment, advisorCategoryPosition
-  , setAdvisorCategoryPosition
-  , advisorCategoryAdvisorStudyProgramAdvisedProgramCategoriesKey
-  , setAdvisorCategoryAdvisorStudyProgramAdvisedProgramCategoriesKey
-  , advisorModuleCompulsory, setAdvisorModuleCompulsory
-  , advisorModuleAdvisorCategoryAdvisorCategorizingKey
-  , setAdvisorModuleAdvisorCategoryAdvisorCategorizingKey
+  , advisorModuleMandatory, setAdvisorModuleMandatory
+  , advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+  , setAdvisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+  , advisorModuleCategoryAdvisorCategorizingKey
+  , setAdvisorModuleCategoryAdvisorCategorizingKey
   , advisorModuleModInstAdvisedProgramModuleInstancesKey
   , setAdvisorModuleModInstAdvisedProgramModuleInstancesKey, masterProgramName
   , setMasterProgramName, masterProgramTerm, setMasterProgramTerm
@@ -101,13 +98,9 @@ module MDB
   , newAdvisorStudyProgramWithUserStudyAdvisingKeyWithStudyProgramStudyProgramsAdvisedKey
   , updateAdvisorStudyProgram, deleteAdvisorStudyProgram
   , getAdvisorStudyProgram, queryAllAdvisorStudyPrograms
-  , queryCondAdvisorStudyProgram, advisorCategory, advisorCategoryKey
-  , showAdvisorCategoryKey, readAdvisorCategoryKey
-  , newAdvisorCategoryWithAdvisorStudyProgramAdvisedProgramCategoriesKey
-  , updateAdvisorCategory, deleteAdvisorCategory, getAdvisorCategory
-  , queryAllAdvisorCategorys, queryCondAdvisorCategory, advisorModule
-  , advisorModuleKey, showAdvisorModuleKey, readAdvisorModuleKey
-  , newAdvisorModuleWithAdvisorCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
+  , queryCondAdvisorStudyProgram, advisorModule, advisorModuleKey
+  , showAdvisorModuleKey, readAdvisorModuleKey
+  , newAdvisorModuleWithAdvisorStudyProgramAdvisorProgramModulesKeyWithCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
   , updateAdvisorModule, deleteAdvisorModule, getAdvisorModule
   , queryAllAdvisorModules, queryCondAdvisorModule, masterProgram
   , masterProgramKey, showMasterProgramKey, readMasterProgramKey
@@ -128,8 +121,8 @@ module MDB
   , queryAllCategorizings, queryCondCategorizing, programInfo, withProgInfo
   , programInfoOf, areaPrograms, withProgram, ofCoreArea, advising, organizes
   , organizedBy, advisedProgramModuleInstances, advisorUseofModInst
-  , withModInst, advisorCategorizing, containsAdvisorMods, belongsToAdvisorCat
-  , advisedProgramCategories, withAdvisorCategory, ofAdvisorProgram
+  , withModInst, advisorCategorizing, containsAdvisorMods, advisedBelongsTo
+  , advisorProgramModules, moduleOfAdvisorProgram, belongsToAdvisedProgram
   , studyProgramsAdvised, advisedProgram, instanceOf, studyAdvising
   , advisesProgram, advisedBy, moduleInstances, instOfModule, withModule
   , lecturerMods, instOfLecturer, withLecturer, dataDesc, withDesc, descOf
@@ -137,9 +130,8 @@ module MDB
   , programCategories, withCategory, ofProgram, checkAllData
   , checkCategorizing, checkStudyProgram, checkCategory, checkMasterCoreArea
   , checkUser, checkModData, checkModDescr, checkModInst
-  , checkAdvisorStudyProgram, checkAdvisorCategory, checkAdvisorModule
-  , checkMasterProgram, checkMasterProgInfo, checkUnivisInfo, saveAllData
-  , restoreAllData
+  , checkAdvisorStudyProgram, checkAdvisorModule, checkMasterProgram
+  , checkMasterProgInfo, checkUnivisInfo, saveAllData, restoreAllData
   , storeTermDB, readTermDB
   , destroyCategorizing, queryModDataWithCode, queryModDataKeysOfCategory
   , queryModDataOfUser, queryHasUnivisEntry, getModDataKeyCategorys
@@ -222,13 +214,9 @@ type AdvisorStudyProgramTuple = (String
                                 ,Key
                                 ,Key)
 
-data AdvisorCategory = AdvisorCategory Key String Int Key
+data AdvisorModule = AdvisorModule Key Bool Key Key Key
 
-type AdvisorCategoryTuple = (String,Int,Key)
-
-data AdvisorModule = AdvisorModule Key (Maybe Bool) Key Key
-
-type AdvisorModuleTuple = (Maybe Bool,Key,Key)
+type AdvisorModuleTuple = (Bool,Key,Key,Key)
 
 data MasterProgram = MasterProgram Key String String Int String String String Bool Key Key
 
@@ -265,8 +253,6 @@ data ModDescrKey = ModDescrKey Key
 data ModInstKey = ModInstKey Key
 
 data AdvisorStudyProgramKey = AdvisorStudyProgramKey Key
-
-data AdvisorCategoryKey = AdvisorCategoryKey Key
 
 data AdvisorModuleKey = AdvisorModuleKey Key
 
@@ -355,21 +341,13 @@ keytuple2AdvisorStudyProgram
 keytuple2AdvisorStudyProgram x1 (x2,x3,x4,x5,x6,x7,x8,x9,x10) =
   AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x7 x8 x9 x10
 
---- Transforms entity AdvisorCategory into tuple representation.
-advisorCategory2tuple :: AdvisorCategory -> AdvisorCategoryTuple
-advisorCategory2tuple (AdvisorCategory _ x2 x3 x4) = (x2,x3,x4)
-
---- Transforms key and tuple into a AdvisorCategory entity.
-keytuple2AdvisorCategory :: Key -> AdvisorCategoryTuple -> AdvisorCategory
-keytuple2AdvisorCategory x1 (x2,x3,x4) = AdvisorCategory x1 x2 x3 x4
-
 --- Transforms entity AdvisorModule into tuple representation.
 advisorModule2tuple :: AdvisorModule -> AdvisorModuleTuple
-advisorModule2tuple (AdvisorModule _ x2 x3 x4) = (x2,x3,x4)
+advisorModule2tuple (AdvisorModule _ x2 x3 x4 x5) = (x2,x3,x4,x5)
 
 --- Transforms key and tuple into a AdvisorModule entity.
 keytuple2AdvisorModule :: Key -> AdvisorModuleTuple -> AdvisorModule
-keytuple2AdvisorModule x1 (x2,x3,x4) = AdvisorModule x1 x2 x3 x4
+keytuple2AdvisorModule x1 (x2,x3,x4,x5) = AdvisorModule x1 x2 x3 x4 x5
 
 --- Transforms entity MasterProgram into tuple representation.
 masterProgram2tuple :: MasterProgram -> MasterProgramTuple
@@ -1063,81 +1041,59 @@ setAdvisorStudyProgramStudyProgramStudyProgramsAdvisedKey
     (AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x7 x8 x9 _) x =
   AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x7 x8 x9 (studyProgramKeyToKey x)
 
---- Sets the value of attribute "Key" in a AdvisorCategory entity.
-setAdvisorCategoryKey :: AdvisorCategory -> Key -> AdvisorCategory
-setAdvisorCategoryKey (AdvisorCategory _ x2 x3 x4) x =
-  AdvisorCategory x x2 x3 x4
-
---- Gets the value of attribute "Comment" of a AdvisorCategory entity.
-advisorCategoryComment :: AdvisorCategory -> String
-advisorCategoryComment (AdvisorCategory _ x _ _) = x
-
---- Sets the value of attribute "Comment" in a AdvisorCategory entity.
-setAdvisorCategoryComment :: AdvisorCategory -> String -> AdvisorCategory
-setAdvisorCategoryComment (AdvisorCategory x1 _ x3 x4) x =
-  AdvisorCategory x1 x x3 x4
-
---- Gets the value of attribute "Position" of a AdvisorCategory entity.
-advisorCategoryPosition :: AdvisorCategory -> Int
-advisorCategoryPosition (AdvisorCategory _ _ x _) = x
-
---- Sets the value of attribute "Position" in a AdvisorCategory entity.
-setAdvisorCategoryPosition :: AdvisorCategory -> Int -> AdvisorCategory
-setAdvisorCategoryPosition (AdvisorCategory x1 x2 _ x4) x =
-  AdvisorCategory x1 x2 x x4
-
---- Gets the value of attribute "AdvisorStudyProgramAdvisedProgramCategoriesKey" of a AdvisorCategory entity.
-advisorCategoryAdvisorStudyProgramAdvisedProgramCategoriesKey
-  :: AdvisorCategory -> AdvisorStudyProgramKey
-advisorCategoryAdvisorStudyProgramAdvisedProgramCategoriesKey
-    (AdvisorCategory _ _ _ x) =
-  AdvisorStudyProgramKey x
-
---- Sets the value of attribute "AdvisorStudyProgramAdvisedProgramCategoriesKey" in a AdvisorCategory entity.
-setAdvisorCategoryAdvisorStudyProgramAdvisedProgramCategoriesKey
-  :: AdvisorCategory -> AdvisorStudyProgramKey -> AdvisorCategory
-setAdvisorCategoryAdvisorStudyProgramAdvisedProgramCategoriesKey
-    (AdvisorCategory x1 x2 x3 _) x =
-  AdvisorCategory x1 x2 x3 (advisorStudyProgramKeyToKey x)
-
 --- Sets the value of attribute "Key" in a AdvisorModule entity.
 setAdvisorModuleKey :: AdvisorModule -> Key -> AdvisorModule
-setAdvisorModuleKey (AdvisorModule _ x2 x3 x4) x = AdvisorModule x x2 x3 x4
+setAdvisorModuleKey (AdvisorModule _ x2 x3 x4 x5) x =
+  AdvisorModule x x2 x3 x4 x5
 
---- Gets the value of attribute "Compulsory" of a AdvisorModule entity.
-advisorModuleCompulsory :: AdvisorModule -> Maybe Bool
-advisorModuleCompulsory (AdvisorModule _ x _ _) = x
+--- Gets the value of attribute "Mandatory" of a AdvisorModule entity.
+advisorModuleMandatory :: AdvisorModule -> Bool
+advisorModuleMandatory (AdvisorModule _ x _ _ _) = x
 
---- Sets the value of attribute "Compulsory" in a AdvisorModule entity.
-setAdvisorModuleCompulsory :: AdvisorModule -> Maybe Bool -> AdvisorModule
-setAdvisorModuleCompulsory (AdvisorModule x1 _ x3 x4) x =
-  AdvisorModule x1 x x3 x4
+--- Sets the value of attribute "Mandatory" in a AdvisorModule entity.
+setAdvisorModuleMandatory :: AdvisorModule -> Bool -> AdvisorModule
+setAdvisorModuleMandatory (AdvisorModule x1 _ x3 x4 x5) x =
+  AdvisorModule x1 x x3 x4 x5
 
---- Gets the value of attribute "AdvisorCategoryAdvisorCategorizingKey" of a AdvisorModule entity.
-advisorModuleAdvisorCategoryAdvisorCategorizingKey
-  :: AdvisorModule -> AdvisorCategoryKey
-advisorModuleAdvisorCategoryAdvisorCategorizingKey (AdvisorModule _ _ x _) =
-  AdvisorCategoryKey x
+--- Gets the value of attribute "AdvisorStudyProgramAdvisorProgramModulesKey" of a AdvisorModule entity.
+advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+  :: AdvisorModule -> AdvisorStudyProgramKey
+advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+    (AdvisorModule _ _ x _ _) =
+  AdvisorStudyProgramKey x
 
---- Sets the value of attribute "AdvisorCategoryAdvisorCategorizingKey" in a AdvisorModule entity.
-setAdvisorModuleAdvisorCategoryAdvisorCategorizingKey
-  :: AdvisorModule -> AdvisorCategoryKey -> AdvisorModule
-setAdvisorModuleAdvisorCategoryAdvisorCategorizingKey
-    (AdvisorModule x1 x2 _ x4) x =
-  AdvisorModule x1 x2 (advisorCategoryKeyToKey x) x4
+--- Sets the value of attribute "AdvisorStudyProgramAdvisorProgramModulesKey" in a AdvisorModule entity.
+setAdvisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+  :: AdvisorModule -> AdvisorStudyProgramKey -> AdvisorModule
+setAdvisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+    (AdvisorModule x1 x2 _ x4 x5) x =
+  AdvisorModule x1 x2 (advisorStudyProgramKeyToKey x) x4 x5
+
+--- Gets the value of attribute "CategoryAdvisorCategorizingKey" of a AdvisorModule entity.
+advisorModuleCategoryAdvisorCategorizingKey :: AdvisorModule -> CategoryKey
+advisorModuleCategoryAdvisorCategorizingKey (AdvisorModule _ _ _ x _) =
+  CategoryKey x
+
+--- Sets the value of attribute "CategoryAdvisorCategorizingKey" in a AdvisorModule entity.
+setAdvisorModuleCategoryAdvisorCategorizingKey
+  :: AdvisorModule -> CategoryKey -> AdvisorModule
+setAdvisorModuleCategoryAdvisorCategorizingKey
+    (AdvisorModule x1 x2 x3 _ x5) x =
+  AdvisorModule x1 x2 x3 (categoryKeyToKey x) x5
 
 --- Gets the value of attribute "ModInstAdvisedProgramModuleInstancesKey" of a AdvisorModule entity.
 advisorModuleModInstAdvisedProgramModuleInstancesKey
   :: AdvisorModule -> ModInstKey
-advisorModuleModInstAdvisedProgramModuleInstancesKey (AdvisorModule _ _ _ x) =
+advisorModuleModInstAdvisedProgramModuleInstancesKey
+    (AdvisorModule _ _ _ _ x) =
   ModInstKey x
 
 --- Sets the value of attribute "ModInstAdvisedProgramModuleInstancesKey" in a AdvisorModule entity.
 setAdvisorModuleModInstAdvisedProgramModuleInstancesKey
   :: AdvisorModule -> ModInstKey -> AdvisorModule
 setAdvisorModuleModInstAdvisedProgramModuleInstancesKey
-    (AdvisorModule x1 x2 x3 _) x =
-  AdvisorModule x1 x2 x3 (modInstKeyToKey x)
+    (AdvisorModule x1 x2 x3 x4 _) x =
+  AdvisorModule x1 x2 x3 x4 (modInstKeyToKey x)
 
 --- Sets the value of attribute "Key" in a MasterProgram entity.
 setMasterProgramKey :: MasterProgram -> Key -> MasterProgram
@@ -1340,11 +1296,9 @@ setUnivisInfoURL :: UnivisInfo -> String -> UnivisInfo
 setUnivisInfoURL (UnivisInfo x1 x2 x3 x4 _) x = UnivisInfo x1 x2 x3 x4 x
 
 --- Database predicate representing the relation between keys and StudyProgram tuple entities.
-studyProgramEntry
- :: Key -> StudyProgramTuple -> Dynamic
+studyProgramEntry :: Key -> StudyProgramTuple -> Dynamic
 studyProgramEntry =
-  persistentSQLite mdbFile
-   "StudyProgram"
+  persistentSQLite mdbFile "StudyProgram"
    ["Name","NameE","ShortName","ProgKey","URLKey","Position"]
 
 --- Dynamic predicate representing the relation
@@ -1449,8 +1403,7 @@ queryCondStudyProgram econd = transformQ (filter econd) queryAllStudyPrograms
 --- Database predicate representing the relation between keys and Category tuple entities.
 categoryEntry :: Key -> CategoryTuple -> Dynamic
 categoryEntry =
-  persistentSQLite mdbFile
-   "Category"
+  persistentSQLite mdbFile "Category"
    ["Name","NameE","ShortName","CatKey","Comment","MinECTS","MaxECTS"
    ,"Position","StudyProgramProgramCategoriesKey"]
 
@@ -1537,7 +1490,12 @@ deleteCategory category_p =
   requiredForeignDBKey "Categorizing" categorizingEntry keytuple2Categorizing
    categorizingCategoryCategorizingKey
    (categoryKey category_p)
-   |>> deleteDBEntry categoryEntry (categoryKeyToKey (categoryKey category_p))
+   |>> (requiredForeignDBKey "AdvisorModule" advisorModuleEntry
+         keytuple2AdvisorModule
+         advisorModuleCategoryAdvisorCategorizingKey
+         (categoryKey category_p)
+         |>> deleteDBEntry categoryEntry
+              (categoryKeyToKey (categoryKey category_p)))
 
 --- Gets a Category entity stored in the database with the given key.
 getCategory :: CategoryKey -> Transaction Category
@@ -1556,8 +1514,7 @@ queryCondCategory econd = transformQ (filter econd) queryAllCategorys
 --- Database predicate representing the relation between keys and MasterCoreArea tuple entities.
 masterCoreAreaEntry :: Key -> MasterCoreAreaTuple -> Dynamic
 masterCoreAreaEntry =
-  persistentSQLite mdbFile
-   "MasterCoreArea"
+  persistentSQLite mdbFile "MasterCoreArea"
    ["Name","ShortName","Description","AreaKey","Position"]
 
 --- Dynamic predicate representing the relation
@@ -1734,8 +1691,7 @@ queryCondUser econd = transformQ (filter econd) queryAllUsers
 --- Database predicate representing the relation between keys and ModData tuple entities.
 modDataEntry :: Key -> ModDataTuple -> Dynamic
 modDataEntry =
-  persistentSQLite mdbFile
-   "ModData"
+  persistentSQLite mdbFile "ModData"
    ["Code","NameG","NameE","Cycle","Presence","ECTS","Workload","Length","URL"
    ,"Visible","UserResponsibleKey"]
 
@@ -1891,8 +1847,7 @@ queryModDataCodeName =
 --- Database predicate representing the relation between keys and ModDescr tuple entities.
 modDescrEntry :: Key -> ModDescrTuple -> Dynamic
 modDescrEntry =
-  persistentSQLite mdbFile
-   "ModDescr"
+  persistentSQLite mdbFile "ModDescr"
    ["Language","ShortDesc","Objectives","Contents","Prereq","Exam","Methods"
    ,"Use","Literature","Links","Comments","ModDataDataDescKey"]
 
@@ -2031,8 +1986,7 @@ queryExamOfMod mdk =
 --- Database predicate representing the relation between keys and ModInst tuple entities.
 modInstEntry :: Key -> ModInstTuple -> Dynamic
 modInstEntry =
-  persistentSQLite mdbFile
-   "ModInst"
+  persistentSQLite mdbFile "ModInst"
    ["Term","Year","UserLecturerModsKey","ModDataModuleInstancesKey"]
 
 --- Dynamic predicate representing the relation
@@ -2144,8 +2098,7 @@ queryModKeysOfSem (term,year) =
 --- Database predicate representing the relation between keys and AdvisorStudyProgram tuple entities.
 advisorStudyProgramEntry :: Key -> AdvisorStudyProgramTuple -> Dynamic
 advisorStudyProgramEntry =
-  persistentSQLite mdbFile
-   "AdvisorStudyProgram"
+  persistentSQLite mdbFile "AdvisorStudyProgram"
    ["Name","Term","Year","Desc","Prereq","Comments","Visible"
    ,"UserStudyAdvisingKey","StudyProgramStudyProgramsAdvisedKey"]
 
@@ -2236,9 +2189,9 @@ updateAdvisorStudyProgram advisorStudyProgram_p =
 --- Deletes an existing AdvisorStudyProgram entity.
 deleteAdvisorStudyProgram :: AdvisorStudyProgram -> Transaction ()
 deleteAdvisorStudyProgram advisorStudyProgram_p =
-  requiredForeignDBKey "AdvisorCategory" advisorCategoryEntry
-   keytuple2AdvisorCategory
-   advisorCategoryAdvisorStudyProgramAdvisedProgramCategoriesKey
+  requiredForeignDBKey "AdvisorModule" advisorModuleEntry
+   keytuple2AdvisorModule
+   advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
    (advisorStudyProgramKey advisorStudyProgram_p)
    |>> deleteDBEntry advisorStudyProgramEntry
         (advisorStudyProgramKeyToKey
@@ -2263,106 +2216,12 @@ queryCondAdvisorStudyProgram
 queryCondAdvisorStudyProgram econd =
   transformQ (filter econd) queryAllAdvisorStudyPrograms
 
---- Database predicate representing the relation between keys and AdvisorCategory tuple entities.
-advisorCategoryEntry :: Key -> AdvisorCategoryTuple -> Dynamic
-advisorCategoryEntry =
-  persistentSQLite mdbFile
-   "AdvisorCategory"
-   ["Comment","Position","AdvisorStudyProgramAdvisedProgramCategoriesKey"]
-
---- Dynamic predicate representing the relation
---- between keys and AdvisorCategory entities.
-advisorCategory :: AdvisorCategoryKey -> AdvisorCategory -> Dynamic
-advisorCategory key obj
-  | key =:= advisorCategoryKey obj
-  = advisorCategoryEntry (advisorCategoryKeyToKey key)
-     (advisorCategory2tuple obj)
-
---- Gets the key of a AdvisorCategory entity.
-advisorCategoryKey :: AdvisorCategory -> AdvisorCategoryKey
-advisorCategoryKey (AdvisorCategory x _ _ _) = AdvisorCategoryKey x
-
---- Shows the key of a AdvisorCategory entity as a string.
---- This is useful if a textual representation of the key is necessary
---- (e.g., as URL parameters in web pages), but it should no be used
---- to store keys in other attributes!
-showAdvisorCategoryKey :: AdvisorCategory -> String
-showAdvisorCategoryKey obj =
-  showDatabaseKey "AdvisorCategory" advisorCategoryKeyToKey
-   (advisorCategoryKey obj)
-
---- Transforms a string into a key of a AdvisorCategory entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readAdvisorCategoryKey :: String -> Maybe AdvisorCategoryKey
-readAdvisorCategoryKey s =
-  readDatabaseKey "AdvisorCategory" AdvisorCategoryKey s
-
-advisorCategoryKeyToKey :: AdvisorCategoryKey -> Key
-advisorCategoryKeyToKey (AdvisorCategoryKey k) = k
-
-maybeAdvisorCategoryKeyToKey :: Maybe AdvisorCategoryKey -> Maybe Key
-maybeAdvisorCategoryKeyToKey Nothing = Nothing
-maybeAdvisorCategoryKeyToKey (Just (AdvisorCategoryKey k)) = Just k
-
---- Inserts a new AdvisorCategory entity.
-newAdvisorCategoryWithAdvisorStudyProgramAdvisedProgramCategoriesKey
-  :: String -> Int -> AdvisorStudyProgramKey -> Transaction AdvisorCategory
-newAdvisorCategoryWithAdvisorStudyProgramAdvisedProgramCategoriesKey
-    comment_p position_p advisorStudyProgramAdvisedProgramCategoriesKey_p =
-  existsEntryWithDBKey "AdvisorStudyProgram" advisorStudyProgramEntry
-   (advisorStudyProgramKeyToKey
-     advisorStudyProgramAdvisedProgramCategoriesKey_p)
-   |>> newEntry advisorCategoryEntry keytuple2AdvisorCategory
-        (comment_p
-        ,position_p
-        ,advisorStudyProgramKeyToKey
-          advisorStudyProgramAdvisedProgramCategoriesKey_p)
-
---- Updates an existing AdvisorCategory entity.
-updateAdvisorCategory :: AdvisorCategory -> Transaction ()
-updateAdvisorCategory advisorCategory_p =
-  existsEntryWithDBKey "AdvisorStudyProgram" advisorStudyProgramEntry
-   (advisorStudyProgramKeyToKey
-     (advisorCategoryAdvisorStudyProgramAdvisedProgramCategoriesKey
-       advisorCategory_p))
-   |>> updateDBEntry advisorCategoryEntry
-        (advisorCategoryKeyToKey (advisorCategoryKey advisorCategory_p))
-        (advisorCategory2tuple advisorCategory_p)
-
---- Deletes an existing AdvisorCategory entity.
-deleteAdvisorCategory :: AdvisorCategory -> Transaction ()
-deleteAdvisorCategory advisorCategory_p =
-  requiredForeignDBKey "AdvisorModule" advisorModuleEntry
-   keytuple2AdvisorModule
-   advisorModuleAdvisorCategoryAdvisorCategorizingKey
-   (advisorCategoryKey advisorCategory_p)
-   |>> deleteDBEntry advisorCategoryEntry
-        (advisorCategoryKeyToKey (advisorCategoryKey advisorCategory_p))
-
---- Gets a AdvisorCategory entity stored in the database with the given key.
-getAdvisorCategory :: AdvisorCategoryKey -> Transaction AdvisorCategory
-getAdvisorCategory key =
-  getEntry advisorCategoryEntry keytuple2AdvisorCategory
-   (advisorCategoryKeyToKey key)
-
---- Gets all AdvisorCategory entities stored in the database.
-queryAllAdvisorCategorys :: Query [AdvisorCategory]
-queryAllAdvisorCategorys =
-  transformQ (map (uncurry keytuple2AdvisorCategory))
-   (allDBKeyInfos advisorCategoryEntry)
-
---- Gets all AdvisorCategory entities satisfying a given condition.
-queryCondAdvisorCategory
-  :: (AdvisorCategory -> Bool) -> Query [AdvisorCategory]
-queryCondAdvisorCategory econd =
-  transformQ (filter econd) queryAllAdvisorCategorys
-
 --- Database predicate representing the relation between keys and AdvisorModule tuple entities.
 advisorModuleEntry :: Key -> AdvisorModuleTuple -> Dynamic
 advisorModuleEntry =
-  persistentSQLite mdbFile
-   "AdvisorModule"
-   ["Compulsory","AdvisorCategoryAdvisorCategorizingKey"
+  persistentSQLite mdbFile "AdvisorModule"
+   ["Mandatory","AdvisorStudyProgramAdvisorProgramModulesKey"
+   ,"CategoryAdvisorCategorizingKey"
    ,"ModInstAdvisedProgramModuleInstancesKey"]
 
 --- Dynamic predicate representing the relation
@@ -2374,7 +2233,7 @@ advisorModule key obj
 
 --- Gets the key of a AdvisorModule entity.
 advisorModuleKey :: AdvisorModule -> AdvisorModuleKey
-advisorModuleKey (AdvisorModule x _ _ _) = AdvisorModuleKey x
+advisorModuleKey (AdvisorModule x _ _ _ _) = AdvisorModuleKey x
 
 --- Shows the key of a AdvisorModule entity as a string.
 --- This is useful if a textual representation of the key is necessary
@@ -2397,35 +2256,46 @@ maybeAdvisorModuleKeyToKey Nothing = Nothing
 maybeAdvisorModuleKeyToKey (Just (AdvisorModuleKey k)) = Just k
 
 --- Inserts a new AdvisorModule entity.
-newAdvisorModuleWithAdvisorCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
-  :: Maybe Bool
-  -> AdvisorCategoryKey -> ModInstKey -> Transaction AdvisorModule
-newAdvisorModuleWithAdvisorCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
-    compulsory_p
-    advisorCategoryAdvisorCategorizingKey_p
+newAdvisorModuleWithAdvisorStudyProgramAdvisorProgramModulesKeyWithCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
+  :: Bool
+  -> AdvisorStudyProgramKey
+  -> CategoryKey -> ModInstKey -> Transaction AdvisorModule
+newAdvisorModuleWithAdvisorStudyProgramAdvisorProgramModulesKeyWithCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
+    mandatory_p
+    advisorStudyProgramAdvisorProgramModulesKey_p
+    categoryAdvisorCategorizingKey_p
     modInstAdvisedProgramModuleInstancesKey_p =
-  existsEntryWithDBKey "AdvisorCategory" advisorCategoryEntry
-   (advisorCategoryKeyToKey advisorCategoryAdvisorCategorizingKey_p)
-   |>> (existsEntryWithDBKey "ModInst" modInstEntry
-         (modInstKeyToKey modInstAdvisedProgramModuleInstancesKey_p)
-         |>> newEntry advisorModuleEntry keytuple2AdvisorModule
-              (compulsory_p
-              ,advisorCategoryKeyToKey advisorCategoryAdvisorCategorizingKey_p
-              ,modInstKeyToKey modInstAdvisedProgramModuleInstancesKey_p))
+  existsEntryWithDBKey "AdvisorStudyProgram" advisorStudyProgramEntry
+   (advisorStudyProgramKeyToKey advisorStudyProgramAdvisorProgramModulesKey_p)
+   |>> (existsEntryWithDBKey "Category" categoryEntry
+         (categoryKeyToKey categoryAdvisorCategorizingKey_p)
+         |>> (existsEntryWithDBKey "ModInst" modInstEntry
+               (modInstKeyToKey modInstAdvisedProgramModuleInstancesKey_p)
+               |>> newEntry advisorModuleEntry keytuple2AdvisorModule
+                    (mandatory_p
+                    ,advisorStudyProgramKeyToKey
+                      advisorStudyProgramAdvisorProgramModulesKey_p
+                    ,categoryKeyToKey categoryAdvisorCategorizingKey_p
+                    ,modInstKeyToKey
+                      modInstAdvisedProgramModuleInstancesKey_p)))
 
 --- Updates an existing AdvisorModule entity.
 updateAdvisorModule :: AdvisorModule -> Transaction ()
 updateAdvisorModule advisorModule_p =
-  existsEntryWithDBKey "AdvisorCategory" advisorCategoryEntry
-   (advisorCategoryKeyToKey
-     (advisorModuleAdvisorCategoryAdvisorCategorizingKey advisorModule_p))
-   |>> (existsEntryWithDBKey "ModInst" modInstEntry
-         (modInstKeyToKey
-           (advisorModuleModInstAdvisedProgramModuleInstancesKey
-             advisorModule_p))
-         |>> updateDBEntry advisorModuleEntry
-              (advisorModuleKeyToKey (advisorModuleKey advisorModule_p))
-              (advisorModule2tuple advisorModule_p))
+  existsEntryWithDBKey "AdvisorStudyProgram" advisorStudyProgramEntry
+   (advisorStudyProgramKeyToKey
+     (advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+       advisorModule_p))
+   |>> (existsEntryWithDBKey "Category" categoryEntry
+         (categoryKeyToKey
+           (advisorModuleCategoryAdvisorCategorizingKey advisorModule_p))
+         |>> (existsEntryWithDBKey "ModInst" modInstEntry
+               (modInstKeyToKey
+                 (advisorModuleModInstAdvisedProgramModuleInstancesKey
+                   advisorModule_p))
+               |>> updateDBEntry advisorModuleEntry
+                    (advisorModuleKeyToKey (advisorModuleKey advisorModule_p))
+                    (advisorModule2tuple advisorModule_p)))
 
 --- Deletes an existing AdvisorModule entity.
 deleteAdvisorModule :: AdvisorModule -> Transaction ()
@@ -2453,8 +2323,7 @@ queryCondAdvisorModule econd =
 --- Database predicate representing the relation between keys and MasterProgram tuple entities.
 masterProgramEntry :: Key -> MasterProgramTuple -> Dynamic
 masterProgramEntry =
-  persistentSQLite mdbFile
-   "MasterProgram"
+  persistentSQLite mdbFile "MasterProgram"
    ["Name","Term","Year","Desc","Prereq","Comments","Visible"
    ,"UserAdvisingKey","MasterCoreAreaAreaProgramsKey"]
 
@@ -2641,8 +2510,7 @@ readProgModules s = readQTerm s
 --- Database predicate representing the relation between keys and MasterProgInfo tuple entities.
 masterProgInfoEntry :: Key -> MasterProgInfoTuple -> Dynamic
 masterProgInfoEntry =
-  persistentSQLite mdbFile
-   "MasterProgInfo"
+  persistentSQLite mdbFile "MasterProgInfo"
    ["ProgModules","Praktikum","Seminar","Thesis","AllgGrundlagen"
    ,"Anwendungsfach","MasterProgramProgramInfoKey"]
 
@@ -2771,8 +2639,7 @@ queryInfoOfMasterProgram mpk =
 --- Database predicate representing the relation between keys and UnivisInfo tuple entities.
 univisInfoEntry :: Key -> UnivisInfoTuple -> Dynamic
 univisInfoEntry =
-  persistentSQLite mdbFile
-   "UnivisInfo"
+  persistentSQLite mdbFile "UnivisInfo"
    ["Code","Term","Year","URL"]
 
 --- Dynamic predicate representing the relation
@@ -2874,8 +2741,7 @@ queryHasUnivisEntry mcode (term,year) = transformQ (not . null) $
 --- Database predicate representing the relation between keys and Categorizing tuple entities.
 categorizingEntry :: Key -> CategorizingTuple -> Dynamic
 categorizingEntry =
-  persistentSQLite mdbFile
-   "Categorizing"
+  persistentSQLite mdbFile "Categorizing"
    ["ModDataCategorizingKey","CategoryCategorizingKey"]
 
 categorizingModDataCategorizingKey :: Categorizing -> ModDataKey
@@ -3022,40 +2888,40 @@ withModInst :: AdvisorModuleKey -> ModInstKey -> Dynamic
 withModInst = flip advisorUseofModInst
 
 --- Dynamic predicate representing the AdvisorCategorizing relation
---- between AdvisorCategory entities and AdvisorModule entities.
-advisorCategorizing :: AdvisorCategoryKey -> AdvisorModuleKey -> Dynamic
+--- between Category entities and AdvisorModule entities.
+advisorCategorizing :: CategoryKey -> AdvisorModuleKey -> Dynamic
 advisorCategorizing key1 key2
-  | advisorModuleAdvisorCategoryAdvisorCategorizingKey en =:= key1
+  | advisorModuleCategoryAdvisorCategorizingKey en =:= key1
   = advisorModuleEntry (advisorModuleKeyToKey key2) (advisorModule2tuple en)
   where
     en free
 
 --- Dynamic predicate representing role "containsAdvisorMods".
-containsAdvisorMods :: AdvisorCategoryKey -> AdvisorModuleKey -> Dynamic
+containsAdvisorMods :: CategoryKey -> AdvisorModuleKey -> Dynamic
 containsAdvisorMods = advisorCategorizing
 
 --- Dynamic predicate representing role "containsAdvisorMods".
-belongsToAdvisorCat :: AdvisorModuleKey -> AdvisorCategoryKey -> Dynamic
-belongsToAdvisorCat = flip containsAdvisorMods
+advisedBelongsTo :: AdvisorModuleKey -> CategoryKey -> Dynamic
+advisedBelongsTo = flip containsAdvisorMods
 
---- Dynamic predicate representing the AdvisedProgramCategories relation
---- between AdvisorStudyProgram entities and AdvisorCategory entities.
-advisedProgramCategories
-  :: AdvisorStudyProgramKey -> AdvisorCategoryKey -> Dynamic
-advisedProgramCategories key1 key2
-  | advisorCategoryAdvisorStudyProgramAdvisedProgramCategoriesKey en =:= key1
-  = advisorCategoryEntry (advisorCategoryKeyToKey key2)
-     (advisorCategory2tuple en)
+--- Dynamic predicate representing the AdvisorProgramModules relation
+--- between AdvisorStudyProgram entities and AdvisorModule entities.
+advisorProgramModules :: AdvisorStudyProgramKey -> AdvisorModuleKey -> Dynamic
+advisorProgramModules key1 key2
+  | advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey en =:= key1
+  = advisorModuleEntry (advisorModuleKeyToKey key2) (advisorModule2tuple en)
   where
     en free
 
---- Dynamic predicate representing role "withAdvisorCategory".
-withAdvisorCategory :: AdvisorStudyProgramKey -> AdvisorCategoryKey -> Dynamic
-withAdvisorCategory = advisedProgramCategories
+--- Dynamic predicate representing role "moduleOfAdvisorProgram".
+moduleOfAdvisorProgram
+  :: AdvisorStudyProgramKey -> AdvisorModuleKey -> Dynamic
+moduleOfAdvisorProgram = advisorProgramModules
 
---- Dynamic predicate representing role "withAdvisorCategory".
-ofAdvisorProgram :: AdvisorCategoryKey -> AdvisorStudyProgramKey -> Dynamic
-ofAdvisorProgram = flip withAdvisorCategory
+--- Dynamic predicate representing role "moduleOfAdvisorProgram".
+belongsToAdvisedProgram
+  :: AdvisorModuleKey -> AdvisorStudyProgramKey -> Dynamic
+belongsToAdvisedProgram = flip moduleOfAdvisorProgram
 
 --- Dynamic predicate representing the StudyProgramsAdvised relation
 --- between StudyProgram entities and AdvisorStudyProgram entities.
@@ -3198,11 +3064,10 @@ checkAllData =
                                  |>> (checkModDescr
                                        |>> (checkModInst
                                              |>> (checkAdvisorStudyProgram
-                                                   |>> (checkAdvisorCategory
-                                                         |>> (checkAdvisorModule
-                                                               |>> (checkMasterProgram
-                                                                     |>> (checkMasterProgInfo
-                                                                           |>> checkUnivisInfo))))))))))))
+                                                   |>> (checkAdvisorModule
+                                                         |>> (checkMasterProgram
+                                                               |>> (checkMasterProgInfo
+                                                                     |>> checkUnivisInfo)))))))))))
 
 --- Checks the consistency of the database for Categorizing entities.
 checkCategorizing :: Transaction ()
@@ -3259,13 +3124,6 @@ checkAdvisorStudyProgram =
   getDB (allDBKeyInfos advisorStudyProgramEntry)
    |>>= (mapT_ checkAdvisorStudyProgramEntry
           . map (uncurry keytuple2AdvisorStudyProgram))
-
---- Checks the consistency of the database for AdvisorCategory entities.
-checkAdvisorCategory :: Transaction ()
-checkAdvisorCategory =
-  getDB (allDBKeyInfos advisorCategoryEntry)
-   |>>= (mapT_ checkAdvisorCategoryEntry
-          . map (uncurry keytuple2AdvisorCategory))
 
 --- Checks the consistency of the database for AdvisorModule entities.
 checkAdvisorModule :: Transaction ()
@@ -3379,25 +3237,21 @@ checkAdvisorStudyProgramEntry advisorStudyProgram_p =
                 (advisorStudyProgramStudyProgramStudyProgramsAdvisedKey
                   advisorStudyProgram_p)))
 
-checkAdvisorCategoryEntry :: AdvisorCategory -> Transaction ()
-checkAdvisorCategoryEntry advisorCategory_p =
-  duplicateKeyTest advisorCategoryEntry
-   |>> existsEntryWithDBKey "AdvisorStudyProgram" advisorStudyProgramEntry
-        (advisorStudyProgramKeyToKey
-          (advisorCategoryAdvisorStudyProgramAdvisedProgramCategoriesKey
-            advisorCategory_p))
-
 checkAdvisorModuleEntry :: AdvisorModule -> Transaction ()
 checkAdvisorModuleEntry advisorModule_p =
   duplicateKeyTest advisorModuleEntry
-   |>> (existsEntryWithDBKey "AdvisorCategory" advisorCategoryEntry
-         (advisorCategoryKeyToKey
-           (advisorModuleAdvisorCategoryAdvisorCategorizingKey
+   |>> (existsEntryWithDBKey "AdvisorStudyProgram" advisorStudyProgramEntry
+         (advisorStudyProgramKeyToKey
+           (advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
              advisorModule_p))
-         |>> existsEntryWithDBKey "ModInst" modInstEntry
-              (modInstKeyToKey
-                (advisorModuleModInstAdvisedProgramModuleInstancesKey
-                  advisorModule_p)))
+         |>> (existsEntryWithDBKey "Category" categoryEntry
+               (categoryKeyToKey
+                 (advisorModuleCategoryAdvisorCategorizingKey
+                   advisorModule_p))
+               |>> existsEntryWithDBKey "ModInst" modInstEntry
+                    (modInstKeyToKey
+                      (advisorModuleModInstAdvisedProgramModuleInstancesKey
+                        advisorModule_p))))
 
 checkMasterProgramEntry :: MasterProgram -> Transaction ()
 checkMasterProgramEntry masterProgram_p =
@@ -3432,8 +3286,6 @@ saveAllData path =
      saveDBTerms path "ModInst" modInstEntry keytuple2ModInst
      saveDBTerms path "AdvisorStudyProgram" advisorStudyProgramEntry
       keytuple2AdvisorStudyProgram
-     saveDBTerms path "AdvisorCategory" advisorCategoryEntry
-      keytuple2AdvisorCategory
      saveDBTerms path "AdvisorModule" advisorModuleEntry
       keytuple2AdvisorModule
      saveDBTerms path "MasterProgram" masterProgramEntry
@@ -3467,9 +3319,6 @@ restoreAllData path =
      restoreDBTerms path "AdvisorStudyProgram" advisorStudyProgramEntry
       (advisorStudyProgramKeyToKey . advisorStudyProgramKey)
       advisorStudyProgram2tuple
-     restoreDBTerms path "AdvisorCategory" advisorCategoryEntry
-      (advisorCategoryKeyToKey . advisorCategoryKey)
-      advisorCategory2tuple
      restoreDBTerms path "AdvisorModule" advisorModuleEntry
       (advisorModuleKeyToKey . advisorModuleKey)
       advisorModule2tuple

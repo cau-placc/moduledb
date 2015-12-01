@@ -1,4 +1,4 @@
-{- ERD specification transformed from /home/mh/home/curry/applications/MDB/mdbext.erdterm -}
+{- ERD specification transformed from /net/medoc/home/mh/home/curry/applications/MDB/MDB.erdterm -}
 
  ERD "MDB"
    [Entity "Categorizing"
@@ -84,15 +84,11 @@
             Attribute "Visible" (BoolDom Nothing) NoKey False,
             Attribute "UserStudyAdvisingKey" (KeyDom "User") NoKey False,
             Attribute "StudyProgramStudyProgramsAdvisedKey" (KeyDom "StudyProgram") NoKey False],
-    Entity "AdvisorCategory"
-           [Attribute "Key" (IntDom Nothing) PKey False,
-            Attribute "Comment" (StringDom Nothing) NoKey True,
-            Attribute "Position" (IntDom Nothing) NoKey False,
-            Attribute "AdvisorStudyProgramAdvisedProgramCategoriesKey" (KeyDom "AdvisorStudyProgram") NoKey False],
     Entity "AdvisorModule"
            [Attribute "Key" (IntDom Nothing) PKey False,
-            Attribute "Compulsory" (BoolDom Nothing) NoKey True,
-            Attribute "AdvisorCategoryAdvisorCategorizingKey" (KeyDom "AdvisorCategory") NoKey False,
+            Attribute "Mandatory" (BoolDom Nothing) NoKey False,
+            Attribute "AdvisorStudyProgramAdvisorProgramModulesKey" (KeyDom "AdvisorStudyProgram") NoKey False,
+            Attribute "CategoryAdvisorCategorizingKey" (KeyDom "Category") NoKey False,
             Attribute "ModInstAdvisedProgramModuleInstancesKey" (KeyDom "ModInst") NoKey False],
     Entity "MasterProgram"
            [Attribute "Key" (IntDom Nothing) PKey False,
@@ -133,11 +129,11 @@
                  [REnd "ModInst" "withModInst" (Exactly 1),
                   REnd "AdvisorModule" "advisorUseofModInst" (Between 0 Infinite)],
     Relationship "AdvisorCategorizing"
-                 [REnd "AdvisorCategory" "belongsToAdvisorCat" (Exactly 1),
+                 [REnd "Category" "advisedBelongsTo" (Exactly 1),
                   REnd "AdvisorModule" "containsAdvisorMods" (Between 0 Infinite)],
-    Relationship "AdvisedProgramCategories"
-                 [REnd "AdvisorStudyProgram" "ofAdvisorProgram" (Exactly 1),
-                  REnd "AdvisorCategory" "withAdvisorCategory" (Between 0 Infinite)],
+    Relationship "AdvisorProgramModules"
+                 [REnd "AdvisorStudyProgram" "belongsToAdvisedProgram" (Exactly 1),
+                  REnd "AdvisorModule" "moduleOfAdvisorProgram" (Between 0 Infinite)],
     Relationship "StudyProgramsAdvised"
                  [REnd "StudyProgram" "instanceOf" (Exactly 1),
                   REnd "AdvisorStudyProgram" "advisedProgram" (Between 0 Infinite)],

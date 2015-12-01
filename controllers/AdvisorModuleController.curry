@@ -1,4 +1,6 @@
-module AdvisorModuleController ( mainAdvisorModuleController ) where
+module AdvisorModuleController
+   ( mainAdvisorModuleController, selectAdvisorModuleController
+   , deleteAdvisorModuleController ) where
 
 import Spicey
 import KeyDatabase
@@ -29,7 +31,7 @@ mainAdvisorModuleController =
           editAdvisorModuleController
        ["delete",s] ->
          applyControllerOn (readAdvisorModuleKey s) getAdvisorModule
-          deleteAdvisorModuleController
+          (deleteAdvisorModuleController listAdvisorModuleController)
        _ -> displayError "Illegal URL"
 
 --- Shows a form to create a new AdvisorModule entity.
@@ -38,20 +40,37 @@ newAdvisorModuleController =
   checkAuthorization (advisorModuleOperationAllowed NewEntity)
    $ (\sinfo ->
      do allModInsts <- runQ queryAllModInsts
-        allAdvisorCategorys <- runQ queryAllAdvisorCategorys
+        allCategorys <- runQ queryAllCategorys
+        allAdvisorStudyPrograms <- runQ queryAllAdvisorStudyPrograms
         return
-         (blankAdvisorModuleView sinfo allModInsts allAdvisorCategorys
+         (blankAdvisorModuleView sinfo allModInsts allCategorys
+           allAdvisorStudyPrograms
            (\entity ->
              transactionController (createAdvisorModuleT entity)
               (nextInProcessOr listAdvisorModuleController Nothing))
            listAdvisorModuleController))
 
+--- Shows a form to select and create a new AdvisorModule entity.
+selectAdvisorModuleController
+  :: AdvisorStudyProgram -> Category -> [(ModInst,ModData)]
+  -> Controller -> Controller
+selectAdvisorModuleController asprog cat modinstdatas nextctrl = do
+  sinfo <- getUserSessionInfo
+  return (selectAdvisorModuleView sinfo modinstdatas cat
+           (\entity ->
+             transactionController (let (c1,(c2,_),c3) = entity
+                                     in createAdvisorModuleT (c1,c2,c3,asprog))
+                                   nextctrl)
+           nextctrl)
+
 --- Transaction to persist a new AdvisorModule entity to the database.
-createAdvisorModuleT :: (Maybe Bool,ModInst,AdvisorCategory) -> Transaction ()
-createAdvisorModuleT (compulsory,modInst,advisorCategory) =
-  newAdvisorModuleWithAdvisorCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
-   compulsory
-   (advisorCategoryKey advisorCategory)
+createAdvisorModuleT
+  :: (Bool,ModInst,Category,AdvisorStudyProgram) -> Transaction ()
+createAdvisorModuleT (mandatory,modInst,category,advisorStudyProgram) =
+  newAdvisorModuleWithAdvisorStudyProgramAdvisorProgramModulesKeyWithCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
+   mandatory
+   (advisorStudyProgramKey advisorStudyProgram)
+   (categoryKey category)
    (modInstKey modInst)
    |>> returnT ()
 
@@ -62,19 +81,25 @@ editAdvisorModuleController advisorModuleToEdit =
    (advisorModuleOperationAllowed (UpdateEntity advisorModuleToEdit))
    $ (\sinfo ->
      do allModInsts <- runQ queryAllModInsts
-        allAdvisorCategorys <- runQ queryAllAdvisorCategorys
+        allCategorys <- runQ queryAllCategorys
+        allAdvisorStudyPrograms <- runQ queryAllAdvisorStudyPrograms
         advisedProgramModuleInstancesModInst <- runJustT
                                                  (getAdvisedProgramModuleInstancesModInst
                                                    advisorModuleToEdit)
-        advisorCategorizingAdvisorCategory <- runJustT
-                                               (getAdvisorCategorizingAdvisorCategory
-                                                 advisorModuleToEdit)
+        advisorCategorizingCategory <- runJustT
+                                        (getAdvisorCategorizingCategory
+                                          advisorModuleToEdit)
+        advisorProgramModulesAdvisorStudyProgram <- runJustT
+                                                     (getAdvisorProgramModulesAdvisorStudyProgram
+                                                       advisorModuleToEdit)
         return
          (editAdvisorModuleView sinfo advisorModuleToEdit
            advisedProgramModuleInstancesModInst
-           advisorCategorizingAdvisorCategory
+           advisorCategorizingCategory
+           advisorProgramModulesAdvisorStudyProgram
            allModInsts
-           allAdvisorCategorys
+           allCategorys
+           allAdvisorStudyPrograms
            (\entity ->
              transactionController (updateAdvisorModuleT entity)
               (nextInProcessOr listAdvisorModuleController Nothing))
@@ -87,20 +112,17 @@ updateAdvisorModuleT advisorModule = updateAdvisorModule advisorModule
 
 --- Deletes a given AdvisorModule entity (after asking for confirmation)
 --- and proceeds with the list controller.
-deleteAdvisorModuleController :: AdvisorModule -> Controller
-deleteAdvisorModuleController advisorModule =
+deleteAdvisorModuleController :: Controller -> AdvisorModule -> Controller
+deleteAdvisorModuleController nextctrl advisorModule =
   checkAuthorization
    (advisorModuleOperationAllowed (DeleteEntity advisorModule))
    $ (\_ ->
      confirmController
       [h3
-        [htxt
-          (concat
-            ["Really delete entity \"",advisorModuleToShortView advisorModule
-            ,"\"?"])]]
+        [htxt "Modulempfehlung wirklich löschen?"]]
       (transactionController (deleteAdvisorModuleT advisorModule)
-        listAdvisorModuleController)
-      (showAdvisorModuleController advisorModule))
+                             nextctrl)
+      nextctrl)
 
 --- Transaction to delete a given AdvisorModule entity.
 deleteAdvisorModuleT :: AdvisorModule -> Transaction ()
@@ -124,13 +146,17 @@ showAdvisorModuleController advisorModule =
      do advisedProgramModuleInstancesModInst <- runJustT
                                                  (getAdvisedProgramModuleInstancesModInst
                                                    advisorModule)
-        advisorCategorizingAdvisorCategory <- runJustT
-                                               (getAdvisorCategorizingAdvisorCategory
-                                                 advisorModule)
+        advisorCategorizingCategory <- runJustT
+                                        (getAdvisorCategorizingCategory
+                                          advisorModule)
+        advisorProgramModulesAdvisorStudyProgram <- runJustT
+                                                     (getAdvisorProgramModulesAdvisorStudyProgram
+                                                       advisorModule)
         return
          (showAdvisorModuleView sinfo advisorModule
            advisedProgramModuleInstancesModInst
-           advisorCategorizingAdvisorCategory))
+           advisorCategorizingCategory
+           advisorProgramModulesAdvisorStudyProgram))
 
 --- Gets the associated ModInst entity for a given AdvisorModule entity.
 getAdvisedProgramModuleInstancesModInst
@@ -138,9 +164,16 @@ getAdvisedProgramModuleInstancesModInst
 getAdvisedProgramModuleInstancesModInst aModInst =
   getModInst (advisorModuleModInstAdvisedProgramModuleInstancesKey aModInst)
 
---- Gets the associated AdvisorCategory entity for a given AdvisorModule entity.
-getAdvisorCategorizingAdvisorCategory
-  :: AdvisorModule -> Transaction AdvisorCategory
-getAdvisorCategorizingAdvisorCategory aAdvisorCategory =
-  getAdvisorCategory
-   (advisorModuleAdvisorCategoryAdvisorCategorizingKey aAdvisorCategory)
+--- Gets the associated Category entity for a given AdvisorModule entity.
+getAdvisorCategorizingCategory :: AdvisorModule -> Transaction Category
+getAdvisorCategorizingCategory aCategory =
+  getCategory (advisorModuleCategoryAdvisorCategorizingKey aCategory)
+
+--- Gets the associated AdvisorStudyProgram entity for a given AdvisorModule entity.
+getAdvisorProgramModulesAdvisorStudyProgram
+  :: AdvisorModule -> Transaction AdvisorStudyProgram
+getAdvisorProgramModulesAdvisorStudyProgram aAdvisorStudyProgram =
+  getAdvisorStudyProgram
+   (advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+     aAdvisorStudyProgram)
+     

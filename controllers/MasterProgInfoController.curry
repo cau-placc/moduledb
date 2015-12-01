@@ -9,6 +9,7 @@ import KeyDatabase
 import HTML
 import Time
 import MDB
+import MDBExts
 import MasterProgInfoView
 import Maybe
 import Authorization
@@ -103,13 +104,6 @@ getProgramInfoMasterProgram :: MasterProgInfo -> Transaction MasterProgram
 getProgramInfoMasterProgram mMasterProgram =
   getMasterProgram (masterProgInfoMasterProgramProgramInfoKey mMasterProgram)
 
-
-
---- Get module instances of next n semesters from a given one:
-queryModInstInSemesters :: (String,Int) -> Int -> Query [ModInst]
-queryModInstInSemesters semyear n =
-  let nextsems = take n (iterate nextSemester semyear)
-   in queryCondModInst (\mi -> (modInstTerm mi,modInstYear mi) `elem` nextsems)
 
 --- Get module instances and their categories
 --- of next n semesters from a given one:

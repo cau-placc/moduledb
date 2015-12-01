@@ -14,7 +14,6 @@ data ControllerReference = MainPageController
                          | ModDescrController
                          | ModInstController
                          | AdvisorStudyProgramController
-                         | AdvisorCategoryController
                          | AdvisorModuleController
                          | MasterProgramController
                          | MasterProgInfoController
@@ -59,10 +58,8 @@ getRoutes =
                                       UnivisInfoController)
       ,("Zeige UnivisInfo-Daten",Prefix "UnivisInfo" "list",
                                  UnivisInfoController)
-      --,("List AdvisorStudyProgram",Prefix "AdvisorStudyProgram" "list"
-      --                            ,AdvisorStudyProgramController)
-      --,("New AdvisorStudyProgram" ,Prefix "AdvisorStudyProgram" "new"
-      --                            ,AdvisorStudyProgramController)
+      ,("List AdvisorStudyProgram",Prefix "AdvisorStudyProgram" "list"
+                                  ,AdvisorStudyProgramController)
       ,(maybe "An" (const "Ab") login ++ "melden",Exact "login",LoginController)
       ,("default",Always,MainPageController)]
  where

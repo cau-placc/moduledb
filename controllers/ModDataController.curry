@@ -320,10 +320,6 @@ getStudyProgramsWithCats = do
   mapIO (\sp -> do cs <- runQ (queryCategorysOfStudyProgram (studyProgramKey sp))
                    return (sp,cs))
         sps
- where
-  queryCategorysOfStudyProgram sp =
-    queryCondCategory (\c -> categoryStudyProgramProgramCategoriesKey c == sp)
-
 
 -------------------------------------------------------------------------
 -- A controller (and view) to send an email:

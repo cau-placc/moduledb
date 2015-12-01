@@ -8,6 +8,7 @@ import KeyDatabase
 import HTML
 import Time
 import MDB
+import MDBExts
 import CategoryView
 import ModDataView
 import Maybe
@@ -152,7 +153,8 @@ listCurrentUserCategoryController =
 listStudyProgramCategoryController :: Bool -> StudyProgram -> Controller
 listStudyProgramCategoryController listall studyprog =
   checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
-    do categorys <- runQ $ queryCategorysOfStudyProgram
+    do categorys <- runQ $ transformQ (mergeSort leqCategory) $
+                             queryCategorysOfStudyProgram
                                            (studyProgramKey studyprog)
        catmods <- runJustT $
         if listall
@@ -266,10 +268,3 @@ showCategoryController cat =
 getProgramCategoriesStudyProgram :: Category -> Transaction StudyProgram
 getProgramCategoriesStudyProgram cStudyProgram =
   getStudyProgram (categoryStudyProgramProgramCategoriesKey cStudyProgram)
-
---- Query the categories of a given StudyProgram.
-queryCategorysOfStudyProgram :: StudyProgramKey -> Query [Category]
-queryCategorysOfStudyProgram sp =
-  transformQ (mergeSort leqCategory) $
-   queryCondCategory (\c -> categoryStudyProgramProgramCategoriesKey c == sp)
-

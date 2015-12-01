@@ -12,7 +12,6 @@ import ModDataController
 import ModDescrController
 import ModInstController
 import AdvisorStudyProgramController
-import AdvisorCategoryController
 import AdvisorModuleController
 import MasterProgramController
 import MasterProgInfoController
@@ -36,7 +35,6 @@ getController fktref =
     ModDataController -> mainModDataController
     ModInstController -> mainModInstController
     AdvisorStudyProgramController -> mainAdvisorStudyProgramController
-    AdvisorCategoryController -> mainAdvisorCategoryController
     AdvisorModuleController -> mainAdvisorModuleController
     MasterProgramController -> mainMasterProgramController
     UnivisInfoController -> mainUnivisInfoController

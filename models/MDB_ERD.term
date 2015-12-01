@@ -65,11 +65,8 @@
            Attribute "Prereq"      (StringDom Nothing)  NoKey True, 
            Attribute "Comments"    (StringDom Nothing)  NoKey True,
            Attribute "Visible"     (BoolDom Nothing)    NoKey False],
-      Entity "AdvisorCategory"
-     	  [Attribute "Comment"     (StringDom Nothing)  NoKey True,
-     	   Attribute "Position"    (IntDom Nothing)     NoKey False],
       Entity "AdvisorModule"
-     	  [Attribute "Compulsory"  (BoolDom Nothing)    NoKey True],
+     	  [Attribute "Mandatory"   (BoolDom Nothing)    NoKey False],
       Entity "MasterProgram"
           [Attribute "Name"        (StringDom Nothing)  NoKey False, 
            Attribute "Term"        (StringDom Nothing)  NoKey False, 
@@ -115,11 +112,11 @@
       Relationship "StudyProgramsAdvised"
        [REnd "StudyProgram"        "instanceOf"       (Exactly 1),
         REnd "AdvisorStudyProgram" "advisedProgram"   (Between 0 Infinite)],
-      Relationship "AdvisedProgramCategories"
-       [REnd "AdvisorStudyProgram" "ofAdvisorProgram"    (Exactly 1),
-        REnd "AdvisorCategory"     "withAdvisorCategory" (Between 0 Infinite)],
+      Relationship "AdvisorProgramModules"
+       [REnd "AdvisorStudyProgram" "belongsToAdvisedProgram" (Exactly 1),
+        REnd "AdvisorModule"     "moduleOfAdvisorProgram" (Between 0 Infinite)],
       Relationship "AdvisorCategorizing"
-       [REnd "AdvisorCategory" "belongsToAdvisorCat"  (Exactly 1),
+       [REnd "Category"        "advisedBelongsTo"     (Exactly 1),
         REnd "AdvisorModule"   "containsAdvisorMods"  (Between 0 Infinite)],
       Relationship "AdvisedProgramModuleInstances"
        [REnd "ModInst"         "withModInst"          (Exactly 1),

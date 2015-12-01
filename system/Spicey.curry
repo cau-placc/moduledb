@@ -10,6 +10,7 @@ module Spicey (
   Controller, applyControllerOn,
   nextController, nextControllerForData, confirmNextController,
   confirmControllerOLD, confirmController, transactionController,
+  transactionBindController,
   getControllerURL,getControllerParams, showControllerURL,
   getForm, wDateType, wBoolean, wUncheckMaybe,
   mainContentsWithSideMenu,
@@ -119,6 +120,19 @@ transactionController trans controller = do
          (\error -> displayError (showTError error))
          transResult
 
+--- A controller to execute a transaction and proceed with a given
+--- controller if the transaction succeeds. Otherwise, the
+--- transaction error is shown.
+--- @param trans - the transaction to be executed
+--- @param controller - the controller executed on the result of a successful
+---                     transaction
+transactionBindController :: (Transaction a) -> (a -> Controller) -> Controller
+transactionBindController trans controller = do
+  transResult <- runT trans
+  either controller
+         (\error -> displayError (showTError error))
+         transResult
+
 --- If we are in a process, execute the next process depending on
 --- the provided information passed in the second argument,
 --- otherwise execute the given controller (first argument).
@@ -205,7 +219,7 @@ renderWuiForm wuispec initdata controller cancelcontroller title buttontag =
     [h1 [htxt title],
      blockstyle "editform" [wuihexp],
      wuiHandler2button buttontag hdlr `addClass` "btn btn-primary",
-     spButton "cancel" (nextController (cancelOperation >> cancelcontroller))]
+     spButton "Abbrechen" (nextController (cancelOperation >> cancelcontroller))]
       
   (hexp,handler) = wuiWithErrorForm wuispec
                      initdata
@@ -249,14 +263,16 @@ getUserMenu login sinfo = do
      ulist $
       [--[href "?main" [htxt "Hauptseite"]],
        [href "?StudyProgram/list" [htxt $ t "Study programs"]],
-       [href "?MasterProgram/list" [htxt $ t "Master programs"]],
+       [href "?AdvisorStudyProgram/list" [htxt $ t "Advisor programs"]],
        [href "?search" [htxt $ t "Search modules"]]] ++
       (if login==Nothing
        then []
        else [[href ("?Category/user")   [htxt $ t "My modules"]]
             --,[href "?MasterProgram/new" [htxt $ t "New master program"]]
+            ,[href "?AdvisorStudyProgram/new" [htxt $ t "New study program"]]
             ]) ++
-      [[href "?login" [htxt $ t ("Log" ++ maybe "in" (const "out") login)]]]
+      [[href "?MasterProgram/list" [htxt $ t "Master programs (until SS15)"]],
+       [href "?login" [htxt $ t ("Log" ++ maybe "in" (const "out") login)]]]
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String

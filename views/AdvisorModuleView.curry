@@ -1,9 +1,11 @@
 module AdvisorModuleView
   ( wAdvisorModule, tuple2AdvisorModule, advisorModule2Tuple
-  , wAdvisorModuleType, blankAdvisorModuleView, createAdvisorModuleView
+  , wAdvisorModuleType, blankAdvisorModuleView, selectAdvisorModuleView
+  , createAdvisorModuleView
   , editAdvisorModuleView, showAdvisorModuleView, listAdvisorModuleView )
 where
 
+import Helpers
 import WUI
 import HTML
 import Time
@@ -15,94 +17,175 @@ import MDBEntitiesToHtml
 
 --- The WUI specification for the entity type AdvisorModule.
 --- It also includes fields for associated entities.
+wSelectAdvisorModule :: [(ModInst,ModData)]
+                     -> WuiSpec (Bool,(ModInst,ModData),Category)
+wSelectAdvisorModule modInstList =
+  withRendering
+   (wTriple wMandatory (wSelect selectName modInstList)
+            (wConstant (stringToHtml . categoryName)))
+   (renderLabels advisorModuleLabelList)
+ where
+  wMandatory = wRadioBool [htxt "Pflicht"]
+                          [htxt "Empfehlung"]
+
+  selectName (modinst,moddata) =
+    modDataNameG moddata ++
+    " (" ++ showSemester (modInstSemester modinst) ++ ")"
+
 wAdvisorModule
   :: [ModInst]
-  -> [AdvisorCategory] -> WuiSpec (Maybe Bool,ModInst,AdvisorCategory)
-wAdvisorModule modInstList advisorCategoryList =
+  -> [Category]
+  -> [AdvisorStudyProgram]
+  -> WuiSpec (Bool,ModInst,Category,AdvisorStudyProgram)
+wAdvisorModule modInstList categoryList advisorStudyProgramList =
   withRendering
-   (wTriple (wUncheckMaybe False wBoolean)
-     (wSelect modInstToShortView modInstList)
-     (wSelect advisorCategoryToShortView advisorCategoryList))
+   (w4Tuple wBoolean (wSelect modInstToShortView modInstList)
+     (wSelect categoryToShortView categoryList)
+     (wSelect advisorStudyProgramToShortView advisorStudyProgramList))
    (renderLabels advisorModuleLabelList)
 
 --- Transformation from data of a WUI form to entity type AdvisorModule.
 tuple2AdvisorModule
-  :: AdvisorModule -> (Maybe Bool,ModInst,AdvisorCategory) -> AdvisorModule
+  :: AdvisorModule
+  -> (Bool,ModInst,Category,AdvisorStudyProgram) -> AdvisorModule
 tuple2AdvisorModule
-    advisorModuleToUpdate (compulsory,modInst,advisorCategory) =
-  setAdvisorModuleCompulsory
-   (setAdvisorModuleAdvisorCategoryAdvisorCategorizingKey
-     (setAdvisorModuleModInstAdvisedProgramModuleInstancesKey
-       advisorModuleToUpdate
-       (modInstKey modInst))
-     (advisorCategoryKey advisorCategory))
-   compulsory
+    advisorModuleToUpdate (mandatory,modInst,category,advisorStudyProgram) =
+  setAdvisorModuleMandatory
+   (setAdvisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+     (setAdvisorModuleCategoryAdvisorCategorizingKey
+       (setAdvisorModuleModInstAdvisedProgramModuleInstancesKey
+         advisorModuleToUpdate
+         (modInstKey modInst))
+       (categoryKey category))
+     (advisorStudyProgramKey advisorStudyProgram))
+   mandatory
 
 --- Transformation from entity type AdvisorModule to a tuple
 --- which can be used in WUI specifications.
 advisorModule2Tuple
   :: ModInst
-  -> AdvisorCategory -> AdvisorModule -> (Maybe Bool,ModInst,AdvisorCategory)
-advisorModule2Tuple modInst advisorCategory advisorModule =
-  (advisorModuleCompulsory advisorModule,modInst,advisorCategory)
+  -> Category
+  -> AdvisorStudyProgram
+  -> AdvisorModule -> (Bool,ModInst,Category,AdvisorStudyProgram)
+advisorModule2Tuple modInst category advisorStudyProgram advisorModule =
+  (advisorModuleMandatory advisorModule,modInst,category,advisorStudyProgram)
 
 --- WUI Type for editing or creating AdvisorModule entities.
 --- Includes fields for associated entities.
 wAdvisorModuleType
   :: AdvisorModule
   -> ModInst
-  -> AdvisorCategory
-  -> [ModInst] -> [AdvisorCategory] -> WuiSpec AdvisorModule
+  -> Category
+  -> AdvisorStudyProgram
+  -> [ModInst] -> [Category] -> [AdvisorStudyProgram] -> WuiSpec AdvisorModule
 wAdvisorModuleType
-    advisorModule modInst advisorCategory modInstList advisorCategoryList =
+    advisorModule
+    modInst
+    category
+    advisorStudyProgram
+    modInstList
+    categoryList
+    advisorStudyProgramList =
   transformWSpec
    (tuple2AdvisorModule advisorModule
-   ,advisorModule2Tuple modInst advisorCategory)
-   (wAdvisorModule modInstList advisorCategoryList)
+   ,advisorModule2Tuple modInst category advisorStudyProgram)
+   (wAdvisorModule modInstList categoryList advisorStudyProgramList)
 
 --- Supplies a WUI form to create a new AdvisorModule entity.
 --- The fields of the entity have some default values.
 blankAdvisorModuleView
   :: UserSessionInfo
   -> [ModInst]
-  -> [AdvisorCategory]
-  -> ((Maybe Bool,ModInst,AdvisorCategory) -> Controller)
+  -> [Category]
+  -> [AdvisorStudyProgram]
+  -> ((Bool,ModInst,Category,AdvisorStudyProgram) -> Controller)
   -> Controller -> [HtmlExp]
 blankAdvisorModuleView
     sinfo
     possibleModInsts
-    possibleAdvisorCategorys
+    possibleCategorys
+    possibleAdvisorStudyPrograms
     controller
     cancelcontroller =
-  createAdvisorModuleView sinfo Nothing (head possibleModInsts)
-   (head possibleAdvisorCategorys)
+  createAdvisorModuleView sinfo False (head possibleModInsts)
+   (head possibleCategorys)
+   (head possibleAdvisorStudyPrograms)
    possibleModInsts
-   possibleAdvisorCategorys
+   possibleCategorys
+   possibleAdvisorStudyPrograms
+   controller
+   cancelcontroller
+
+--- Supplies a WUI form to create a new AdvisorModule entity.
+--- The fields of the entity have some default values.
+selectAdvisorModuleView
+  :: UserSessionInfo
+  -> [(ModInst,ModData)]
+  -> Category
+  -> ((Bool,(ModInst,ModData),Category) -> Controller)
+  -> Controller -> [HtmlExp]
+selectAdvisorModuleView sinfo possibleModInsts cat controller cancelcontroller =
+  createSelectedAdvisorModuleView sinfo False (head possibleModInsts) cat
+   possibleModInsts
    controller
    cancelcontroller
 
 --- Supplies a WUI form to create a new AdvisorModule entity.
 --- Takes default values to be prefilled in the form fields.
+createSelectedAdvisorModuleView
+  :: UserSessionInfo
+  -> Bool
+  -> (ModInst,ModData)
+  -> Category
+  -> [(ModInst,ModData)]
+  -> ((Bool,(ModInst,ModData),Category) -> Controller)
+  -> Controller -> [HtmlExp]
+createSelectedAdvisorModuleView
+    _
+    defaultMandatory
+    defaultModInst
+    category
+    possibleModInsts
+    controller
+    cancelcontroller =
+  renderWuiForm (wSelectAdvisorModule possibleModInsts)
+   (defaultMandatory,defaultModInst,category)
+   controller
+   cancelcontroller
+   "Neues Modul im Studienprogramm"
+   "Hinzufügen"
+
+--- Supplies a WUI form to create a new AdvisorModule entity.
+--- Takes default values to be prefilled in the form fields.
 createAdvisorModuleView
   :: UserSessionInfo
-  -> Maybe Bool
+  -> Bool
   -> ModInst
-  -> AdvisorCategory
+  -> Category
+  -> AdvisorStudyProgram
   -> [ModInst]
-  -> [AdvisorCategory]
-  -> ((Maybe Bool,ModInst,AdvisorCategory) -> Controller)
+  -> [Category]
+  -> [AdvisorStudyProgram]
+  -> ((Bool,ModInst,Category,AdvisorStudyProgram) -> Controller)
   -> Controller -> [HtmlExp]
 createAdvisorModuleView
     _
-    defaultCompulsory
+    defaultMandatory
     defaultModInst
-    defaultAdvisorCategory
+    defaultCategory
+    defaultAdvisorStudyProgram
     possibleModInsts
-    possibleAdvisorCategorys
+    possibleCategorys
+    possibleAdvisorStudyPrograms
     controller
     cancelcontroller =
-  renderWuiForm (wAdvisorModule possibleModInsts possibleAdvisorCategorys)
-   (defaultCompulsory,defaultModInst,defaultAdvisorCategory)
+  renderWuiForm
+   (wAdvisorModule possibleModInsts possibleCategorys
+     possibleAdvisorStudyPrograms)
+   (defaultMandatory
+   ,defaultModInst
+   ,defaultCategory
+   ,defaultAdvisorStudyProgram)
    controller
    cancelcontroller
    "Create new AdvisorModule"
@@ -115,23 +198,29 @@ editAdvisorModuleView
   :: UserSessionInfo
   -> AdvisorModule
   -> ModInst
-  -> AdvisorCategory
+  -> Category
+  -> AdvisorStudyProgram
   -> [ModInst]
-  -> [AdvisorCategory]
+  -> [Category]
+  -> [AdvisorStudyProgram]
   -> (AdvisorModule -> Controller) -> Controller -> [HtmlExp]
 editAdvisorModuleView
     _
     advisorModule
     relatedModInst
-    relatedAdvisorCategory
+    relatedCategory
+    relatedAdvisorStudyProgram
     possibleModInsts
-    possibleAdvisorCategorys
+    possibleCategorys
+    possibleAdvisorStudyPrograms
     controller
     cancelcontroller =
   renderWuiForm
-   (wAdvisorModuleType advisorModule relatedModInst relatedAdvisorCategory
+   (wAdvisorModuleType advisorModule relatedModInst relatedCategory
+     relatedAdvisorStudyProgram
      possibleModInsts
-     possibleAdvisorCategorys)
+     possibleCategorys
+     possibleAdvisorStudyPrograms)
    advisorModule
    controller
    cancelcontroller
@@ -141,16 +230,21 @@ editAdvisorModuleView
 --- Supplies a view to show the details of a AdvisorModule.
 showAdvisorModuleView
   :: UserSessionInfo
-  -> AdvisorModule -> ModInst -> AdvisorCategory -> [HtmlExp]
-showAdvisorModuleView _ advisorModule relatedModInst relatedAdvisorCategory =
-  advisorModuleToDetailsView advisorModule relatedModInst
-   relatedAdvisorCategory
+  -> AdvisorModule -> ModInst -> Category -> AdvisorStudyProgram -> [HtmlExp]
+showAdvisorModuleView
+    _
+    advisorModule
+    relatedModInst
+    relatedCategory
+    relatedAdvisorStudyProgram =
+  advisorModuleToDetailsView advisorModule relatedModInst relatedCategory
+   relatedAdvisorStudyProgram
    ++ [spHref "?AdvisorModule/list" [htxt "back to AdvisorModule list"]]
 
 --- Compares two AdvisorModule entities. This order is used in the list view.
 leqAdvisorModule :: AdvisorModule -> AdvisorModule -> Bool
 leqAdvisorModule x1 x2 =
-  advisorModuleCompulsory x1 <= advisorModuleCompulsory x2
+  advisorModuleMandatory x1 <= advisorModuleMandatory x2
 
 --- Supplies a list view for a given list of AdvisorModule entities.
 --- Shows also show/edit/delete buttons if the user is logged in.
