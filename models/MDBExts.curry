@@ -1,9 +1,12 @@
 --- Some extensions to the basic MDB.
+module MDBExts where
 
 import Helpers
-import MDB
 import KeyDatabase
+import KeyDatabaseQuery
+import MDB
 
+-----------------------------------------------------------------------
 --- Gets the associated User entity for a given ModData entity.
 getResponsibleUser :: ModData -> Transaction User
 getResponsibleUser mUser = getUser (modDataUserResponsibleKey mUser)
@@ -49,3 +52,5 @@ getAdvisorModuleData =
          getModInst (advisorModuleModInstAdvisedProgramModuleInstancesKey amod)
          |>>= \mi -> getModData (modInstModDataModuleInstancesKey mi)
          |>>= \moddata -> returnT (amod,mi,moddata))
+
+-----------------------------------------------------------------------

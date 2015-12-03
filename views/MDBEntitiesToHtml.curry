@@ -43,7 +43,7 @@ studyProgramToShortView studyProgram = studyProgramShortName studyProgram
 studyProgramToDetailsView :: StudyProgram -> [HtmlExp]
 studyProgramToDetailsView studyProgram =
   [spTable
-    (map (\ (label ,value) -> [label,value])
+    (map (\(label,value) -> [label,value])
       (zip studyProgramLabelList detailedView))]
   where detailedView = [[stringToHtml (studyProgramName studyProgram)]
                             -- TODO: use English translation
@@ -91,7 +91,7 @@ categoryToShortView category = categoryCatKey category
 categoryToDetailsView :: Category -> StudyProgram -> [HtmlExp]
 categoryToDetailsView category relatedStudyProgram =
   [spTable
-    (map (\ (label ,value) -> [label,value])
+    (map (\(label,value) -> [label,value])
       (zip categoryLabelList detailedView))]
   where detailedView = [[stringToHtml (categoryName category)]
                           -- TODO: use English name
@@ -133,16 +133,15 @@ masterCoreAreaToShortView masterCoreArea =
 masterCoreAreaToDetailsView :: MasterCoreArea -> [HtmlExp]
 masterCoreAreaToDetailsView masterCoreArea =
   [spTable
-    (map (\ (label ,value) -> [label,value])
+    (map (\(label,value) -> [label,value])
       (zip masterCoreAreaLabelList detailedView))]
-  where detailedView = [[stringToHtml (masterCoreAreaName masterCoreArea)]
-                       ,[stringToHtml
-                          (masterCoreAreaShortName masterCoreArea)]
-                       
-                       ,[stringToHtml
-                          (masterCoreAreaDescription masterCoreArea)]
-                       ,[stringToHtml (masterCoreAreaAreaKey masterCoreArea)]
-                       ,[intToHtml (masterCoreAreaPosition masterCoreArea)]]
+  where
+    detailedView =
+      [[stringToHtml (masterCoreAreaName masterCoreArea)]
+      ,[stringToHtml (masterCoreAreaShortName masterCoreArea)]
+      ,[stringToHtml (masterCoreAreaDescription masterCoreArea)]
+      ,[stringToHtml (masterCoreAreaAreaKey masterCoreArea)]
+      ,[intToHtml (masterCoreAreaPosition masterCoreArea)]]
 
 --- The labels of a MasterCoreArea entity, as used in HTML tables.
 masterCoreAreaLabelList :: [[HtmlExp]]
@@ -182,16 +181,17 @@ userToShortView user =
 userToDetailsView :: User -> [HtmlExp]
 userToDetailsView user =
   [spTable
-    (map (\ (label ,value) -> [label,value])
-      (zip userLabelList detailedView))]
-  where detailedView = [[stringToHtml (userLogin user)]
-                       ,[stringToHtml (userName user)]
-                       ,[stringToHtml (userFirst user)]
-                       ,[stringToHtml (userTitle user)]
-                       ,[stringToHtml (userEmail user)]
-                       ,[stringToHtml (userUrl user)]
-                       ,[stringToHtml (userPassword user)]
-                       ,[calendarTimeToHtml (userLastLogin user)]]
+    (map (\(label,value) -> [label,value]) (zip userLabelList detailedView))]
+  where
+    detailedView =
+      [[stringToHtml (userLogin user)]
+      ,[stringToHtml (userName user)]
+      ,[stringToHtml (userFirst user)]
+      ,[stringToHtml (userTitle user)]
+      ,[stringToHtml (userEmail user)]
+      ,[stringToHtml (userUrl user)]
+      ,[stringToHtml (userPassword user)]
+      ,[calendarTimeToHtml (userLastLogin user)]]
 
 --- The labels of a User entity, as used in HTML tables.
 userLabelList :: [[HtmlExp]]
@@ -245,20 +245,22 @@ modDataToShortView modData = modDataCode modData
 modDataToDetailsView :: ModData -> User -> [Category] -> [HtmlExp]
 modDataToDetailsView modData relatedUser categorys =
   [spTable
-    (map (\ (label ,value) -> [label,value])
+    (map (\(label,value) -> [label,value])
       (zip modDataLabelList detailedView))]
-  where detailedView = [[stringToHtml (modDataCode modData)]
-                       ,[stringToHtml (modDataNameG modData)]
-                       ,[stringToHtml (modDataNameE modData)]
-                       ,[stringToHtml (modDataCycle modData)]
-                       ,[stringToHtml (modDataPresence modData)]
-                       ,[intToHtml (modDataECTS modData)]
-                       ,[stringToHtml (modDataWorkload modData)]
-                       ,[intToHtml (modDataLength modData)]
-                       ,[stringToHtml (modDataURL modData)]
-                       ,[boolToHtml (modDataVisible modData)]
-                       ,[htxt (userToShortView relatedUser)]
-                       ,[htxt (unwords (map categoryToShortView categorys))]]
+  where
+    detailedView =
+      [[stringToHtml (modDataCode modData)]
+      ,[stringToHtml (modDataNameG modData)]
+      ,[stringToHtml (modDataNameE modData)]
+      ,[stringToHtml (modDataCycle modData)]
+      ,[stringToHtml (modDataPresence modData)]
+      ,[intToHtml (modDataECTS modData)]
+      ,[stringToHtml (modDataWorkload modData)]
+      ,[intToHtml (modDataLength modData)]
+      ,[stringToHtml (modDataURL modData)]
+      ,[boolToHtml (modDataVisible modData)]
+      ,[htxt (userToShortView relatedUser)]
+      ,[htxt (unwords (map categoryToShortView categorys))]]
 
 --- The labels of a ModData entity, as used in HTML tables.
 modDataLabelList :: [[HtmlExp]]
@@ -302,20 +304,22 @@ modDescrToShortView modDescr = modDescrLanguage modDescr
 modDescrToDetailsView :: ModDescr -> ModData -> [HtmlExp]
 modDescrToDetailsView modDescr relatedModData =
   [spTable
-    (map (\ (label ,value) -> [label,value])
+    (map (\(label,value) -> [label,value])
       (zip modDescrLabelList detailedView))]
-  where detailedView = [[stringToHtml (modDescrLanguage modDescr)]
-                       ,[stringToHtml (modDescrShortDesc modDescr)]
-                       ,[stringToHtml (modDescrObjectives modDescr)]
-                       ,[stringToHtml (modDescrContents modDescr)]
-                       ,[stringToHtml (modDescrPrereq modDescr)]
-                       ,[stringToHtml (modDescrExam modDescr)]
-                       ,[stringToHtml (modDescrMethods modDescr)]
-                       ,[stringToHtml (modDescrUse modDescr)]
-                       ,[stringToHtml (modDescrLiterature modDescr)]
-                       ,[stringToHtml (modDescrLinks modDescr)]
-                       ,[stringToHtml (modDescrComments modDescr)]
-                       ,[htxt (modDataToShortView relatedModData)]]
+  where
+    detailedView =
+      [[stringToHtml (modDescrLanguage modDescr)]
+      ,[stringToHtml (modDescrShortDesc modDescr)]
+      ,[stringToHtml (modDescrObjectives modDescr)]
+      ,[stringToHtml (modDescrContents modDescr)]
+      ,[stringToHtml (modDescrPrereq modDescr)]
+      ,[stringToHtml (modDescrExam modDescr)]
+      ,[stringToHtml (modDescrMethods modDescr)]
+      ,[stringToHtml (modDescrUse modDescr)]
+      ,[stringToHtml (modDescrLiterature modDescr)]
+      ,[stringToHtml (modDescrLinks modDescr)]
+      ,[stringToHtml (modDescrComments modDescr)]
+      ,[htxt (modDataToShortView relatedModData)]]
 
 --- The labels of a ModDescr entity, as used in HTML tables.
 modDescrLabelList :: [[HtmlExp]]
@@ -372,12 +376,10 @@ modInstLabelList =
 --- This view is used in a row of a table of all entities.
 advisorStudyProgramToListView :: AdvisorStudyProgram -> [[HtmlExp]]
 advisorStudyProgramToListView advisorStudyProgram =
-  [[stringToHtml (advisorStudyProgramName advisorStudyProgram)],[stringToHtml
-                                                                  (advisorStudyProgramTerm
-                                                                    advisorStudyProgram)]
-  ,[intToHtml (advisorStudyProgramYear advisorStudyProgram)],[stringToHtml
-                                                               (advisorStudyProgramDesc
-                                                                 advisorStudyProgram)]
+  [[stringToHtml (advisorStudyProgramName advisorStudyProgram)]
+  ,[stringToHtml (advisorStudyProgramTerm advisorStudyProgram)]
+  ,[intToHtml (advisorStudyProgramYear advisorStudyProgram)]
+  ,[stringToHtml (advisorStudyProgramDesc advisorStudyProgram)]
   ,[stringToHtml (advisorStudyProgramPrereq advisorStudyProgram)]
   ,[stringToHtml (advisorStudyProgramComments advisorStudyProgram)]
   ,[boolToHtml (advisorStudyProgramVisible advisorStudyProgram)]]
@@ -400,15 +402,13 @@ advisorStudyProgramToDetailsView
   where
     detailedView =
       [[stringToHtml (advisorStudyProgramName advisorStudyProgram)]
-      ,[stringToHtml (advisorStudyProgramTerm advisorStudyProgram)],[intToHtml
-                                                                      (advisorStudyProgramYear
-                                                                        advisorStudyProgram)]
+      ,[stringToHtml (advisorStudyProgramTerm advisorStudyProgram)]
+      ,[intToHtml (advisorStudyProgramYear advisorStudyProgram)]
       ,[stringToHtml (advisorStudyProgramDesc advisorStudyProgram)]
       ,[stringToHtml (advisorStudyProgramPrereq advisorStudyProgram)]
       ,[stringToHtml (advisorStudyProgramComments advisorStudyProgram)]
-      ,[boolToHtml (advisorStudyProgramVisible advisorStudyProgram)],[htxt
-                                                                       (studyProgramToShortView
-                                                                         relatedStudyProgram)]
+      ,[boolToHtml (advisorStudyProgramVisible advisorStudyProgram)]
+      ,[htxt (studyProgramToShortView relatedStudyProgram)]
       ,[htxt (userToShortView relatedUser)]]
 
 --- The labels of a AdvisorStudyProgram entity, as used in HTML tables.
@@ -447,12 +447,10 @@ advisorModuleToDetailsView
       (zip advisorModuleLabelList detailedView))]
   where
     detailedView =
-      [[boolToHtml (advisorModuleMandatory advisorModule)],[htxt
-                                                             (modInstToShortView
-                                                               relatedModInst)]
-      ,[htxt (categoryToShortView relatedCategory)],[htxt
-                                                      (advisorStudyProgramToShortView
-                                                        relatedAdvisorStudyProgram)]]
+      [[boolToHtml (advisorModuleMandatory advisorModule)]
+      ,[htxt (modInstToShortView relatedModInst)]
+      ,[htxt (categoryToShortView relatedCategory)]
+      ,[htxt (advisorStudyProgramToShortView relatedAdvisorStudyProgram)]]
 
 --- The labels of a AdvisorModule entity, as used in HTML tables.
 advisorModuleLabelList :: [[HtmlExp]]
@@ -484,18 +482,19 @@ masterProgramToDetailsView
  :: MasterProgram -> MasterCoreArea -> User -> [HtmlExp]
 masterProgramToDetailsView masterProgram relatedMasterCoreArea relatedUser =
   [spTable
-    (map (\ (label ,value) -> [label,value])
+    (map (\(label,value) -> [label,value])
       (zip masterProgramLabelList detailedView))]
-  where detailedView = [[stringToHtml (masterProgramName masterProgram)]
-                       ,[stringToHtml (masterProgramTerm masterProgram)]
-                       ,[intToHtml (masterProgramYear masterProgram)]
-                       ,[stringToHtml (masterProgramDesc masterProgram)]
-                       ,[stringToHtml (masterProgramPrereq masterProgram)]
-                       ,[stringToHtml (masterProgramComments masterProgram)]
-                       ,[boolToHtml (masterProgramVisible masterProgram)]
-                       ,[htxt
-                          (masterCoreAreaToShortView relatedMasterCoreArea)]
-                       ,[htxt (userToShortView relatedUser)]]
+  where
+    detailedView =
+      [[stringToHtml (masterProgramName masterProgram)]
+      ,[stringToHtml (masterProgramTerm masterProgram)]
+      ,[intToHtml (masterProgramYear masterProgram)]
+      ,[stringToHtml (masterProgramDesc masterProgram)]
+      ,[stringToHtml (masterProgramPrereq masterProgram)]
+      ,[stringToHtml (masterProgramComments masterProgram)]
+      ,[boolToHtml (masterProgramVisible masterProgram)]
+      ,[htxt (masterCoreAreaToShortView relatedMasterCoreArea)]
+      ,[htxt (userToShortView relatedUser)]]
 
 --- The labels of a MasterProgram entity, as used in HTML tables.
 masterProgramLabelList :: [[HtmlExp]]
@@ -532,22 +531,17 @@ masterProgInfoToShortView masterProgInfo =
 masterProgInfoToDetailsView :: MasterProgInfo -> MasterProgram -> [HtmlExp]
 masterProgInfoToDetailsView masterProgInfo relatedMasterProgram =
   [spTable
-    (map (\ (label ,value) -> [label,value])
+    (map (\(label,value) -> [label,value])
       (zip masterProgInfoLabelList detailedView))]
-  where detailedView = [[stringToHtml
-                          (masterProgInfoProgModules masterProgInfo)]
-                       ,[stringToHtml
-                          (masterProgInfoPraktikum masterProgInfo)]
-                       ,[stringToHtml (masterProgInfoSeminar masterProgInfo)]
-                       ,[stringToHtml (masterProgInfoThesis masterProgInfo)]
-                       ,[stringToHtml
-                          (masterProgInfoAllgGrundlagen masterProgInfo)]
-                       
-                       ,[stringToHtml
-                          (masterProgInfoAnwendungsfach masterProgInfo)]
-                       
-                       ,[htxt
-                          (masterProgramToShortView relatedMasterProgram)]]
+  where
+    detailedView =
+      [[stringToHtml (masterProgInfoProgModules masterProgInfo)]
+      ,[stringToHtml (masterProgInfoPraktikum masterProgInfo)]
+      ,[stringToHtml (masterProgInfoSeminar masterProgInfo)]
+      ,[stringToHtml (masterProgInfoThesis masterProgInfo)]
+      ,[stringToHtml (masterProgInfoAllgGrundlagen masterProgInfo)]
+      ,[stringToHtml (masterProgInfoAnwendungsfach masterProgInfo)]
+      ,[htxt (masterProgramToShortView relatedMasterProgram)]]
 
 --- The labels of a MasterProgInfo entity, as used in HTML tables.
 masterProgInfoLabelList :: [[HtmlExp]]
@@ -578,12 +572,14 @@ univisInfoToShortView univisInfo = univisInfoCode univisInfo
 univisInfoToDetailsView :: UnivisInfo -> [HtmlExp]
 univisInfoToDetailsView univisInfo =
   [spTable
-    (map (\ (label ,value) -> [label,value])
+    (map (\(label,value) -> [label,value])
       (zip univisInfoLabelList detailedView))]
-  where detailedView = [[stringToHtml (univisInfoCode univisInfo)]
-                       ,[stringToHtml (univisInfoTerm univisInfo)]
-                       ,[intToHtml (univisInfoYear univisInfo)]
-                       ,[stringToHtml (univisInfoURL univisInfo)]]
+  where
+    detailedView =
+      [[stringToHtml (univisInfoCode univisInfo)]
+      ,[stringToHtml (univisInfoTerm univisInfo)]
+      ,[intToHtml (univisInfoYear univisInfo)]
+      ,[stringToHtml (univisInfoURL univisInfo)]]
 
 --- The labels of a UnivisInfo entity, as used in HTML tables.
 univisInfoLabelList :: [[HtmlExp]]

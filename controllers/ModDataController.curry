@@ -115,7 +115,7 @@ editModDataController modDataToEdit =
        spcats <- if admin then getStudyProgramsWithCats else return []
        allUsers <- runQ queryAllUsers
        responsibleUser <- runJustT (getResponsibleUser modDataToEdit)
-       categorizingCategorys <- runJustT (getModDataCategorys modDataToEdit)
+       categorizingCategorys <- runJustT (getModDataCategories modDataToEdit)
        return
         (editModDataView admin (modDataToEdit,categorizingCategorys)
           responsibleUser allUsers spcats updateModDataController))
@@ -130,7 +130,7 @@ updateModDataController True (modData,newcats) = do
   tr <- runT $
     if admin
     then updateModData modData |>>
-         getModDataCategorys modData |>>= \oldcats ->
+         getModDataCategories modData |>>= \oldcats ->
          addCategorizing (filter (`notElem` oldcats) newcats) modData |>>
          removeCategorizing (filter (`notElem` newcats) oldcats) modData
     else updateModData modData
@@ -155,7 +155,7 @@ confirmDeleteModDataController modData =
 deleteModDataController :: ModData -> Controller
 deleteModDataController modData =
   checkAuthorization checkAdmin $ \_->
-    runT (getModDataCategorys modData |>>= \oldCategorizingCategorys ->
+    runT (getModDataCategories modData |>>= \oldCategorizingCategorys ->
           killCategorizing oldCategorizingCategorys |>>
           getDB (queryDescriptionOfMod (modDataKey modData)) |>>= \mbdescr ->
           maybe doneT deleteModDescr mbdescr |>>
@@ -202,7 +202,7 @@ storeCopiedModController mdata mdesc newcode = do
             (Just (modDataECTS mdata)) (modDataWorkload mdata)
             (Just (modDataLength mdata)) (modDataURL mdata) False
             (modDataUserResponsibleKey mdata) |>>= \md ->
-          getModDataCategorys mdata |>>= \oldcats ->
+          getModDataCategories mdata |>>= \oldcats ->
           addCategorizing oldcats md |>>
           newModDescrWithModDataDataDescKey
             (modDescrLanguage mdesc)
@@ -261,7 +261,7 @@ pdfModDataController :: ModData -> Controller
 pdfModDataController modData =
   checkAuthorization (modDataOperationAllowed (ShowEntity modData)) $ \_ -> do
     responsibleUser <- runJustT (getResponsibleUser modData)
-    categories <- runJustT (getModDataCategorys modData)
+    categories <- runJustT (getModDataCategories modData)
     sprogs <- runQ queryAllStudyPrograms
     let mdkey = modDataKey modData
     moddesc <- runQ $ queryDescriptionOfMod mdkey
@@ -280,7 +280,7 @@ showModDataWithCode mcode = do
 showModDataController :: ModData -> Controller
 showModDataController modData = do
   responsibleUser <- runJustT (getResponsibleUser modData)
-  categories <- runJustT (getModDataCategorys modData)
+  categories <- runJustT (getModDataCategories modData)
   sprogs <- runQ queryAllStudyPrograms
   moddesc <- runQ $ queryDescriptionOfMod (modDataKey modData)
   modinsts <- runQ $ queryInstancesOfMod (modDataKey modData)
@@ -403,7 +403,7 @@ formatCatModulesForm catmods = do
     
   formatModData sprogs md = do
     respuser <- runJustT (getResponsibleUser md)
-    categories <- runJustT (getModDataCategorys md)
+    categories <- runJustT (getModDataCategories md)
     mbdesc <- runQ $ queryDescriptionOfMod (modDataKey md)
     modinsts <- runQ $ queryInstancesOfMod (modDataKey md)
     return (quoteUnknownLatexCmd
@@ -517,7 +517,7 @@ showXmlModule mcode = do
    if null modDatas then displayError "Illegal URL" >>= getForm else do
     let md = head modDatas
     responsibleUser <- runJustT (getResponsibleUser md)
-    categories <- runJustT (getModDataCategorys md)
+    categories <- runJustT (getModDataCategories md)
     sprogs <- runQ queryAllStudyPrograms
     moddesc <- runQ $ queryDescriptionOfMod (modDataKey md)
     modinsts <- runQ $ queryInstancesOfMod (modDataKey md)

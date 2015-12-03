@@ -113,15 +113,15 @@ wAdvisorStudyProgramType sinfo
 blankAdvisorStudyProgramView
   :: UserSessionInfo
   -> [StudyProgram]
-  -> [User]
+  -> User -> [User]
   -> ((String,String,Int,String,String,String,Bool,StudyProgram,User)
   -> Controller)
   -> Controller -> [HtmlExp]
 blankAdvisorStudyProgramView
-    sinfo possibleStudyPrograms possibleUsers controller cancelcontroller =
+    sinfo possibleStudyPrograms user possibleUsers controller cancelcontroller =
   createAdvisorStudyProgramView sinfo "" "" 2015 "" "" "" False
    defaultStudyProgram
-   (head possibleUsers)
+   user
    possibleStudyPrograms
    possibleUsers
    controller

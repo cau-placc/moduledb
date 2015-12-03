@@ -4,6 +4,7 @@ where
 import Spicey
 import KeyDatabase
 import HTML
+import List(find)
 import Time
 import MDB
 import MDBExts
@@ -45,18 +46,22 @@ mainAdvisorStudyProgramController =
 --- Shows a form to create a new AdvisorStudyProgram entity.
 newAdvisorStudyProgramController :: Controller
 newAdvisorStudyProgramController =
-  checkAuthorization (advisorStudyProgramOperationAllowed NewEntity)
-   $ (\sinfo ->
-     do allStudyPrograms <- runQ queryAllStudyPrograms
-        allUsers <- runQ queryAllUsers
-        return
-         (blankAdvisorStudyProgramView sinfo
+  checkAuthorization (advisorStudyProgramOperationAllowed NewEntity) $ \sinfo ->
+   do allStudyPrograms <- runQ queryAllStudyPrograms
+      allUsers <- runQ queryAllUsers
+      return $ maybe
+       [h1 [htxt "Illegal operation"]]
+       (\user ->
+         blankAdvisorStudyProgramView sinfo
            (mergeSort leqStudyProgram allStudyPrograms)
-           allUsers
+           user allUsers
            (\entity ->
              transactionBindController (createAdvisorStudyProgramT entity)
                                        showAdvisorStudyProgramController)
-           listAdvisorStudyProgramController))
+           listAdvisorStudyProgramController)
+       (maybe Nothing
+              (\ln -> find (\u -> userLogin u == ln) allUsers)
+              (userLoginOfSession sinfo))
 
 --- Transaction to persist a new AdvisorStudyProgram entity to the database.
 createAdvisorStudyProgramT
