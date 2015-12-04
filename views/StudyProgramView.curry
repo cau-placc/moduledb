@@ -15,26 +15,22 @@ import SessionInfo
 import MultiLang
 
 --- The WUI specification for the entity type StudyProgram.
-wStudyProgram :: WuiSpec (String,String,String,String,String,Int)
+wStudyProgram :: WuiSpec (String,String,String,String,Int)
 wStudyProgram =
   withRendering
-   (w6Tuple wRequiredString wString wRequiredString wRequiredString
-     wRequiredString
-     wInt)
+   (w5Tuple wRequiredString wString wRequiredString wRequiredString wInt)
    (renderLabels studyProgramLabelList)
 
 --- Transformation from data of a WUI form to entity type StudyProgram.
 tuple2StudyProgram
-  :: StudyProgram -> (String,String,String,String,String,Int) -> StudyProgram
+  :: StudyProgram -> (String,String,String,String,Int) -> StudyProgram
 tuple2StudyProgram
-    studyProgramToUpdate (name,nameE,shortName,progKey,uRLKey,position) =
+    studyProgramToUpdate (name,nameE,shortName,progKey,position) =
   setStudyProgramName
    (setStudyProgramNameE
      (setStudyProgramShortName
        (setStudyProgramProgKey
-         (setStudyProgramURLKey
-           (setStudyProgramPosition studyProgramToUpdate position)
-           uRLKey)
+         (setStudyProgramPosition studyProgramToUpdate position)
          progKey)
        shortName)
      nameE)
@@ -42,13 +38,12 @@ tuple2StudyProgram
 
 --- Transformation from entity type StudyProgram to a tuple
 --- which can be used in WUI specifications.
-studyProgram2Tuple :: StudyProgram -> (String,String,String,String,String,Int)
+studyProgram2Tuple :: StudyProgram -> (String,String,String,String,Int)
 studyProgram2Tuple studyProgram =
   (studyProgramName studyProgram
   ,studyProgramNameE studyProgram
   ,studyProgramShortName studyProgram
   ,studyProgramProgKey studyProgram
-  ,studyProgramURLKey studyProgram
   ,studyProgramPosition studyProgram)
 
 --- WUI Type for editing or creating StudyProgram entities.
@@ -62,10 +57,10 @@ wStudyProgramType studyProgram =
 --- The fields of the entity have some default values.
 blankStudyProgramView
   :: UserSessionInfo
-  -> ((String,String,String,String,String,Int) -> Controller)
+  -> ((String,String,String,String,Int) -> Controller)
   -> Controller -> [HtmlExp]
 blankStudyProgramView sinfo controller cancelcontroller =
-  createStudyProgramView sinfo "" "" "" "" "" 0 controller cancelcontroller
+  createStudyProgramView sinfo "" "" "" "" 0 controller cancelcontroller
 
 --- Supplies a WUI form to create a new StudyProgram entity.
 --- Takes default values to be prefilled in the form fields.
@@ -75,9 +70,8 @@ createStudyProgramView
   -> String
   -> String
   -> String
-  -> String
   -> Int
-  -> ((String,String,String,String,String,Int) -> Controller)
+  -> ((String,String,String,String,Int) -> Controller)
   -> Controller -> [HtmlExp]
 createStudyProgramView
     _
@@ -85,17 +79,11 @@ createStudyProgramView
     defaultNameE
     defaultShortName
     defaultProgKey
-    defaultURLKey
     defaultPosition
     controller
     cancelcontroller =
   renderWuiForm wStudyProgram
-   (defaultName
-   ,defaultNameE
-   ,defaultShortName
-   ,defaultProgKey
-   ,defaultURLKey
-   ,defaultPosition)
+   (defaultName,defaultNameE,defaultShortName,defaultProgKey,defaultPosition)
    controller
    cancelcontroller
    "Create new StudyProgram"
@@ -136,7 +124,7 @@ listStudyProgramView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
 listStudyProgramView sinfo studyPrograms =
   if isAdminSession sinfo
   then [h1 [htxt $ t "Study programs"],
-        spTable ([selectColumns $ take 6 studyProgramLabelList] ++
+        spTable ([take 5 studyProgramLabelList] ++
                 map listStudyProgram (mergeSort leqStudyProgram studyPrograms))]
   else [h1 [htxt $ t "Study programs"],
         spTable (map (\sp -> [langSelect sinfo
@@ -146,11 +134,9 @@ listStudyProgramView sinfo studyPrograms =
  where
   t = translate sinfo
 
-  selectColumns cs = take 4 cs ++ drop 5 cs
-  
   listStudyProgram :: StudyProgram -> [[HtmlExp]]
   listStudyProgram studyProgram =
-     selectColumns (studyProgramToListView studyProgram) ++
+     studyProgramToListView studyProgram ++
       [[spHref
          ("?StudyProgram/show/" ++ showStudyProgramKey studyProgram)
          [htxt "show"]]

@@ -5,13 +5,11 @@
            Attribute "NameE"       (StringDom Nothing) NoKey  True, 
      	   Attribute "ShortName"   (StringDom Nothing) Unique False,
      	   Attribute "ProgKey"     (StringDom Nothing) PKey   False,
-     	   Attribute "URLKey"      (StringDom Nothing) Unique False,
      	   Attribute "Position"    (IntDom Nothing)    NoKey  False],
       Entity "Category"
      	  [Attribute "Name"        (StringDom Nothing) NoKey False, 
            Attribute "NameE"       (StringDom Nothing) NoKey True, 
      	   Attribute "ShortName"   (StringDom Nothing) NoKey False,
-     	   Attribute "CatKey"      (StringDom Nothing) PKey  False,
            Attribute "Comment"     (StringDom Nothing) NoKey True,
            Attribute "MinECTS"     (IntDom (Just 0))   NoKey False,
            Attribute "MaxECTS"     (IntDom (Just 180)) NoKey False,

@@ -64,13 +64,10 @@ newCategoryController =
 
 --- Transaction to persist a new Category entity to the database.
 createCategoryT
-  :: (String,String,String,String,String,Int,Int,Int,StudyProgram)
-  -> Transaction ()
+  :: (String,String,String,String,Int,Int,Int,StudyProgram) -> Transaction ()
 createCategoryT
-    (name,nameE,shortName,catKey,comment,minECTS,maxECTS,position
-    ,studyProgram) =
-  newCategoryWithStudyProgramProgramCategoriesKey name nameE shortName catKey
-   comment
+    (name,nameE,shortName,comment,minECTS,maxECTS,position,studyProgram) =
+  newCategoryWithStudyProgramProgramCategoriesKey name nameE shortName comment
    (Just minECTS)
    (Just maxECTS)
    position

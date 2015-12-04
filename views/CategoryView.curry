@@ -26,16 +26,16 @@ import MultiLang
 --- It also includes fields for associated entities.
 wCategory
   :: [StudyProgram]
-  -> WuiSpec (String,String,String,String,String,Int,Int,Int,StudyProgram)
+  -> WuiSpec (String,String,String,String,Int,Int,Int,StudyProgram)
 wCategory studyProgramList =
-   w9Tuple wRequiredString wString wRequiredString wRequiredString
+   w8Tuple wRequiredString wString wRequiredString
      (wTextArea (6,70))
      wECTS
      wECTS
      wInt
      (wSelect studyProgramToShortView studyProgramList)
    `withCondition`
-       (\ (_,_,_,_,_,mine,maxe,_,_) -> mine <= maxe)
+       (\ (_,_,_,_,mine,maxe,_,_) -> mine <= maxe)
    `withError`
       "Minimale ECTS-Punkte müssen kleiner als maximale ECTS-Punkte sein!"
    `withRendering`
@@ -49,26 +49,23 @@ wCategory studyProgramList =
 --- Transformation from data of a WUI form to entity type Category.
 tuple2Category
   :: Category
-  -> (String,String,String,String,String,Int,Int,Int,StudyProgram) -> Category
+  -> (String,String,String,String,Int,Int,Int,StudyProgram) -> Category
 tuple2Category
     categoryToUpdate
-    (name,nameE,shortName,catKey,comment,minECTS,maxECTS,position
-    ,studyProgram) =
+    (name,nameE,shortName,comment,minECTS,maxECTS,position,studyProgram) =
   setCategoryName
    (setCategoryNameE
      (setCategoryShortName
-       (setCategoryCatKey
-         (setCategoryComment
-           (setCategoryMinECTS
-             (setCategoryMaxECTS
-               (setCategoryPosition
-                 (setCategoryStudyProgramProgramCategoriesKey categoryToUpdate
-                   (studyProgramKey studyProgram))
-                 position)
-               maxECTS)
-             minECTS)
-           comment)
-         catKey)
+       (setCategoryComment
+         (setCategoryMinECTS
+           (setCategoryMaxECTS
+             (setCategoryPosition
+               (setCategoryStudyProgramProgramCategoriesKey categoryToUpdate
+                 (studyProgramKey studyProgram))
+               position)
+             maxECTS)
+           minECTS)
+         comment)
        shortName)
      nameE)
    name
@@ -77,12 +74,11 @@ tuple2Category
 --- which can be used in WUI specifications.
 category2Tuple
   :: StudyProgram
-  -> Category -> (String,String,String,String,String,Int,Int,Int,StudyProgram)
+  -> Category -> (String,String,String,String,Int,Int,Int,StudyProgram)
 category2Tuple studyProgram category =
   (categoryName category
   ,categoryNameE category
   ,categoryShortName category
-  ,categoryCatKey category
   ,categoryComment category
   ,categoryMinECTS category
   ,categoryMaxECTS category
@@ -102,11 +98,10 @@ wCategoryType category studyProgram studyProgramList =
 blankCategoryView
   :: UserSessionInfo
   -> [StudyProgram]
-  -> ((String,String,String,String,String,Int,Int,Int,StudyProgram)
-  -> Controller)
+  -> ((String,String,String,String,Int,Int,Int,StudyProgram) -> Controller)
   -> Controller -> [HtmlExp]
 blankCategoryView sinfo possibleStudyPrograms controller cancelcontroller =
-  createCategoryView sinfo "" "" "" "" "" 0 180 0 (head possibleStudyPrograms)
+  createCategoryView sinfo "" "" "" "" 0 180 0 (head possibleStudyPrograms)
    possibleStudyPrograms
    controller
    cancelcontroller
@@ -119,21 +114,18 @@ createCategoryView
   -> String
   -> String
   -> String
-  -> String
   -> Int
   -> Int
   -> Int
   -> StudyProgram
   -> [StudyProgram]
-  -> ((String,String,String,String,String,Int,Int,Int,StudyProgram)
-  -> Controller)
+  -> ((String,String,String,String,Int,Int,Int,StudyProgram) -> Controller)
   -> Controller -> [HtmlExp]
 createCategoryView
     _
     defaultName
     defaultNameE
     defaultShortName
-    defaultCatKey
     defaultComment
     defaultMinECTS
     defaultMaxECTS
@@ -146,7 +138,6 @@ createCategoryView
    (defaultName
    ,defaultNameE
    ,defaultShortName
-   ,defaultCatKey
    ,defaultComment
    ,defaultMinECTS
    ,defaultMaxECTS

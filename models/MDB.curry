@@ -6,12 +6,11 @@ module MDB
   , AdvisorModuleKey, MasterProgramKey, MasterProgInfoKey, UnivisInfoKey
   , Categorizing, studyProgramName, setStudyProgramName, studyProgramNameE
   , setStudyProgramNameE, studyProgramShortName, setStudyProgramShortName
-  , studyProgramProgKey, setStudyProgramProgKey, studyProgramURLKey
-  , setStudyProgramURLKey, studyProgramPosition, setStudyProgramPosition
-  , categoryName, setCategoryName, categoryNameE, setCategoryNameE
-  , categoryShortName, setCategoryShortName, categoryCatKey, setCategoryCatKey
-  , categoryComment, setCategoryComment, categoryMinECTS, setCategoryMinECTS
-  , categoryMaxECTS, setCategoryMaxECTS, categoryPosition, setCategoryPosition
+  , studyProgramProgKey, setStudyProgramProgKey, studyProgramPosition
+  , setStudyProgramPosition, categoryName, setCategoryName, categoryNameE
+  , setCategoryNameE, categoryShortName, setCategoryShortName, categoryComment
+  , setCategoryComment, categoryMinECTS, setCategoryMinECTS, categoryMaxECTS
+  , setCategoryMaxECTS, categoryPosition, setCategoryPosition
   , categoryStudyProgramProgramCategoriesKey
   , setCategoryStudyProgramProgramCategoriesKey, masterCoreAreaName
   , setMasterCoreAreaName, masterCoreAreaShortName, setMasterCoreAreaShortName
@@ -144,13 +143,13 @@ import KeyDatabaseQuery
 import ReadShowTerm
 import Time
 
-data StudyProgram = StudyProgram Key String String String String String Int
+data StudyProgram = StudyProgram Key String String String String Int
 
-type StudyProgramTuple = (String,String,String,String,String,Int)
+type StudyProgramTuple = (String,String,String,String,Int)
 
-data Category = Category Key String String String String String Int Int Int Key
+data Category = Category Key String String String String Int Int Int Key
 
-type CategoryTuple = (String,String,String,String,String,Int,Int,Int,Key)
+type CategoryTuple = (String,String,String,String,Int,Int,Int,Key)
 
 data MasterCoreArea = MasterCoreArea Key String String String String Int
 
@@ -269,22 +268,21 @@ dbFile = storageDir++"MDB.db"
 
 --- Transforms entity StudyProgram into tuple representation.
 studyProgram2tuple :: StudyProgram -> StudyProgramTuple
-studyProgram2tuple (StudyProgram _ x2 x3 x4 x5 x6 x7) = (x2,x3,x4,x5,x6,x7)
+studyProgram2tuple (StudyProgram _ x2 x3 x4 x5 x6) = (x2,x3,x4,x5,x6)
 
 --- Transforms key and tuple into a StudyProgram entity.
 keytuple2StudyProgram :: Key -> StudyProgramTuple -> StudyProgram
-keytuple2StudyProgram x1 (x2,x3,x4,x5,x6,x7) =
-  StudyProgram x1 x2 x3 x4 x5 x6 x7
+keytuple2StudyProgram x1 (x2,x3,x4,x5,x6) = StudyProgram x1 x2 x3 x4 x5 x6
 
 --- Transforms entity Category into tuple representation.
 category2tuple :: Category -> CategoryTuple
-category2tuple (Category _ x2 x3 x4 x5 x6 x7 x8 x9 x10) =
-  (x2,x3,x4,x5,x6,x7,x8,x9,x10)
+category2tuple (Category _ x2 x3 x4 x5 x6 x7 x8 x9) =
+  (x2,x3,x4,x5,x6,x7,x8,x9)
 
 --- Transforms key and tuple into a Category entity.
 keytuple2Category :: Key -> CategoryTuple -> Category
-keytuple2Category x1 (x2,x3,x4,x5,x6,x7,x8,x9,x10) =
-  Category x1 x2 x3 x4 x5 x6 x7 x8 x9 x10
+keytuple2Category x1 (x2,x3,x4,x5,x6,x7,x8,x9) =
+  Category x1 x2 x3 x4 x5 x6 x7 x8 x9
 
 --- Transforms entity MasterCoreArea into tuple representation.
 masterCoreArea2tuple :: MasterCoreArea -> MasterCoreAreaTuple
@@ -400,151 +398,133 @@ setCategorizingCategoryCategorizingKey (Categorizing x1 _) x =
 
 --- Sets the value of attribute "Key" in a StudyProgram entity.
 setStudyProgramKey :: StudyProgram -> Key -> StudyProgram
-setStudyProgramKey (StudyProgram _ x2 x3 x4 x5 x6 x7) x =
-  StudyProgram x x2 x3 x4 x5 x6 x7
+setStudyProgramKey (StudyProgram _ x2 x3 x4 x5 x6) x =
+  StudyProgram x x2 x3 x4 x5 x6
 
 --- Gets the value of attribute "Name" of a StudyProgram entity.
 studyProgramName :: StudyProgram -> String
-studyProgramName (StudyProgram _ x _ _ _ _ _) = x
+studyProgramName (StudyProgram _ x _ _ _ _) = x
 
 --- Sets the value of attribute "Name" in a StudyProgram entity.
 setStudyProgramName :: StudyProgram -> String -> StudyProgram
-setStudyProgramName (StudyProgram x1 _ x3 x4 x5 x6 x7) x =
-  StudyProgram x1 x x3 x4 x5 x6 x7
+setStudyProgramName (StudyProgram x1 _ x3 x4 x5 x6) x =
+  StudyProgram x1 x x3 x4 x5 x6
 
 --- Gets the value of attribute "NameE" of a StudyProgram entity.
 studyProgramNameE :: StudyProgram -> String
-studyProgramNameE (StudyProgram _ _ x _ _ _ _) = x
+studyProgramNameE (StudyProgram _ _ x _ _ _) = x
 
 --- Sets the value of attribute "NameE" in a StudyProgram entity.
 setStudyProgramNameE :: StudyProgram -> String -> StudyProgram
-setStudyProgramNameE (StudyProgram x1 x2 _ x4 x5 x6 x7) x =
-  StudyProgram x1 x2 x x4 x5 x6 x7
+setStudyProgramNameE (StudyProgram x1 x2 _ x4 x5 x6) x =
+  StudyProgram x1 x2 x x4 x5 x6
 
 --- Gets the value of attribute "ShortName" of a StudyProgram entity.
 studyProgramShortName :: StudyProgram -> String
-studyProgramShortName (StudyProgram _ _ _ x _ _ _) = x
+studyProgramShortName (StudyProgram _ _ _ x _ _) = x
 
 --- Sets the value of attribute "ShortName" in a StudyProgram entity.
 setStudyProgramShortName :: StudyProgram -> String -> StudyProgram
-setStudyProgramShortName (StudyProgram x1 x2 x3 _ x5 x6 x7) x =
-  StudyProgram x1 x2 x3 x x5 x6 x7
+setStudyProgramShortName (StudyProgram x1 x2 x3 _ x5 x6) x =
+  StudyProgram x1 x2 x3 x x5 x6
 
 --- Gets the value of attribute "ProgKey" of a StudyProgram entity.
 studyProgramProgKey :: StudyProgram -> String
-studyProgramProgKey (StudyProgram _ _ _ _ x _ _) = x
+studyProgramProgKey (StudyProgram _ _ _ _ x _) = x
 
 --- Sets the value of attribute "ProgKey" in a StudyProgram entity.
 setStudyProgramProgKey :: StudyProgram -> String -> StudyProgram
-setStudyProgramProgKey (StudyProgram x1 x2 x3 x4 _ x6 x7) x =
-  StudyProgram x1 x2 x3 x4 x x6 x7
-
---- Gets the value of attribute "URLKey" of a StudyProgram entity.
-studyProgramURLKey :: StudyProgram -> String
-studyProgramURLKey (StudyProgram _ _ _ _ _ x _) = x
-
---- Sets the value of attribute "URLKey" in a StudyProgram entity.
-setStudyProgramURLKey :: StudyProgram -> String -> StudyProgram
-setStudyProgramURLKey (StudyProgram x1 x2 x3 x4 x5 _ x7) x =
-  StudyProgram x1 x2 x3 x4 x5 x x7
+setStudyProgramProgKey (StudyProgram x1 x2 x3 x4 _ x6) x =
+  StudyProgram x1 x2 x3 x4 x x6
 
 --- Gets the value of attribute "Position" of a StudyProgram entity.
 studyProgramPosition :: StudyProgram -> Int
-studyProgramPosition (StudyProgram _ _ _ _ _ _ x) = x
+studyProgramPosition (StudyProgram _ _ _ _ _ x) = x
 
 --- Sets the value of attribute "Position" in a StudyProgram entity.
 setStudyProgramPosition :: StudyProgram -> Int -> StudyProgram
-setStudyProgramPosition (StudyProgram x1 x2 x3 x4 x5 x6 _) x =
-  StudyProgram x1 x2 x3 x4 x5 x6 x
+setStudyProgramPosition (StudyProgram x1 x2 x3 x4 x5 _) x =
+  StudyProgram x1 x2 x3 x4 x5 x
 
 --- Sets the value of attribute "Key" in a Category entity.
 setCategoryKey :: Category -> Key -> Category
-setCategoryKey (Category _ x2 x3 x4 x5 x6 x7 x8 x9 x10) x =
-  Category x x2 x3 x4 x5 x6 x7 x8 x9 x10
+setCategoryKey (Category _ x2 x3 x4 x5 x6 x7 x8 x9) x =
+  Category x x2 x3 x4 x5 x6 x7 x8 x9
 
 --- Gets the value of attribute "Name" of a Category entity.
 categoryName :: Category -> String
-categoryName (Category _ x _ _ _ _ _ _ _ _) = x
+categoryName (Category _ x _ _ _ _ _ _ _) = x
 
 --- Sets the value of attribute "Name" in a Category entity.
 setCategoryName :: Category -> String -> Category
-setCategoryName (Category x1 _ x3 x4 x5 x6 x7 x8 x9 x10) x =
-  Category x1 x x3 x4 x5 x6 x7 x8 x9 x10
+setCategoryName (Category x1 _ x3 x4 x5 x6 x7 x8 x9) x =
+  Category x1 x x3 x4 x5 x6 x7 x8 x9
 
 --- Gets the value of attribute "NameE" of a Category entity.
 categoryNameE :: Category -> String
-categoryNameE (Category _ _ x _ _ _ _ _ _ _) = x
+categoryNameE (Category _ _ x _ _ _ _ _ _) = x
 
 --- Sets the value of attribute "NameE" in a Category entity.
 setCategoryNameE :: Category -> String -> Category
-setCategoryNameE (Category x1 x2 _ x4 x5 x6 x7 x8 x9 x10) x =
-  Category x1 x2 x x4 x5 x6 x7 x8 x9 x10
+setCategoryNameE (Category x1 x2 _ x4 x5 x6 x7 x8 x9) x =
+  Category x1 x2 x x4 x5 x6 x7 x8 x9
 
 --- Gets the value of attribute "ShortName" of a Category entity.
 categoryShortName :: Category -> String
-categoryShortName (Category _ _ _ x _ _ _ _ _ _) = x
+categoryShortName (Category _ _ _ x _ _ _ _ _) = x
 
 --- Sets the value of attribute "ShortName" in a Category entity.
 setCategoryShortName :: Category -> String -> Category
-setCategoryShortName (Category x1 x2 x3 _ x5 x6 x7 x8 x9 x10) x =
-  Category x1 x2 x3 x x5 x6 x7 x8 x9 x10
-
---- Gets the value of attribute "CatKey" of a Category entity.
-categoryCatKey :: Category -> String
-categoryCatKey (Category _ _ _ _ x _ _ _ _ _) = x
-
---- Sets the value of attribute "CatKey" in a Category entity.
-setCategoryCatKey :: Category -> String -> Category
-setCategoryCatKey (Category x1 x2 x3 x4 _ x6 x7 x8 x9 x10) x =
-  Category x1 x2 x3 x4 x x6 x7 x8 x9 x10
+setCategoryShortName (Category x1 x2 x3 _ x5 x6 x7 x8 x9) x =
+  Category x1 x2 x3 x x5 x6 x7 x8 x9
 
 --- Gets the value of attribute "Comment" of a Category entity.
 categoryComment :: Category -> String
-categoryComment (Category _ _ _ _ _ x _ _ _ _) = x
+categoryComment (Category _ _ _ _ x _ _ _ _) = x
 
 --- Sets the value of attribute "Comment" in a Category entity.
 setCategoryComment :: Category -> String -> Category
-setCategoryComment (Category x1 x2 x3 x4 x5 _ x7 x8 x9 x10) x =
-  Category x1 x2 x3 x4 x5 x x7 x8 x9 x10
+setCategoryComment (Category x1 x2 x3 x4 _ x6 x7 x8 x9) x =
+  Category x1 x2 x3 x4 x x6 x7 x8 x9
 
 --- Gets the value of attribute "MinECTS" of a Category entity.
 categoryMinECTS :: Category -> Int
-categoryMinECTS (Category _ _ _ _ _ _ x _ _ _) = x
+categoryMinECTS (Category _ _ _ _ _ x _ _ _) = x
 
 --- Sets the value of attribute "MinECTS" in a Category entity.
 setCategoryMinECTS :: Category -> Int -> Category
-setCategoryMinECTS (Category x1 x2 x3 x4 x5 x6 _ x8 x9 x10) x =
-  Category x1 x2 x3 x4 x5 x6 x x8 x9 x10
+setCategoryMinECTS (Category x1 x2 x3 x4 x5 _ x7 x8 x9) x =
+  Category x1 x2 x3 x4 x5 x x7 x8 x9
 
 --- Gets the value of attribute "MaxECTS" of a Category entity.
 categoryMaxECTS :: Category -> Int
-categoryMaxECTS (Category _ _ _ _ _ _ _ x _ _) = x
+categoryMaxECTS (Category _ _ _ _ _ _ x _ _) = x
 
 --- Sets the value of attribute "MaxECTS" in a Category entity.
 setCategoryMaxECTS :: Category -> Int -> Category
-setCategoryMaxECTS (Category x1 x2 x3 x4 x5 x6 x7 _ x9 x10) x =
-  Category x1 x2 x3 x4 x5 x6 x7 x x9 x10
+setCategoryMaxECTS (Category x1 x2 x3 x4 x5 x6 _ x8 x9) x =
+  Category x1 x2 x3 x4 x5 x6 x x8 x9
 
 --- Gets the value of attribute "Position" of a Category entity.
 categoryPosition :: Category -> Int
-categoryPosition (Category _ _ _ _ _ _ _ _ x _) = x
+categoryPosition (Category _ _ _ _ _ _ _ x _) = x
 
 --- Sets the value of attribute "Position" in a Category entity.
 setCategoryPosition :: Category -> Int -> Category
-setCategoryPosition (Category x1 x2 x3 x4 x5 x6 x7 x8 _ x10) x =
-  Category x1 x2 x3 x4 x5 x6 x7 x8 x x10
+setCategoryPosition (Category x1 x2 x3 x4 x5 x6 x7 _ x9) x =
+  Category x1 x2 x3 x4 x5 x6 x7 x x9
 
 --- Gets the value of attribute "StudyProgramProgramCategoriesKey" of a Category entity.
 categoryStudyProgramProgramCategoriesKey :: Category -> StudyProgramKey
-categoryStudyProgramProgramCategoriesKey (Category _ _ _ _ _ _ _ _ _ x) =
+categoryStudyProgramProgramCategoriesKey (Category _ _ _ _ _ _ _ _ x) =
   StudyProgramKey x
 
 --- Sets the value of attribute "StudyProgramProgramCategoriesKey" in a Category entity.
 setCategoryStudyProgramProgramCategoriesKey
   :: Category -> StudyProgramKey -> Category
 setCategoryStudyProgramProgramCategoriesKey
-    (Category x1 x2 x3 x4 x5 x6 x7 x8 x9 _) x =
-  Category x1 x2 x3 x4 x5 x6 x7 x8 x9 (studyProgramKeyToKey x)
+    (Category x1 x2 x3 x4 x5 x6 x7 x8 _) x =
+  Category x1 x2 x3 x4 x5 x6 x7 x8 (studyProgramKeyToKey x)
 
 --- Sets the value of attribute "Key" in a MasterCoreArea entity.
 setMasterCoreAreaKey :: MasterCoreArea -> Key -> MasterCoreArea
@@ -1296,7 +1276,7 @@ setUnivisInfoURL (UnivisInfo x1 x2 x3 x4 _) x = UnivisInfo x1 x2 x3 x4 x
 studyProgramEntry :: Key -> StudyProgramTuple -> Dynamic
 studyProgramEntry =
   persistentSQLite dbFile "StudyProgram"
-   ["Name","NameE","ShortName","ProgKey","URLKey","Position"]
+   ["Name","NameE","ShortName","ProgKey","Position"]
 
 --- Dynamic predicate representing the relation
 --- between keys and StudyProgram entities.
@@ -1307,7 +1287,7 @@ studyProgram key obj
 
 --- Gets the key of a StudyProgram entity.
 studyProgramKey :: StudyProgram -> StudyProgramKey
-studyProgramKey (StudyProgram x _ _ _ _ _ _) = StudyProgramKey x
+studyProgramKey (StudyProgram x _ _ _ _ _) = StudyProgramKey x
 
 --- Shows the key of a StudyProgram entity as a string.
 --- This is useful if a textual representation of the key is necessary
@@ -1331,24 +1311,15 @@ maybeStudyProgramKeyToKey (Just (StudyProgramKey k)) = Just k
 
 --- Inserts a new StudyProgram entity.
 newStudyProgram
-  :: String
-  -> String -> String -> String -> String -> Int -> Transaction StudyProgram
-newStudyProgram name_p nameE_p shortName_p progKey_p uRLKey_p position_p =
+  :: String -> String -> String -> String -> Int -> Transaction StudyProgram
+newStudyProgram name_p nameE_p shortName_p progKey_p position_p =
   unique "MDB" studyProgramEntry keytuple2StudyProgram studyProgramShortName
    shortName_p
    |>> (unique "MDB" studyProgramEntry keytuple2StudyProgram
          studyProgramProgKey
          progKey_p
-         |>> (unique "MDB" studyProgramEntry keytuple2StudyProgram
-               studyProgramURLKey
-               uRLKey_p
-               |>> newEntry studyProgramEntry keytuple2StudyProgram
-                    (name_p
-                    ,nameE_p
-                    ,shortName_p
-                    ,progKey_p
-                    ,uRLKey_p
-                    ,position_p)))
+         |>> newEntry studyProgramEntry keytuple2StudyProgram
+              (name_p,nameE_p,shortName_p,progKey_p,position_p))
 
 --- Updates an existing StudyProgram entity.
 updateStudyProgram :: StudyProgram -> Transaction ()
@@ -1361,13 +1332,9 @@ updateStudyProgram studyProgram_p =
          (studyProgramKeyToKey . studyProgramKey)
          studyProgramProgKey
          studyProgram_p
-         |>> (uniqueUpdate "MDB" studyProgramEntry keytuple2StudyProgram
-               (studyProgramKeyToKey . studyProgramKey)
-               studyProgramURLKey
-               studyProgram_p
-               |>> updateDBEntry studyProgramEntry
-                    (studyProgramKeyToKey (studyProgramKey studyProgram_p))
-                    (studyProgram2tuple studyProgram_p)))
+         |>> updateDBEntry studyProgramEntry
+              (studyProgramKeyToKey (studyProgramKey studyProgram_p))
+              (studyProgram2tuple studyProgram_p))
 
 --- Deletes an existing StudyProgram entity.
 deleteStudyProgram :: StudyProgram -> Transaction ()
@@ -1404,7 +1371,6 @@ categoryEntry =
    ["Name"
    ,"NameE"
    ,"ShortName"
-   ,"CatKey"
    ,"Comment"
    ,"MinECTS"
    ,"MaxECTS"
@@ -1420,7 +1386,7 @@ category key obj
 
 --- Gets the key of a Category entity.
 categoryKey :: Category -> CategoryKey
-categoryKey (Category x _ _ _ _ _ _ _ _ _) = CategoryKey x
+categoryKey (Category x _ _ _ _ _ _ _ _) = CategoryKey x
 
 --- Shows the key of a Category entity as a string.
 --- This is useful if a textual representation of the key is necessary
@@ -1448,45 +1414,36 @@ newCategoryWithStudyProgramProgramCategoriesKey
   -> String
   -> String
   -> String
-  -> String
   -> Maybe Int -> Maybe Int -> Int -> StudyProgramKey -> Transaction Category
 newCategoryWithStudyProgramProgramCategoriesKey
     name_p
     nameE_p
     shortName_p
-    catKey_p
     comment_p
     minECTS_p
     maxECTS_p
     position_p
     studyProgramProgramCategoriesKey_p =
-  unique "MDB" categoryEntry keytuple2Category categoryCatKey catKey_p
-   |>> (existsEntryWithDBKey "StudyProgram" studyProgramEntry
-         (studyProgramKeyToKey studyProgramProgramCategoriesKey_p)
-         |>> newEntry categoryEntry keytuple2Category
-              (name_p
-              ,nameE_p
-              ,shortName_p
-              ,catKey_p
-              ,comment_p
-              ,maybe 0 id minECTS_p
-              ,maybe 180 id maxECTS_p
-              ,position_p
-              ,studyProgramKeyToKey studyProgramProgramCategoriesKey_p))
+  existsEntryWithDBKey "StudyProgram" studyProgramEntry
+   (studyProgramKeyToKey studyProgramProgramCategoriesKey_p)
+   |>> newEntry categoryEntry keytuple2Category
+        (name_p
+        ,nameE_p
+        ,shortName_p
+        ,comment_p
+        ,maybe 0 id minECTS_p
+        ,maybe 180 id maxECTS_p
+        ,position_p
+        ,studyProgramKeyToKey studyProgramProgramCategoriesKey_p)
 
 --- Updates an existing Category entity.
 updateCategory :: Category -> Transaction ()
 updateCategory category_p =
-  uniqueUpdate "MDB" categoryEntry keytuple2Category
-   (categoryKeyToKey . categoryKey)
-   categoryCatKey
-   category_p
-   |>> (existsEntryWithDBKey "StudyProgram" studyProgramEntry
-         (studyProgramKeyToKey
-           (categoryStudyProgramProgramCategoriesKey category_p))
-         |>> updateDBEntry categoryEntry
-              (categoryKeyToKey (categoryKey category_p))
-              (category2tuple category_p))
+  existsEntryWithDBKey "StudyProgram" studyProgramEntry
+   (studyProgramKeyToKey
+     (categoryStudyProgramProgramCategoriesKey category_p))
+   |>> updateDBEntry categoryEntry (categoryKeyToKey (categoryKey category_p))
+        (category2tuple category_p)
 
 --- Deletes an existing Category entity.
 deleteCategory :: Category -> Transaction ()
@@ -2953,21 +2910,16 @@ checkStudyProgramEntry studyProgram_p =
    |>> (uniqueC "MDB" studyProgramEntry keytuple2StudyProgram
          studyProgramShortName
          studyProgram_p
-         |>> (uniqueC "MDB" studyProgramEntry keytuple2StudyProgram
-               studyProgramProgKey
-               studyProgram_p
-               |>> uniqueC "MDB" studyProgramEntry keytuple2StudyProgram
-                    studyProgramURLKey
-                    studyProgram_p))
+         |>> uniqueC "MDB" studyProgramEntry keytuple2StudyProgram
+              studyProgramProgKey
+              studyProgram_p)
 
 checkCategoryEntry :: Category -> Transaction ()
 checkCategoryEntry category_p =
   duplicateKeyTest categoryEntry
-   |>> (uniqueC "MDB" categoryEntry keytuple2Category categoryCatKey
-         category_p
-         |>> existsEntryWithDBKey "StudyProgram" studyProgramEntry
-              (studyProgramKeyToKey
-                (categoryStudyProgramProgramCategoriesKey category_p)))
+   |>> existsEntryWithDBKey "StudyProgram" studyProgramEntry
+        (studyProgramKeyToKey
+          (categoryStudyProgramProgramCategoriesKey category_p))
 
 checkMasterCoreAreaEntry :: MasterCoreArea -> Transaction ()
 checkMasterCoreAreaEntry masterCoreArea_p =

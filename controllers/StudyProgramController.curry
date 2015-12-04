@@ -48,10 +48,9 @@ newStudyProgramController =
            listStudyProgramController))
 
 --- Transaction to persist a new StudyProgram entity to the database.
-createStudyProgramT
-  :: (String,String,String,String,String,Int) -> Transaction ()
-createStudyProgramT (name,nameE,shortName,progKey,uRLKey,position) =
-  newStudyProgram name nameE shortName progKey uRLKey position |>> returnT ()
+createStudyProgramT :: (String,String,String,String,Int) -> Transaction ()
+createStudyProgramT (name,nameE,shortName,progKey,position) =
+  newStudyProgram name nameE shortName progKey position |>> returnT ()
 
 --- Shows a form to edit the given StudyProgram entity.
 editStudyProgramController :: StudyProgram -> Controller

@@ -26,7 +26,6 @@ studyProgramToListView studyProgram =
   ,name2href (studyProgramNameE studyProgram)
   ,[stringToHtml (studyProgramShortName studyProgram)]
   ,[stringToHtml (studyProgramProgKey studyProgram)]
-  ,[stringToHtml (studyProgramURLKey studyProgram)]
   ,[intToHtml (studyProgramPosition studyProgram)]]
  where
   name2href n =
@@ -45,12 +44,13 @@ studyProgramToDetailsView studyProgram =
   [spTable
     (map (\(label,value) -> [label,value])
       (zip studyProgramLabelList detailedView))]
-  where detailedView = [[stringToHtml (studyProgramName studyProgram)]
-                            -- TODO: use English translation
-                       ,[stringToHtml (studyProgramShortName studyProgram)]
-                       ,[stringToHtml (studyProgramProgKey studyProgram)]
-                       ,[stringToHtml (studyProgramURLKey studyProgram)]
-                       ,[intToHtml (studyProgramPosition studyProgram)]]
+  where
+    detailedView =
+      [[stringToHtml (studyProgramName studyProgram)]
+      ,[stringToHtml (studyProgramNameE studyProgram)]
+      ,[stringToHtml (studyProgramShortName studyProgram)]
+      ,[stringToHtml (studyProgramProgKey studyProgram)]
+      ,[intToHtml (studyProgramPosition studyProgram)]]
 
 --- The labels of a StudyProgram entity, as used in HTML tables.
 studyProgramLabelList :: [[HtmlExp]]
@@ -59,7 +59,6 @@ studyProgramLabelList =
   ,[textstyle "label label_for_type_string" "English name"]
   ,[textstyle "label label_for_type_string" "ShortName"]
   ,[textstyle "label label_for_type_string" "ProgKey (to identify programs)"]
-  ,[textstyle "label label_for_type_string" "URLKey (no longer used)"]
   ,[textstyle "label label_for_type_int" "Position"]]
 
 --- The list view of a Category entity in HTML format.
@@ -69,7 +68,6 @@ categoryToListView category =
   [name2href (categoryName category)
   ,name2href (categoryNameE category)
   ,[stringToHtml (categoryShortName category)]
-  ,[stringToHtml (categoryCatKey category)]
   ,[intToHtml (categoryPosition category)]]
  where
    name2href n = [hrefCategory ("?Category/show/"++showCategoryKey category)
@@ -79,12 +77,12 @@ categoryToListView category =
 categoryToHtmlView :: Category -> HtmlExp
 categoryToHtmlView category =
   smallHrefCategory ("?Category/show/"++showCategoryKey category)
-    [htxt (categoryCatKey category)]
+    [htxt (categoryShortName category)]
 
 --- The short view of a Category entity as a string.
 --- This view is used in menus and comments to refer to a Category entity.
 categoryToShortView :: Category -> String
-categoryToShortView category = categoryCatKey category
+categoryToShortView category = categoryShortName category
 
 --- The detailed view of a Category entity in HTML format.
 --- It also takes associated entities for every associated entity type.
@@ -93,12 +91,13 @@ categoryToDetailsView category relatedStudyProgram =
   [spTable
     (map (\(label,value) -> [label,value])
       (zip categoryLabelList detailedView))]
-  where detailedView = [[stringToHtml (categoryName category)]
-                          -- TODO: use English name
-                       ,[stringToHtml (categoryShortName category)]
-                       ,[stringToHtml (categoryCatKey category)]
-                       ,[intToHtml (categoryPosition category)]
-                       ,[htxt (studyProgramToShortView relatedStudyProgram)]]
+  where
+    detailedView =
+      [[stringToHtml (categoryName category)]
+      ,[stringToHtml (categoryNameE category)]
+      ,[stringToHtml (categoryShortName category)]
+      ,[intToHtml (categoryPosition category)]
+      ,[htxt (studyProgramToShortView relatedStudyProgram)]]
 
 --- The labels of a Category entity, as used in HTML tables.
 categoryLabelList :: [[HtmlExp]]
@@ -106,7 +105,6 @@ categoryLabelList =
   [[textstyle "label label_for_type_string" "Deutscher Name"]
   ,[textstyle "label label_for_type_string" "Englischer Name"]
   ,[textstyle "label label_for_type_string" "ShortName"]
-  ,[textstyle "label label_for_type_string" "CatKey"]
   ,[textstyle "label label_for_type_string" "Kommentar"]
   ,[textstyle "label label_for_type_int" "Minimale ECTS"]
   ,[textstyle "label label_for_type_int" "Maximale ECTS"]
