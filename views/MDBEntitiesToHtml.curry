@@ -165,7 +165,7 @@ userToHtmlView user =
   let name = userToShortView user
    in if null (userUrl user)
       then htxt name
-      else ehref (userUrl user) [stringToHtml name]
+      else ehref (userUrl user) [htxt name]
 
 --- The short view of a User entity as a string.
 --- This view is used in menus and comments to refer to a User entity.

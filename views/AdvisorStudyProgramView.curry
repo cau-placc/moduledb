@@ -231,11 +231,10 @@ showAdvisorStudyProgramView
       ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
   (if advisorStudyProgramVisible asprog then []
      else [h4 [htxt "(nicht öffentlich sichtbar)"]]) ++
-  [h2 [htxt (t "Study program" ++ ": " ++
-             (langSelect sinfo studyProgramNameE studyProgramName)
-               relatedsprog)]] ++
+  [h2 [htxt (t "Study program" ++ ": "),
+       studyProgramToHRef sinfo relatedsprog]] ++
   [h3 [htxt $ t "Start: " ++ showSemester (startSem,startYear) ++
-              " / Research advisor: " ++ userToShortView advisor]] ++
+              " / Research advisor: ", userToHtmlView advisor]] ++
   [par $ (if admin || editallowed
           then [spButton "Beschreibung/Sichtbarkeit ändern"
                        (nextController (editcontroller asprog))]
@@ -331,8 +330,9 @@ listAdvisorStudyProgramView sinfo advisorStudyPrograms =
     [(if advisorStudyProgramVisible asprog then bold else italic)
       [href ("?AdvisorStudyProgram/show/" ++ showAdvisorStudyProgramKey asprog)
             [htxt (advisorStudyProgramName asprog)]
-      ,htxt (" " ++ t "in study program" ++ ": " ++
-            (langSelect sinfo studyProgramNameE studyProgramName) sprog)]
+      ,htxt $ " (" ++ t "Study program" ++ ": "
+      ,studyProgramToHRef sinfo sprog
+      ,htxt ")"]
     ]
 
    t = translate sinfo
