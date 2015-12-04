@@ -30,6 +30,7 @@ mainPageView sinfo studyPrograms =
                 (mergeSort leqStudyProgram studyPrograms)),
    h2 [htxt $ t "Master studies in computer science:"],
    par [spHref "?MCA/list" [htxt $ t "Core areas"], nbsp,
+        spHref "?AdvisorStudyProgram/list" [htxt $ t "Master programs"],
         spHref "?MasterProgram/list" [htxt $ t "Master programs (until SS15)"],
         nbsp,
         spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
@@ -46,7 +47,9 @@ mainPageView sinfo studyPrograms =
      [bold [htxt $ t "For programmers:"], nbsp,
       ehref "?xml" [htxt $ t "XML index to all modules"],
       htxt " | ",
-      ehref "?xmlprog=all" [htxt $ t "XML document with all master programs"]]]]
+      ehref "?xmlaprog=all" [htxt $ t "XML document with all master programs"],
+      htxt " | ",
+      ehref "?xmlprog=all" [htxt $ t "XML document with all master programs (until SS15)"]]]]
  where
   t = translate sinfo
 

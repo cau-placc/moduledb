@@ -1,11 +1,16 @@
-module AdvisorStudyProgramController ( mainAdvisorStudyProgramController )
+module AdvisorStudyProgramController
+        ( mainAdvisorStudyProgramController
+        , showAllXmlAdvisorStudyPrograms, showXmlAdvisorStudyProgram
+        )
 where
 
+import Helpers
 import Spicey
 import KeyDatabase
 import HTML
 import List(find)
 import Time
+import ConfigMDB(baseURL)
 import MDB
 import MDBExts
 import AdvisorModuleController
@@ -20,6 +25,7 @@ import CategoryView(leqCategory)
 import MDBExts
 import UserProcesses
 import MDBEntitiesToHtml
+import XML
 
 --- Choose the controller for a AdvisorStudyProgram entity according to the URL parameter.
 mainAdvisorStudyProgramController :: Controller
@@ -171,11 +177,9 @@ showAdvisorStudyProgramController asprog =
   checkAuthorization
    (advisorStudyProgramOperationAllowed (ShowEntity asprog))
    $ (\sinfo ->
-     do studyprog <- runJustT (getStudyProgramsAdvisedStudyProgram
-                                               asprog)
+     do studyprog <- runJustT (getStudyProgramsAdvisedStudyProgram asprog)
         categories <- runQ $ transformQ (mergeSort leqCategory) $
-                               queryCategorysOfStudyProgram
-                                           (studyProgramKey studyprog)
+                               queryCategorysOfStudyProgram (studyProgramKey studyprog)
         amods <- runQ $ queryCondAdvisorModule
            (\am -> advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey am
                                               == advisorStudyProgramKey asprog)
@@ -192,7 +196,7 @@ showAdvisorStudyProgramController asprog =
            showcontroller
            (addCatModController asprog showcontroller)
            (deleteAdvisorModuleController showcontroller)
-           asprog
+           asprog (xmlURL asprog)
            studyprog
            amdatas
            categories
@@ -209,3 +213,80 @@ getStudyProgramsAdvisedStudyProgram aStudyProgram =
 getStudyAdvisingUser :: AdvisorStudyProgram -> Transaction User
 getStudyAdvisingUser aUser =
   getUser (advisorStudyProgramUserStudyAdvisingKey aUser)
+
+-------------------------------------------------------------------------
+-- Formatting master programs as XML documents:
+
+-- XML URL of an AdvisorStudyProgram:
+xmlURL :: AdvisorStudyProgram -> String
+xmlURL asp = baseURL++"?xmlaprog="++string2urlencoded (showAdvisorStudyProgramKey asp)
+
+-- URL of an AdvisorStudyProgram:
+advisorProgURL :: AdvisorStudyProgram -> String
+advisorProgURL asp =
+  baseURL++"?AdvisorStudyProgram/show/"++string2urlencoded (showAdvisorStudyProgramKey asp)
+
+-- Show XML document containing all visible master programs
+showAllXmlAdvisorStudyPrograms :: IO HtmlForm
+showAllXmlAdvisorStudyPrograms = do
+  allasprogs <- runQ $ transformQ (filter advisorStudyProgramVisible)
+                                 queryAllAdvisorStudyPrograms
+  aspxmls <- mapIO getAdvisorStudyProgramAsXML allasprogs
+  return (HtmlAnswer "text/xml"
+                     (showXmlDoc (xml "studyprograms" aspxmls)))
+
+showXmlAdvisorStudyProgram :: AdvisorStudyProgramKey -> IO HtmlForm
+showXmlAdvisorStudyProgram aspkey = do
+  asprog <- runJustT $ getAdvisorStudyProgram aspkey
+  xmldoc <- getAdvisorStudyProgramAsXML asprog
+  return (HtmlAnswer "text/xml" (showXmlDoc xmldoc))
+
+getAdvisorStudyProgramAsXML :: AdvisorStudyProgram -> IO XmlExp
+getAdvisorStudyProgramAsXML asprog = do
+  studyprog <- runJustT (getStudyProgramsAdvisedStudyProgram asprog)
+  categories <- runQ $ transformQ (mergeSort leqCategory) $
+                         queryCategorysOfStudyProgram (studyProgramKey studyprog)
+  amods <- runQ $ queryCondAdvisorModule
+                       (\am -> advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey am
+                                                          == advisorStudyProgramKey asprog)
+  amdatas <- runJustT (getAdvisorModuleData amods)
+  advisor <- runJustT (getStudyAdvisingUser asprog)
+  return (asprog2xml asprog advisor studyprog categories amdatas)
+
+asprog2xml :: AdvisorStudyProgram -> User -> StudyProgram -> [Category]
+           -> [(AdvisorModule,ModInst,ModData)]
+           -> XmlExp
+asprog2xml asprog advisor sprog cats amdatas  =
+  XElem "studyprogram" [("ID",showAdvisorStudyProgramKey asprog)] $
+   [xml "title"         [xtxt (advisorStudyProgramName asprog)]
+   ,xml "advisor"       [xtxt (userToShortView advisor)]
+   ,xml "start"         [xtxt (showSemester (startSem,startYear))]
+   ,xml "url"           [xtxt (advisorProgURL asprog)]
+   ,xml "description"   [xtxt (advisorStudyProgramDesc asprog)]
+   ,xml "prerequisites" [xtxt (advisorStudyProgramPrereq asprog)]
+   ,xml "comments"      [xtxt (advisorStudyProgramComments asprog)]
+   ,XElem "degreeprogram" [("key",studyProgKey)] [xtxt (studyProgramName sprog)]
+   ] ++
+   concatMap (\c -> let camods = filter (isAdvisorModuleOfCat c) amdatas
+                    in  if null camods then [] else map (advisorModuleData2xml c) camods)
+             cats
+
+ where
+  studyProgKey = studyProgramProgKey sprog
+  
+  isAdvisorModuleOfCat cat (am,_,_) =
+    advisorModuleCategoryAdvisorCategorizingKey am == categoryKey cat
+
+  advisorModuleData2xml cat (am,modinst,md) =
+    xml "lecture"
+     [xml "mandatory"  [xtxt $ if advisorModuleMandatory am then "yes" else "no"]
+     ,XElem "category" [("key", studyProgKey ++ "_" ++ categoryShortName cat)]
+                       [xtxt (categoryName cat)]
+     ,xml "code"       [xtxt (modDataCode md)]
+     ,xml "semester"   [xtxt (showSemester (modInstSemester modinst))]
+     ]
+
+  startSem  = advisorStudyProgramTerm asprog
+  startYear = advisorStudyProgramYear asprog
+
+-------------------------------------------------------------------------

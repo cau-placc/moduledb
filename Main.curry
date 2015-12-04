@@ -12,6 +12,7 @@ import Routes
 import RoutesData
 import Processes
 import ModDataController
+import AdvisorStudyProgramController(showXmlAdvisorStudyProgram,showAllXmlAdvisorStudyPrograms)
 import MasterProgramController(showXmlMasterProgram,showAllXmlMasterPrograms)
 import KeyDatabase
 import MDB
@@ -58,6 +59,12 @@ main = do
            else maybe (displayError "Illegal URL" >>= getForm)
                       showXmlMasterProgram
                       (readMasterProgramKey (urlencoded2string code))
+    ('x':'m':'l':'a':'p':'r':'o':'g':'=':code)
+        -> if code=="all"
+           then showAllXmlAdvisorStudyPrograms
+           else maybe (displayError "Illegal URL" >>= getForm)
+                      showXmlAdvisorStudyProgram
+                      (readAdvisorStudyProgramKey (urlencoded2string code))
     ['l','a','n','g',l1,l2] -> setLanguage [l1,l2] >> dispatcher
     "csv"    -> allModuleCSV
     "saveDB" -> storeTermDB >>

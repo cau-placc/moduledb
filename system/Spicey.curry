@@ -263,13 +263,13 @@ getUserMenu login sinfo = do
      ulist $
       [--[href "?main" [htxt "Hauptseite"]],
        [href "?StudyProgram/list" [htxt $ t "Study programs"]],
-       [href "?AdvisorStudyProgram/list" [htxt $ t "Advisor programs"]],
+       [href "?AdvisorStudyProgram/list" [htxt $ t "Master programs"]],
        [href "?search" [htxt $ t "Search modules"]]] ++
       (if login==Nothing
        then []
        else [[href ("?Category/user")   [htxt $ t "My modules"]]
             --,[href "?MasterProgram/new" [htxt $ t "New master program"]]
-            ,[href "?AdvisorStudyProgram/new" [htxt $ t "New study program"]]
+            ,[href "?AdvisorStudyProgram/new" [htxt $ t "New master program"]]
             ]) ++
       [[href "?MasterProgram/list" [htxt $ t "Master programs (until SS15)"]],
        [href "?login" [htxt $ t ("Log" ++ maybe "in" (const "out") login)]]]

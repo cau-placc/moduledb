@@ -58,8 +58,8 @@ studyProgramLabelList =
   [[textstyle "label label_for_type_string" "Name"]
   ,[textstyle "label label_for_type_string" "English name"]
   ,[textstyle "label label_for_type_string" "ShortName"]
-  ,[textstyle "label label_for_type_string" "ProgKey"]
-  ,[textstyle "label label_for_type_string" "URLKey"]
+  ,[textstyle "label label_for_type_string" "ProgKey (to identify programs)"]
+  ,[textstyle "label label_for_type_string" "URLKey (no longer used)"]
   ,[textstyle "label label_for_type_int" "Position"]]
 
 --- The list view of a Category entity in HTML format.

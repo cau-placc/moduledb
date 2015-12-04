@@ -136,24 +136,27 @@ listStudyProgramView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
 listStudyProgramView sinfo studyPrograms =
   if isAdminSession sinfo
   then [h1 [htxt $ t "Study programs"],
-        spTable ([take 6 studyProgramLabelList] ++
+        spTable ([selectColumns $ take 6 studyProgramLabelList] ++
                 map listStudyProgram (mergeSort leqStudyProgram studyPrograms))]
   else [h1 [htxt $ t "Study programs"],
         spTable (map (\sp -> [langSelect sinfo
                                 (studyProgramToListView sp !! 1)
                                 (head (studyProgramToListView sp))])
                      (mergeSort leqStudyProgram studyPrograms))]
- where t = translate sinfo
+ where
+  t = translate sinfo
 
-       listStudyProgram :: StudyProgram -> [[HtmlExp]]
-       listStudyProgram studyProgram =
-          studyProgramToListView studyProgram ++
-           [[spHref
-              ("?StudyProgram/show/" ++ showStudyProgramKey studyProgram)
-              [htxt "show"]]
-           ,[spHref
-              ("?StudyProgram/edit/" ++ showStudyProgramKey studyProgram)
-              [htxt "edit"]]
-           ,[spHref
-              ("?StudyProgram/delete/" ++ showStudyProgramKey studyProgram)
-              [htxt "delete"]]]
+  selectColumns cs = take 4 cs ++ drop 5 cs
+  
+  listStudyProgram :: StudyProgram -> [[HtmlExp]]
+  listStudyProgram studyProgram =
+     selectColumns (studyProgramToListView studyProgram) ++
+      [[spHref
+         ("?StudyProgram/show/" ++ showStudyProgramKey studyProgram)
+         [htxt "show"]]
+      ,[spHref
+         ("?StudyProgram/edit/" ++ showStudyProgramKey studyProgram)
+         [htxt "edit"]]
+      ,[spHref
+         ("?StudyProgram/delete/" ++ showStudyProgramKey studyProgram)
+         [htxt "delete"]]]

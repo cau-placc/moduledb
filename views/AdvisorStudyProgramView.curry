@@ -41,8 +41,9 @@ wAdvisorStudyProgram isnewprog sinfo studyProgramList userList =
   wTrm = if isnewprog || admin then wTerm        else wConstant stringToHtml
   wYr  = if isnewprog || admin then wCurrentYear else wConstant intToHtml
 
-  wStudyProg = if isnewprog then wSelect studyProgramName studyProgramList
-                            else wConstant (stringToHtml . studyProgramName)
+  -- Uncomment code if it should be allowed to define programs other than MSc Inf:
+  wStudyProg = {- if isnewprog then wSelect studyProgramName studyProgramList
+                            else -} wConstant (stringToHtml . studyProgramName)
                             
   wAdvisor = if admin then wSelect userToShortView userList
                       else wConstant (stringToHtml . userToShortView)
@@ -130,7 +131,8 @@ blankAdvisorStudyProgramView
   defaultStudyProgram =
     maybe (head possibleStudyPrograms)
           id
-          (find (\sp -> studyProgramURLKey sp == "MS15") possibleStudyPrograms)
+          -- Select MSc Inf study program as the default program:
+          (find (\sp -> studyProgramProgKey sp == "MScI15") possibleStudyPrograms)
           
 --- Supplies a WUI form to create a new AdvisorStudyProgram entity.
 --- Takes default values to be prefilled in the form fields.
@@ -218,15 +220,15 @@ showAdvisorStudyProgramView
   -> Controller
   -> (Category -> Controller)
   -> (AdvisorModule -> Controller)
-  -> AdvisorStudyProgram -> StudyProgram
-  -> [(AdvisorModule,ModInst,ModData)]
-  -> [Category]
-  -> User -> [HtmlExp]
+  -> AdvisorStudyProgram -> String -> StudyProgram
+  -> [(AdvisorModule,ModInst,ModData)] -> [Category] -> User
+  -> [HtmlExp]
 showAdvisorStudyProgramView
     sinfo admin editallowed editcontroller showcontroller addcatmodcontroller
     delmodcontroller
-    asprog relatedsprog amdatas cats advisor =
-  [h1 [htxt (advisorStudyProgramName asprog)]] ++
+    asprog xmlurl relatedsprog amdatas cats advisor =
+  [h1 [htxt (advisorStudyProgramName asprog)
+      ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
   (if advisorStudyProgramVisible asprog then []
      else [h4 [htxt "(nicht öffentlich sichtbar)"]]) ++
   [h2 [htxt (t "Study program" ++ ": " ++
