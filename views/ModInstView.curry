@@ -144,28 +144,37 @@ listModInstView modInsts showModInstController editModInstController
                       ,"\"?"])])
                 (deleteModInstController modInst))]]
 
---- Supplies a list view for a given list of ModInst entities.
---- Shows also buttons to show, delete, or edit entries.
---- The arguments are the list of ModInst entities
---- and the controller functions to show, delete and edit entities.
-singleModInstView :: ModInst -> ModData -> User -> [MasterProgram] -> [HtmlExp]
-singleModInstView modinst moddata user mprogs =
+--- Supplies a view for a single ModInst entity.
+--- Shows also the master programs and AdvisorStudyPrograms
+--- where this instance is used.
+singleModInstView :: ModInst -> ModData -> User -> [MasterProgram]
+                  -> [AdvisorStudyProgram] -> [HtmlExp]
+singleModInstView modinst moddata user mprogs sprogs =
   [h1 [htxt $ "Modul \""++ modDataNameG moddata ++ "\" im " ++
               showSemester modinstsem],
    h3 [htxt "Dozent: ", userToHtmlView user]] ++
-   (if null mprogs
+   (if null mprogs && null sprogs
     then [par [htxt notusedcmt]]
     else [par [htxt usedcmt],
           ulist
            (map (\mp -> [htxt "Masterprogramm ",
-                   ehref ("?MasterProgram/show/"++showMasterProgramKey mp)
-                          [htxt (masterProgramName mp), htxt " (",
-                           htxt "Beginn : ",
-                           htxt (showSemester (masterProgramTerm mp,
-                                               masterProgramYear mp)),
-                           htxt ")"]])
-                mprogs)]
-   ) ++
+                     ehref ("?MasterProgram/show/"++showMasterProgramKey mp)
+                            [htxt (masterProgramName mp), htxt " (",
+                             htxt "Beginn : ",
+                             htxt (showSemester (masterProgramTerm mp,
+                                                 masterProgramYear mp)),
+                             htxt ")"]])
+                mprogs ++
+            map (\sp ->
+                 [htxt "Masterprogramm ",
+                  ehref
+                   ("?AdvisorStudyProgram/show/"++showAdvisorStudyProgramKey sp)
+                        [htxt (advisorStudyProgramName sp), htxt " (",
+                         htxt "Beginn : ",
+                         htxt (showSemester (advisorStudyProgramTerm sp,
+                                             advisorStudyProgramYear sp)),
+                         htxt ")"]])
+                 sprogs)]) ++
    [spEHref ("?ModData/number/"++showModDataKey moddata++
              "/"++showSemesterCode modinstsem)
             [htxt $ "Anzahl der Masterstudierenden"]]

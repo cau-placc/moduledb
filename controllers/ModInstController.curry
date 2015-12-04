@@ -65,9 +65,14 @@ editAllModInstController md cntcontroller = do
    allinsts <- runQ $ transformQ (mergeSort leqModInst . filterModInsts admin)
                                  (queryInstancesOfMod (modDataKey md))
    allmpkeys <- runQ $ getMasterProgramKeysOfModInst allinsts
+   allspkeys <- runJustT $
+                 mapT (\mi -> getDB (getAdvisorStudyProgramKeysOfModInst mi))
+                      allinsts
    allUsers <- runQ (transformQ (mergeSort leqUser) queryAllUsers)
    -- select instances not used in master programs:
-   let editinsts = map fst (filter (null . snd) (zip allinsts allmpkeys))
+   let editinsts = map (\ (mi,_,_) -> mi)
+                       (filter (\ (_,mks,sks) -> null mks && null sks)
+                               (zip3 allinsts allmpkeys allspkeys))
    return (editModInstView admin editinsts
              allUsers (updateAllModInstController editinsts cntcontroller))
  where
@@ -172,23 +177,27 @@ listModInstController =
      else
        maybe (displayError "Illegal URL")
        (\mik -> do
-         mi <- runJustT $ getModInst mik
-         user <- runJustT $ getUser (modInstUserLecturerModsKey mi)
-         moddata <- runJustT $ getModData (modInstModDataModuleInstancesKey mi)
+         mi       <- runJustT $ getModInst mik
+         user     <- runJustT $ getUser (modInstUserLecturerModsKey mi)
+         moddata  <- runJustT $ getModData (modInstModDataModuleInstancesKey mi)
          [mpkeys] <- runQ $ getMasterProgramKeysOfModInst [mi]
-         mps <- runJustT (mapT getMasterProgram mpkeys)
-         return (singleModInstView mi moddata user mps))
+         mps      <- runJustT (mapT getMasterProgram mpkeys)
+         spkeys   <- runQ (getAdvisorStudyProgramKeysOfModInst mi)
+         sprogs   <- runJustT (mapT getAdvisorStudyProgram spkeys)
+         return (singleModInstView mi moddata user mps sprogs))
        (readModInstKey (head args))
 
 --- Shows a ModInst entity.
 showModInstController :: ModInst -> Controller
 showModInstController mi =
   checkAuthorization (modInstOperationAllowed (ShowEntity mi)) $ \_ ->
-   (do user <- runJustT $ getUser (modInstUserLecturerModsKey mi)
-       moddata <- runJustT $ getModData (modInstModDataModuleInstancesKey mi)
+   (do user     <- runJustT $ getUser (modInstUserLecturerModsKey mi)
+       moddata  <- runJustT $ getModData (modInstModDataModuleInstancesKey mi)
        [mpkeys] <- runQ $ getMasterProgramKeysOfModInst [mi]
-       mps <- runJustT (mapT getMasterProgram mpkeys)
-       return (singleModInstView mi moddata user mps))
+       mps      <- runJustT (mapT getMasterProgram mpkeys)
+       spkeys   <- runQ (getAdvisorStudyProgramKeysOfModInst mi)
+       sprogs   <- runJustT (mapT getAdvisorStudyProgram spkeys)
+       return (singleModInstView mi moddata user mps sprogs))
 
 --- Gets the associated ModData entity for a given ModInst entity.
 getModuleInstancesModData :: ModInst -> Transaction ModData

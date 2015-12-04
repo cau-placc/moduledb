@@ -131,6 +131,7 @@ module MDB
   , queryModDataKeysOfCategory, getModDataKeyCategorys
   , queryHasUnivisEntry, masterProgramKeyToString
   , queryMasterProgramOfUser, queryInfoOfMasterProgram
+  , getAdvisorStudyProgramKeysOfModInst
   , queryMasterProgramMainInfos
   , queryModKeysOfSem, queryExamOfMod, queryUnivisURL
   , readTermDB, storeTermDB
@@ -3293,6 +3294,34 @@ queryInfoOfMasterProgram mpk =
    (KeyDatabase.someDBKeyInfos masterProgInfoEntry
                                [6 @= masterProgramKeyToKey mpk])
 -}
+
+-----------------------------------------------------------------------
+--- Database table for UnivisInfo entities.
+advisorModule'Table :: DBTable AdvisorModule
+advisorModule'Table = dbTable advisorModuleEntry keytuple2AdvisorModule
+
+advisorModule'ProgKey :: DBAttr AdvisorModule AdvisorStudyProgramKey
+advisorModule'ProgKey =
+  dbKeyAttr advisorModule'Table 1
+            advisorStudyProgramKeyToKey AdvisorStudyProgramKey
+
+advisorModule'ModInstKey :: DBAttr AdvisorModule ModInstKey
+advisorModule'ModInstKey =
+  dbKeyAttr advisorModule'Table 3 modInstKeyToKey ModInstKey
+
+--- Query to get the AdvisorModules where a module instance is used.
+queryAdvisorStudyProgramOfModInst :: ModInst -> Query [AdvisorModule]
+queryAdvisorStudyProgramOfModInst modinst =
+ selectFrom advisorModule'Table
+   `whereQ` advisorModule'ModInstKey @== modInstKey modinst
+
+--- Gets all AdvisorStudyProgram (keys) for each ModInst of a given
+--- ModInst list.
+getAdvisorStudyProgramKeysOfModInst :: ModInst
+                                    -> Query [AdvisorStudyProgramKey]
+getAdvisorStudyProgramKeysOfModInst mi =
+  transformQ (map advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey)
+                  (queryAdvisorStudyProgramOfModInst mi)
 
 -----------------------------------------------------------------------
 --- Database table for UnivisInfo entities.
