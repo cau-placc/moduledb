@@ -87,29 +87,45 @@ pingAnswer = return (answerEncText "iso-8859-1" "ALIVE")
 -------------------------------------------------------------------------
 -- Script for generating csv of module infos:
 allModuleCSV :: IO HtmlForm
-allModuleCSV = runQ queryAllModDatas >>= moduleCSV
+allModuleCSV = do
+  studyprogs <- runQ queryAllStudyPrograms
+  runQ queryAllModDatas >>= moduleCSV studyprogs
 
 -- Generate csv of module infos:
-moduleCSV :: [ModData] -> IO HtmlForm
-moduleCSV mods = do
+moduleCSV :: [StudyProgram] -> [ModData] -> IO HtmlForm
+moduleCSV studyprogs mods = do
   csvfields <- mapIO mod2csv (filter isNotCopy mods)
   return (answerEncText "iso-8859-1" (showCSV csvfields))
  where
   isNotCopy m = take 5 (reverse (modDataCode m)) /= "ypoc-"
 
+  studyprogsKeysShortNames =
+        map (\sp -> (studyProgramKey sp, studyProgramShortName sp)) studyprogs
+
   mod2csv m = do
     modinsts <- runQ $ queryInstancesOfMod (modDataKey m)
-    cats <- runJustT $ getModDataCategorys m
+    cats <- runJustT $ getModDataCategories m
     responsibleUser <- runJustT (getResponsibleUser m)
     return
       [modDataCode m,modDataNameG m,modDataNameE m,
        if null (modDataURL m) then userToShortView responsibleUser else "",
        showDiv10 (modDataECTS m),
-       concat . intersperse "|" . sortCats . nub . map categoryShortName $ cats,
+       concat . intersperse "|" . sortCats . nub . map categoryShortName
+                                                 . filterCats $ cats,
        concat . intersperse "|" . map (showSemester . modInstSemester)
               $ modinsts]
 
-  -- Sorting categories according to a wish of Corinna Dort:
+  -- Filter out categories that belong to new BSc15 study programs
+  -- that are identified by their short name which ends with "(15)".
+  -- This is necessary as long as Corinna Ohlsen does not support
+  -- a reasonable solution in the StudiDB.
+  filterCats =
+    filter (\c -> maybe True -- this case should not occur
+                        (\shortname -> not ("(15)" `isSuffixOf` shortname))
+                        (lookup (categoryStudyProgramProgramCategoriesKey c)
+                                studyprogsKeysShortNames))
+                                
+  -- Sorting categories according to a wish of Corinna Ohlsen:
   sortCats = mergeSort leqCat
     where leqCat c1 c2 = c1=="G" || (c1=="A" && c2/="G") ||
                          (c1/="G" && c1/="A" && c1 <= c2)

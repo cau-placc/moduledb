@@ -118,14 +118,14 @@ getModInstCatsInSemesters semyear n =
                   (lookup (modInstModDataModuleInstancesKey mi) mdkcats))) mis)
 
 --- Get module instances (and their categories) belonging to given
---- list of categories (specified by their CatKeys)
+--- list of categories (specified by their ShortNames)
 --- of next n semesters from a given one:
 getCategoryModInstInSemesters :: (String,Int) -> Int -> [String]
                           -> Transaction [(ModInst,[Category])]
 getCategoryModInstInSemesters semyear n catkeys =
   getModInstCatsInSemesters semyear n |>>=
   returnT .
-    (filter (\ (_,cats) -> any (\c -> categoryCatKey c `elem` catkeys) cats))
+    (filter (\ (_,cats) -> any (\c -> categoryShortName c `elem` catkeys) cats))
 
 --- Get master module instances (and their module data and categories)
 --- of next n semesters from a given one:

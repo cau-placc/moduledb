@@ -96,8 +96,8 @@ wMasterProgInfo modinsts =
   mvmods = retrieveCat "MV"
 
   retrieveCat catkey = map (transModInst catkey) $
-    sortModSem (filter (\ (_,_,cats) -> catkey `elem` map categoryCatKey cats)
-                       modinsts)
+   sortModSem (filter (\ (_,_,cats) -> catkey `elem` map categoryShortName cats)
+                      modinsts)
 
   wPara = wTextArea (4,70)
 
