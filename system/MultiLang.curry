@@ -99,8 +99,10 @@ english2german =
  ,("Master programs (until SS15)","Masterprogramme (bis SS15)")
  ,("Master programs in computer science","Programme im Masterstudiengang Informatik")
  ,("Master studies in computer science:","Masterstudium Informatik:")
- ,("Maximal ECTS points","Maximale ECTS-Punkte")
- ,("Minimal ECTS points","Minimale ECTS-Punkte")
+ ,("Maximal ECTS points in this category",
+   "Maximale ECTS-Punkte in dieser Kategorie")
+ ,("Minimal ECTS points in this category",
+   "Minimale ECTS-Punkte in dieser Kategorie")
  ,("Module categories:" ,"Modulkategorien:")
  ,("Module code:"       ,"Modulcode:")
  ,("Module Information System","Modulinformationssystem Informatik")

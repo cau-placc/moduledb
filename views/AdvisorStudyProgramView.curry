@@ -249,39 +249,41 @@ showAdvisorStudyProgramView
    par [HtmlText (docText2html (advisorStudyProgramPrereq asprog))],
    h4 [htxt $ t "Comments"++":"],
    par [HtmlText (docText2html (advisorStudyProgramComments asprog))],
-   h3 [htxt $ t "Program overview by categories:"]] ++
-  concatMap
-    (\c -> [h4 ([catRef c] ++
+   h3 [htxt $ t "Program overview by categories:"],
+   spTable $
+     concatMap
+       (\c -> [[[catRef c],
                 (if admin || editallowed
-                 then [spSmallButton "Modul hinzufügen"
-                                     (nextController (addcatmodcontroller c))]
-                 else []))] ++ showCategoryInfo sinfo c ++
-           let camods = filter (isAdvisorModuleOfCat c) amdatas
-            in if null camods then []
-               else [ulist (map showAdvisorModuleData camods)])
-    cats
+                  then [spSmallButton "Modulempfehlung hinzufügen"
+                                      (nextController (addcatmodcontroller c))]
+                  else [])],
+               [showCategoryInfo sinfo c]] ++
+            let camods = filter (isAdvisorModuleOfCat c) amdatas
+             in if null camods then []
+                else (map showAdvisorModuleData camods))
+       cats]
  where
    t = translate sinfo
    
    startSem  = advisorStudyProgramTerm asprog
    startYear = advisorStudyProgramYear asprog
 
-   catRef c = ehref ("?Category/show/"++showCategoryKey c)
+   catRef c = hrefCategory ("?Category/show/"++showCategoryKey c)
                     [htxt $ (langSelect sinfo categoryNameE categoryName) c]
                        
    isAdvisorModuleOfCat cat (am,_,_) =
      advisorModuleCategoryAdvisorCategorizingKey am == categoryKey cat
 
    showAdvisorModuleData (am,modinst,md) =
-     [(if mandatory then bold else italic) [modtitle],
+    [[(if mandatory then bold else italic) [modtitle],
       htxt $ " (" ++ showDiv10 (modDataECTS md) ++ " ECTS, "
                  ++ showSemester (modInstSemester modinst) ++ ", " ++
                  (if mandatory then "Pflicht" else "empfohlen")
-                 ++ ")"] ++
+                 ++ ")"],
      if admin || editallowed
-       then [spSmallButton "Modul löschen"
+       then [spSmallButton "Modulempfehlung löschen"
                            (nextController (delmodcontroller am))]
-       else []
+       else []]
     where
       mandatory = advisorModuleMandatory am
       modtitle = ehref ("?ModData/show/"++showModDataKey md)

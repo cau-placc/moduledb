@@ -580,8 +580,7 @@ spShortSelectionInitial :: CgiRef -> [(String,String)] -> Int -> HtmlExp
 spShortSelectionInitial cref sellist sel =
   selectionInitial cref sellist sel `addClass` "shorttextinput"
 
---- Standard table in Spicey. Visualize it with a grid or with
---- a table if there are too many columns.
+--- Standard table in Spicey.
 spTable :: [[[HtmlExp]]] -> HtmlExp
 spTable items = table items  `addClass` "table table-hover table-condensed"
 

@@ -181,11 +181,13 @@ leqCategory x1 x2 =
 
 showCategoryInfo :: UserSessionInfo -> Category -> [HtmlExp]
 showCategoryInfo sinfo cat =
-  (if null catcmt then [] else [par [htxt catcmt]]) ++
   (if minpts==0 && maxpts==0 then []
-   else [par [htxt $ t "Minimal ECTS points" ++": "++ showDiv10 minpts ++
+   else [par [htxt $ t "Minimal ECTS points in this category" ++": "++
+                     showDiv10 minpts ++
                      " / " ++
-                     t "Maximal ECTS points" ++": "++ showDiv10 maxpts]])
+                     t "Maximal ECTS points in this category" ++": "++
+                     showDiv10 maxpts]]) ++
+  (if null catcmt then [] else [par [htxt catcmt]])
  where
   catcmt = categoryComment cat
   minpts = categoryMinECTS cat
@@ -209,9 +211,11 @@ showCategoryInfo sinfo cat =
 ---   has a UnivIS entry (if this list is empty, UnivIS entries should not
 ---   be shown)
 listCategoryView
-  :: UserSessionInfo -> Either StudyProgram String
+  :: UserSessionInfo
+  -> Either StudyProgram String
   -> [(Either Category String,[(ModData,[Maybe (ModInst,Int)],[Bool])])]
-  -> [(String,Int)] -> [User]
+  -> [(String,Int)]
+  -> [User]
   -> (Either StudyProgram String -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller)
   -> ([(String,[ModData])] -> Controller)
@@ -240,9 +244,10 @@ listCategoryView sinfo mbsprog catmods semperiod users
                                             (head (listCategory c)))])
                    (\s->[style "category" [htxt s]])
                    mbcat
-            : if null mods then []
+            : if null mods
+              then []
               else map (\s -> [style "category" [stringToHtml s]])
-                       ("ECTS":map showSemester semperiod)) :
+                       ("ECTS" : map showSemester semperiod)) :
            map (\ (md,mis,univs) -> modDataToCompactListView sinfo md ++
                   if null univs
                   then map (maybe [] showModInst) mis
@@ -260,9 +265,13 @@ listCategoryView sinfo mbsprog catmods semperiod users
           mbsprog
     else
      [par ([bold [htxt $ t "Semester planning"], htxt $ t " from ",
-            spShortSelectionInitial fromsem semSelection lowerSemesterSelection,
+            spShortSelectionInitial fromsem semSelection
+              (if null semperiod then lowerSemesterSelection
+                                 else findSemesterSelection (head semperiod)),
             htxt $ t " to ",
-            spShortSelectionInitial tosem semSelection upperSemesterSelection,
+            spShortSelectionInitial tosem semSelection
+              (if null semperiod then upperSemesterSelection
+                                 else findSemesterSelection (last semperiod)),
             htxt ": ",
             spSmallButton (t "Show") (showPlan False False False mbsprog)] ++
            (maybe []

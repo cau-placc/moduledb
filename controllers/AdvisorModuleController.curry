@@ -143,15 +143,12 @@ showAdvisorModuleController advisorModule =
   checkAuthorization
    (advisorModuleOperationAllowed (ShowEntity advisorModule))
    $ (\sinfo ->
-     do advisedProgramModuleInstancesModInst <- runJustT
-                                                 (getAdvisedProgramModuleInstancesModInst
-                                                   advisorModule)
-        advisorCategorizingCategory <- runJustT
-                                        (getAdvisorCategorizingCategory
-                                          advisorModule)
-        advisorProgramModulesAdvisorStudyProgram <- runJustT
-                                                     (getAdvisorProgramModulesAdvisorStudyProgram
-                                                       advisorModule)
+     do advisedProgramModuleInstancesModInst <-
+          runJustT (getAdvisedProgramModuleInstancesModInst advisorModule)
+        advisorCategorizingCategory <-
+          runJustT (getAdvisorCategorizingCategory advisorModule)
+        advisorProgramModulesAdvisorStudyProgram <-
+          runJustT (getAdvisorProgramModulesAdvisorStudyProgram advisorModule)
         return
          (showAdvisorModuleView sinfo advisorModule
            advisedProgramModuleInstancesModInst

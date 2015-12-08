@@ -13,7 +13,8 @@ module Helpers(LogEvent(..),logEvent,
                quoteUnknownLatexCmd,
                showSemester, showLongSemester, showSemesterCode,
                nextSemester, prevSemester, leqSemester,
-               semesterSelection, lowerSemesterSelection, upperSemesterSelection,
+               semesterSelection, findSemesterSelection,
+               lowerSemesterSelection, upperSemesterSelection,
                currentUpperSemester,
                imageNB, wTerm, wCurrentYear, wYear, wVisible,
                wLargeString, wLargeRequiredString,
@@ -270,12 +271,15 @@ showSemesterCode (sem,year) =
    in (if sem=="SS" then "ss" else "ws") ++ showDigit2 yr2
 
 -- compute following semester:
+nextSemester :: (String,Int) -> (String,Int)
 nextSemester (sem,year) = if sem=="SS" then ("WS",year) else ("SS",year+1)
 
 -- compute previous semester:
+prevSemester :: (String,Int) -> (String,Int)
 prevSemester (sem,year) = if sem=="WS" then ("SS",year) else ("WS",year-1)
 
 -- compare semesters:
+leqSemester :: (String,Int) -> (String,Int) -> Bool
 leqSemester (s1,y1) (s2,y2) = y1 < y2 || (y1 == y2 && (s1 == s2 || s1 == "SS"))
 
 -- a list of semesters to select in some WUIs
@@ -283,12 +287,19 @@ semesterSelection :: [(String,Int)]
 semesterSelection =
   take 14 (iterate nextSemester (iterate prevSemester currentSemester !! 6))
 
--- preselected lower and upper bound index of a semester list:
-lowerSemesterSelection =
-  maybe (error "Helpers.lowerSemesterSelection: current semester not found!")
+-- find the index of a given semester in the semesterSelection list:
+findSemesterSelection :: (String,Int) -> Int
+findSemesterSelection sem =
+  maybe (error $ "Helpers.findSemesterSelection: semester " ++
+                 showSemester sem ++ " not found!")
         id
-        (findIndex (==currentSemester) semesterSelection)
+        (findIndex (==sem) semesterSelection)
 
+-- preselected lower and upper bound index of a semester list:
+lowerSemesterSelection :: Int
+lowerSemesterSelection = findSemesterSelection currentSemester
+
+upperSemesterSelection :: Int
 upperSemesterSelection = lowerSemesterSelection + 3
 
 -- the upper semester in current period views:
