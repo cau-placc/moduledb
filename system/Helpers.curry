@@ -55,6 +55,9 @@ data LogEvent =
   | DeleteMasterProgram MasterProgram
   | NewMasterProgInfo MasterProgInfo | UpdateMasterProgInfo MasterProgInfo
   | DeleteMasterProgInfo MasterProgInfo
+  | NewAdvisorStudyProgram AdvisorStudyProgram
+  | UpdateAdvisorStudyProgram AdvisorStudyProgram
+  | DeleteAdvisorStudyProgram AdvisorStudyProgram
 
 -- A info in the log file consists of info about the time,
 -- the current user, the remote host, and a log event.

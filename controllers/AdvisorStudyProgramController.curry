@@ -62,8 +62,10 @@ newAdvisorStudyProgramController =
            (mergeSort leqStudyProgram allStudyPrograms)
            user allUsers
            (\entity ->
-             transactionBindController (createAdvisorStudyProgramT entity)
-                                       showAdvisorStudyProgramController)
+             transactionBindController
+               (createAdvisorStudyProgramT entity)
+               (\asp -> logEvent (NewAdvisorStudyProgram asp) >>
+                        showAdvisorStudyProgramController asp))
            listAdvisorStudyProgramController)
        (maybe Nothing
               (\ln -> find (\u -> userLogin u == ln) allUsers)
@@ -109,8 +111,9 @@ editAdvisorStudyProgramController advisorStudyProgramToEdit =
            allStudyPrograms
            allUsers
            (\entity ->
-             transactionController (updateAdvisorStudyProgramT entity)
-                                   showctrl)
+             transactionController
+               (updateAdvisorStudyProgramT entity)
+               (logEvent (UpdateAdvisorStudyProgram entity) >> showctrl))
            showctrl))
 
 --- A show controller for a given AdvisorStudyProgram key:
@@ -128,20 +131,22 @@ updateAdvisorStudyProgramT advisorStudyProgram =
 --- Deletes a given AdvisorStudyProgram entity (after asking for confirmation)
 --- and proceeds with the list controller.
 deleteAdvisorStudyProgramController :: AdvisorStudyProgram -> Controller
-deleteAdvisorStudyProgramController advisorStudyProgram =
+deleteAdvisorStudyProgramController asprog =
   checkAuthorization
-   (advisorStudyProgramOperationAllowed (DeleteEntity advisorStudyProgram))
+   (advisorStudyProgramOperationAllowed (DeleteEntity asprog))
    $ (\_ ->
      confirmController
       [h3
         [htxt
           (concat
             ["Studienprogramm \""
-            ,advisorStudyProgramToShortView advisorStudyProgram
+            ,advisorStudyProgramToShortView asprog
             ,"\" wirklich löschen?"])]]
-      (transactionController (deleteAdvisorStudyProgramT advisorStudyProgram)
-        listAdvisorStudyProgramController)
-      (showAdvisorStudyProgramController advisorStudyProgram))
+      (transactionController
+        (deleteAdvisorStudyProgramT asprog)
+        (logEvent (DeleteAdvisorStudyProgram asprog) >>
+         listAdvisorStudyProgramController))
+      (showAdvisorStudyProgramController asprog))
 
 --- Transaction to delete a given AdvisorStudyProgram entity.
 deleteAdvisorStudyProgramT :: AdvisorStudyProgram -> Transaction ()
