@@ -364,7 +364,7 @@ singleModDataView sinfo editallowed modData responsibleUser
     [[[bold [stringToHtml $ t "Module code:"]],
       [stringToHtml (modDataCode modData)]],
      [[bold [stringToHtml $
-               langSelect sinfo "Title:" "Englische Bezeichnung:"]],
+               langSelect sinfo "German title:" "Englische Bezeichnung:"]],
       [stringToHtml ((langSelect sinfo modDataNameG modDataNameE) modData)]],
      [[bold [stringToHtml $ t "Person in charge:"]],
       [userToHtmlView responsibleUser]],
