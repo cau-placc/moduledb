@@ -271,7 +271,7 @@ getUserMenu login sinfo = do
             --,[href "?MasterProgram/new" [htxt $ t "New master program"]]
             ,[href "?AdvisorStudyProgram/new" [htxt $ t "New master program"]]
             ]) ++
-      [[href "?MasterProgram/list" [htxt $ t "Master programs (until SS15)"]],
+      [--[href "?MasterProgram/list" [htxt $ t "Master programs (until SS15)"]]
        [href "?login" [htxt $ t ("Log" ++ maybe "in" (const "out") login)]]]
 
 --- The title of this application (shown in the header).

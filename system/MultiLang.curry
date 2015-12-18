@@ -9,7 +9,8 @@ module MultiLang (
   toEnglish,
   translate, langSelect,
   loginEmailText, loginText, mainTitle, mainExplanation,
-  masterStudyNote, minorSubjectNote, sendPasswordCmt, ssComment,
+  masterStudyNote, masterStudyOldNote, minorSubjectNote,
+  sendPasswordCmt, ssComment,
   timeoutText, unknownUser, useURLText
  ) where
 
@@ -220,6 +221,15 @@ masterStudyNote sinfo = langSelect sinfo
    htxt " durchführen! ",
    htxt "Damit wird weitgehend gewährleistet, dass das geplante Studium ",
    htxt "auch wirklich durchführbar ist."]
+   
+masterStudyOldNote sinfo = langSelect sinfo
+  [htxt "The master programs until SS15 can be found ",
+   spEHref oldMasterProgURL [bold [htxt "here"]], htxt "."]
+  [htxt "Die Masterprogramme bis zum Sommersemester 2015 sind ",
+   spEHref oldMasterProgURL [bold [htxt "hier"]],
+   htxt " zu finden."]
+ where
+  oldMasterProgURL = "?MasterProgram/list" 
    
 minorSubjectNote sinfo = langSelect sinfo
   [italic [htxt "Note: "],

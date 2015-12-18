@@ -310,8 +310,9 @@ leqAdvisorStudyProgram (x1,sp1) (x2,sp2) =
 listAdvisorStudyProgramView
   :: UserSessionInfo -> [(AdvisorStudyProgram,StudyProgram)] -> [HtmlExp]
 listAdvisorStudyProgramView sinfo advisorStudyPrograms =
-  [h1 [htxt $ t "Study programs at the department of computer science"]
-      , hrule] ++
+  [h1 [htxt $ t "Study programs at the department of computer science"]] ++
+  masterStudyOldNote sinfo ++
+  [hrule] ++
   if null advisorprogramgroups then [] else
    concatMap (\ag -> [h2 [htxt $ t "Start: " ++
                           let asp = fst (head ag) in
