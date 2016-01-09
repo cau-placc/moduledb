@@ -47,6 +47,7 @@ import Helpers
 import Distribution
 import MultiLang
 import SessionInfo
+import List(last)
 
 ---------------- vvvv -- Framework functions -- vvvv -----------------------
 
@@ -272,7 +273,8 @@ getUserMenu login sinfo = do
             ,[href "?AdvisorStudyProgram/new" [htxt $ t "New master program"]]
             ]) ++
       [--[href "?MasterProgram/list" [htxt $ t "Master programs (until SS15)"]]
-       [href "?login" [htxt $ t ("Log" ++ maybe "in" (const "out") login)]]]
+       --[href "?login" [htxt $ t ("Log" ++ maybe "in" (const "out") login)]]
+      ]
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String
@@ -294,13 +296,13 @@ addLayout viewblock = do
   return $
     stdNavBar usermenu login sinfo ++
     [blockstyle "container-fluid" $
-      [HtmlStruct "header" [("class","hero-unit")] [h1 mainTitle],
+      [HtmlStruct "header" [("class","jumbotron")] [h1 mainTitle],
        if null msg
         then HtmlStruct "header" [("class","pagemessage pagemessage-empty")]
                         [nbsp]
         else HtmlStruct "header" [("class","pagemessage")] [htxt msg],
-       blockstyle "row-fluid"
-        [blockstyle "span12" mainDoc]] ++
+       blockstyle "row"
+        [blockstyle "col-md-12" mainDoc]] ++
        (if admin then adminNavBar routemenu1 ++ adminNavBar routemenu2
                  else []) ++
       [hrule,
@@ -317,15 +319,15 @@ titledSideMenu title items =
   (if null title
    then []
    else [HtmlStruct "small" [] [htxt title]]) ++
-  [ulist items `addClass` "nav nav-list"]
+  [ulist items `addClass` "nav nav-sidebar"]
 
 --- Create contents in the main page area with a side menu.
 mainContentsWithSideMenu :: [[HtmlExp]] -> [HtmlExp] -> [HtmlExp]
 mainContentsWithSideMenu menuitems contents =
-  [blockstyle "row-fluid"
-    [blockstyle "span3"
-      [blockstyle "well sidebar-nav" (titledSideMenu "" menuitems)],
-       blockstyle "span9" contents]]
+  [blockstyle "row"
+    [blockstyle "col-sm-3 col-md-3"
+      [blockstyle "well nav-sidebar" (titledSideMenu "" menuitems)],
+       blockstyle "col-sm-9 col-md-9" contents]]
 
 -- Standard navigation bar at the top.
 -- The first argument is the route menu (a ulist).
@@ -333,24 +335,42 @@ mainContentsWithSideMenu menuitems contents =
 stdNavBar :: HtmlExp -> Maybe String -> UserSessionInfo -> [HtmlExp]
 stdNavBar routemenu login sinfo =
   [blockstyle "navbar navbar-inverse navbar-fixed-top"
-    [blockstyle "navbar-inner"
-      [blockstyle "container-fluid"
-         [addDropdownItem routemenu `addClass` "nav",
-          par [bold [if languageOfSession sinfo == English
-                     then href "?langDE" [htxt "[Deutsch]"]
-                     else href "?langEN" [htxt "[English]"]], nbsp, nbsp, nbsp,
-               userIcon, nbsp, htxt $ maybe (t "not logged in") id login]
-            `addClass` "navbar-text pull-right"]
-      ]
+    [blockstyle "container-fluid"
+      [navBarHeaderItem,
+       HtmlStruct "div" [("id","topnavbar"),
+                         ("class","navbar-collapse collapse")]
+         [routemenu `addClass` "nav navbar-nav",
+          appendDropdownItem
+            (ulist
+              [[href "?login"
+                 (maybe [loginIcon, nbsp, htxt (t "Login")]
+                        (\n -> [logoutIcon, nbsp,
+                                htxt $ t "Logout" ++ " ("++n++")"])
+                        login)]
+              ,[if languageOfSession sinfo == English
+                  then href "?langDE" [htxt "[Deutsch]"]
+                  else href "?langEN" [htxt "[English]"]]]
+             `addClass` "nav navbar-nav navbar-right")]]
     ]
   ]
  where
   t = translate sinfo
 
-  userIcon = italic [] `addClass` "icon-user icon-white"
-
-  addDropdownItem (HtmlStruct tag ats items) =
-    HtmlStruct tag ats (dropDownMenuItem : items)
+  navBarHeaderItem =
+    blockstyle "navbar-header"
+      [HtmlStruct "button"
+        [("type","button"),("class","navbar-toggle collapsed"),
+         ("data-toggle","collapse"),("data-target","#topnavbar"),
+         ("aria-expanded","false"),("aria-controls","navbar")]
+        [textstyle "sr-only" "Toggle navigation",
+         textstyle "icon-bar" "",
+         textstyle "icon-bar" "",
+         textstyle "icon-bar" ""],
+       href "?" [homeIcon, htxt " MDB"] `addClass` "navbar-brand"]
+       
+  appendDropdownItem (HtmlStruct tag ats items) =
+    HtmlStruct tag ats
+      (take (length items - 1) items ++ [dropDownMenuItem] ++ [last items])
 
   dropDownMenuItem =
     HtmlStruct "li" [("class","dropdown")]
@@ -367,7 +387,7 @@ stdNavBar routemenu login sinfo =
             (t "Department of Computer Science")
    ,toEHref "http://www.uni-kiel.de" "CAU Kiel"
    ,litem [htxt " "] `addClass` "divider"
-   ,litem [htxt $ t "Supported by:"] `addClass` "nav-header"
+   ,litem [htxt $ t "Supported by:"] `addClass` "dropdown-header"
    ,toEHref "http://www.curry-language.org"
             ("Curry ("++t "programming language"++")")
    ,toEHref "http://www.informatik.uni-kiel.de/~pakcs/spicey"
@@ -378,17 +398,13 @@ stdNavBar routemenu login sinfo =
 
   toEHref url s = litem [ehref url [arrowIcon, nbsp, htxt s]]
 
-  arrowIcon = italic [] `addClass` "icon-arrow-right"
-
 -- Admin navigation bar at the bottom.
 -- The first argument is the menu (a ulist).
 adminNavBar :: HtmlExp -> [HtmlExp]
 adminNavBar routemenu =
   [blockstyle "navbar navbar-inverse"
-    [blockstyle "navbar-inner"
-      [blockstyle "container-fluid"
-         [routemenu `addClass` "nav"]
-      ]
+    [blockstyle "container-fluid"
+         [routemenu `addClass` "nav navbar-nav"]
     ]
   ]
 
@@ -403,12 +419,12 @@ getForm viewBlock =
     cookie  <- sessionCookie
     body    <- addLayout viewBlock
     return $ HtmlForm spiceyTitle
-                     ([responsiveView, cookie, icon, MultipleHandlers] ++
-                      map (\f -> FormCSS $ "css/"++f++".css")
-                          ["bootstrap","bootstrap-responsive","style"] ++
-                      map (\f -> FormJScript $ "js/"++f++".js")
-                          ["jquery","bootstrap-dropdown"])
-                     body
+                ([responsiveView, cookie, icon, MultipleHandlers] ++
+                 map (\f -> FormCSS $ "css/"++f++".css")
+                     ["bootstrap.min","style"])
+                (body ++
+                 map (\f -> HtmlStruct "script" [("src","js/"++f++".js")] [])
+                     ["jquery.min","bootstrap.min"])
  where
    responsiveView =
      formMetaInfo [("name","viewport"),
@@ -535,12 +551,12 @@ hrefUnivis = spEHrefBlock
 --- Hypertext reference in Spicey (rendered as a block button):
 spHref :: String -> [HtmlExp] -> HtmlExp
 spHref ref hexps =
-  href ref hexps `addClass` "btn btn-small"
+  href ref hexps `addClass` "btn btn-sm btn-default"
 
 --- Hypertext reference in Spicey (rendered as a block button):
 spHrefBlock :: String -> [HtmlExp] -> HtmlExp
 spHrefBlock ref hexps =
-  href ref hexps `addClass` "btn btn-small btn-block"
+  href ref hexps `addClass` "btn btn-sm btn-block"
 
 --- Hypertext reference in Spicey (rendered as an info block button):
 spHrefInfoBlock :: String -> [HtmlExp] -> HtmlExp
@@ -573,7 +589,7 @@ spPrimButton label handler =
 --- Small input button in Spicey (rendered as a small button):
 spSmallButton :: String -> HtmlHandler -> HtmlExp
 spSmallButton label handler =
-  button label handler `addClass` "btn btn-small"
+  button label handler `addClass` "btn btn-sm"
 
 --- Short selectionInitial input field:
 spShortSelectionInitial :: CgiRef -> [(String,String)] -> Int -> HtmlExp
@@ -589,6 +605,16 @@ spHeadedTable :: [[[HtmlExp]]] -> HtmlExp
 spHeadedTable items =
   headedTable items  `addClass` "table table-hover table-condensed"
 
+
+--------------------------------------------------------------------------
+-- Icons:
+
+homeIcon   = glyphicon "home"
+loginIcon  = glyphicon "log-in"
+logoutIcon = glyphicon "log-out"
+arrowIcon  = glyphicon "arrow-right"
+
+glyphicon n = textstyle ("glyphicon glyphicon-"++n) ""
 
 --------------------------------------------------------------------------
 -- The page messages are implemented by a session store.

@@ -275,5 +275,5 @@ useURLText sinfo = langSelect sinfo
 
 spEHref :: String -> [HtmlExp] -> HtmlExp
 spEHref ref hexps =
-  href ref hexps `addClass` "btn btn-small"
+  href ref hexps `addClass` "btn btn-sm btn-default"
                  `addAttr` ("target","_blank")
