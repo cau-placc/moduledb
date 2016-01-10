@@ -579,7 +579,7 @@ spEHrefInfoBlock ref hexps =
 --- Input button in Spicey (rendered as a default button):
 spButton :: String -> HtmlHandler -> HtmlExp
 spButton label handler =
-  button label handler `addClass` "btn"
+  button label handler `addClass` "btn btn-default"
 
 --- Primary input button in Spicey (rendered as a default primary button):
 spPrimButton :: String -> HtmlHandler -> HtmlExp
@@ -589,7 +589,7 @@ spPrimButton label handler =
 --- Small input button in Spicey (rendered as a small button):
 spSmallButton :: String -> HtmlHandler -> HtmlExp
 spSmallButton label handler =
-  button label handler `addClass` "btn btn-sm"
+  button label handler `addClass` "btn btn-sm btn-default"
 
 --- Short selectionInitial input field:
 spShortSelectionInitial :: CgiRef -> [(String,String)] -> Int -> HtmlExp
