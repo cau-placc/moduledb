@@ -263,9 +263,9 @@ getUserMenu login sinfo = do
   return $
      ulist $
       [--[href "?main" [htxt "Hauptseite"]],
-       [href "?StudyProgram/list" [htxt $ t "Study programs"]],
-       [href "?AdvisorStudyProgram/list" [htxt $ t "Master programs"]],
-       [href "?search" [htxt $ t "Search modules"]]] ++
+       [href "?StudyProgram/list" [stprogIcon, nbsp, htxt $ t "Study programs"]],
+       [href "?AdvisorStudyProgram/list" [adprogIcon, nbsp, htxt $ t "Master programs"]],
+       [href "?search" [searchIcon, nbsp, htxt $ t "Search modules"]]] ++
       (if login==Nothing
        then []
        else [[href ("?Category/user")   [htxt $ t "My modules"]]
@@ -617,7 +617,10 @@ homeIcon   = glyphicon "home"
 userIcon   = glyphicon "user"
 loginIcon  = glyphicon "log-in"
 logoutIcon = glyphicon "log-out"
+searchIcon = glyphicon "search"
 arrowIcon  = glyphicon "arrow-right"
+stprogIcon = glyphicon "book"
+adprogIcon = glyphicon "road"
 
 glyphicon n = textstyle ("glyphicon glyphicon-"++n) ""
 
