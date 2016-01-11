@@ -73,7 +73,7 @@ wModData :: Bool -> Bool -> [User] -> [(StudyProgram,[Category])]
                      String,Bool,User,[Category])
 wModData admin allowchangemcode userList spcats =
   withRendering
-   (w12Tuple (if allowchangemcode then wRequiredStringSize 15
+   (w12Tuple (if allowchangemcode then wLargeRequiredString
                                   else wConstant htxt)
              wLargeRequiredString wLargeString wCycle wPresence wECTS
              wLargeRequiredString wLength wURL wVisible wResp wCats)

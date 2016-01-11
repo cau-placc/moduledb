@@ -342,11 +342,15 @@ stdNavBar routemenu login sinfo =
          [routemenu `addClass` "nav navbar-nav",
           appendDropdownItem
             (ulist
-              [[href "?login"
-                 (maybe [loginIcon, nbsp, htxt (t "Login")]
-                        (\n -> [logoutIcon, nbsp,
-                                htxt $ t "Logout" ++ " ("++n++")"])
-                        login)]
+              [maybe [href "?login" [loginIcon, nbsp, htxt (t "Login")]]
+                     (\n -> [style "navbar-text"
+                              [href "?login"
+                                    [logoutIcon, nbsp, htxt (t "Logout")]
+                              ,htxt $ " (", style "text-success" [userIcon]
+                              ,htxt $ " "++n++")"
+                              ]
+                            ])
+                     login
               ,[if languageOfSession sinfo == English
                   then href "?langDE" [htxt "[Deutsch]"]
                   else href "?langEN" [htxt "[English]"]]]
@@ -421,7 +425,7 @@ getForm viewBlock =
     return $ HtmlForm spiceyTitle
                 ([responsiveView, cookie, icon, MultipleHandlers] ++
                  map (\f -> FormCSS $ "css/"++f++".css")
-                     ["bootstrap.min","style"])
+                     ["bootstrap.min","spicey"])
                 (body ++
                  map (\f -> HtmlStruct "script" [("src","js/"++f++".js")] [])
                      ["jquery.min","bootstrap.min"])
@@ -610,6 +614,7 @@ spHeadedTable items =
 -- Icons:
 
 homeIcon   = glyphicon "home"
+userIcon   = glyphicon "user"
 loginIcon  = glyphicon "log-in"
 logoutIcon = glyphicon "log-out"
 arrowIcon  = glyphicon "arrow-right"

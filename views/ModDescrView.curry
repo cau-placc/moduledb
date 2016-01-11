@@ -24,7 +24,7 @@ wModDescr =
              wPara wPara wPara wPara)
    (renderLabels modDescrLabelList)
  where
-  wPara = wTextArea (6,70)
+  wPara = wTextArea (6,70) `withRendering` renderWithFormControl
 
 --- Transformation from data of a WUI form to entity type ModDescr.
 tuple2ModDescr

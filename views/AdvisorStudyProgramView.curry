@@ -48,7 +48,7 @@ wAdvisorStudyProgram isnewprog sinfo studyProgramList userList =
   wAdvisor = if admin then wSelect userToShortView userList
                       else wConstant (stringToHtml . userToShortView)
 
-  wStr = wTextArea (6,70)
+  wStr = wTextArea (6,70) `withRendering` renderWithFormControl
 
 --- Transformation from data of a WUI form to entity type AdvisorStudyProgram.
 tuple2AdvisorStudyProgram

@@ -20,7 +20,7 @@ module Helpers(LogEvent(..),logEvent,
                wLargeString, wLargeRequiredString,
                wMediumString, wMediumRequiredString,
                largetextinputRendering, mediumtextinputRendering,
-               shorttextinputRendering )
+               shorttextinputRendering, renderWithFormControl )
   where
 
 import ConfigMDB
@@ -330,15 +330,14 @@ wYear = wInt `withRendering` shorttextinputRendering
 
 --- A WUI for the visibility of a module:
 wVisible :: WuiSpec Bool
-wVisible = wRadioBool [htxt "öffentlich sichtbar"]
+wVisible = wRadioBool [htxt "öffentlich sichtbar", nbsp, nbsp]
                       [htxt "nur zur internen Bearbeitung"]
 
 --- A WUI for a large input text line
-wLargeString = wStringSize 70 `withRendering` largetextinputRendering
+wLargeString = wString `withRendering` renderWithFormControl
 
 --- A WUI for a large required input text line
-wLargeRequiredString = wRequiredStringSize 70
-                         `withRendering` largetextinputRendering
+wLargeRequiredString = wRequiredString `withRendering` renderWithFormControl
 
 --- A WUI for a medium input text line
 wMediumString = wStringSize 70 `withRendering` mediumtextinputRendering
@@ -352,5 +351,7 @@ largetextinputRendering [s] = inline [s `addClass` "largetextinput"]
 mediumtextinputRendering [s] = inline [s `addClass` "mediumtextinput"]
 
 shorttextinputRendering [s] = inline [s `addClass` "shorttextinput"]
+
+renderWithFormControl = inline . map (`addClass` "form-control")
 
 -----------------------------------------------------------------------------
