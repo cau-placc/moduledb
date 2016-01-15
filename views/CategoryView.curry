@@ -311,17 +311,17 @@ listCategoryView sinfo mbsprog catmods semperiod users
    -- show UnivIS instance of a semester
    showUnivisInst md ((term,year),mbmi,hasinst)
      | hasinst && mbmi/=Nothing
-     = [univisRef [italic [htxt "UnivIS"]]
+     = [hrefUnivisInfo univisUrl [htxt "UnivIS"]
           `addTitle` (t "to UnivIS entry")]
      | hasinst
-     = [univisRef [textstyle "alert-danger" "!UnivIS!"]
+     = [hrefUnivisDanger univisUrl [htxt  "!UnivIS!"]
           `addTitle` (t "UnivIS entry without MDB entry!")]
      | mbmi/=Nothing
-     = [univisRef [textstyle "alert-danger" "???"]
+     = [hrefUnivisDanger univisUrl [htxt "???"]
           `addTitle` (t "Missing UnivIS entry!")]
      | otherwise                = [nbsp]
-    where univisRef = hrefUnivis ("?UnivisInfo/showmod/"++showModDataKey md++"/"
-                                                        ++term++"/"++show year)
+    where univisUrl = "?UnivisInfo/showmod/"++showModDataKey md++"/"
+                                            ++term++"/"++show year
 
    showModInst (mi,num) =
      let miuserkey = modInstUserLecturerModsKey mi

@@ -23,7 +23,8 @@ module Spicey (
   boolToHtml, maybeBoolToHtml, calendarTimeToHtml, maybeCalendarTimeToHtml,
   userDefinedToHtml, maybeUserDefinedToHtml,
   hrefStudyProgram, hrefCategory, smallHrefCategory,
-  hrefModule, smallHrefModule, hrefExtModule, hrefModInst, hrefUnivis,
+  hrefModule, smallHrefModule, hrefExtModule, hrefModInst,
+  hrefUnivisInfo, hrefUnivisDanger,
   spHref, spEHref,
   spButton, spPrimButton, spSmallButton, spTable, spHeadedTable, addTitle,
   spShortSelectionInitial,
@@ -308,9 +309,9 @@ addLayout viewblock = do
       [hrule,
        HtmlStruct "footer" []
         [par [htxt "powered by",
-              href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
-                   [image "images/spicey-logo.png" "Spicey"]
-                 `addAttr` ("target","_blank"),
+              withELink $
+                href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
+                     [image "images/spicey-logo.png" "Spicey"],
               htxt "Framework"]]]]
 
 --- Create a side menu containing a (possibly empty) title and a list of items:
@@ -541,16 +542,19 @@ smallHrefModule = spEHref
 
 --- Hypertext reference to an external module:
 hrefExtModule :: String -> [HtmlExp] -> HtmlExp
-hrefExtModule ref hexps =
-  hrefModule ref hexps `addAttr` ("target","_blank")
+hrefExtModule ref hexps = withELink $ hrefModule ref hexps
 
 --- Hypertext reference to a module instance:
 hrefModInst :: String -> [HtmlExp] -> HtmlExp
 hrefModInst = spEHrefBlock
 
 --- Hypertext reference to a UnivIS information:
-hrefUnivis :: String -> [HtmlExp] -> HtmlExp
-hrefUnivis = spEHrefBlock
+hrefUnivisInfo :: String -> [HtmlExp] -> HtmlExp
+hrefUnivisInfo = spEHrefInfoBlock
+
+--- Hypertext reference to a UnivIS information with "danger" rendering:
+hrefUnivisDanger :: String -> [HtmlExp] -> HtmlExp
+hrefUnivisDanger = spEHrefDangerBlock
 
 --- Hypertext reference in Spicey (rendered as a block button):
 spHref :: String -> [HtmlExp] -> HtmlExp
@@ -560,25 +564,33 @@ spHref ref hexps =
 --- Hypertext reference in Spicey (rendered as a block button):
 spHrefBlock :: String -> [HtmlExp] -> HtmlExp
 spHrefBlock ref hexps =
-  href ref hexps `addClass` "btn btn-sm btn-block"
+  href ref hexps `addClass` "btn btn-sm btn-default btn-block"
 
 --- Hypertext reference in Spicey (rendered as an info block button):
 spHrefInfoBlock :: String -> [HtmlExp] -> HtmlExp
 spHrefInfoBlock ref hexps =
   href ref hexps `addClass` "btn btn-info btn-block"
 
+--- Hypertext reference in Spicey (rendered as an info block button):
+spHrefDangerBlock :: String -> [HtmlExp] -> HtmlExp
+spHrefDangerBlock ref hexps =
+  href ref hexps `addClass` "btn btn-danger btn-block"
+
 --- External hypertext reference in Spicey (rendered as a block button):
 spEHref :: String -> [HtmlExp] -> HtmlExp
-spEHref ref hexps = spHref ref hexps `addAttr` ("target","_blank")
+spEHref ref hexps = withELink $ spHref ref hexps
 
 --- External hypertext reference in Spicey (rendered as a block button):
 spEHrefBlock :: String -> [HtmlExp] -> HtmlExp
-spEHrefBlock ref hexps = spHrefBlock ref hexps `addAttr` ("target","_blank")
+spEHrefBlock ref hexps = withELink $ spHrefBlock ref hexps
 
 --- External hypertext reference in Spicey (rendered as an info block button):
 spEHrefInfoBlock :: String -> [HtmlExp] -> HtmlExp
-spEHrefInfoBlock ref hexps =
-  spHrefInfoBlock ref hexps `addAttr` ("target","_blank")
+spEHrefInfoBlock ref hexps = withELink $ spHrefInfoBlock ref hexps
+
+--- External hypertext reference in Spicey (rendered as a danger block button):
+spEHrefDangerBlock :: String -> [HtmlExp] -> HtmlExp
+spEHrefDangerBlock ref hexps = withELink $ spHrefDangerBlock ref hexps
 
 --- Input button in Spicey (rendered as a default button):
 spButton :: String -> HtmlHandler -> HtmlExp
@@ -608,6 +620,10 @@ spTable items = table items  `addClass` "table table-hover table-condensed"
 spHeadedTable :: [[[HtmlExp]]] -> HtmlExp
 spHeadedTable items =
   headedTable items  `addClass` "table table-hover table-condensed"
+
+--- Makes a link to an external link.
+withELink :: HtmlExp -> HtmlExp
+withELink hexp = hexp `addAttr` ("target","_blank")
 
 --- Adds a title attribute to an HTML element.
 addTitle :: HtmlExp -> String -> HtmlExp
