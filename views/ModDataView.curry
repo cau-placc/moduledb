@@ -23,7 +23,7 @@ import SessionInfo
 import MultiLang
 
 --- The WUI specification of the module cycle:
-Cycle :: WuiSpec String
+wCycle :: WuiSpec String
 wCycle = wSelect id ["unregelmäßig","jedes Semester","jedes Jahr"]
 
 --- A WUI for the presence time of a module:
