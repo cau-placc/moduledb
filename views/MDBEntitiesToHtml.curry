@@ -589,29 +589,39 @@ univisInfoLabelList =
 
 -- Show the short name of each category and its study program
 -- for a given list of categories:
-showStudyProgCategories :: [StudyProgram] -> [Category] -> String
-showStudyProgCategories sprogs cats =
-  concat (intersperse ", " (map (showStudyProgCategory sprogs) cats))
+showStudyProgCategories :: UserSessionInfo -> [StudyProgram] -> [Category]
+                        -> String
+showStudyProgCategories sinfo sprogs cats =
+  concat (intersperse ", " (map (showStudyProgCategory sinfo True sprogs) cats))
 
 -----------------------------------------------------------------------------
 -- Show the short name of each category and its study program
 -- with a HTML link for a given list of categories:
-showStudyProgCategoriesAsHtml :: [StudyProgram] -> [Category] -> HtmlExp
-showStudyProgCategoriesAsHtml sprogs cats =
+showStudyProgCategoriesAsHtml :: UserSessionInfo -> [StudyProgram]
+                              -> [Category] -> HtmlExp
+showStudyProgCategoriesAsHtml sinfo sprogs cats =
   inline
     (intersperse nbsp --(stringToHtml " ")
        (map (\c -> smallHrefCategory ("?Category/show/"++showCategoryKey c)
-                     [stringToHtml (showStudyProgCategory sprogs c)])
+                     [stringToHtml (showStudyProgCategory sinfo True sprogs c)]
+                    `addTitle` (showStudyProgCategory sinfo False sprogs c))
             cats))
+ where
+  fullCatInfo sprog cat = categoryName cat ++
+        " (" ++ studyProgramName sprog ++ ")"
 
-showStudyProgCategory :: [StudyProgram] -> Category -> String
-showStudyProgCategory sprogs cat =
+showStudyProgCategory :: UserSessionInfo -> Bool -> [StudyProgram] -> Category
+                      -> String
+showStudyProgCategory sinfo short sprogs cat =
     let pkey = categoryStudyProgramProgramCategoriesKey cat
-     in categoryShortName cat ++
+     in (if short then categoryShortName
+                  else langSelect sinfo categoryNameE categoryName) cat ++
         " (" ++ showShortStudyProgramWithKey pkey ++ ")"
  where
-  showShortStudyProgramWithKey spk =
-    let sp = find (\p -> studyProgramKey p == spk) sprogs
-     in maybe "?" studyProgramShortName sp
+  showShortStudyProgramWithKey spk = 
+    maybe "?"
+          (if short then studyProgramShortName
+                    else langSelect sinfo studyProgramNameE studyProgramName)
+          (find (\p -> studyProgramKey p == spk) sprogs)
 
 -----------------------------------------------------------------------------

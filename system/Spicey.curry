@@ -25,7 +25,7 @@ module Spicey (
   hrefStudyProgram, hrefCategory, smallHrefCategory,
   hrefModule, smallHrefModule, hrefExtModule, hrefModInst, hrefUnivis,
   spHref, spEHref,
-  spButton, spPrimButton, spSmallButton, spTable, spHeadedTable,
+  spButton, spPrimButton, spSmallButton, spTable, spHeadedTable, addTitle,
   spShortSelectionInitial,
   setPageMessage, getPageMessage,
   saveLastUrl, getLastUrl, getLastUrlParameters, getLastUrls
@@ -609,6 +609,9 @@ spHeadedTable :: [[[HtmlExp]]] -> HtmlExp
 spHeadedTable items =
   headedTable items  `addClass` "table table-hover table-condensed"
 
+--- Adds a title attribute to an HTML element.
+addTitle :: HtmlExp -> String -> HtmlExp
+addTitle hexp title = hexp `addAttr` ("title",title)
 
 --------------------------------------------------------------------------
 -- Icons:

@@ -104,6 +104,7 @@ english2german =
    "Maximale ECTS-Punkte in dieser Kategorie")
  ,("Minimal ECTS points in this category",
    "Minimale ECTS-Punkte in dieser Kategorie")
+ ,("Missing UnivIS entry!","UnivIS-Eintrag fehlt!")
  ,("Module categories:" ,"Modulkategorien:")
  ,("Module code:"       ,"Modulcode:")
  ,("Module Information System","Modulinformationssystem Informatik")
@@ -155,6 +156,8 @@ english2german =
  ,("Supported by:"      ,"Unterstützt durch:")
  ,(" to "               ," bis ")
  ,("Teaching language:" ,"Lehrsprache:")
+ ,("to UnivIS entry"    ,"zum UnivIS-Eintrag")
+ ,("UnivIS entry without MDB entry!","UnivIS-Eintrag ohne MDB-Eintrag!")
  ,("two"                ,"zwei")
  ,("Visibility:"         ,"Sichtbarkeit:")
  ,("with master program usage","mit Masterprogrammverwendungen")

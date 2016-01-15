@@ -23,6 +23,7 @@ import SessionInfo
 import MultiLang
 
 --- The WUI specification of the module cycle:
+Cycle :: WuiSpec String
 wCycle = wSelect id ["unregelmäßig","jedes Semester","jedes Jahr"]
 
 --- A WUI for the presence time of a module:
@@ -381,7 +382,7 @@ singleModDataView sinfo editallowed modData responsibleUser
      [[bold [stringToHtml $ t "Duration:"]],
       [stringToHtml $ showLen (modDataLength modData) ++ " " ++ t "semester"]],
      [[bold [stringToHtml $ t "Module categories:"]],
-      [showStudyProgCategoriesAsHtml sprogs categorys]],
+      [showStudyProgCategoriesAsHtml sinfo sprogs categorys]],
      [[bold [stringToHtml $ t "Teaching language:"]],
       [stringToHtml
            (maybe ""

@@ -382,7 +382,7 @@ formatModuleForm md mis respuser sprogs categorys mbdesc = do
   sinfo <- getUserSessionInfo
   pid <- getPID
   let tmp = "tmp_"++show pid
-  writeModulesLatexFile (tmp++".tex")
+  writeModulesLatexFile sinfo (tmp++".tex")
                         md mis respuser sprogs categorys mbdesc
   latexFormatForm sinfo 2.0 tmp "Formatted module description"
 
@@ -393,21 +393,21 @@ formatCatModulesForm catmods = do
   sinfo <- getUserSessionInfo
   pid <- getPID
   let tmp = "tmp_"++show pid
-  mstr <- mapIO (formatCatMods sprogs) catmods
+  mstr <- mapIO (formatCatMods sinfo sprogs) catmods
   writeStandaloneLatexFile (tmp++".tex") (concat mstr)
   latexFormatForm sinfo 10.0 tmp "Formatted module descriptions"
  where
-  formatCatMods sprogs (catname,mods) = do
-    mstr <- mapIO (formatModData sprogs) mods
+  formatCatMods sinfo sprogs (catname,mods) = do
+    mstr <- mapIO (formatModData sinfo sprogs) mods
     return ("\\modulecategory{"++catname++"}\n\n"++concat mstr)
     
-  formatModData sprogs md = do
+  formatModData sinfo sprogs md = do
     respuser <- runJustT (getResponsibleUser md)
     categories <- runJustT (getModDataCategories md)
     mbdesc <- runQ $ queryDescriptionOfMod (modDataKey md)
     modinsts <- runQ $ queryInstancesOfMod (modDataKey md)
     return (quoteUnknownLatexCmd
-              (mod2latex md modinsts respuser sprogs categories mbdesc))
+              (mod2latex sinfo md modinsts respuser sprogs categories mbdesc))
 
 -- Form to format a file tmp.tex with pdflatex and show the result.
 -- The second argument is the maximum formatting time in seconds,
@@ -438,11 +438,13 @@ latexFormatForm sinfo tlimit tmp title = do
 -- Formatting modules as LaTeX documents:
 
 -- Generate LaTeX document containing a detailed description of a module:
-writeModulesLatexFile :: String -> ModData -> [ModInst] -> User -> [StudyProgram]
+writeModulesLatexFile :: UserSessionInfo -> String -> ModData
+                      -> [ModInst] -> User -> [StudyProgram]
                       -> [Category] -> Maybe ModDescr -> IO ()
-writeModulesLatexFile fname md mis respuser sprogs categorys mbdesc =
+writeModulesLatexFile sinfo fname md mis respuser sprogs categorys mbdesc =
   writeStandaloneLatexFile fname
-   (quoteUnknownLatexCmd (mod2latex md mis respuser sprogs categorys mbdesc))
+   (quoteUnknownLatexCmd
+      (mod2latex sinfo md mis respuser sprogs categorys mbdesc))
 
 -- Put a latex string into a file with headers and footers
 writeStandaloneLatexFile :: String -> String -> IO ()
@@ -452,16 +454,17 @@ writeStandaloneLatexFile fname latexstring = do
                    latexstring ++
                    "\\end{document}\n")
 
-mod2latex :: ModData -> [ModInst] -> User -> [StudyProgram] -> [Category]
+mod2latex :: UserSessionInfo -> ModData -> [ModInst] -> User
+          -> [StudyProgram] -> [Category]
           -> Maybe ModDescr -> String
 
-mod2latex md _ _ _ _ Nothing =
+mod2latex _ md _ _ _ _ Nothing =
     "%%%%%%%%%% "++modDataCode md++" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"++
     "\\importmodule{"++modDataCode md++"}{"++
     escapeLaTeXSpecials (modDataNameG md)++"}{"++
     modDataURL md++"}{"++baseName (modDataURL md)++"}\n\n"
 
-mod2latex md mis responsibleUser sprogs categorys (Just desc) =
+mod2latex sinfo md mis responsibleUser sprogs categorys (Just desc) =
     "%%%%%%%%%% "++modDataCode md++" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"++
     "\\module{"++modDataCode md++"}{"++
     escapeLaTeXSpecials (modDataNameG md)++"}{"++
@@ -471,7 +474,7 @@ mod2latex md mis responsibleUser sprogs categorys (Just desc) =
     showDiv10 (modDataECTS md)++"}{"++
     escapeLaTeXSpecials (modDataWorkload md)++"}{"++
     showLen (modDataLength md)++" Semester}{"++
-    (showStudyProgCategories sprogs categorys)++
+    (showStudyProgCategories sinfo sprogs categorys)++
     "}\n\\descmain{"++
     modDescrLanguage desc++"}{"++
     docText2latex (modDescrShortDesc desc)++"}{"++

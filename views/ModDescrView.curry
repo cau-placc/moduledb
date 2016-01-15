@@ -12,6 +12,7 @@ import MDB
 import MDBEntitiesToHtml
 import Helpers
 
+wLanguage :: WuiSpec String
 wLanguage = wSelect id ["Deutsch","Englisch"]
 
 --- The WUI specification for the entity type ModDescr.
