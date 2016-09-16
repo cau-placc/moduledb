@@ -124,7 +124,7 @@ listAllCategoryController =
     do let t = translate sinfo
        categorys <- runQ queryAllCategorys
        return (listCategoryView sinfo (Right $ t "All categories")
-                 (map (\c -> (Left c,[])) (mergeSort leqCategory categorys))
+                 (map (\c -> (Left c,[])) (mergeSortBy leqCategory categorys))
                  [] []
                  showCategoryPlanController formatCatModulesForm
                  showEmailCorrectionController)
@@ -150,7 +150,7 @@ listCurrentUserCategoryController =
 listStudyProgramCategoryController :: Bool -> StudyProgram -> Controller
 listStudyProgramCategoryController listall studyprog =
   checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
-    do categorys <- runQ $ transformQ (mergeSort leqCategory) $
+    do categorys <- runQ $ transformQ (mergeSortBy leqCategory) $
                              queryCategorysOfStudyProgram
                                            (studyProgramKey studyprog)
        catmods <- runJustT $

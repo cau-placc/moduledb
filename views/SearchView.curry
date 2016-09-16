@@ -61,6 +61,6 @@ showExamOverview sem mods =
      [[htxt "Modul:"],[htxt "Prüfungsanforderungen:"]] :
      map (\ (m,e) -> [[htxt (modDataCode m ++": "++ modDataNameG m)],
                      [HtmlText (docText2html e)]])
-         (mergeSort (\ (m1,_) (m2,_) -> leqModData m1 m2) mods)]
+         (mergeSortBy (\ (m1,_) (m2,_) -> leqModData m1 m2) mods)]
 
 -----------------------------------------------------------------------------

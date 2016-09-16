@@ -234,7 +234,7 @@ listCategoryView sinfo mbsprog catmods semperiod users
     (if isAdminSession sinfo && null (concatMap snd catmods)
      then [take 4 categoryLabelList ++ [categoryLabelList!!7]] ++
           map listCategory
-              (mergeSort leqCategory
+              (mergeSortBy leqCategory
                (concatMap (\ (c,_) -> either (:[]) (const []) c) catmods))
      else
       concatMap
@@ -253,7 +253,7 @@ listCategoryView sinfo mbsprog catmods semperiod users
                   then map (maybe [] showModInst) mis
                   else map (showUnivisInst md)
                            (zip3 semperiod mis univs))
-               (mergeSort (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2) mods))
+               (mergeSortBy (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2) mods))
         catmods)] ++
    (if null (concatMap snd catmods)
     then either

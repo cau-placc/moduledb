@@ -126,7 +126,7 @@ moduleCSV studyprogs mods = do
                                 studyprogsKeysShortNames))
                                 
   -- Sorting categories according to a wish of Corinna Ohlsen:
-  sortCats = mergeSort leqCat
+  sortCats = mergeSortBy leqCat
     where leqCat c1 c2 = c1=="G" || (c1=="A" && c2/="G") ||
                          (c1/="G" && c1/="A" && c1 <= c2)
 

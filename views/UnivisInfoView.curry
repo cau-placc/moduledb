@@ -105,7 +105,7 @@ listUnivisInfoView univisInfos showUnivisInfoController
   [h1 [htxt "UnivisInfo list"]
   ,spTable
     ([take 4 univisInfoLabelList] ++
-     map listUnivisInfo (mergeSort leqUnivisInfo univisInfos))]
+     map listUnivisInfo (mergeSortBy leqUnivisInfo univisInfos))]
   where listUnivisInfo :: UnivisInfo -> [[HtmlExp]]
         listUnivisInfo univisInfo =
           univisInfoToListView univisInfo ++

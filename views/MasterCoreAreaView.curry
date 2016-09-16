@@ -112,12 +112,12 @@ listMasterCoreAreaView admin masterCoreAreas =
   if admin
   then [spTable ([take 5 masterCoreAreaLabelList] ++
                  map listMasterCoreArea
-                     (mergeSort leqMasterCoreArea masterCoreAreas))]
+                     (sortBy leqMasterCoreArea masterCoreAreas))]
   else concatMap (\mca -> [h2 [htxt (masterCoreAreaName mca ++ " (" ++
                                      masterCoreAreaShortName mca ++ ")")],
                            par [HtmlText
                                 (docText2html (masterCoreAreaDescription mca))]])
-                 (mergeSort leqMasterCoreArea masterCoreAreas)
+                 (sortBy leqMasterCoreArea masterCoreAreas)
   where listMasterCoreArea :: MasterCoreArea -> [[HtmlExp]]
         listMasterCoreArea mca =
           masterCoreAreaToListView mca ++

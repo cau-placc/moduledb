@@ -254,7 +254,7 @@ listAdvisorModuleView sinfo advisorModules =
   [h1 [htxt "AdvisorModule list"],spTable
                                    ([take 1 advisorModuleLabelList]
                                      ++ map listAdvisorModule
-                                         (mergeSort leqAdvisorModule
+                                         (sortBy leqAdvisorModule
                                            advisorModules))]
   where
     listAdvisorModule advisorModule =

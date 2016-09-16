@@ -86,7 +86,7 @@ wMasterProgInfo modinsts =
         sem2  = (modInstYear mi2, modInstTerm mi2)
      in code1 < code2 || (code1 == code2 && sem1 <= sem2)
 
-  sortModSem ms = mergeSort leqModSem ms
+  sortModSem ms = mergeSortBy leqModSem ms
 
   transModInst c (mi,md,_) = (c,showModDataKey md,modInstTerm mi,modInstYear mi)
 
@@ -197,7 +197,7 @@ listMasterProgInfoView masterProgInfos showMasterProgInfoController
   [h1 [htxt "MasterProgInfo list"]
   ,spTable
     ([take 6 masterProgInfoLabelList] ++
-     map listMasterProgInfo (mergeSort leqMasterProgInfo masterProgInfos))]
+     map listMasterProgInfo (mergeSortBy leqMasterProgInfo masterProgInfos))]
   where listMasterProgInfo :: MasterProgInfo -> [[HtmlExp]]
         listMasterProgInfo masterProgInfo =
           masterProgInfoToListView masterProgInfo ++

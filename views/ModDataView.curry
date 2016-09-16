@@ -69,15 +69,15 @@ wCatList spcats =
 
 --- The WUI specification for the entity type ModData.
 --- It also includes fields for associated entities.
-wModData :: Bool -> Bool -> [User] -> [(StudyProgram,[Category])]
+wModData :: Bool -> Bool -> Bool -> [User] -> [(StudyProgram,[Category])]
          -> WuiSpec (String,String,String,String,String,Int,String,Int,
                      String,Bool,User,[Category])
-wModData admin allowchangemcode userList spcats =
+wModData admin allowchangemcode allowchangevisibility userList spcats =
   withRendering
    (w12Tuple (if allowchangemcode then wLargeRequiredString
                                   else wConstant htxt)
              wLargeRequiredString wLargeString wCycle wPresence wECTS
-             wLargeRequiredString wLength wURL wVisible wResp wCats)
+             wLargeRequiredString wLength wURL wVis wResp wCats)
    (renderLabels (if admin then labelList else take 10 labelList))
  where
   labelList = if allowchangemcode
@@ -89,6 +89,11 @@ wModData admin allowchangemcode userList spcats =
                     else wConstant (htxt . showDiv10))
              `withRendering` numwidthRendering
 
+  wVis  = if allowchangevisibility then wVisible else wConstant showVis
+    where
+      showVis True  = htxt "öffentlich sichtbar"
+      showVis False = htxt "nur zur internen Bearbeitung"
+      
   wLength = wSelect show [1,2,3]
              `withRendering` numwidthRendering
 
@@ -99,7 +104,7 @@ wModData admin allowchangemcode userList spcats =
 
   wURL = if admin then wLargeString else wConstant htxt
 
-  wResp = if admin then wSelect userToShortView (mergeSort leqUser userList)
+  wResp = if admin then wSelect userToShortView (mergeSortBy leqUser userList)
                    else wConstant (stringToHtml . userToShortView)
 
   numwidthRendering [s] = inline [s `addClass` "numwidth"]
@@ -155,7 +160,8 @@ wModDataType :: Bool -> ModData -> User -> [User]
              -> WuiSpec (ModData,[Category])
 wModDataType admin modData user userList spcats =
   transformWSpec (tuple2ModData modData,modData2Tuple user)
-   (wModData admin admin userList spcats)
+   (wModData admin admin (admin || not (modDataVisible modData))
+             userList spcats)
 
 --- Supplies a WUI form to create a new ModData entity.
 --- The fields of the entity have some default values.
@@ -199,7 +205,7 @@ createModDataView admin isimport
                     (controller False initdata)
       
       (hexp ,handler) = wuiWithErrorForm
-                         (wModData admin True possibleUsers spcats)
+                         (wModData admin True True possibleUsers spcats)
                          initdata
                          (nextControllerForData (controller True))
                          (wuiFrameToForm wuiframe)
@@ -285,7 +291,7 @@ listModDataView admin title modDatas =
   [h1 [htxt title]
   ,spTable
     ([take 2 modDataLabelList ++ [[htxt "ECTS"]]] ++
-     map listModData (mergeSort leqModData modDatas))]
+     map listModData (mergeSortBy leqModData modDatas))]
   where listModData :: ModData -> [[HtmlExp]]
         listModData modData =
           modDataToListView modData ++
@@ -371,8 +377,10 @@ singleModDataView sinfo editallowed modData responsibleUser
       [userToHtmlView responsibleUser]],
      [[bold [stringToHtml $ t "Cycle:"]],
       [stringToHtml $ t (toEnglish (improveCycle modData modinsts))] ++
-        if null modinsts then []
-        else htxt " ": showSemsOfModInstances (mergeSort leqModInst modinsts)],
+        if null modinsts
+          then []
+          else htxt " " :
+               showSemsOfModInstances (mergeSortBy leqModInst modinsts)],
      [[bold [stringToHtml $ t "Presence:"]],
       [stringToHtml (formatPresence (modDataPresence modData))]],
      [[bold [stringToHtml "ECTS:"]],

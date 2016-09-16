@@ -316,7 +316,7 @@ getModDataOfCategory ck =
 -- Get all study programs with their categories:
 getStudyProgramsWithCats :: IO [(StudyProgram,[Category])]
 getStudyProgramsWithCats = do
-  sps <- runQ $ transformQ (mergeSort leqStudyProgram) queryAllStudyPrograms
+  sps <- runQ $ transformQ (mergeSortBy leqStudyProgram) queryAllStudyPrograms
   mapIO (\sp -> do cs <- runQ (queryCategorysOfStudyProgram (studyProgramKey sp))
                    return (sp,cs))
         sps
@@ -559,7 +559,7 @@ mod2xml md responsibleUser users sprogs categorys modinsts (Just desc) =
       ([xml "praesenz" [xtxt (modDataPresence md)],
         xml "dauer"    [xtxt (show (modDataLength md))],
         xml "turnus"   [xtxt (modDataCycle md)]] ++
-       map modinst2xml (mergeSort leqModInst modinsts))])
+       map modinst2xml (mergeSortBy leqModInst modinsts))])
  where
    showStudyProgramKey spk =
      maybe "?" studyProgramProgKey

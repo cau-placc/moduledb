@@ -129,7 +129,7 @@ listUserView :: [User] -> [HtmlExp]
 listUserView users =
   [h1 [htxt "Liste aller Benutzer"]
   ,spTable ([take 3 userLabelList ++ [userLabelList!!7]] ++
-            map listUser (mergeSort leqUser users))]
+            map listUser (sortBy leqUser users))]
   where
    listUser :: User -> [[HtmlExp]]
    listUser user =

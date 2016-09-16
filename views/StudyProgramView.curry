@@ -125,12 +125,12 @@ listStudyProgramView sinfo studyPrograms =
   if isAdminSession sinfo
   then [h1 [htxt $ t "Study programs"],
         spTable ([take 5 studyProgramLabelList] ++
-                map listStudyProgram (mergeSort leqStudyProgram studyPrograms))]
+                map listStudyProgram (sortBy leqStudyProgram studyPrograms))]
   else [h1 [htxt $ t "Study programs"],
         spTable (map (\sp -> [langSelect sinfo
                                 (studyProgramToListView sp !! 1)
                                 (head (studyProgramToListView sp))])
-                     (mergeSort leqStudyProgram studyPrograms))]
+                     (sortBy leqStudyProgram studyPrograms))]
  where
   t = translate sinfo
 

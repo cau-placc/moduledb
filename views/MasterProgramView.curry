@@ -196,7 +196,7 @@ listMasterProgramView sinfo listall mpinfos allcoreareas =
            [if vis then stringToHtml name
                    else italic [stringToHtml name]]]
 
-   sortedmpinfos = reverse (mergeSort leqMP mpinfos)
+   sortedmpinfos = reverse (mergeSortBy leqMP mpinfos)
      where leqMP (_,name1,term1,year1,_,_) (_,name2,term2,year2,_,_) =
              (year1,term1,name1) <= (year2,term2,name2)
 
@@ -228,7 +228,7 @@ listMasterProgramView sinfo listall mpinfos allcoreareas =
                  (map formatprog
                    (filter (\ (_,_,_,_,_,mcak) -> mcak == masterCoreAreaKey mca)
                            semprogs))])
-             (mergeSort leqMasterCoreArea mcas) ++
+             (mergeSortBy leqMasterCoreArea mcas) ++
            catSems (prevSemester sem) remprogs
 
 

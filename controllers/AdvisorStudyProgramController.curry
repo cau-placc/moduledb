@@ -18,7 +18,7 @@ import AdvisorStudyProgramView
 import StudyProgramView
 import Maybe
 import SessionInfo
-import Sort(mergeSort)
+import Sort(sortBy)
 import Authorization
 import AuthorizedControllers
 import CategoryView(leqCategory)
@@ -59,7 +59,7 @@ newAdvisorStudyProgramController =
        [h1 [htxt "Illegal operation"]]
        (\user ->
          blankAdvisorStudyProgramView sinfo
-           (mergeSort leqStudyProgram allStudyPrograms)
+           (sortBy leqStudyProgram allStudyPrograms)
            user allUsers
            (\entity ->
              transactionBindController
@@ -183,7 +183,7 @@ showAdvisorStudyProgramController asprog =
    (advisorStudyProgramOperationAllowed (ShowEntity asprog))
    $ (\sinfo ->
      do studyprog <- runJustT (getStudyProgramsAdvisedStudyProgram asprog)
-        categories <- runQ $ transformQ (mergeSort leqCategory) $
+        categories <- runQ $ transformQ (sortBy leqCategory) $
                                queryCategorysOfStudyProgram (studyProgramKey studyprog)
         amods <- runQ $ queryCondAdvisorModule
            (\am -> advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey am
@@ -249,7 +249,7 @@ showXmlAdvisorStudyProgram aspkey = do
 getAdvisorStudyProgramAsXML :: AdvisorStudyProgram -> IO XmlExp
 getAdvisorStudyProgramAsXML asprog = do
   studyprog <- runJustT (getStudyProgramsAdvisedStudyProgram asprog)
-  categories <- runQ $ transformQ (mergeSort leqCategory) $
+  categories <- runQ $ transformQ (sortBy leqCategory) $
                          queryCategorysOfStudyProgram (studyProgramKey studyprog)
   amods <- runQ $ queryCondAdvisorModule
                        (\am -> advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey am

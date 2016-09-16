@@ -323,7 +323,7 @@ listAdvisorStudyProgramView sinfo advisorStudyPrograms =
   where
    advisorprogramgroups =
      groupBy sameSemester
-             (mergeSort leqAdvisorStudyProgram advisorStudyPrograms)
+             (mergeSortBy leqAdvisorStudyProgram advisorStudyPrograms)
 
    sameSemester (p1,_) (p2,_) =
         advisorStudyProgramYear p1 == advisorStudyProgramYear p2

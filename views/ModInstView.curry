@@ -21,7 +21,7 @@ wModInst :: [User] -> WuiSpec (String,Int,User)
 wModInst userList =
   withRendering
    (wTriple wTerm wCurrentYear
-            (wSelect userToShortView (mergeSort leqUser userList)))
+            (wSelect userToShortView (sortBy leqUser userList)))
    (renderLabels (map (\s -> [stringToHtml s]) ["Semester","Jahr","Dozent"]))
 
 --- The WUI specification for a list of term/year/user tuples with a deletion
@@ -31,7 +31,7 @@ wListModInst :: Bool -> [User] -> WuiSpec [(String,Int,User,Bool)]
 wListModInst someyear userList =
   wList
    (w4Tuple wTerm (if someyear then wYear else wCurrentYear)
-            (wSelect userToShortView (mergeSort leqUser userList))
+            (wSelect userToShortView (sortBy leqUser userList))
             (wCheckBool [htxt "Semester löschen"]) )
 
 --- Transformation from data of a WUI form to entity type ModInst.
@@ -127,7 +127,7 @@ listModInstView modInsts showModInstController editModInstController
   [h1 [htxt "ModInst list"]
   ,spTable
     ([take 2 modInstLabelList] ++
-     map listModInst (mergeSort leqModInst modInsts))]
+     map listModInst (sortBy leqModInst modInsts))]
   where listModInst :: ModInst -> [[HtmlExp]]
         listModInst modInst =
           modInstToListView modInst ++

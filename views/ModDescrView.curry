@@ -129,7 +129,7 @@ listModDescrView modDescrs showModDescrController editModDescrController
   [h1 [htxt "ModDescr list"]
   ,spTable
     ([take 11 modDescrLabelList] ++
-     map listModDescr (mergeSort leqModDescr modDescrs))]
+     map listModDescr (sortBy leqModDescr modDescrs))]
   where listModDescr :: ModDescr -> [[HtmlExp]]
         listModDescr modDescr =
           modDescrToListView modDescr ++

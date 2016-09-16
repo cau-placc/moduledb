@@ -73,10 +73,10 @@ loadLectures sem = do
     univissem++"&show=xml"
   --writeFile ("univis_lectures_"++univissem++".xml") xmlstring
   let xexps = parseXmlString xmlstring
-  if xexps==[]
+  if null xexps
    then return (Right "No XML document!")
    else
-    if tail xexps /= []
+    if not (null (tail xexps))
     then return (Right "More than one XML document!")
     else do
      writeQTermListFile termfile

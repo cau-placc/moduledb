@@ -36,7 +36,7 @@ mainModInstController =
 addModInstController :: ModData -> User -> Controller -> Controller
 addModInstController md user cntcontroller =
   checkAuthorization (modInstOperationAllowed NewEntity) $ \_ -> do
-    allUsers <- runQ (transformQ (mergeSort leqUser) queryAllUsers)
+    allUsers <- runQ (transformQ (mergeSortBy leqUser) queryAllUsers)
     return (addModInstView user allUsers
                            (createModInstController md cntcontroller))
 
@@ -62,13 +62,13 @@ editAllModInstController :: ModData -> Controller -> Controller
 editAllModInstController md cntcontroller = do
    --checkAuthorization (modInstOperationAllowed (UpdateEntity md)) $ do
    admin <- isAdmin
-   allinsts <- runQ $ transformQ (mergeSort leqModInst . filterModInsts admin)
+   allinsts <- runQ $ transformQ (mergeSortBy leqModInst . filterModInsts admin)
                                  (queryInstancesOfMod (modDataKey md))
    allmpkeys <- runQ $ getMasterProgramKeysOfModInst allinsts
    allspkeys <- runJustT $
                  mapT (\mi -> getDB (getAdvisorStudyProgramKeysOfModInst mi))
                       allinsts
-   allUsers <- runQ (transformQ (mergeSort leqUser) queryAllUsers)
+   allUsers <- runQ (transformQ (mergeSortBy leqUser) queryAllUsers)
    -- select instances not used in master programs:
    let editinsts = map (\ (mi,_,_) -> mi)
                        (filter (\ (_,mks,sks) -> null mks && null sks)
