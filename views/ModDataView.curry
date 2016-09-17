@@ -348,7 +348,7 @@ singleModDataView sinfo editallowed modData responsibleUser
                 spSmallButton (t "Change semesters")
                        (nextController modinsteditController),
                 spHref ("?ModData/edit/" ++ showModDataKey modData)
-                       [htxt $ t "Change module data/visibility"] ] ++
+                       [htxt $ t "Change module data"] ] ++
                 maybe []
                       (\desc ->
                         [spSmallButton (t "Change module description")

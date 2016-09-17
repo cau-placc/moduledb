@@ -50,7 +50,7 @@ english2german =
  ,("all English modules","alle englischen Module")
  ,("Back to last page"  ,"Zurück zur letzten Seite")
  ,("Cancel"             ,"Abbrechen")
- ,("Change module data/visibility","Moduldaten/Sichtbarkeit ändern")
+ ,("Change module data" ,"Modulbasisdaten ändern")
  ,("Change module description","Modulbeschreibung ändern")
  ,("Change password"    ,"Passwort ändern")
  ,("Change semesters"   ,"Semesterangaben ändern")
