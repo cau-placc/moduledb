@@ -41,9 +41,8 @@ wAdvisorStudyProgram isnewprog sinfo studyProgramList userList =
   wTrm = if isnewprog || admin then wTerm        else wConstant stringToHtml
   wYr  = if isnewprog || admin then wCurrentYear else wConstant intToHtml
 
-  -- Uncomment code if it should be allowed to define programs other than MSc Inf:
-  wStudyProg = {- if isnewprog then wSelect studyProgramName studyProgramList
-                            else -} wConstant (stringToHtml . studyProgramName)
+  wStudyProg = if isnewprog then wSelect studyProgramName studyProgramList
+                            else wConstant (stringToHtml . studyProgramName)
                             
   wAdvisor = if admin then wSelect userToShortView userList
                       else wConstant (stringToHtml . userToShortView)
@@ -224,8 +223,8 @@ showAdvisorStudyProgramView
   -> [(AdvisorModule,ModInst,ModData)] -> [Category] -> User
   -> [HtmlExp]
 showAdvisorStudyProgramView
-    sinfo admin editallowed editcontroller showcontroller addcatmodcontroller
-    delmodcontroller
+    sinfo admin editallowed editcontroller _ {-showcontroller-}
+    addcatmodcontroller delmodcontroller
     asprog xmlurl relatedsprog amdatas cats advisor =
   [h1 [htxt (advisorStudyProgramName asprog)
       ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++

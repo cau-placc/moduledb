@@ -22,7 +22,6 @@ import Sort(sortBy)
 import Authorization
 import AuthorizedControllers
 import CategoryView(leqCategory)
-import MDBExts
 import UserProcesses
 import MDBEntitiesToHtml
 import XML
