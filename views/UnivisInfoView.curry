@@ -151,6 +151,7 @@ showUnivisLinks md sem lecturer urls admin emailcontroller =
  where
    mailButtonTitle = "Mail mit Korrekturbitte an Modulverantwortlichen senden"
 
+missingUnivISMessage :: ModData -> (String,Int) -> String
 missingUnivISMessage md sem =
      "Lieber Modulverantwortlicher,\n\n"++
      "das Modul "++modDataCode md++" ist fuer das "++showSemester sem++"\n"++
@@ -160,6 +161,7 @@ missingUnivISMessage md sem =
      "im UnivIS und der Moduldatenbank konsistent sind.\n\n"++
      "Viele Gruesse vom Moduldatenbankadministrator"
 
+missingMDBMessage :: ModData -> (String,Int) -> String
 missingMDBMessage md sem =
      "Lieber Modulverantwortlicher,\n\n"++
      "das Modul "++modDataCode md++" ist fuer das "++showSemester sem++"\n"++

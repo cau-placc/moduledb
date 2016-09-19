@@ -5,6 +5,7 @@
 module SearchController(searchController,searchUserModules)
  where
 
+import Sort (mergeSortBy)
 import Spicey
 import Authentication
 import MDB
@@ -17,6 +18,7 @@ import CategoryController
 import CategoryView
 import SearchView
 import ModDataView
+import UserView (leqUser)
 import Helpers
 import MDBEntitiesToHtml
 import MultiLang
@@ -28,8 +30,9 @@ searchController :: Controller
 searchController = do
   args <- getControllerParams
   case args of
-    ["all"]     -> showAllModulesController
-    ["english"] -> showAllEnglishModulesController
+    ["all"]      -> showAllModulesController
+    ["usermods"] -> selectUserModulesController
+    ["english"]  -> showAllEnglishModulesController
     _ -> do sinfo <- getUserSessionInfo
             return (searchPageView sinfo searchModules showExamController)
 
@@ -67,6 +70,14 @@ match pattern string = loop pattern string pattern string
 
     next _  [] = False
     next op (_:ss) = loop op ss op ss
+
+
+--- Controller to select a user in order to list all modules of this user.
+selectUserModulesController :: Controller
+selectUserModulesController = do
+  sinfo <- getUserSessionInfo
+  allUsers <- runQ queryAllUsers
+  return (selectUserView sinfo (mergeSortBy leqUser allUsers) searchUserModules)
 
 
 --- Controller to list all modules of a user.

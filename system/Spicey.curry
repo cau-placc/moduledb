@@ -25,7 +25,7 @@ module Spicey (
   hrefStudyProgram, hrefCategory, smallHrefCategory,
   hrefModule, smallHrefModule, hrefExtModule, hrefModInst,
   hrefUnivisInfo, hrefUnivisDanger,
-  spHref, spEHref,
+  spHref, spEHref, hrefPrimButton,
   spButton, spPrimButton, spSmallButton, spTable, spHeadedTable, addTitle,
   spShortSelectionInitial,
   setPageMessage, getPageMessage,
@@ -560,6 +560,11 @@ hrefUnivisDanger = spEHrefDangerBlock
 spHref :: String -> [HtmlExp] -> HtmlExp
 spHref ref hexps =
   href ref hexps `addClass` "btn btn-sm btn-default"
+
+--- Hypertext reference in Spicey (rendered as a primary button):
+hrefPrimButton :: String -> [HtmlExp] -> HtmlExp
+hrefPrimButton ref hexps =
+  href ref hexps `addClass` "btn btn-sm btn-primary"
 
 --- Hypertext reference in Spicey (rendered as a block button):
 spHrefBlock :: String -> [HtmlExp] -> HtmlExp

@@ -2,7 +2,7 @@
 --- This module implements the views related to searching moduls.
 --------------------------------------------------------------------------
 
-module SearchView(searchPageView,showExamOverview)
+module SearchView(searchPageView,selectUserView,showExamOverview)
  where
 
 import Spicey
@@ -23,20 +23,24 @@ searchPageView :: UserSessionInfo -> (String -> Controller)
                -> ((String,Int) -> Controller) -> [HtmlExp]
 searchPageView sinfo searchcontroller showExamController =
   [h1 [htxt $ t "Search modules"],
-   blockstyle "widelist" [ulist $
-      [[htxt $ t "Search all modules containing", nbsp,
+   h2 [htxt $ t "Search for individual modules:"],
+   par [htxt $ t "Search all modules containing", nbsp,
         textfield scode "" `addAttr` ("size","20"), nbsp,
         htxt $ t "in the module code or title", nbsp,
-        spButton (t "search") searchHandler],
-       [htxt $ t "Show", nbsp,
-        spHref "?search/all"     [htxt $ t "all modules"], nbsp,
-        spHref "?search/english" [htxt $ t "all English modules"]]] ++
-      if userLoginOfSession sinfo == Nothing
-      then []
-      else [[htxt "Prüfungsanforderungen aller Module im ",
+        spPrimButton (t "Search!") searchHandler],
+   h2 [htxt $ t "Show module selections:"],
+   par [hrefPrimButton "?search/all"      [htxt $ t "All modules"],
+        nbsp,
+        hrefPrimButton "?search/english"  [htxt $ t "All English modules"],
+        nbsp,
+        hrefPrimButton "?search/usermods" [htxt $ t "All modules of a person"]
+       ]] ++
+  if userLoginOfSession sinfo == Nothing
+    then []
+    else [h2 [htxt "Prüfungsanforderungen:"],
+          par [htxt "Prüfungsanforderungen aller Module im ",
             spShortSelectionInitial insem semSelection lowerSemesterSelection,
-            spButton (t "show") showExams]]
-      ]]
+            spPrimButton (t "show") showExams]]
  where
   scode,insem free
 
@@ -51,6 +55,26 @@ searchPageView sinfo searchcontroller showExamController =
     let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
      in showExamController (semesterSelection!!semi)
          >>= getForm
+
+-----------------------------------------------------------------------------
+--- A view to select a user and apply the given controller to the selected user.
+selectUserView :: UserSessionInfo -> [User] -> (User -> Controller) -> [HtmlExp]
+selectUserView sinfo users usercontroller =
+  [h1 [htxt $ t "Show modules of a person"],
+   htxt $ t "Select person:",
+   selectionInitial seluser userSelection 1,
+   spPrimButton (t "show modules") selectUser]
+ where
+  seluser free
+  
+  t = translate sinfo
+
+  userSelection = map (\(u,i) -> (userToShortView u, show i))
+                      (zip users [0..])
+
+  selectUser env =
+    let ui = maybe 0 id (findIndex (\(_,i) -> i==(env seluser)) userSelection)
+    in usercontroller (users!!ui) >>= getForm
 
 -----------------------------------------------------------------------------
 --- Supplies a view for the examination requirements of a given list of modules.
