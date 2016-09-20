@@ -43,7 +43,8 @@ setUserLoginOfSession login (SD _ lang) = SD login lang
 
 --- Is the current session an administrator session?
 isAdminSession :: UserSessionInfo -> Bool
-isAdminSession sinfo = maybe False (=="admin") (userLoginOfSession sinfo)
+isAdminSession sinfo =
+  maybe False (\s -> take 5 s =="admin") (userLoginOfSession sinfo)
 
 --- Extracts the preferred language from the user session data.
 languageOfSession :: UserSessionInfo -> Language
