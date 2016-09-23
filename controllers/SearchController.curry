@@ -31,6 +31,7 @@ searchController = do
   args <- getControllerParams
   case args of
     ["all"]      -> showAllModulesController
+    ["allresp"]  -> showAllModuleResponsibleController
     ["usermods"] -> selectUserModulesController
     ["english"]  -> showAllEnglishModulesController
     _ -> do sinfo <- getUserSessionInfo
@@ -100,6 +101,14 @@ showAllModulesController :: Controller
 showAllModulesController = do
   mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
   showModulesController mods
+
+--- Controller to list all responsible persons of all modules.
+showAllModuleResponsibleController :: Controller
+showAllModuleResponsibleController = do
+  mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
+  let respkeys = nub (map modDataUserResponsibleKey mods)
+  respusers <- runJustT (mapT getUser respkeys)
+  return (showAllModuleResponsibleView respusers)
 
 --- Controller to list all (visible) modules taught in English.
 showAllEnglishModulesController :: Controller

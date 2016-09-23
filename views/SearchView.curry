@@ -2,8 +2,9 @@
 --- This module implements the views related to searching moduls.
 --------------------------------------------------------------------------
 
-module SearchView(searchPageView,selectUserView,showExamOverview)
- where
+module SearchView(searchPageView,selectUserView
+                 ,showExamOverview,showAllModuleResponsibleView
+                 ) where
 
 import Spicey
 import HTML
@@ -29,12 +30,15 @@ searchPageView sinfo searchcontroller showExamController =
         htxt $ t "in the module code or title", nbsp,
         spPrimButton (t "Search!") searchHandler],
    h2 [htxt $ t "Show module selections:"],
-   par [hrefPrimButton "?search/all"      [htxt $ t "All modules"],
-        nbsp,
-        hrefPrimButton "?search/english"  [htxt $ t "All English modules"],
-        nbsp,
-        hrefPrimButton "?search/usermods" [htxt $ t "All modules of a person"]
-       ]] ++
+   par $
+    [hrefPrimButton "?search/all"      [htxt $ t "All modules"], nbsp,
+     hrefPrimButton "?search/english"  [htxt $ t "All English modules"], nbsp,
+     hrefPrimButton "?search/usermods" [htxt $ t "All modules of a person"]] ++
+    if isAdminSession sinfo
+      then [nbsp, hrefPrimButton "?search/allresp"
+                                 [htxt $ t "Alle Modulverantwortlichen"]]
+      else []
+  ] ++
   if userLoginOfSession sinfo == Nothing
     then []
     else [h2 [htxt "Prüfungsanforderungen:"],
@@ -86,5 +90,15 @@ showExamOverview sem mods =
      map (\ (m,e) -> [[htxt (modDataCode m ++": "++ modDataNameG m)],
                      [HtmlText (docText2html e)]])
          (mergeSortBy (\ (m1,_) (m2,_) -> leqModData m1 m2) mods)]
+
+-----------------------------------------------------------------------------
+--- Supplies a view for the examination requirements of a given list of modules.
+showAllModuleResponsibleView :: [User] -> [HtmlExp]
+showAllModuleResponsibleView users =
+  [h1 [htxt $ "Alle Modulverantwortlichen"],
+   htxt (intercalate ", " (map userInfo users))]
+ where
+   userInfo u = unwords [userFirst u, userName u,
+                         '<' : userEmail u ++ ">"]
 
 -----------------------------------------------------------------------------
