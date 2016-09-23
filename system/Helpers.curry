@@ -321,7 +321,7 @@ wTerm = wSelect id ["WS","SS"]
 
 --- The WUI specification for an almost current year.
 wCurrentYear :: WuiSpec Int
-wCurrentYear = wSelect show [(currentYear-14)..(currentYear+6)]
+wCurrentYear = wSelect show [(currentYear-4)..(currentYear+6)]
                  `withRendering` shorttextinputRendering
 
 --- The WUI specification for an arbitrary year.
