@@ -24,6 +24,7 @@ import Sort
 import SessionInfo
 import MultiLang
 import MDBEntitiesToHtml
+import ModInstView (leqModInst)
 import StudyPlanner
 
 --- Choose the controller for a Category entity according to the URL parameter.
@@ -31,9 +32,10 @@ categoryController :: Controller
 categoryController = do
   args <- getControllerParams
   case args of
-    ["list"] -> listAllCategoryController
-    ["user"] -> listCurrentUserCategoryController
-    ["new"]  -> newCategoryController
+    ["list"]    -> listAllCategoryController
+    ["user"]    -> listCurrentUserCategoryController False
+    ["userall"] -> listCurrentUserCategoryController True
+    ["new"]     -> newCategoryController
     ["studyprogram",s] ->
        applyControllerOn (readStudyProgramKey s)
          getStudyProgram (listStudyProgramCategoryController False)
@@ -123,28 +125,50 @@ listAllCategoryController =
   checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
     do let t = translate sinfo
        categorys <- runQ queryAllCategorys
-       return (listCategoryView sinfo (Right $ t "All categories")
+       return (listCategoryView sinfo (Right [htxt $ t "All categories"])
                  (map (\c -> (Left c,[])) (mergeSortBy leqCategory categorys))
                  [] []
                  showCategoryPlanController formatCatModulesForm
                  showEmailCorrectionController)
 
 --- Controller to list all modules of the current user.
-listCurrentUserCategoryController :: Controller
-listCurrentUserCategoryController =
+--- The argument indicates whether all modules should be shown.
+--- If it is false, only the modules without or with most recent instances
+--- are shown.
+listCurrentUserCategoryController :: Bool -> Controller
+listCurrentUserCategoryController listall =
   checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
     do let lname = maybe "" id (userLoginOfSession sinfo)
        -- get user entries with a given login name
        users <- runQ $ queryCondUser (\u -> userLogin u == lname)
        if null users then (displayError "Illegal URL") else
-        do mods <- runQ $ queryModDataOfUser (userKey (head users))
+        do usermods <- runQ $ queryModDataOfUser (userKey (head users))
+           showmods <- if listall
+                         then return usermods
+                         else mapIO addModInsts usermods >>=
+                              return . map fst . filter isCurrentModInst
            let t = translate sinfo
-           return (listCategoryView sinfo
-                        (Right $ t "My modules")
-                        [(Right "",map (\m->(m,[],[])) mods)]
+           return $ listCategoryView sinfo
+                        (Right $ listCatHeader t)
+                        [(Right "",map (\m->(m,[],[])) showmods)]
                         [] []
                         showCategoryPlanController
-                        formatCatModulesForm showEmailCorrectionController)
+                        formatCatModulesForm showEmailCorrectionController
+ where
+   listCatHeader t =
+     if listall
+       then [htxt $ t "All my modules"]
+       else [htxt $ t "My modules", nbsp, htxt "(",
+             href "?Category/userall" [htxt $ t "All my modules"], htxt ")"]
+             
+   addModInsts md = runJustT $
+     getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->
+     returnT (md, mis)
+
+   -- Has a module empty instances or instances in the current semester frame?
+   isCurrentModInst (_,mis) =
+     null mis || not (null (intersect (map modInstSemester mis)
+                                      (drop 2 semesterSelection)))
 
 --- Lists a study program with all its Category entities.
 listStudyProgramCategoryController :: Bool -> StudyProgram -> Controller
@@ -171,7 +195,7 @@ listStudyProgramCategoryController listall studyprog =
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
 showCategoryPlanController
-  :: Either StudyProgram String -> [(Either Category String,[ModData])]
+  :: Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
   -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller
 showCategoryPlanController mbstudyprog catmods startsem stopsem
                            withunivis withmprogs withstudyplan = do
@@ -215,7 +239,7 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
 showEmailCorrectionController
-  :: Either StudyProgram String -> [(Either Category String,[ModData])]
+  :: Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
   -> (String,Int) -> (String,Int) -> Controller
 showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
   sinfo <- getUserSessionInfo
@@ -252,7 +276,7 @@ showCategoryController cat =
            mbsprog = find (\p -> studyProgramKey p == spk) sprogs
        mods <- runJustT $ getModDataOfCategory (categoryKey cat)
        return (listCategoryView sinfo
-                 (maybe (Right "???") Left mbsprog)
+                 (maybe (Right [htxt "???"]) Left mbsprog)
                  [(Left cat,map (\m->(m,[],[]))
                                 (maybe (filter modDataVisible mods)
                                        (const mods)

@@ -46,7 +46,7 @@ searchModules pat = do
   let vismods = maybe (filter modDataVisible mods) (const mods)
                       (userLoginOfSession sinfo)
   return (listCategoryView sinfo
-            (Right $ t "Found modules")
+            (Right [htxt $ t "Found modules"])
             [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat,
               map (\m->(m,[],[])) vismods)]
             [] []
@@ -87,7 +87,7 @@ searchUserModules user = do
   let t = translate sinfo
   mods <- runQ $ queryModDataOfUser (userKey user)
   return (listCategoryView sinfo
-               (Right (t "Modules of" ++ " " ++ (userToShortView user)))
+               (Right [htxt $ t "Modules of" ++ " " ++ userToShortView user])
                [(Right "",map (\m->(m,[],[])) mods)]
                [] []
                showCategoryPlanController
@@ -122,7 +122,7 @@ showModulesController mods = do
   let t = translate sinfo
       (pmods,wmods) = partition isMandatoryModule mods
   return (listCategoryView sinfo
-            (Right $ t "All modules")
+            (Right [htxt $ t "All modules"])
             [(Right (t "Mandatary modules" ++
                      " (Informatik, Wirtschaftsinformatik, Nebenfach)"),
               map (\m->(m,[],[])) pmods),

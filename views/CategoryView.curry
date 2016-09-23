@@ -199,8 +199,8 @@ showCategoryInfo sinfo cat =
 --- Shows also buttons to show, delete, or edit entries.
 --- Various controller functions to show, delete, edit, and format entities
 --- as well as sending emails to request corrections are passed as arguments.
---- The third argument is the current study program or a header string.
---- The fourth argument is the real data to be shown:
+--- The second argument is the current study program or a header expression.
+--- The third argument is the real data to be shown:
 --- a list of category information where each info contains
 --- a category (or a header string) together with a list of triples containing
 --- the modules in this category. Each triple contains:
@@ -212,20 +212,20 @@ showCategoryInfo sinfo cat =
 ---   be shown)
 listCategoryView
   :: UserSessionInfo
-  -> Either StudyProgram String
+  -> Either StudyProgram [HtmlExp]
   -> [(Either Category String,[(ModData,[Maybe (ModInst,Int)],[Bool])])]
   -> [(String,Int)]
   -> [User]
-  -> (Either StudyProgram String -> [(Either Category String,[ModData])]
+  -> (Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller)
   -> ([(String,[ModData])] -> Controller)
-  -> (Either StudyProgram String -> [(Either Category String,[ModData])]
+  -> (Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Controller)
   -> [HtmlExp]
 listCategoryView sinfo mbsprog catmods semperiod users
                  showCategoryPlanController formatCatModsController
                  showEmailCorrectionController =
-  [h1 [either (studyProgramToHRef sinfo) htxt mbsprog]] ++
+  [h1 $ either (\sp -> [studyProgramToHRef sinfo sp]) id mbsprog] ++
   (if length catmods == 1 && isLeft (fst (head catmods))
    then let cat = fromLeft (fst (head catmods))
          in showCategoryInfo sinfo cat
@@ -365,12 +365,12 @@ listCategoryView sinfo mbsprog catmods semperiod users
 --- The arguments are the list of Category entities
 --- and the controller functions to show, delete and edit entities.
 listEmailCorrectionView
- :: Either StudyProgram String
+ :: Either StudyProgram [HtmlExp]
   -> [(ModData,[Maybe ModInst],[Bool])]
   -> [(String,Int)] -> [User]
   -> [HtmlExp]
 listEmailCorrectionView mbsprog modinsts semperiod users =
-  [h1 [htxt $ either studyProgramName id mbsprog],
+  [h1 $ either (\sp -> [htxt $ studyProgramName sp]) id mbsprog,
    spTable (map showUnivisInst problemmods),
    spButton "UnivIS-Korrektur-Emails jetzt an alle versenden" sendMails]
   where

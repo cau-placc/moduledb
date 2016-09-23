@@ -48,6 +48,7 @@ english2german =
  ,("All modules"        ,"Alle Module")
  ,("all modules"        ,"alle Module")
  ,("All modules of a person","Alle Module einer Person")
+ ,("All my modules"     ,"Alle eigenen Module")
  ,("All English modules","Alle englischen Module")
  ,("Back to last page"  ,"Zurück zur letzten Seite")
  ,("Cancel"             ,"Abbrechen")
