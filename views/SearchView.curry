@@ -62,7 +62,7 @@ selectUserView :: UserSessionInfo -> [User] -> (User -> Controller) -> [HtmlExp]
 selectUserView sinfo users usercontroller =
   [h1 [htxt $ t "Show modules of a person"],
    htxt $ t "Select person:",
-   selectionInitial seluser userSelection 1,
+   selectionInitial seluser userSelection 2,
    spPrimButton (t "show modules") selectUser]
  where
   seluser free
