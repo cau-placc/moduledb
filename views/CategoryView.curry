@@ -158,7 +158,7 @@ editCategoryView category relatedStudyProgram possibleStudyPrograms
                  controller =
   let initdata = category
       
-      wuiframe = wuiEditForm "edit Category" "change"
+      wuiframe = wuiEditForm "Kategorie ändern" "Ändern"
                   (controller False initdata)
       
       (hexp ,handler) = wuiWithErrorForm
@@ -187,7 +187,7 @@ showCategoryInfo sinfo cat =
                      " / " ++
                      t "Maximal ECTS points in this category" ++": "++
                      showDiv10 maxpts]]) ++
-  (if null catcmt then [] else [par [htxt catcmt]])
+  (if null catcmt then [] else [par [HtmlText (docText2html catcmt)]])
  where
   catcmt = categoryComment cat
   minpts = categoryMinECTS cat
@@ -232,7 +232,8 @@ listCategoryView sinfo mbsprog catmods semperiod users
    else []) ++
   [spTable
     (if isAdminSession sinfo && null (concatMap snd catmods)
-     then [take 4 categoryLabelList ++ [categoryLabelList!!7]] ++
+     then [take 3 categoryLabelList ++
+           [categoryLabelList!!6, categoryLabelList!!7]] ++
           map listCategory
               (mergeSortBy leqCategory
                (concatMap (\ (c,_) -> either (:[]) (const []) c) catmods))

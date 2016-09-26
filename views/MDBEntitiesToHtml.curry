@@ -104,12 +104,12 @@ categoryLabelList :: [[HtmlExp]]
 categoryLabelList =
   [[textstyle "label label_for_type_string" "Deutscher Name"]
   ,[textstyle "label label_for_type_string" "Englischer Name"]
-  ,[textstyle "label label_for_type_string" "ShortName"]
-  ,[textstyle "label label_for_type_string" "Kommentar"]
+  ,[textstyle "label label_for_type_string" "Abkürzung"]
+  ,[textstyle "label label_for_type_string" "Kommentar", markdownRef]
   ,[textstyle "label label_for_type_int" "Minimale ECTS"]
   ,[textstyle "label label_for_type_int" "Maximale ECTS"]
   ,[textstyle "label label_for_type_int" "Position"]
-  ,[textstyle "label label_for_type_relation" "StudyProgram"]]
+  ,[textstyle "label label_for_type_relation" "Studiengang"]]
 
 --- The list view of a MasterCoreArea entity in HTML format.
 --- This view is used in a row of a table of all entities.
