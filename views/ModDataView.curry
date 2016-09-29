@@ -30,20 +30,24 @@ wCycle = wSelect id ["unregelmäßig","jedes Semester","jedes Jahr"]
 wPresence :: WuiSpec String
 wPresence =
   transformWSpec (showPresence,readPresence)
-   (w4Tuple wSWS wSWS wSWS wSWS
+   (w5Tuple wSWS wSWS wSWS wSWS wSWS
      `withRendering`
-        (\ [v,u,p,s] -> inline [v, htxt "Vorlesung ", u, htxt "Übung ",
-                                p, htxt "Praktikum ", s, htxt "Seminar"]))
+        (\ [v,u,pue,p,s] -> inline [v, htxt "Vorlesung ", u, htxt "Übung ",
+                                    pue, htxt "Praktische Übung ",
+                                    p, htxt "Praktikum ", s, htxt "Seminar"]))
  where
    wSWS = wSelect show [0..15]
             `withRendering` (\ [s] -> inline [s `addClass` "numwidth"])
 
-   showPresence (vor,ueb,prk,sem) =
-    show vor ++ "V " ++ show ueb ++ "Ü " ++ show prk ++ "P " ++ show sem ++ "S"
+   showPresence (vor,ueb,pue,prk,sem) =
+    show vor ++ "V " ++ show ueb ++ "Ü " ++ show pue ++ "PÜ " ++
+    show prk ++ "P " ++ show sem ++ "S"
 
    readPresence ps =
-     let [v,u,p,s] = if null ps then [0,0,0,0] else map Read.readNat (words ps)
-      in (v,u,p,s)
+     let presnums = if null ps then [0,0,0,0] else map Read.readNat (words ps)
+      in case presnums of
+           [v,u,pue,s]   -> (v,u,pue,0,s) -- old format
+           [v,u,pue,p,s] -> (v,u,pue,p,s) -- new format
 
 -- a WUI to select a set of category keys from a given list of categories:
 wCatList :: [(StudyProgram,[Category])] -> WuiSpec [Category]

@@ -120,15 +120,19 @@ showDiv10 i = let m = mod i 10
 
 -----------------------------------------------------------------------------
 -- format the presence field string of ModData entities
--- (delete 0 fields, replace P bei PUe):
+-- (delete 0 fields, replace P bei PUe if there are only 4 fields (old format)):
 formatPresence :: String -> String
 formatPresence ps =
   let xs = words ps
-   in unwords (map p2pue (filter (\s -> head s /= '0') xs))
+      oldformat = length xs == 4
+   in unwords (map (p2pue oldformat) (filter (\s -> head s /= '0') xs))
  where
-   p2pue s = case s of
-               [d,'P'] -> [d,'P','Ü']
-               _ -> s
+   p2pue oldformat s =
+     if oldformat
+       then case s of
+              [d,'P'] -> [d,'P','Ü']
+              _ -> s
+       else s
 
 -----------------------------------------------------------------------------
 -- translate potential URLs in a string into markdown hyperrefs:
