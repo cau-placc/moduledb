@@ -14,6 +14,7 @@ import Spicey
 import SessionInfo
 import MDB
 import MDBEntitiesToHtml
+import ModInstView (leqModInst)
 
 --- The WUI specification for the entity type AdvisorModule.
 --- It also includes fields for associated entities.
@@ -21,10 +22,15 @@ wSelectAdvisorModule :: [(ModInst,ModData)]
                      -> WuiSpec (Bool,(ModInst,ModData),Category)
 wSelectAdvisorModule modInstList =
   withRendering
-   (wTriple wMandatory (wSelect selectName modInstList)
+   (wTriple wMandatory (wSelect selectName sortedModInstList)
             (wConstant (stringToHtml . categoryName)))
    (renderLabels advisorModuleLabelList)
  where
+  sortedModInstList = sortBy leqModInstData modInstList
+   where leqModInstData (mi1,md1) (mi2,md2) =
+           modDataNameG md1 < modDataNameG md2 ||
+           (modDataNameG md1 == modDataNameG md2 && leqModInst mi1 mi2)
+
   wMandatory = wRadioBool [htxt "Pflicht"]
                           [htxt "Empfehlung"]
 

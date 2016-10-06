@@ -86,12 +86,11 @@ editAdvisorModuleController advisorModuleToEdit =
         advisedProgramModuleInstancesModInst <- runJustT
                                                  (getAdvisedProgramModuleInstancesModInst
                                                    advisorModuleToEdit)
-        advisorCategorizingCategory <- runJustT
-                                        (getAdvisorCategorizingCategory
-                                          advisorModuleToEdit)
-        advisorProgramModulesAdvisorStudyProgram <- runJustT
-                                                     (getAdvisorProgramModulesAdvisorStudyProgram
-                                                       advisorModuleToEdit)
+        advisorCategorizingCategory <-
+          runJustT (getAdvisorCategorizingCategory advisorModuleToEdit)
+        advisorProgramModulesAdvisorStudyProgram <-
+          runJustT (getAdvisorProgramModulesAdvisorStudyProgram
+                                                          advisorModuleToEdit)
         return
          (editAdvisorModuleView sinfo advisorModuleToEdit
            advisedProgramModuleInstancesModInst
