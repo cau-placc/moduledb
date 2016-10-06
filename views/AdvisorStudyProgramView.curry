@@ -277,7 +277,7 @@ showAdvisorStudyProgramView
     [[(if mandatory then bold else italic) [modtitle],
       htxt $ " (" ++ showDiv10 (modDataECTS md) ++ " ECTS, "
                  ++ showSemester (modInstSemester modinst) ++ ", " ++
-                 (if mandatory then "Pflicht" else "empfohlen")
+                 (if mandatory then t "mandatory" else t "recommended")
                  ++ ")"],
      if admin || editallowed
        then [spSmallButton "Modulempfehlung löschen"
