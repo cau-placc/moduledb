@@ -96,7 +96,7 @@ english2german =
  ,("Login data for module database","Moduldatenbankzugangsdaten")
  ,("Logout"             ,"Abmelden")
  ,("Main page of the module information system","Hauptseite der Moduldatenbank")
- ,("mandatary"          ,"Pflicht")
+ ,("mandatory"          ,"Pflicht")
  ,("Mandatary modules"  ,"Pflichtmodule")
  ,("Master programs"    ,"Masterprogramme")
  ,("Master programs (since WS15/16)","Masterprogramme (ab WS15/16)")
