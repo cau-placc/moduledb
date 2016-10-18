@@ -21,7 +21,7 @@ import MultiLang
 mainPageView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
 mainPageView sinfo studyPrograms =
   [h1 [htxt $ mainTitle sinfo],
-   par [htxt $ mainExplanation sinfo],
+   par $ mainExplanation sinfo,
    par $ minorSubjectNote sinfo,
    h2 [htxt $ t "Study programs"],
    spTable (map (\sp -> [langSelect sinfo

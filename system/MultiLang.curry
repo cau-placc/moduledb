@@ -213,16 +213,22 @@ mainTitle sinfo = langSelect sinfo
   "Module und Studienprogramme des Instituts für Informatik"
 
 mainExplanation sinfo = langSelect sinfo
-  ("This web site provides an overview on all modules and "++
-   "study programs offered by the Department of Computer Science. "++
-   "Additionally, it contains an overiew on all master programs "++
-   "in computer science. A list of all modules offered in English "++
-   "can be found in the category \"Search modules\".")
-  ("Auf diesen Webseiten sind die Module aller Studienprogramme "++
-   "des Instituts für Informatik sowie alle vom Institut "++
-   "angebotenen Module beschrieben. "++
-   "Außerdem befindet sich hier eine Übersicht über alle "++
-   "angebotenen Masterprogramme in Informatik.")
+  [htxt $
+    "This web site provides an overview on all modules and "++
+    "study programs offered by the Department of Computer Science. "++
+    "Additionally, it contains an overiew on all master programs "++
+    "in computer science. A list of all modules offered in English "++
+    "can be found in the category \"Search modules\"."]
+  [htxt $ "Auf diesen Webseiten sind die Module aller Studienprogramme "++
+    "des Instituts für Informatik sowie alle vom Institut "++
+     "angebotenen Module beschrieben. "++
+     "Außerdem befindet sich hier eine Übersicht über alle "++
+     "angebotenen Masterprogramme in Informatik.",
+   htxt $ "Aktuelle Informationen zu den Lehrveranstaltungen kann man auch im ",
+   spEHref univisURL [htxt "UnivIS"],
+   htxt $ " finden."]
+ where
+  univisURL = "http://univis.uni-kiel.de/"
 
 masterStudyNote sinfo = langSelect sinfo
   [italic [htxt "Important note: "],
@@ -253,7 +259,7 @@ minorSubjectNote sinfo = langSelect sinfo
    htxt "Informatik sowie die dazugehörigen Module findet man ",
    spEHref minorURL [htxt "auf dieser Seite."]]
  where
-  minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf/bsc/anwendungsgebiete"
+  minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf-1-fach/bachelorstudiengang/anwendungsgebiete_nebenfaecher"
 
 sendPasswordCmt sinfo = langSelect sinfo
   ("You can send a new password to your email address "++

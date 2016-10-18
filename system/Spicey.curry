@@ -391,6 +391,7 @@ stdNavBar routemenu login sinfo =
    [toEHref "http://www.inf.uni-kiel.de"
             (t "Department of Computer Science")
    ,toEHref "http://www.uni-kiel.de" "CAU Kiel"
+   ,toEHref "http://univis.uni-kiel.de/" "UnivIS"
    ,litem [htxt " "] `addClass` "divider"
    ,litem [htxt $ t "Supported by:"] `addClass` "dropdown-header"
    ,toEHref "http://www.curry-language.org"
