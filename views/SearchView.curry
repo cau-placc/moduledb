@@ -20,9 +20,9 @@ import SessionInfo
 
 -----------------------------------------------------------------------------
 --- A view for searching modules.
-searchPageView :: UserSessionInfo -> (String -> Controller)
+searchPageView :: UserSessionInfo -> (String,Int) -> (String -> Controller)
                -> ((String,Int) -> Controller) -> [HtmlExp]
-searchPageView sinfo searchcontroller showExamController =
+searchPageView sinfo cursem searchcontroller showExamController =
   [h1 [htxt $ t "Search modules"],
    h2 [htxt $ t "Search for individual modules:"],
    par [htxt $ t "Search all modules containing", nbsp,
@@ -43,7 +43,8 @@ searchPageView sinfo searchcontroller showExamController =
     then []
     else [h2 [htxt "Prüfungsanforderungen:"],
           par [htxt "Prüfungsanforderungen aller Module im ",
-            spShortSelectionInitial insem semSelection lowerSemesterSelection,
+            spShortSelectionInitial insem semSelection
+                                    (findSemesterSelection cursem cursem),
             spPrimButton (t "show") showExams]]
  where
   scode,insem free
@@ -53,11 +54,11 @@ searchPageView sinfo searchcontroller showExamController =
   searchHandler env = searchcontroller (map toLower (env scode)) >>= getForm
 
   semSelection = map (\(s,i) -> (showSemester s,show i))
-                     (zip semesterSelection [0..])
+                     (zip (semesterSelection cursem) [0..])
 
   showExams env =
     let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
-     in showExamController (semesterSelection!!semi)
+     in showExamController (semesterSelection cursem !! semi)
          >>= getForm
 
 -----------------------------------------------------------------------------

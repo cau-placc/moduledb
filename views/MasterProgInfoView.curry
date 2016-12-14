@@ -20,21 +20,22 @@ import List
 --- list of the form [(catkey,recommended,moddatakey,term,year)]
 --- where each sublist are module instances of the same category
 --- and contains additional empty instances
-readAndExtendProgMods :: String -> [[(String,Bool,String,String,Int)]]
-readAndExtendProgMods s =
+readAndExtendProgMods :: (String,Int) -> String
+                      -> [[(String,Bool,String,String,Int)]]
+readAndExtendProgMods (curterm,curyear) s =
   [filterTag "IG",filterTag "TG",filterTag "IS",filterTag "MV"]
  where
    xs = readQTerm s
    filterTag ct = let mis = filter (\ (t,_,_,_,_) -> ct==t) xs
                    in if length mis == 0 then mis++[emptyMI ct,emptyMI ct]
                                          else mis++[emptyMI ct]
-   emptyMI ct = (ct,False,"",currentTerm,currentYear)
+   emptyMI ct = (ct,False,"",curterm,curyear)
 
 --- The WUI specification for the entity type MasterProgInfo.
 --- It also includes fields for associated entities.
-wMasterProgInfo :: [(ModInst,ModData,[Category])]
+wMasterProgInfo :: (String,Int) -> [(ModInst,ModData,[Category])]
                 -> WuiSpec (String,String,String,String,String,String)
-wMasterProgInfo modinsts =
+wMasterProgInfo cursem@(curterm,curyear) modinsts =
   withRendering
    (w6Tuple wProgMods wPara wPara wPara wPara wPara)
    (renderLabels masterProgInfoLabelList)
@@ -43,8 +44,8 @@ wMasterProgInfo modinsts =
   wProgMods =
      transformWSpec (\ (e1,e2,e3,e4) -> showQTerm (filterCodes
                                                     (concat [e1,e2,e3,e4])),
-                     \ s -> let (e1:e2:e3:e4:_) = readAndExtendProgMods s
-                                           in (e1,e2,e3,e4))
+                     \ s -> let (e1:e2:e3:e4:_) = readAndExtendProgMods cursem s
+                            in (e1,e2,e3,e4))
     (w4Tuple (wList (modsems2wSelect "IG" igmods))
              (wList (modsems2wSelect "TG" tgmods))
              (wList (modsems2wSelect "IS" ismods))
@@ -67,7 +68,7 @@ wMasterProgInfo modinsts =
       (wSelectBool "Pflicht" "Empfehlung"
          `withRendering` shorttextinputRendering)
       (wSelect showModSem
-               ((catkey,"",currentTerm,currentYear) :cs)
+               ((catkey,"",curterm,curyear) :cs)
          `withRendering` largetextinputRendering))
 
   showModSem (_,mc,term,year) =
@@ -136,20 +137,21 @@ masterProgInfo2Tuple masterProgInfo =
 
 --- WUI Type for editing or creating MasterProgInfo entities.
 --- Includes fields for associated entities.
-wMasterProgInfoType :: MasterProgInfo -> [(ModInst,ModData,[Category])]
+wMasterProgInfoType :: (String,Int) -> MasterProgInfo
+                    -> [(ModInst,ModData,[Category])]
                     -> WuiSpec MasterProgInfo
-wMasterProgInfoType masterProgInfo modinsts =
+wMasterProgInfoType cursem masterProgInfo modinsts =
   transformWSpec
    (tuple2MasterProgInfo masterProgInfo,masterProgInfo2Tuple)
-   (wMasterProgInfo modinsts)
+   (wMasterProgInfo cursem modinsts)
 
 --- Supplies a WUI form to edit the given MasterProgInfo entity.
 --- Takes also associated entities and a list of possible associations
 --- for every associated entity type.
 editMasterProgInfoView
- :: MasterProgInfo -> [(ModInst,ModData,[Category])]
+ :: MasterProgInfo -> (String,Int) -> [(ModInst,ModData,[Category])]
  -> (Bool -> MasterProgInfo -> Controller) -> [HtmlExp]
-editMasterProgInfoView masterProgInfo modinsts controller =
+editMasterProgInfoView masterProgInfo cursem modinsts controller =
   let initdata = masterProgInfo
       
       wuiframe = wuiEditFormWithText
@@ -161,7 +163,7 @@ editMasterProgInfoView masterProgInfo modinsts controller =
                    (controller False initdata)
       
       (hexp ,handler) = wuiWithErrorForm
-                         (wMasterProgInfoType masterProgInfo modinsts)
+                         (wMasterProgInfoType cursem masterProgInfo modinsts)
                          initdata (nextControllerForData (controller True))
                          (wuiFrameToForm wuiframe)
    in wuiframe hexp handler

@@ -20,10 +20,10 @@ import MultiLang
 --- The WUI specification for the entity type AdvisorStudyProgram.
 --- It also includes fields for associated entities.
 wAdvisorStudyProgram
-  :: Bool -> UserSessionInfo -> [StudyProgram]
+  :: Int -> Bool -> UserSessionInfo -> [StudyProgram]
   -> [User]
   -> WuiSpec (String,String,Int,String,String,String,Bool,StudyProgram,User)
-wAdvisorStudyProgram isnewprog sinfo studyProgramList userList =
+wAdvisorStudyProgram curyear isnewprog sinfo studyProgramList userList =
   withRendering
    (w9Tuple wLargeRequiredString wTrm wYr wStr wStr wStr
      wVisible
@@ -39,7 +39,8 @@ wAdvisorStudyProgram isnewprog sinfo studyProgramList userList =
   admin = isAdminSession sinfo
   
   wTrm = if isnewprog || admin then wTerm        else wConstant stringToHtml
-  wYr  = if isnewprog || admin then wCurrentYear else wConstant intToHtml
+  wYr  = if isnewprog || admin then wCurrentYear curyear
+                               else wConstant intToHtml
 
   wStudyProg = if isnewprog then wSelect studyProgramName studyProgramList
                             else wConstant (stringToHtml . studyProgramName)
@@ -98,28 +99,28 @@ advisorStudyProgram2Tuple studyProgram user advisorStudyProgram =
 --- WUI Type for editing or creating AdvisorStudyProgram entities.
 --- Includes fields for associated entities.
 wAdvisorStudyProgramType
-  :: UserSessionInfo -> AdvisorStudyProgram
+  :: UserSessionInfo -> Int -> AdvisorStudyProgram
   -> StudyProgram
   -> User -> [StudyProgram] -> [User] -> WuiSpec AdvisorStudyProgram
-wAdvisorStudyProgramType sinfo
+wAdvisorStudyProgramType sinfo curyear
     advisorStudyProgram studyProgram user studyProgramList userList =
   transformWSpec
    (tuple2AdvisorStudyProgram advisorStudyProgram
    ,advisorStudyProgram2Tuple studyProgram user)
-   (wAdvisorStudyProgram False sinfo studyProgramList userList)
+   (wAdvisorStudyProgram curyear False sinfo studyProgramList userList)
 
 --- Supplies a WUI form to create a new AdvisorStudyProgram entity.
 --- The fields of the entity have some default values.
 blankAdvisorStudyProgramView
-  :: UserSessionInfo
+  :: UserSessionInfo -> (String,Int)
   -> [StudyProgram]
   -> User -> [User]
   -> ((String,String,Int,String,String,String,Bool,StudyProgram,User)
   -> Controller)
   -> Controller -> [HtmlExp]
-blankAdvisorStudyProgramView
-    sinfo possibleStudyPrograms user possibleUsers controller cancelcontroller =
-  createAdvisorStudyProgramView sinfo "" "" 2015 "" "" "" False
+blankAdvisorStudyProgramView sinfo cursem possibleStudyPrograms user
+                             possibleUsers controller cancelcontroller =
+  createAdvisorStudyProgramView sinfo cursem "" "" 2015 "" "" "" False
    defaultStudyProgram
    user
    possibleStudyPrograms
@@ -136,7 +137,7 @@ blankAdvisorStudyProgramView
 --- Supplies a WUI form to create a new AdvisorStudyProgram entity.
 --- Takes default values to be prefilled in the form fields.
 createAdvisorStudyProgramView
-  :: UserSessionInfo
+  :: UserSessionInfo -> (String,Int)
   -> String
   -> String
   -> Int
@@ -152,7 +153,7 @@ createAdvisorStudyProgramView
   -> Controller)
   -> Controller -> [HtmlExp]
 createAdvisorStudyProgramView
-    sinfo
+    sinfo (_,curyear)
     defaultName
     defaultTerm
     defaultYear
@@ -167,7 +168,7 @@ createAdvisorStudyProgramView
     controller
     cancelcontroller =
   renderWuiForm
-   (wAdvisorStudyProgram True sinfo possibleStudyPrograms possibleUsers)
+   (wAdvisorStudyProgram curyear True sinfo possibleStudyPrograms possibleUsers)
    (defaultName
    ,defaultTerm
    ,defaultYear
@@ -186,14 +187,14 @@ createAdvisorStudyProgramView
 --- Takes also associated entities and a list of possible associations
 --- for every associated entity type.
 editAdvisorStudyProgramView
-  :: UserSessionInfo
+  :: UserSessionInfo -> (String,Int)
   -> AdvisorStudyProgram
   -> StudyProgram
   -> User
   -> [StudyProgram]
   -> [User] -> (AdvisorStudyProgram -> Controller) -> Controller -> [HtmlExp]
 editAdvisorStudyProgramView
-    sinfo
+    sinfo (_,curyear)
     advisorStudyProgram
     relatedStudyProgram
     relatedUser
@@ -202,7 +203,8 @@ editAdvisorStudyProgramView
     controller
     cancelcontroller =
   renderWuiForm
-   (wAdvisorStudyProgramType sinfo advisorStudyProgram relatedStudyProgram
+   (wAdvisorStudyProgramType sinfo curyear advisorStudyProgram
+                             relatedStudyProgram
      relatedUser
      possibleStudyPrograms
      possibleUsers)

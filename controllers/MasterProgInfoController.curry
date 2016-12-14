@@ -25,8 +25,9 @@ editMasterProgInfoController :: (String,Int) -> Controller
 editMasterProgInfoController semyear cntcontroller masterProgInfoToEdit =
   checkAuthorization
    (masterProgInfoOperationAllowed (UpdateEntity masterProgInfoToEdit)) $ \_ -> do
+    csem  <- getCurrentSemester
     modinsts <- runJustT (getMasterModInstInSemesters semyear 3)
-    return (editMasterProgInfoView masterProgInfoToEdit modinsts
+    return (editMasterProgInfoView masterProgInfoToEdit csem modinsts
                              (updateMasterProgInfoController cntcontroller))
 
 --- Persists modifications of a given MasterProgInfo entity to the

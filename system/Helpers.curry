@@ -11,11 +11,10 @@ module Helpers(LogEvent(..),logEvent,
                hrefs2markdown,
                docText2html, docText2latex, escapeLaTeXSpecials,
                quoteUnknownLatexCmd,
+               getCurrentSemester,
                showSemester, showLongSemester, showSemesterCode,
                nextSemester, prevSemester, leqSemester,
                semesterSelection, findSemesterSelection,
-               lowerSemesterSelection, upperSemesterSelection,
-               currentUpperSemester,
                imageNB, wTerm, wCurrentYear, wYear, wVisible,
                wLargeString, wLargeRequiredString,
                wMediumString, wMediumRequiredString,
@@ -260,6 +259,16 @@ logUnknownLatex cmd =
 -----------------------------------------------------------------------------
 -- Semester/Year management:
 
+--- Gets the current semester from the current date.
+getCurrentSemester :: IO (String,Int)
+getCurrentSemester = do
+  ltime <- getLocalTime
+  return $ monthYearToSemester (ctMonth ltime) (ctYear ltime)
+ where
+  monthYearToSemester mt yr | mt>=4 && mt<=9 = ("SS",yr)
+                            | mt>=10         = ("WS",yr)
+                            | otherwise      = ("WS",yr-1)
+                            
 -- show a semester:
 showSemester (sem,year) =
   let yr2 = year `mod` 100
@@ -289,28 +298,20 @@ prevSemester (sem,year) = if sem=="WS" then ("SS",year) else ("WS",year-1)
 leqSemester :: (String,Int) -> (String,Int) -> Bool
 leqSemester (s1,y1) (s2,y2) = y1 < y2 || (y1 == y2 && (s1 == s2 || s1 == "SS"))
 
--- a list of semesters to select in some WUIs
-semesterSelection :: [(String,Int)]
-semesterSelection =
-  take 14 (iterate nextSemester (iterate prevSemester currentSemester !! 6))
+-- A list of semesters to select in some WUIs where the current semester
+-- is given:
+semesterSelection :: (String,Int) -> [(String,Int)]
+semesterSelection cursem =
+  take 14 (iterate nextSemester (iterate prevSemester cursem !! 6))
 
--- find the index of a given semester in the semesterSelection list:
-findSemesterSelection :: (String,Int) -> Int
-findSemesterSelection sem =
+-- find the index of a given semester in the semesterSelection list
+-- where the current semester is given as the first argument:
+findSemesterSelection :: (String,Int) -> (String,Int) -> Int
+findSemesterSelection cursem sem =
   maybe (error $ "Helpers.findSemesterSelection: semester " ++
                  showSemester sem ++ " not found!")
         id
-        (findIndex (==sem) semesterSelection)
-
--- preselected lower and upper bound index of a semester list:
-lowerSemesterSelection :: Int
-lowerSemesterSelection = findSemesterSelection currentSemester
-
-upperSemesterSelection :: Int
-upperSemesterSelection = lowerSemesterSelection + 3
-
--- the upper semester in current period views:
-currentUpperSemester = iterate nextSemester currentSemester !! 3
+        (findIndex (==sem) (semesterSelection cursem))
 
 -----------------------------------------------------------------------------
 --- An image without borders.
@@ -324,9 +325,9 @@ wTerm = wSelect id ["WS","SS"]
          `withRendering` shorttextinputRendering
 
 --- The WUI specification for an almost current year.
-wCurrentYear :: WuiSpec Int
-wCurrentYear = wSelect show [(currentYear-4)..(currentYear+6)]
-                 `withRendering` shorttextinputRendering
+wCurrentYear :: Int -> WuiSpec Int
+wCurrentYear curyear = wSelect show [(curyear-4) .. (curyear+6)]
+                         `withRendering` shorttextinputRendering
 
 --- The WUI specification for an arbitrary year.
 wYear :: WuiSpec Int

@@ -124,8 +124,9 @@ listAllCategoryController :: Controller
 listAllCategoryController =
   checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
     do let t = translate sinfo
+       csem  <- getCurrentSemester
        categorys <- runQ queryAllCategorys
-       return (listCategoryView sinfo (Right [htxt $ t "All categories"])
+       return (listCategoryView sinfo csem (Right [htxt $ t "All categories"])
                  (map (\c -> (Left c,[])) (mergeSortBy leqCategory categorys))
                  [] []
                  showCategoryPlanController formatCatModulesForm
@@ -143,12 +144,13 @@ listCurrentUserCategoryController listall =
        users <- runQ $ queryCondUser (\u -> userLogin u == lname)
        if null users then (displayError "Illegal URL") else
         do usermods <- runQ $ queryModDataOfUser (userKey (head users))
+           csem  <- getCurrentSemester
            showmods <- if listall
                          then return usermods
                          else mapIO addModInsts usermods >>=
-                              return . map fst . filter isCurrentModInst
+                              return . map fst . filter (isCurrentModInst csem)
            let t = translate sinfo
-           return $ listCategoryView sinfo
+           return $ listCategoryView sinfo csem
                         (Right $ listCatHeader t)
                         [(Right "",map (\m->(m,[],[])) showmods)]
                         [] []
@@ -166,9 +168,9 @@ listCurrentUserCategoryController listall =
      returnT (md, mis)
 
    -- Has a module empty instances or instances in the current semester frame?
-   isCurrentModInst (_,mis) =
+   isCurrentModInst cursem (_,mis) =
      null mis || not (null (intersect (map modInstSemester mis)
-                                      (drop 2 semesterSelection)))
+                                      (drop 2 (semesterSelection cursem))))
 
 --- Lists a study program with all its Category entities.
 listStudyProgramCategoryController :: Bool -> StudyProgram -> Controller
@@ -187,7 +189,8 @@ listStudyProgramCategoryController listall studyprog =
                                              (userLoginOfSession sinfo))))
                   categorys
         else mapT (\c -> returnT (Left c,[])) categorys
-       return (listCategoryView sinfo (Left studyprog)
+       csem  <- getCurrentSemester
+       return (listCategoryView sinfo csem (Left studyprog)
                   catmods [] []
                   showCategoryPlanController
                   formatCatModulesForm showEmailCorrectionController)
@@ -200,6 +203,7 @@ showCategoryPlanController
 showCategoryPlanController mbstudyprog catmods startsem stopsem
                            withunivis withmprogs withstudyplan = do
   sinfo <- getUserSessionInfo
+  csem  <- getCurrentSemester
   let filterMods ms = maybe (filter modDataVisible ms)
                             (const ms)
                             (userLoginOfSession sinfo)
@@ -208,7 +212,7 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem
                                mapIO getModInsts (filterMods mods) >>= \mmis ->
                                return (c,mmis))
                        catmods
-  return (listCategoryView sinfo mbstudyprog
+  return (listCategoryView sinfo csem mbstudyprog
              catmodinsts semPeriod users
              showCategoryPlanController
              formatCatModulesForm showEmailCorrectionController)
@@ -275,7 +279,8 @@ showCategoryController cat =
        let spk     = categoryStudyProgramProgramCategoriesKey cat
            mbsprog = find (\p -> studyProgramKey p == spk) sprogs
        mods <- runJustT $ getModDataOfCategory (categoryKey cat)
-       return (listCategoryView sinfo
+       csem  <- getCurrentSemester
+       return (listCategoryView sinfo csem
                  (maybe (Right [htxt "???"]) Left mbsprog)
                  [(Left cat,map (\m->(m,[],[]))
                                 (maybe (filter modDataVisible mods)

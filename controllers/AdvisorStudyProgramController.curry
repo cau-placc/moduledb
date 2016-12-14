@@ -54,10 +54,11 @@ newAdvisorStudyProgramController =
   checkAuthorization (advisorStudyProgramOperationAllowed NewEntity) $ \sinfo ->
    do allStudyPrograms <- runQ queryAllStudyPrograms
       allUsers <- runQ queryAllUsers
+      csem  <- getCurrentSemester
       return $ maybe
        [h1 [htxt "Illegal operation"]]
        (\user ->
-         blankAdvisorStudyProgramView sinfo
+         blankAdvisorStudyProgramView sinfo csem
            (sortBy leqStudyProgram allStudyPrograms)
            user allUsers
            (\entity ->
@@ -103,8 +104,9 @@ editAdvisorStudyProgramController advisorStudyProgramToEdit =
                               (getStudyAdvisingUser advisorStudyProgramToEdit)
         let aspkey = advisorStudyProgramKey advisorStudyProgramToEdit
             showctrl = showASPController aspkey
+        csem <- getCurrentSemester
         return
-         (editAdvisorStudyProgramView sinfo advisorStudyProgramToEdit
+         (editAdvisorStudyProgramView sinfo csem advisorStudyProgramToEdit
            studyProgramsAdvisedStudyProgram
            studyAdvisingUser
            allStudyPrograms

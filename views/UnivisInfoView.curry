@@ -174,21 +174,22 @@ missingMDBMessage md sem =
 ------------------------------------------------------------------------
 --- Supplies a WUI form to create a new UnivisInfo entity.
 --- The fields of the entity have some default values.
-loadUnivisView :: ((String,Int) -> Controller) -> [HtmlExp]
-loadUnivisView loadcontroller =
+loadUnivisView :: (String,Int) -> ((String,Int) -> Controller) -> [HtmlExp]
+loadUnivisView cursem loadcontroller =
     [h1 [htxt "Daten aus dem UnivIS der CAU laden"],
      par [htxt "Daten aus dem UnivIS für das Semester ",
-          spShortSelectionInitial insem semSelection lowerSemesterSelection,
+          spShortSelectionInitial insem semSelection
+                                  (findSemesterSelection cursem cursem),
           spButton "jetzt übernehmen" loadData,
           htxt " (dauert etwas länger!)"]]
  where
   insem free
 
   semSelection = map (\(s,i) -> (showSemester s,show i))
-                     (zip semesterSelection [0..])
+                     (zip (semesterSelection cursem) [0..])
 
   loadData env =
     let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
-     in loadcontroller (semesterSelection!!semi) >>= getForm
+     in loadcontroller (semesterSelection cursem !! semi) >>= getForm
 
 

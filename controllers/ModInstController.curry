@@ -37,7 +37,8 @@ addModInstController :: ModData -> User -> Controller -> Controller
 addModInstController md user cntcontroller =
   checkAuthorization (modInstOperationAllowed NewEntity) $ \_ -> do
     allUsers <- runQ (transformQ (mergeSortBy leqUser) queryAllUsers)
-    return (addModInstView user allUsers
+    csem  <- getCurrentSemester
+    return (addModInstView user allUsers csem
                            (createModInstController md cntcontroller))
 
 --- Persists a new ModInst entity to the database.
@@ -62,8 +63,10 @@ editAllModInstController :: ModData -> Controller -> Controller
 editAllModInstController md cntcontroller = do
    --checkAuthorization (modInstOperationAllowed (UpdateEntity md)) $ do
    admin <- isAdmin
-   allinsts <- runQ $ transformQ (mergeSortBy leqModInst . filterModInsts admin)
-                                 (queryInstancesOfMod (modDataKey md))
+   cursem   <- getCurrentSemester
+   allinsts <- runQ $ transformQ
+                        (mergeSortBy leqModInst . filterModInsts admin cursem)
+                        (queryInstancesOfMod (modDataKey md))
    allmpkeys <- runQ $ getMasterProgramKeysOfModInst allinsts
    allspkeys <- runJustT $
                  mapT (\mi -> getDB (getAdvisorStudyProgramKeysOfModInst mi))
@@ -73,15 +76,17 @@ editAllModInstController md cntcontroller = do
    let editinsts = map (\ (mi,_,_) -> mi)
                        (filter (\ (_,mks,sks) -> null mks && null sks)
                                (zip3 allinsts allmpkeys allspkeys))
-   return (editModInstView admin editinsts
+   return (editModInstView admin cursem editinsts
              allUsers (updateAllModInstController editinsts cntcontroller))
  where
-  filterModInsts admin =
-   if admin
-   then id
-   else filter (\mi -> leqSemester (currentTerm,currentYear)
-                                   (modInstTerm mi,modInstYear mi))
-
+  filterModInsts admin cursem =
+   -- the next semester in the future where we changes are allowed:
+   let futuresem = nextSemester (nextSemester (nextSemester cursem))
+   in if admin
+        then id
+        else filter (\mi -> leqSemester futuresem
+                                        (modInstTerm mi,modInstYear mi))
+ 
 --- Persists modifications of given ModInst entities to the
 --- database depending on the Boolean argument. If the Boolean argument
 --- is False, nothing is changed.

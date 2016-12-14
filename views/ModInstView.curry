@@ -17,20 +17,20 @@ import Helpers
 import UserView(leqUser)
 
 --- The WUI specification for a term/year/user tuple.
-wModInst :: [User] -> WuiSpec (String,Int,User)
-wModInst userList =
+wModInst :: Int -> [User] -> WuiSpec (String,Int,User)
+wModInst curyear userList =
   withRendering
-   (wTriple wTerm wCurrentYear
+   (wTriple wTerm (wCurrentYear curyear)
             (wSelect userToShortView (sortBy leqUser userList)))
    (renderLabels (map (\s -> [stringToHtml s]) ["Semester","Jahr","Dozent"]))
 
 --- The WUI specification for a list of term/year/user tuples with a deletion
 --- option.
 --- If the first argument is true, the year can be arbitrary.
-wListModInst :: Bool -> [User] -> WuiSpec [(String,Int,User,Bool)]
-wListModInst someyear userList =
+wListModInst :: Int -> Bool -> [User] -> WuiSpec [(String,Int,User,Bool)]
+wListModInst curyear someyear userList =
   wList
-   (w4Tuple wTerm (if someyear then wYear else wCurrentYear)
+   (w4Tuple wTerm (if someyear then wYear else (wCurrentYear curyear))
             (wSelect userToShortView (sortBy leqUser userList))
             (wCheckBool [htxt "Semester löschen"]) )
 
@@ -56,28 +56,28 @@ modInst2Tuple users modInst =
 --- WUI Type for editing a list of ModInst entities.
 --- If the first argument is true, the year can be arbitrary.
 --- Includes fields for associated entities.
-wModInstsType :: Bool -> [ModInst] -> [User] -> WuiSpec [(ModInst,Bool)]
-wModInstsType someyear insts userList =
+wModInstsType :: Int -> Bool -> [ModInst] -> [User] -> WuiSpec [(ModInst,Bool)]
+wModInstsType curyear someyear insts userList =
   transformWSpec
    (\modinsts -> map (\ (mi,(t,y,u,d)) -> (tuple2ModInst mi (t,y,u),d))
                      (zip insts modinsts),
     map (\ (mi,b) -> add4 b (modInst2Tuple userList mi)))
-   (wListModInst someyear userList)
+   (wListModInst curyear someyear userList)
  where
    add4 b (x,y,z) = (x,y,z,b)
 
 --- Supplies a WUI form to create a new ModInst entity.
 --- Takes default values to be prefilled in the form fields.
-addModInstView :: User -> [User]
+addModInstView :: User -> [User] -> (String,Int)
                -> (Bool -> (String,Int,User) -> Controller) -> [HtmlExp]
-addModInstView defaultUser possibleUsers storecontroller =
-  let initdata = (currentTerm,currentYear,defaultUser)
+addModInstView defaultUser possibleUsers (curterm,curyear) storecontroller =
+  let initdata = (curterm,curyear+1,defaultUser)
       
       wuiframe = wuiEditForm "Neues Semester hinzufügen" "Hinzufügen"
                              (storecontroller False initdata)
       
       (hexp ,handler) = wuiWithErrorForm
-                         (wModInst possibleUsers) initdata
+                         (wModInst (curyear+1) possibleUsers) initdata
                          (nextControllerForData (storecontroller True))
                          (wuiFrameToForm wuiframe)
    in wuiframe hexp handler
@@ -85,24 +85,27 @@ addModInstView defaultUser possibleUsers storecontroller =
 --- Supplies a WUI form to edit the given ModInst entity.
 --- Takes also associated entities and a list of possible associations
 --- for every associated entity type.
-editModInstView :: Bool -> [ModInst] -> [User]
+editModInstView :: Bool -> (String,Int) -> [ModInst] -> [User]
                 -> (Bool -> [(ModInst,Bool)] -> Controller) -> [HtmlExp]
-editModInstView admin insts possibleUsers controller =
+editModInstView admin (_,curyear) insts possibleUsers controller =
   let wuiframe = wuiEditFormWithText
                     "Semesterangaben ändern" "Änderungen speichern"
                     [par [htxt modinstcomment]]
                     (controller False (map (\i -> (i,False)) insts))
       
       (hexp ,handler) = wuiWithErrorForm
-                         (wModInstsType admin insts possibleUsers)
+                         (wModInstsType curyear admin insts possibleUsers)
                          (map (\i -> (i,False)) insts)
                          (nextControllerForData (controller True))
                          (wuiFrameToForm wuiframe)
    in wuiframe hexp handler
  where
-  modinstcomment = "Anmerkung: Alte Veranstaltungen und Veranstaltungen, "++
+  modinstcomment =
+    "Anmerkung: Veranstaltungen innerhalb des Planungszeitraumes " ++
+    "(bis zu den beiden nächsten Semestern) und Veranstaltungen, "++
     "die schon in Masterprogrammen eingeplant sind, können nicht "++
-    "verändert werden!"
+    "verändert werden! In Ausnahmefällen kontaktieren Sie die " ++
+    "Studiengangskoordinatoren."
 
 --- Supplies a view to show the details of a ModInst.
 showModInstView :: ModInst -> ModData -> User -> Controller -> [HtmlExp]

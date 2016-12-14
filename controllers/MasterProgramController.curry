@@ -55,7 +55,9 @@ newMasterProgramController =
                        login
     maybe (return [h1 [htxt "Illegal operation"]])
           (\u -> do mprogs <- runQ $ queryMasterProgramOfUser (userKey u)
-                    return $ blankMasterProgramView u mprogs allMasterCoreAreas
+                    csem  <- getCurrentSemester
+                    return $ blankMasterProgramView u csem mprogs
+                               allMasterCoreAreas
                                createMasterProgramController)
           mbuser
 
@@ -152,8 +154,9 @@ listMasterProgramController listall =
   checkAuthorization (masterProgramOperationAllowed ListEntities) $ \sinfo ->
    do
     allmpinfos <- runQ queryMasterProgramMainInfos
+    csem       <- getCurrentSemester
     let mpinfos = if listall then allmpinfos
-                             else filter currentProgram allmpinfos
+                             else filter (currentProgram csem) allmpinfos
     coreareas <- runQ queryAllMasterCoreAreas
     return (listMasterProgramView sinfo listall
               (maybe (filter visibleProgram mpinfos)
@@ -161,8 +164,8 @@ listMasterProgramController listall =
               coreareas)
  where
   -- is a master program a current one?
-  currentProgram (_,_,term,year,_,_) =
-    leqSemester (prevSemester (prevSemester currentSemester)) (term,year)
+  currentProgram cursem (_,_,term,year,_,_) =
+    leqSemester (prevSemester (prevSemester cursem)) (term,year)
 
   visibleProgram (_,_,_,_,vis,_) = vis
 

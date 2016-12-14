@@ -92,14 +92,14 @@ wMasterProgramType admin masterProgram masterCoreArea user masterCoreAreaList
 
 --- Supplies a WUI form to create a new MasterProgram entity.
 blankMasterProgramView
- :: User -> [MasterProgram] -> [MasterCoreArea]
+ :: User -> (String,Int) -> [MasterProgram] -> [MasterCoreArea]
   -> (Bool -> (String,Maybe MasterProgram,String,Int,String,String,
                String,Bool,MasterCoreArea,User)
       -> Controller)
   -> [HtmlExp]
-blankMasterProgramView user mprogs possibleMasterCoreAreas controller =
-  let initdata = ("",Nothing,currentTerm,currentYear,
-                  head possibleMasterCoreAreas)
+blankMasterProgramView user (curterm,curyear) mprogs
+                       possibleMasterCoreAreas controller =
+  let initdata = ("",Nothing,curterm,curyear,head possibleMasterCoreAreas)
       
       storeTitleController ::
          Bool -> (String,Maybe MasterProgram,String,Int,MasterCoreArea)
@@ -111,19 +111,20 @@ blankMasterProgramView user mprogs possibleMasterCoreAreas controller =
                              (storeTitleController False initdata)
       
       (hexp ,handler) = wuiWithErrorForm
-                         (wMasterProgramTitle mprogs possibleMasterCoreAreas)
+                         (wMasterProgramTitle curyear mprogs
+                                              possibleMasterCoreAreas)
                          initdata (nextControllerForData
                                   (storeTitleController True))
                          (wuiFrameToForm wuiframe)
    in wuiframe hexp handler
 
-wMasterProgramTitle :: [MasterProgram] -> [MasterCoreArea]
+wMasterProgramTitle :: Int -> [MasterProgram] -> [MasterCoreArea]
            -> WuiSpec (String,Maybe MasterProgram,String,Int,MasterCoreArea)
-wMasterProgramTitle mprogs possibleMasterCoreAreas =
+wMasterProgramTitle curyear mprogs possibleMasterCoreAreas =
   w5Tuple wLargeString
           (wSelect (maybe "" masterProgramToShortView)
                    (Nothing : map Just mprogs))
-          wTerm wCurrentYear
+          wTerm (wCurrentYear curyear)
           (wSelect masterCoreAreaToShortView possibleMasterCoreAreas)
   `withCondition` (\ (t,mp,_,_,_) -> not (null t && mp==Nothing))
   `withError` "Fehler: Titel eingeben oder altes Masterprogramm auswaehlen!"

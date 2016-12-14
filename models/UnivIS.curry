@@ -8,6 +8,7 @@ import Helpers
 import ReadUnivIS
 
 -- Initialize Univis DB:
+initUnivisDB :: IO String
 initUnivisDB = do
   addUnivisOfSemester ("WS",2009)
   addUnivisOfSemester ("SS",2010)

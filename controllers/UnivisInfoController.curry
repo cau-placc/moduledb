@@ -17,7 +17,7 @@ import Read
 import UnivIS
 import Authentication
 import ModDataController
-
+import Helpers(getCurrentSemester)
 
 --- Choose the controller for a UnivisInfo entity according to the URL parameter.
 mainUnivisInfoController :: Controller
@@ -108,8 +108,9 @@ showUnivisInfoController univisInfo =
 --- Shows a form to load data from UnivisInfo for selectable term.
 loadUnivisController :: Controller
 loadUnivisController =
-  checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ ->
-    return (loadUnivisView loadUnivisDataController)
+  checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ -> do
+    csem  <- getCurrentSemester
+    return (loadUnivisView csem loadUnivisDataController)
 
 loadUnivisDataController :: (String,Int) -> Controller
 loadUnivisDataController sem =

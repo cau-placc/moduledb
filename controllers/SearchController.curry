@@ -35,18 +35,20 @@ searchController = do
     ["usermods"] -> selectUserModulesController
     ["english"]  -> showAllEnglishModulesController
     _ -> do sinfo <- getUserSessionInfo
-            return (searchPageView sinfo searchModules showExamController)
+            csem  <- getCurrentSemester
+            return (searchPageView sinfo csem searchModules showExamController)
 
 --- Controller for searching modules
 searchModules :: String -> Controller
 searchModules pat = do
   sinfo <- getUserSessionInfo
+  csem  <- getCurrentSemester
   let t = translate sinfo
   modcodes <- runQ $ transformQ (filter isMatching) queryModDataCodeName
   mods <- runJustT $ mapT (\ (k,_,_,_) -> getModData k) modcodes
   let vismods = maybe (filter modDataVisible mods) (const mods)
                       (userLoginOfSession sinfo)
-  return (listCategoryView sinfo
+  return (listCategoryView sinfo csem
             (Right [htxt $ t "Found modules"])
             [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat,
               map (\m->(m,[],[])) vismods)]
@@ -85,9 +87,10 @@ selectUserModulesController = do
 searchUserModules :: User -> Controller
 searchUserModules user = do
   sinfo <- getUserSessionInfo
+  csem  <- getCurrentSemester
   let t = translate sinfo
   mods <- runQ $ queryModDataOfUser (userKey user)
-  return (listCategoryView sinfo
+  return (listCategoryView sinfo csem
                (Right [htxt $ t "Modules of" ++ " " ++ userToShortView user])
                [(Right "",map (\m->(m,[],[])) mods)]
                [] []
@@ -128,9 +131,10 @@ showAllEnglishModulesController = do
 showModulesController :: [ModData] -> Controller
 showModulesController mods = do
   sinfo <- getUserSessionInfo
+  csem  <- getCurrentSemester
   let t = translate sinfo
       (pmods,wmods) = partition isMandatoryModule mods
-  return (listCategoryView sinfo
+  return (listCategoryView sinfo csem
             (Right [htxt $ t "All modules"])
             [(Right (t "Mandatary modules" ++
                      " (Informatik, Wirtschaftsinformatik, Nebenfach)"),

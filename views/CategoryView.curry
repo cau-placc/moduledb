@@ -211,7 +211,7 @@ showCategoryInfo sinfo cat =
 ---   has a UnivIS entry (if this list is empty, UnivIS entries should not
 ---   be shown)
 listCategoryView
-  :: UserSessionInfo
+  :: UserSessionInfo -> (String,Int)
   -> Either StudyProgram [HtmlExp]
   -> [(Either Category String,[(ModData,[Maybe (ModInst,Int)],[Bool])])]
   -> [(String,Int)]
@@ -222,7 +222,7 @@ listCategoryView
   -> (Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
         -> (String,Int) -> (String,Int) -> Controller)
   -> [HtmlExp]
-listCategoryView sinfo mbsprog catmods semperiod users
+listCategoryView sinfo cursem mbsprog catmods semperiod users
                  showCategoryPlanController formatCatModsController
                  showEmailCorrectionController =
   [h1 $ either (\sp -> [studyProgramToHRef sinfo sp]) id mbsprog] ++
@@ -267,12 +267,13 @@ listCategoryView sinfo mbsprog catmods semperiod users
     else
      [par ([bold [htxt $ t "Semester planning"], htxt $ t " from ",
             spShortSelectionInitial fromsem semSelection
-              (if null semperiod then lowerSemesterSelection
-                                 else findSemesterSelection (head semperiod)),
+              (findSemesterSelection cursem
+                 (if null semperiod then cursem else (head semperiod))),
             htxt $ t " to ",
             spShortSelectionInitial tosem semSelection
-              (if null semperiod then upperSemesterSelection
-                                 else findSemesterSelection (last semperiod)),
+              (if null semperiod
+                 then findSemesterSelection cursem cursem + 3
+                 else findSemesterSelection cursem (last semperiod)),
             htxt ": ",
             spSmallButton (t "Show") (showPlan False False False mbsprog)] ++
            (maybe []
@@ -335,14 +336,14 @@ listCategoryView sinfo mbsprog catmods semperiod users
                    htxt (if num==0 then "" else '(':show num++")")]]]
 
    semSelection = map (\(s,i) -> (showSemester s,show i))
-                      (zip semesterSelection [0..])
+                      (zip (semesterSelection cursem) [0..])
 
    showPlan withunivis withmprogs withstudyplan sprog env = do
     let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
         stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
     showCategoryPlanController sprog
      (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
-     (semesterSelection!!start) (semesterSelection!!stop)
+     (semesterSelection cursem !! start) (semesterSelection cursem !! stop)
      withunivis withmprogs withstudyplan >>= getForm
 
    showCorrectionEmails sprog env = do
@@ -350,7 +351,8 @@ listCategoryView sinfo mbsprog catmods semperiod users
         stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
     showEmailCorrectionController sprog
      (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
-     (semesterSelection!!start) (semesterSelection!!stop) >>= getForm
+     (semesterSelection cursem !!start) (semesterSelection cursem !! stop)
+        >>= getForm
 
    listCategory :: Category -> [[HtmlExp]]
    listCategory category =
