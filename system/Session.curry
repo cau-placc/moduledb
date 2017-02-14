@@ -41,7 +41,7 @@ getId (SessionId i) = i
 --- Creates a new unused session id.
 getUnusedId :: IO SessionId
 getUnusedId = do
-  (ltime,lsid) <- readGlobal lastId
+  (ltime,lsid) <- safeReadGlobal lastId (0,0)
   clockTime <- getClockTime
   if clockTimeToInt clockTime /= ltime
     then writeGlobal lastId (clockTimeToInt clockTime, 0)
@@ -85,7 +85,7 @@ emptySessionStore = SStore []
 getSessionData :: Global (SessionStore a) -> IO (Maybe a)
 getSessionData sessionData = do
     sid <- getSessionId
-    SStore sdata <- readGlobal sessionData
+    SStore sdata <- safeReadGlobal sessionData emptySessionStore
     return (findInSession sid sdata)
   where
     findInSession si ((id, _, storedData):rest) =
@@ -98,7 +98,7 @@ getSessionData sessionData = do
 putSessionData :: a -> Global (SessionStore a) -> IO ()
 putSessionData newData sessionData = do
   sid <- getSessionId
-  SStore sdata <- readGlobal sessionData
+  SStore sdata <- safeReadGlobal sessionData emptySessionStore
   currentTime <- getClockTime
   case findIndex (\ (id, _, _) -> id == sid) sdata of
     Just i ->
@@ -114,7 +114,7 @@ putSessionData newData sessionData = do
 removeSessionData :: Global (SessionStore a) -> IO ()
 removeSessionData sessionData = do
   sid <- getSessionId
-  SStore sdata <- readGlobal sessionData
+  SStore sdata <- safeReadGlobal sessionData emptySessionStore
   currentTime <- getClockTime
   writeGlobal sessionData
               (SStore (filter (\ (id, _, _) -> id /= sid)

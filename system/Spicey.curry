@@ -638,15 +638,31 @@ addTitle hexp title = hexp `addAttr` ("title",title)
 --------------------------------------------------------------------------
 -- Icons:
 
+homeIcon :: HtmlExp
 homeIcon   = glyphicon "home"
+
+userIcon :: HtmlExp
 userIcon   = glyphicon "user"
+
+loginIcon :: HtmlExp
 loginIcon  = glyphicon "log-in"
+
+logoutIcon :: HtmlExp
 logoutIcon = glyphicon "log-out"
+
+searchIcon :: HtmlExp
 searchIcon = glyphicon "search"
+
+arrowIcon :: HtmlExp
 arrowIcon  = glyphicon "arrow-right"
+
+stprogIcon :: HtmlExp
 stprogIcon = glyphicon "book"
+
+adprogIcon :: HtmlExp
 adprogIcon = glyphicon "road"
 
+glyphicon :: String -> HtmlExp
 glyphicon n = textstyle ("glyphicon glyphicon-"++n) ""
 
 --------------------------------------------------------------------------

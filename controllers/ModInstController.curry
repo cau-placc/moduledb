@@ -81,6 +81,8 @@ editAllModInstController md cntcontroller = do
  where
   filterModInsts admin cursem =
    -- the next semester in the future where we changes are allowed:
+   -- if we are in semester n, it is not allowed to change instances
+   -- in semester n, n+1, and n+2.
    let futuresem = nextSemester (nextSemester (nextSemester cursem))
    in if admin
         then id

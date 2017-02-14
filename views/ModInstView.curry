@@ -26,7 +26,7 @@ wModInst curyear userList =
 
 --- The WUI specification for a list of term/year/user tuples with a deletion
 --- option.
---- If the first argument is true, the year can be arbitrary.
+--- If the second argument is true, the year can be arbitrary.
 wListModInst :: Int -> Bool -> [User] -> WuiSpec [(String,Int,User,Bool)]
 wListModInst curyear someyear userList =
   wList
@@ -54,7 +54,7 @@ modInst2Tuple users modInst =
    head (filter (\u -> userKey u == modInstUserLecturerModsKey modInst) users))
 
 --- WUI Type for editing a list of ModInst entities.
---- If the first argument is true, the year can be arbitrary.
+--- If the second argument is true, the year can be arbitrary.
 --- Includes fields for associated entities.
 wModInstsType :: Int -> Bool -> [ModInst] -> [User] -> WuiSpec [(ModInst,Bool)]
 wModInstsType curyear someyear insts userList =
