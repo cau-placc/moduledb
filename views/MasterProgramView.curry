@@ -318,6 +318,7 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
                        [htxt $ modDataCode md ++": "++ modDataNameG md]
 
 
+masterStudienbereiche :: [(String, String)]
 masterStudienbereiche =
   [("IG","Vertiefende Informatik-Grundlagen"),
    ("TG","Vertiefende theoretische Grundlagen"),

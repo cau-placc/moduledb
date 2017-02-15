@@ -36,7 +36,9 @@ searchController = do
     ["english"]  -> showAllEnglishModulesController
     _ -> do sinfo <- getUserSessionInfo
             csem  <- getCurrentSemester
-            return (searchPageView sinfo csem searchModules showExamController)
+            return $ searchPageView sinfo csem searchModules
+                                    showSemModsController showExamController
+                                    showHandbookController
 
 --- Controller for searching modules
 searchModules :: String -> Controller
@@ -161,6 +163,13 @@ mandatoryModulCodes =
    "Inf-InfNat","NF-Inf-1","NF-Inf-1v","NF-Inf-2"]
 
 
+--- Controller to show all modules in the given semester.
+showSemModsController :: (String,Int) -> Controller
+showSemModsController sem = do
+  semmodkeys <- runQ $ transformQ nub (queryModKeysOfSem sem)
+  semmods    <- runJustT $ mapT getModData semmodkeys
+  showModulesController semmods
+
 --- Controller to show all examination requirement of the modules
 --- in the given semester.
 showExamController :: (String,Int) -> Controller
@@ -172,5 +181,12 @@ showExamController sem = do
               (map (\ (x,Just y) -> (x,y))
                    (filter (\ (m,e) -> modDataVisible m && isJust e)
                            (zip semmods semexams)))
+
+--- Controller to show all modules in the given semester.
+showHandbookController :: (String,Int) -> Controller
+showHandbookController sem = do
+  modkeys <- runQ $ transformQ nub (queryModKeysOfSem sem)
+  mods    <- runJustT $ mapT getModData modkeys
+  formatCatModulesForm [("Alle Module im " ++ showLongSemester sem, mods)]
 
 -----------------------------------------------------------------------------

@@ -40,6 +40,7 @@ toGerman s = maybe s id (lookup s english2german)
 toEnglish :: String -> String
 toEnglish s = maybe s id (lookup s (map (\ (x,y) -> (y,x)) english2german))
 
+english2german :: [(String, String)]
 english2german =
  [("Acknowledgment"     ,"Bestätigung")
  ,("Add semester"       ,"Semester hinzufügen")
@@ -76,6 +77,7 @@ english2german =
  ,("For programmers:"   ,"Für Programmierer:")
  ,("For persons in charge for modules: ","Für Modulverantwortliche: ")
  ,("Forgot your login data?","Login-Daten vergessen?")
+ ,("format modules (PDF)","Module formatieren (PDF)")
  ,("Found modules"      ,"Gefundene Module")
  ,(" from "             ," von ")
  ,("Further information:","Weitere Informationen:")
@@ -155,7 +157,9 @@ english2german =
  ,("Show all modules in this study program",
    "Alle Module in diesem Studienprogramm anzeigen")
  ,("Show module selections:","Module anzeigen:")
+ ,("show examination requirements","Prüfungsanforderungen anzeigen")
  ,("show modules"       ,"Module anzeigen")
+ ,("Show semester modules:","Module eines Semesters anzeigen:")
  ,("Show modules of a person","Module einer Person anzeigen")
  ,("Start: "            ,"Beginn: ")
  ,("Study planner"      ,"Studienplaner")
@@ -185,12 +189,14 @@ english2german =
  ,("Your new password has been sent","Ihr neues Passwort wurde Ihnen zugesandt")
  ]
 
+loginText :: UserSessionInfo -> String -> String
 loginText sinfo loginname = langSelect sinfo
   ("You are logged in as user '" ++ loginname ++
    "' and are allowed to change your modules and programs.")
   ("Sie sind als Benutzer '" ++ loginname ++
    "' angemeldet und können Ihre Module und Programme bearbeiten.")
 
+loginEmailText :: UserSessionInfo -> String -> String -> String
 loginEmailText sinfo loginname passwd = langSelect sinfo
   ("Your login data:\n\nLogin name: " ++ loginname ++
    "\nNew password: " ++ passwd ++
@@ -208,28 +214,32 @@ loginEmailText sinfo loginname passwd = langSelect sinfo
    "und dann nach Auswahl von 'Abmelden' den Punkt\n"++
    "'Passwort aendern' waehlen.")
 
+mainTitle :: UserSessionInfo -> String
 mainTitle sinfo = langSelect sinfo
   "Modules and study programs of the Department of Computer Science"
   "Module und Studienprogramme des Instituts für Informatik"
 
+mainExplanation :: UserSessionInfo -> [HtmlExp]
 mainExplanation sinfo = langSelect sinfo
   [htxt $
     "This web site provides an overview on all modules and "++
     "study programs offered by the Department of Computer Science. "++
     "Additionally, it contains an overiew on all master programs "++
-    "in computer science. A list of all modules offered in English "++
+    "in computer science and business information technology. "++
+    "A list of all modules offered in English "++
     "can be found in the category \"Search modules\"."]
   [htxt $ "Auf diesen Webseiten sind die Module aller Studienprogramme "++
     "des Instituts für Informatik sowie alle vom Institut "++
      "angebotenen Module beschrieben. "++
      "Außerdem befindet sich hier eine Übersicht über alle "++
-     "angebotenen Masterprogramme in Informatik.",
+     "angebotenen Masterprogramme in Informatik und Wirtschaftsinformatik.",
    htxt $ "Aktuelle Informationen zu den Lehrveranstaltungen kann man auch im ",
    spEHref univisURL [htxt "UnivIS"],
    htxt $ " finden."]
  where
   univisURL = "http://univis.uni-kiel.de/"
 
+masterStudyNote :: UserSessionInfo -> [HtmlExp]
 masterStudyNote sinfo = langSelect sinfo
   [italic [htxt "Important note: "],
    htxt "All master students should plan their individual studies with the ",
@@ -241,6 +251,7 @@ masterStudyNote sinfo = langSelect sinfo
    htxt "Damit wird weitgehend gewährleistet, dass das geplante Studium ",
    htxt "auch wirklich durchführbar ist."]
    
+masterStudyOldNote :: UserSessionInfo -> [HtmlExp]
 masterStudyOldNote sinfo = langSelect sinfo
   [htxt "The master programs until SS15 can be found ",
    spEHref oldMasterProgURL [bold [htxt "here"]], htxt "."]
@@ -250,6 +261,7 @@ masterStudyOldNote sinfo = langSelect sinfo
  where
   oldMasterProgURL = "?MasterProgram/list" 
    
+minorSubjectNote :: UserSessionInfo -> [HtmlExp]
 minorSubjectNote sinfo = langSelect sinfo
   [italic [htxt "Note: "],
    htxt "The possible minor/application subjects and their modules are listed ",
@@ -261,12 +273,14 @@ minorSubjectNote sinfo = langSelect sinfo
  where
   minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf-1-fach/bachelorstudiengang/anwendungsgebiete_nebenfaecher"
 
+sendPasswordCmt :: UserSessionInfo -> String
 sendPasswordCmt sinfo = langSelect sinfo
   ("You can send a new password to your email address "++
    "if you are registered in the system.")
   ("Sie können sich ein neues Password an Ihre Email-Adresse " ++
    "zusenden lassen, sofern Sie im System registriert sind.")
   
+ssComment :: UserSessionInfo -> String
 ssComment sinfo = langSelect sinfo
   ("If the master studies are started in the summer term, "++
    "one can also choose a master program from an adjacent winter term. "++
@@ -275,16 +289,19 @@ ssComment sinfo = langSelect sinfo
    "benachbarten Wintersemester gewählt werden. "++
    "Bei der Anpassung berät Sie der Academic Advisor.")
 
+timeoutText :: UserSessionInfo -> String
 timeoutText sinfo = langSelect sinfo
   ("Please note that you are automatically logged out "++
    "if you are inactive for more than 60 minutes.")
   ("Bitte beachten Sie, dass Sie bei mehr als 60 Minuten "++
    "Inaktivität automatisch wieder abgemeldet werden.")
 
+unknownUser :: UserSessionInfo -> String
 unknownUser sinfo = langSelect sinfo
   "There is no user with this email address!"
   "Ein Benutzer mit dieser Email-Adresse ist im System nicht bekannt!"
 
+useURLText :: UserSessionInfo -> String
 useURLText sinfo = langSelect sinfo
   "Please use the following URL to refer to this module from other web pages:"
   "Bitte verwenden Sie die folgende URL, um das Modul aus anderen Webseiten zu referenzieren:"

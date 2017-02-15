@@ -402,10 +402,10 @@ formatCatModulesForm catmods = do
     return ("\\modulecategory{"++catname++"}\n\n"++concat mstr)
     
   formatModData sinfo sprogs md = do
-    respuser <- runJustT (getResponsibleUser md)
+    respuser   <- runJustT (getResponsibleUser md)
     categories <- runJustT (getModDataCategories md)
-    mbdesc <- runQ $ queryDescriptionOfMod (modDataKey md)
-    modinsts <- runQ $ queryInstancesOfMod (modDataKey md)
+    mbdesc     <- runQ $ queryDescriptionOfMod (modDataKey md)
+    modinsts   <- runQ $ queryInstancesOfMod (modDataKey md)
     return (quoteUnknownLatexCmd
               (mod2latex sinfo md modinsts respuser sprogs categories mbdesc))
 

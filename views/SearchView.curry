@@ -21,8 +21,12 @@ import SessionInfo
 -----------------------------------------------------------------------------
 --- A view for searching modules.
 searchPageView :: UserSessionInfo -> (String,Int) -> (String -> Controller)
-               -> ((String,Int) -> Controller) -> [HtmlExp]
-searchPageView sinfo cursem searchcontroller showExamController =
+               -> ((String,Int) -> Controller)
+               -> ((String,Int) -> Controller)
+               -> ((String,Int) -> Controller)
+               -> [HtmlExp]
+searchPageView sinfo cursem searchcontroller showSemModsController
+               showExamController showHandbookController =
   [h1 [htxt $ t "Search modules"],
    h2 [htxt $ t "Search for individual modules:"],
    par [htxt $ t "Search all modules containing", nbsp,
@@ -37,15 +41,20 @@ searchPageView sinfo cursem searchcontroller showExamController =
     if isAdminSession sinfo
       then [nbsp, hrefPrimButton "?search/allresp"
                                  [htxt $ t "Alle Modulverantwortlichen"]]
-      else []
-  ] ++
-  if userLoginOfSession sinfo == Nothing
-    then []
-    else [h2 [htxt "Prüfungsanforderungen:"],
-          par [htxt "Prüfungsanforderungen aller Module im ",
-            spShortSelectionInitial insem semSelection
-                                    (findSemesterSelection cursem cursem),
-            spPrimButton (t "show") showExams]]
+      else [],
+   h2 [htxt $ t "Show semester modules:"],
+   par $ [ spShortSelectionInitial insem semSelection
+                                   (findSemesterSelection cursem cursem)
+         , spPrimButton (t "show modules") (showSem showSemModsController) ] ++
+         (if userLoginOfSession sinfo == Nothing
+            then []
+            else [ spPrimButton (t "show examination requirements")
+                                (showSem showExamController)]) ++
+         (if isAdminSession sinfo
+            then [ spPrimButton (t "format modules (PDF)")
+                                (showSem showHandbookController)]
+            else [])
+  ]
  where
   scode,insem free
 
@@ -56,10 +65,9 @@ searchPageView sinfo cursem searchcontroller showExamController =
   semSelection = map (\(s,i) -> (showSemester s,show i))
                      (zip (semesterSelection cursem) [0..])
 
-  showExams env =
+  showSem controller env =
     let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
-     in showExamController (semesterSelection cursem !! semi)
-         >>= getForm
+    in controller (semesterSelection cursem !! semi) >>= getForm
 
 -----------------------------------------------------------------------------
 --- A view to select a user and apply the given controller to the selected user.
