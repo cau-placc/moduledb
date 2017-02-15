@@ -153,39 +153,14 @@ hrefs2markdown s =
 docText2html :: String -> String
 docText2html = showHtmlExps . markdownText2HTML  . latex2MD
 
--- translate string containing some standard latex markups into HTML:
-latex2html [] = []
-latex2html (c:cs) | c=='\\' = tryTrans c cs slashtrans
-                  | c=='"'  = tryTrans c cs apotrans
-                  | c=='{'  = '\\' : '{' : latex2html cs
-                  | c=='}'  = '\\' : '}' : latex2html cs
-                  | otherwise = htmlIsoUmlauts [c] ++ latex2html cs
- where
-  tryTrans x xs [] = x : latex2html xs
-  tryTrans x xs ((lmacro,hmacro) : ms) = let l = length lmacro in
-    if take l xs == lmacro then hmacro ++ latex2html (drop l xs)
-                           else tryTrans x xs ms
-
-  slashtrans = [("begin{itemize}","<ul>"),("end{itemize}","</ul>"),
-                ("begin{enumerate}","<ol>"),("end{enumerate}","</ol>"),
-                ("item","<li>"),
-                ("\"a","&auml;"),("\"o","&ouml;"),("\"u","&uuml;"),
-                ("\"A","&Auml;"),("\"O","&Ouml;"),("\"U","&Uuml;"),
-                ("ss{}","&szlig;"),("-",""),("\\","\n\n"),(" "," "),
-                ("%","%")]
-
-  apotrans = [("a","&auml;"),("o","&ouml;"),("u","&uuml;"),("s","&szlig;"),
-              ("A","&Auml;"),("O","&Ouml;"),("U","&Uuml;"),
-              ("\'","\""),("`","\"")]
-         
 -- Translate a string containing some standard latex markups into
--- markdown syntax (i.e., also HTML markupds):
+-- markdown syntax (i.e., also HTML markups with UTF-8 encoding):
 latex2MD :: String -> String
 latex2MD [] = []
 latex2MD (c:cs) | c=='\\' = tryTrans cs slashtrans
                 | c=='{'  = '\\' : '{' : latex2MD cs
                 | c=='}'  = '\\' : '}' : latex2MD cs
-                | otherwise = htmlIsoUmlauts [c] ++ latex2MD cs
+                | otherwise = c : latex2MD cs
  where
   tryTrans [] [] = "\\\\" -- quote backslash
   tryTrans (x:xs) [] = -- no translatable LaTeX element found:
