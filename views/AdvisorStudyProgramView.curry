@@ -288,7 +288,8 @@ showAdvisorStudyProgramView
     where
       mandatory = advisorModuleMandatory am
       modtitle = ehref ("?ModData/show/"++showModDataKey md)
-                       [htxt $ modDataCode md ++": "++ modDataNameG md]
+                       [htxt $ modDataCode md ++": "++
+                               (langSelect sinfo modDataNameE modDataNameG) md]
 
 
 --- Compares two AdvisorStudyProgram entities. This order is used in the list view.
