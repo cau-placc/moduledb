@@ -250,6 +250,12 @@ showAdvisorStudyProgramView
    par [HtmlText (docText2html (advisorStudyProgramPrereq asprog))],
    h4 [htxt $ t "Comments"++":"],
    par [HtmlText (docText2html (advisorStudyProgramComments asprog))],
+   h3 [htxt $ t "Program overview by terms:"],
+   spTable $ map (\sem -> [htxt (showSemester sem)] :
+                    let semmods = filter (isAdvisorModuleOfSem sem) amdatas
+                    in map showAdvisorModuleCode semmods
+                 )
+                 (take 3 (iterate nextSemester (startSem,startYear))),
    h3 [htxt $ t "Program overview by categories:"],
    spTable $
      concatMap
@@ -272,6 +278,16 @@ showAdvisorStudyProgramView
    catRef c = hrefCategory ("?Category/show/"++showCategoryKey c)
                     [htxt $ (langSelect sinfo categoryNameE categoryName) c]
                        
+   isAdvisorModuleOfSem sem (_,modinst,_) =
+     modInstSemester modinst == sem
+
+   showAdvisorModuleCode (am,_,md) =
+     [spHrefBlock ("?ModData/show/"++showModDataKey md)
+        [(if mandatory then bold else italic) [htxt $ modDataCode md]]
+         `addTitle` ((langSelect sinfo modDataNameE modDataNameG) md)]
+    where
+      mandatory = advisorModuleMandatory am
+
    isAdvisorModuleOfCat cat (am,_,_) =
      advisorModuleCategoryAdvisorCategorizingKey am == categoryKey cat
 

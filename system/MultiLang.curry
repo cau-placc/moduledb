@@ -135,6 +135,7 @@ english2german =
  ,("Prerequisites"      ,"Voraussetzungen")
  ,("Presence:"          ,"Präsenzzeiten:")
  ,("Program overview by categories:","Programmübersicht nach Studienbereichen:")
+ ,("Program overview by terms:","Programmübersicht nach Semestern:")
  ,("programming language","Programmiersprache")
  ,("public"             ,"öffentlich")
  ,("recommended"        ,"empfohlen")

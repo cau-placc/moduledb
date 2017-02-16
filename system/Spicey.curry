@@ -25,7 +25,7 @@ module Spicey (
   hrefStudyProgram, hrefCategory, smallHrefCategory,
   hrefModule, smallHrefModule, hrefExtModule, hrefModInst,
   hrefUnivisInfo, hrefUnivisDanger,
-  spHref, spEHref, hrefPrimButton,
+  spHref, spHrefBlock, spEHref, hrefPrimButton,
   spButton, spPrimButton, spSmallButton, spTable, spHeadedTable, addTitle,
   spShortSelectionInitial,
   setPageMessage, getPageMessage,

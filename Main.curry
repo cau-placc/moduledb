@@ -28,7 +28,12 @@ import SessionInfo
 dispatcher :: IO HtmlForm
 dispatcher = do
   -- get url
-  (url,ctrlparams) <- getControllerURL
+  (url0,ctrlparams) <- getControllerURL
+  -- if the URL starts with langEN? or langDE?, we set the language and
+  -- drop this part of the URL:
+  url <- if take 4 url0 == "lang" && url0!!6 == '?'
+           then setLanguage (take 2 (drop 4 url0)) >> return (drop 7 url0)
+           else return url0
   
   controller <- nextControllerRefInProcessOrForUrl url >>=
                 maybe (displayError "Illegal URL!")
