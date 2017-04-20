@@ -24,9 +24,11 @@ searchPageView :: UserSessionInfo -> (String,Int) -> (String -> Controller)
                -> ((String,Int) -> Controller)
                -> ((String,Int) -> Controller)
                -> ((String,Int) -> Controller)
+               -> ((String,Int) -> Controller)
                -> [HtmlExp]
 searchPageView sinfo cursem searchcontroller showSemModsController
-               showExamController showHandbookController =
+               showExamController showModSemResponsibles
+               showHandbookController =
   [h1 [htxt $ t "Search modules"],
    h2 [htxt $ t "Search for individual modules:"],
    par [htxt $ t "Search all modules containing", nbsp,
@@ -51,7 +53,9 @@ searchPageView sinfo cursem searchcontroller showSemModsController
             else [ spPrimButton (t "show examination requirements")
                                 (showSem showExamController)]) ++
          (if isAdminSession sinfo
-            then [ spPrimButton (t "format modules (PDF)")
+            then [ spPrimButton (t "persons in charge")
+                                (showSem showModSemResponsibles)
+                 , spPrimButton (t "format modules (PDF)")
                                 (showSem showHandbookController)]
             else [])
   ]
@@ -102,9 +106,9 @@ showExamOverview sem mods =
 
 -----------------------------------------------------------------------------
 --- Supplies a view for the examination requirements of a given list of modules.
-showAllModuleResponsibleView :: [User] -> [HtmlExp]
-showAllModuleResponsibleView users =
-  [h1 [htxt $ "Alle Modulverantwortlichen"],
+showAllModuleResponsibleView :: String -> [User] -> [HtmlExp]
+showAllModuleResponsibleView title users =
+  [h1 [htxt title],
    htxt (intercalate ", " (map userInfo users))]
  where
    userInfo u = unwords [userFirst u, userName u,

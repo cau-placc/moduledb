@@ -130,6 +130,7 @@ english2german =
  ,("Overview on the "   ,"Übersicht über die ")
  ,("Password:"          ,"Passwort:")
  ,("Password changed"   ,"Passwort geändert")
+ ,("persons in charge"  ,"Modulverantwortliche")
  ,("Person in charge:"  ,"Modulverantwortliche(r):")
  ,("planning instruments of the institute","Lehrplanungsinstrumente des Instituts")
  ,("Prerequisites"      ,"Voraussetzungen")

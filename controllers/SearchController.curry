@@ -38,6 +38,7 @@ searchController = do
             csem  <- getCurrentSemester
             return $ searchPageView sinfo csem searchModules
                                     showSemModsController showExamController
+                                    showModSemResponsibleController
                                     showHandbookController
 
 --- Controller for searching modules
@@ -113,7 +114,18 @@ showAllModuleResponsibleController = do
   mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
   let respkeys = nub (map modDataUserResponsibleKey mods)
   respusers <- runJustT (mapT getUser respkeys)
-  return (showAllModuleResponsibleView respusers)
+  return (showAllModuleResponsibleView "Alle Modulverantwortlichen" respusers)
+
+--- Controller to list all responsible persons of the modules
+--- in the given semester.
+showModSemResponsibleController :: (String,Int) -> Controller
+showModSemResponsibleController sem = do
+  semmodkeys <- runQ $ transformQ nub (queryModKeysOfSem sem)
+  semmods    <- runJustT $ mapT getModData semmodkeys
+  let respkeys = nub (map modDataUserResponsibleKey semmods)
+  respusers <- runJustT (mapT getUser respkeys)
+  return (showAllModuleResponsibleView
+            ("Alle Modulverantwortlichen im " ++ showSemester sem) respusers)
 
 --- Controller to list all (visible) modules taught in English.
 showAllEnglishModulesController :: Controller
