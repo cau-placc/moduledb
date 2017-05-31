@@ -73,11 +73,14 @@ editAllModInstController md cntcontroller = do
                       allinsts
    allUsers <- runQ (transformQ (mergeSortBy leqUser) queryAllUsers)
    -- select instances not used in master programs:
-   let editinsts = map (\ (mi,_,_) -> mi)
-                       (filter (\ (_,mks,sks) -> null mks && null sks)
-                               (zip3 allinsts allmpkeys allspkeys))
+   let editinsts = concatMap
+                       (\ (mi,mks,sks) -> if (null mks && null sks) || admin
+                                            then [(null mks && null sks, mi)]
+                                            else [])
+                       (zip3 allinsts allmpkeys allspkeys)
    return (editModInstView admin cursem editinsts
-             allUsers (updateAllModInstController editinsts cntcontroller))
+             allUsers
+             (updateAllModInstController (map snd editinsts) cntcontroller))
  where
   filterModInsts admin cursem =
    -- the next semester in the future where we changes are allowed:

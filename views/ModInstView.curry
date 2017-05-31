@@ -27,12 +27,18 @@ wModInst curyear userList =
 --- The WUI specification for a list of term/year/user tuples with a deletion
 --- option.
 --- If the second argument is true, the year can be arbitrary.
-wListModInst :: Int -> Bool -> [User] -> WuiSpec [(String,Int,User,Bool)]
+wListModInst :: Int -> Bool -> [User]
+             -> WuiSpec [Either (String,Int,User,Bool) (String,Int,User)]
 wListModInst curyear someyear userList =
   wList
-   (w4Tuple wTerm (if someyear then wYear else (wCurrentYear curyear))
-            (wSelect userToShortView (sortBy leqUser userList))
-            (wCheckBool [htxt "Semester löschen"]) )
+   (wEither
+     (w4Tuple wTerm (if someyear then wYear else (wCurrentYear curyear))
+              (wSelect userToShortView (sortBy leqUser userList))
+              (wCheckBool [htxt "Semester löschen"]))
+     (wTriple (wConstant htxt)
+              (wConstant (htxt . show))
+              (wSelect userToShortView (sortBy leqUser userList)))
+   )
 
 --- Transformation from data of a WUI form to entity type ModInst.
 tuple2ModInst :: ModInst -> (String,Int,User) -> ModInst
@@ -53,18 +59,23 @@ modInst2Tuple users modInst =
    modInstYear modInst,
    head (filter (\u -> userKey u == modInstUserLecturerModsKey modInst) users))
 
---- WUI Type for editing a list of ModInst entities.
+--- WUI type for editing a list of ModInst entities.
 --- If the second argument is true, the year can be arbitrary.
 --- Includes fields for associated entities.
-wModInstsType :: Int -> Bool -> [ModInst] -> [User] -> WuiSpec [(ModInst,Bool)]
+wModInstsType :: Int -> Bool -> [ModInst] -> [User]
+              -> WuiSpec [Either (ModInst,Bool) ModInst]
 wModInstsType curyear someyear insts userList =
   transformWSpec
-   (\modinsts -> map (\ (mi,(t,y,u,d)) -> (tuple2ModInst mi (t,y,u),d))
-                     (zip insts modinsts),
-    map (\ (mi,b) -> add4 b (modInst2Tuple userList mi)))
+   (\modinsts -> map tuple2modinst (zip insts modinsts),
+    map modinst2tuple)
    (wListModInst curyear someyear userList)
  where
-   add4 b (x,y,z) = (x,y,z,b)
+   tuple2modinst (mi, Left  (t,y,u,d)) = Left  (tuple2ModInst mi (t,y,u),d)
+   tuple2modinst (mi, Right (t,y,u))   = Right (tuple2ModInst mi (t,y,u))
+
+   modinst2tuple (Left (mi,b)) = let (x,y,z) = (modInst2Tuple userList mi)
+                                 in Left (x,y,z,b)
+   modinst2tuple (Right mi)    = Right (modInst2Tuple userList mi)
 
 --- Supplies a WUI form to create a new ModInst entity.
 --- Takes default values to be prefilled in the form fields.
@@ -82,21 +93,27 @@ addModInstView defaultUser possibleUsers (curterm,curyear) storecontroller =
                          (wuiFrameToForm wuiframe)
    in wuiframe hexp handler
 
---- Supplies a WUI form to edit the given ModInst entity.
+--- Supplies a WUI form to edit the ModInst entities given in the
+--- third argument. If the flag for a ModInst entity is true,
+--- one can complete change the entity, otherwise one can only
+--- change the lecturer of this entity.
 --- Takes also associated entities and a list of possible associations
 --- for every associated entity type.
-editModInstView :: Bool -> (String,Int) -> [ModInst] -> [User]
+editModInstView :: Bool -> (String,Int) -> [(Bool,ModInst)] -> [User]
                 -> (Bool -> [(ModInst,Bool)] -> Controller) -> [HtmlExp]
-editModInstView admin (_,curyear) insts possibleUsers controller =
-  let wuiframe = wuiEditFormWithText
+editModInstView admin (_,curyear) binsts possibleUsers controller =
+  let insts    = map snd binsts
+      wuiframe = wuiEditFormWithText
                     "Semesterangaben ändern" "Änderungen speichern"
                     [par [htxt modinstcomment]]
                     (controller False (map (\i -> (i,False)) insts))
       
       (hexp ,handler) = wuiWithErrorForm
                          (wModInstsType curyear admin insts possibleUsers)
-                         (map (\i -> (i,False)) insts)
-                         (nextControllerForData (controller True))
+                         (map (\ (b,i) -> if b then Left (i,False) else Right i)
+                              binsts)
+                         (nextControllerForData
+                          (controller True . map (either id (\i -> (i,False)))))
                          (wuiFrameToForm wuiframe)
    in wuiframe hexp handler
  where
