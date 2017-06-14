@@ -23,7 +23,7 @@ mainPageView sinfo studyPrograms =
   [h1 [htxt $ mainTitle sinfo],
    par $ mainExplanation sinfo,
    par $ minorSubjectNote sinfo,
-   h2 [htxt $ t "Study programs"],
+   h2 [htxt $ t "Degree programs"],
    spTable (map (\sp -> [langSelect sinfo
                                     (studyProgramToListView sp !! 1)
                                     (head (studyProgramToListView sp))])

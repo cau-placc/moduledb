@@ -63,6 +63,10 @@ english2german =
  ,("Core area: "        ,"Schwerpunktbereich: ")
  ,("Core areas"         ,"Schwerpunktbereiche")
  ,("Cycle:"             ,"Turnus:")
+ ,("Degree program"      ,"Studiengang")
+ ,("Degree programs"     ,"Studiengänge")
+ ,("Degree programs at the department of computer science",
+   "Studiengänge im Institut für Informatik")
  ,("Delete module"      ,"Modul löschen")
  ,("Description"        ,"Beschreibung")
  ,("Duration:"          ,"Dauer:")
@@ -116,11 +120,11 @@ english2german =
  ,("Modules of"         ,"Module von")
  ,("My modules"         ,"Eigene Module")
  ,("New advisor program","Neues Studienprogramm")
+ ,("New degree program" ,"Neuer Studiengang")
  ,("New master program" ,"Neues Masterprogramm")
  ,("New password:"      ,"Neues Passwort:")
  ,("New passwords are different!","Neue Passwörter sind verschieden!")
  ,("New master program" ,"Neues Masterprogramm")
- ,("New study program"  ,"Neuer Studiengang")
  ,("not logged in"      ,"nicht angemeldet")
  ,("notes on module descriptions and their preparation",
    "Hinweise zu Modulbeschreibungen und deren Bearbeitung")
@@ -156,7 +160,7 @@ english2german =
  ,("show"               ,"anzeigen")
  ,("Show all master programs",
    "Alle (auch ältere) Masterprogramme anzeigen")
- ,("Show all modules in this study program",
+ ,("Show all modules in this degree program",
    "Alle Module in diesem Studienprogramm anzeigen")
  ,("Show module selections:","Module anzeigen:")
  ,("show examination requirements","Prüfungsanforderungen anzeigen")
@@ -165,10 +169,6 @@ english2german =
  ,("Show modules of a person","Module einer Person anzeigen")
  ,("Start: "            ,"Beginn: ")
  ,("Study planner"      ,"Studienplaner")
- ,("Study program"      ,"Studiengang")
- ,("Study programs"     ,"Studiengänge")
- ,("Study programs at the department of computer science",
-   "Studienprogramme im Institut für Informatik")
  ,("Supported by:"      ,"Unterstützt durch:")
  ,(" to "               ," bis ")
  ,("Teaching language:" ,"Lehrsprache:")
@@ -218,19 +218,19 @@ loginEmailText sinfo loginname passwd = langSelect sinfo
 
 mainTitle :: UserSessionInfo -> String
 mainTitle sinfo = langSelect sinfo
-  "Modules and study programs of the Department of Computer Science"
-  "Module und Studienprogramme des Instituts für Informatik"
+  "Modules and degree programs of the Department of Computer Science"
+  "Module und Studiengänge des Instituts für Informatik"
 
 mainExplanation :: UserSessionInfo -> [HtmlExp]
 mainExplanation sinfo = langSelect sinfo
   [htxt $
     "This web site provides an overview on all modules and "++
-    "study programs offered by the Department of Computer Science. "++
+    "degree programs offered by the Department of Computer Science. "++
     "Additionally, it contains an overiew on all master programs "++
     "in computer science and business information technology. "++
     "A list of all modules offered in English "++
     "can be found in the category \"Search modules\"."]
-  [htxt $ "Auf diesen Webseiten sind die Module aller Studienprogramme "++
+  [htxt $ "Auf diesen Webseiten sind die Module aller Studiengänge "++
     "des Instituts für Informatik sowie alle vom Institut "++
      "angebotenen Module beschrieben. "++
      "Außerdem befindet sich hier eine Übersicht über alle "++

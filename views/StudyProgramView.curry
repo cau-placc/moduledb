@@ -123,10 +123,10 @@ leqStudyProgram x1 x2 =
 listStudyProgramView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
 listStudyProgramView sinfo studyPrograms =
   if isAdminSession sinfo
-  then [h1 [htxt $ t "Study programs"],
+  then [h1 [htxt $ t "Degree programs"],
         spTable ([take 5 studyProgramLabelList] ++
                 map listStudyProgram (sortBy leqStudyProgram studyPrograms))]
-  else [h1 [htxt $ t "Study programs"],
+  else [h1 [htxt $ t "Degree programs"],
         spTable (map (\sp -> [langSelect sinfo
                                 (studyProgramToListView sp !! 1)
                                 (head (studyProgramToListView sp))])

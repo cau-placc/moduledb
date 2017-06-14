@@ -261,7 +261,7 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
           (\sprog ->
             [par
               [spHref ("?Category/studyprogramall/"++showStudyProgramKey sprog)
-                      [htxt $ t "Show all modules in this study program"]]])
+                      [htxt $ t "Show all modules in this degree program"]]])
           (const [])
           mbsprog
     else

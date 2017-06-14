@@ -232,7 +232,7 @@ showAdvisorStudyProgramView
       ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
   (if advisorStudyProgramVisible asprog then []
      else [h4 [htxt "(nicht öffentlich sichtbar)"]]) ++
-  [h2 [htxt (t "Study program" ++ ": "),
+  [h2 [htxt (t "Degree program" ++ ": "),
        studyProgramToHRef sinfo relatedsprog]] ++
   [h3 [htxt $ t "Start: " ++ showSemester (startSem,startYear) ++
               " / Research advisor: ", userToHtmlView advisor]] ++
@@ -328,7 +328,7 @@ leqAdvisorStudyProgram (x1,sp1) (x2,sp2) =
 listAdvisorStudyProgramView
   :: UserSessionInfo -> [(AdvisorStudyProgram,StudyProgram)] -> [HtmlExp]
 listAdvisorStudyProgramView sinfo advisorStudyPrograms =
-  [h1 [htxt $ t "Study programs at the department of computer science"]] ++
+  [h1 [htxt $ t "Degree programs at the department of computer science"]] ++
   masterStudyOldNote sinfo ++
   [hrule] ++
   if null advisorprogramgroups then [] else
@@ -351,7 +351,7 @@ listAdvisorStudyProgramView sinfo advisorStudyPrograms =
     [(if advisorStudyProgramVisible asprog then bold else italic)
       [href ("?AdvisorStudyProgram/show/" ++ showAdvisorStudyProgramKey asprog)
             [htxt (advisorStudyProgramName asprog)]
-      ,htxt $ " (" ++ t "Study program" ++ ": "
+      ,htxt $ " (" ++ t "Degree program" ++ ": "
       ,studyProgramToHRef sinfo sprog
       ,htxt ")"]
     ]
