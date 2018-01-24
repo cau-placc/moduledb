@@ -1,1421 +1,777 @@
-module MDB
-  ( StudyProgram, Category, MasterCoreArea, User, ModData, ModDescr, ModInst
-  , AdvisorStudyProgram, AdvisorModule, MasterProgram, MasterProgInfo
-  , UnivisInfo, StudyProgramKey, CategoryKey, MasterCoreAreaKey, UserKey
-  , ModDataKey, ModDescrKey, ModInstKey, AdvisorStudyProgramKey
-  , AdvisorModuleKey, MasterProgramKey, MasterProgInfoKey, UnivisInfoKey
-  , Categorizing, studyProgramName, setStudyProgramName, studyProgramNameE
-  , setStudyProgramNameE, studyProgramShortName, setStudyProgramShortName
-  , studyProgramProgKey, setStudyProgramProgKey, studyProgramPosition
-  , setStudyProgramPosition, categoryName, setCategoryName, categoryNameE
-  , setCategoryNameE, categoryShortName, setCategoryShortName, categoryComment
-  , setCategoryComment, categoryMinECTS, setCategoryMinECTS, categoryMaxECTS
-  , setCategoryMaxECTS, categoryPosition, setCategoryPosition
-  , categoryStudyProgramProgramCategoriesKey
-  , setCategoryStudyProgramProgramCategoriesKey, masterCoreAreaName
-  , setMasterCoreAreaName, masterCoreAreaShortName, setMasterCoreAreaShortName
-  , masterCoreAreaDescription, setMasterCoreAreaDescription
-  , masterCoreAreaAreaKey, setMasterCoreAreaAreaKey, masterCoreAreaPosition
-  , setMasterCoreAreaPosition, userLogin, setUserLogin, userName, setUserName
-  , userFirst, setUserFirst, userTitle, setUserTitle, userEmail, setUserEmail
-  , userUrl, setUserUrl, userPassword, setUserPassword, userLastLogin
-  , setUserLastLogin, modDataCode, setModDataCode, modDataNameG
-  , setModDataNameG, modDataNameE, setModDataNameE, modDataCycle
-  , setModDataCycle, modDataPresence, setModDataPresence, modDataECTS
-  , setModDataECTS, modDataWorkload, setModDataWorkload, modDataLength
-  , setModDataLength, modDataURL, setModDataURL, modDataVisible
-  , setModDataVisible, modDataUserResponsibleKey, setModDataUserResponsibleKey
-  , modDescrLanguage, setModDescrLanguage, modDescrShortDesc
-  , setModDescrShortDesc, modDescrObjectives, setModDescrObjectives
-  , modDescrContents, setModDescrContents, modDescrPrereq, setModDescrPrereq
-  , modDescrExam, setModDescrExam, modDescrMethods, setModDescrMethods
-  , modDescrUse, setModDescrUse, modDescrLiterature, setModDescrLiterature
-  , modDescrLinks, setModDescrLinks, modDescrComments, setModDescrComments
-  , modDescrModDataDataDescKey, setModDescrModDataDataDescKey, modInstTerm
-  , setModInstTerm, modInstYear, setModInstYear, modInstUserLecturerModsKey
-  , setModInstUserLecturerModsKey, modInstModDataModuleInstancesKey
-  , setModInstModDataModuleInstancesKey, advisorStudyProgramName
-  , setAdvisorStudyProgramName, advisorStudyProgramTerm
-  , setAdvisorStudyProgramTerm, advisorStudyProgramYear
-  , setAdvisorStudyProgramYear, advisorStudyProgramDesc
-  , setAdvisorStudyProgramDesc, advisorStudyProgramPrereq
-  , setAdvisorStudyProgramPrereq, advisorStudyProgramComments
-  , setAdvisorStudyProgramComments, advisorStudyProgramVisible
-  , setAdvisorStudyProgramVisible, advisorStudyProgramUserStudyAdvisingKey
-  , setAdvisorStudyProgramUserStudyAdvisingKey
-  , advisorStudyProgramStudyProgramStudyProgramsAdvisedKey
-  , setAdvisorStudyProgramStudyProgramStudyProgramsAdvisedKey
-  , advisorModuleMandatory, setAdvisorModuleMandatory
-  , advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
-  , setAdvisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
-  , advisorModuleCategoryAdvisorCategorizingKey
-  , setAdvisorModuleCategoryAdvisorCategorizingKey
-  , advisorModuleModInstAdvisedProgramModuleInstancesKey
-  , setAdvisorModuleModInstAdvisedProgramModuleInstancesKey, masterProgramName
-  , setMasterProgramName, masterProgramTerm, setMasterProgramTerm
-  , masterProgramYear, setMasterProgramYear, masterProgramDesc
-  , setMasterProgramDesc, masterProgramPrereq, setMasterProgramPrereq
-  , masterProgramComments, setMasterProgramComments, masterProgramVisible
-  , setMasterProgramVisible, masterProgramUserAdvisingKey
-  , setMasterProgramUserAdvisingKey
-  , masterProgramMasterCoreAreaAreaProgramsKey
-  , setMasterProgramMasterCoreAreaAreaProgramsKey, masterProgInfoProgModules
-  , setMasterProgInfoProgModules, masterProgInfoPraktikum
-  , setMasterProgInfoPraktikum, masterProgInfoSeminar
-  , setMasterProgInfoSeminar, masterProgInfoThesis, setMasterProgInfoThesis
-  , masterProgInfoAllgGrundlagen, setMasterProgInfoAllgGrundlagen
-  , masterProgInfoAnwendungsfach, setMasterProgInfoAnwendungsfach
-  , masterProgInfoMasterProgramProgramInfoKey
-  , setMasterProgInfoMasterProgramProgramInfoKey, univisInfoCode
-  , setUnivisInfoCode, univisInfoTerm, setUnivisInfoTerm, univisInfoYear
-  , setUnivisInfoYear, univisInfoURL, setUnivisInfoURL, studyProgram
-  , studyProgramKey, showStudyProgramKey, readStudyProgramKey, newStudyProgram
-  , updateStudyProgram, deleteStudyProgram, getStudyProgram
-  , queryAllStudyPrograms, queryCondStudyProgram, category, categoryKey
-  , showCategoryKey, readCategoryKey
-  , newCategoryWithStudyProgramProgramCategoriesKey, updateCategory
-  , deleteCategory, getCategory, queryAllCategorys, queryCondCategory
-  , masterCoreArea, masterCoreAreaKey, showMasterCoreAreaKey
-  , readMasterCoreAreaKey, newMasterCoreArea, updateMasterCoreArea
-  , deleteMasterCoreArea, getMasterCoreArea, queryAllMasterCoreAreas
-  , queryCondMasterCoreArea, user, userKey, showUserKey, readUserKey, newUser
-  , updateUser, deleteUser, getUser, queryAllUsers, queryCondUser, modData
-  , modDataKey, showModDataKey, readModDataKey
-  , newModDataWithUserResponsibleKey, updateModData, deleteModData, getModData
-  , queryAllModDatas, queryCondModData, modDescr, modDescrKey, showModDescrKey
-  , readModDescrKey, newModDescrWithModDataDataDescKey, updateModDescr
-  , deleteModDescr, getModDescr, queryAllModDescrs, queryCondModDescr, modInst
-  , modInstKey, showModInstKey, readModInstKey
-  , newModInstWithUserLecturerModsKeyWithModDataModuleInstancesKey
-  , updateModInst, deleteModInst, getModInst, queryAllModInsts
-  , queryCondModInst, advisorStudyProgram, advisorStudyProgramKey
-  , showAdvisorStudyProgramKey, readAdvisorStudyProgramKey
-  , newAdvisorStudyProgramWithUserStudyAdvisingKeyWithStudyProgramStudyProgramsAdvisedKey
-  , updateAdvisorStudyProgram, deleteAdvisorStudyProgram
-  , getAdvisorStudyProgram, queryAllAdvisorStudyPrograms
-  , queryCondAdvisorStudyProgram, advisorModule, advisorModuleKey
-  , showAdvisorModuleKey, readAdvisorModuleKey
-  , newAdvisorModuleWithAdvisorStudyProgramAdvisorProgramModulesKeyWithCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
-  , updateAdvisorModule, deleteAdvisorModule, getAdvisorModule
-  , queryAllAdvisorModules, queryCondAdvisorModule, masterProgram
-  , masterProgramKey, showMasterProgramKey, readMasterProgramKey
-  , newMasterProgramWithUserAdvisingKeyWithMasterCoreAreaAreaProgramsKey
-  , updateMasterProgram, deleteMasterProgram, getMasterProgram
-  , queryAllMasterPrograms, queryCondMasterProgram, masterProgInfo
-  , masterProgInfoKey, showMasterProgInfoKey, readMasterProgInfoKey
-  , newMasterProgInfoWithMasterProgramProgramInfoKey, updateMasterProgInfo
-  , deleteMasterProgInfo, getMasterProgInfo, queryAllMasterProgInfos
-  , queryCondMasterProgInfo, univisInfo, univisInfoKey, showUnivisInfoKey
-  , readUnivisInfoKey, newUnivisInfo, updateUnivisInfo, deleteUnivisInfo
-  , getUnivisInfo, queryAllUnivisInfos, queryCondUnivisInfo
-  , categorizingModDataCategorizingKey, categorizingCategoryCategorizingKey
-  , categorizing, newCategorizing, deleteCategorizing, getModDataCategorys
-  , queryAllCategorizings, queryCondCategorizing, programInfo, withProgInfo
-  , programInfoOf, areaPrograms, withProgram, ofCoreArea, advising, organizes
-  , organizedBy, advisedProgramModuleInstances, advisorUseofModInst
-  , withModInst, advisorCategorizing, containsAdvisorMods, advisedBelongsTo
-  , advisorProgramModules, moduleOfAdvisorProgram, belongsToAdvisedProgram
-  , studyProgramsAdvised, advisedProgram, instanceOf, studyAdvising
-  , advisesProgram, advisedBy, moduleInstances, instOfModule, withModule
-  , lecturerMods, instOfLecturer, withLecturer, dataDesc, withDesc, descOf
-  , belongsTo, contains, responsible, responsibleFor, managedBy
-  , programCategories, withCategory, ofProgram, checkAllData
-  , checkCategorizing, checkStudyProgram, checkCategory, checkMasterCoreArea
-  , checkUser, checkModData, checkModDescr, checkModInst
-  , checkAdvisorStudyProgram, checkAdvisorModule, checkMasterProgram
-  , checkMasterProgInfo, checkUnivisInfo, saveAllData, restoreAllData
-  , modInstSemester
-  , queryModDataOfUser, queryModDataWithCode, queryModDataCodeName
-  , queryInstancesOfMod, getMasterProgramKeysOfModInst
-  , getModDataCategories, destroyCategorizing, queryDescriptionOfMod
-  , queryModDataKeysOfCategory, getModDataKeyCategorys
-  , queryHasUnivisEntry, masterProgramKeyToString
-  , queryMasterProgramOfUser, queryInfoOfMasterProgram
-  , getAdvisorStudyProgramKeysOfModInst
-  , queryMasterProgramMainInfos
-  , queryModKeysOfSem, queryExamOfMod, queryUnivisURL
-  , readTermDB, storeTermDB
-  ) where
-
-import ConfigMDB
-import ERDGeneric
-import KeyDatabase
-import KeyDatabaseQuery
-import ReadShowTerm
-import Time
-
-data StudyProgram = StudyProgram Key String String String String Int
-
-type StudyProgramTuple = (String,String,String,String,Int)
-
-data Category = Category Key String String String String Int Int Int Key
-
-type CategoryTuple = (String,String,String,String,Int,Int,Int,Key)
-
-data MasterCoreArea = MasterCoreArea Key String String String String Int
-
-type MasterCoreAreaTuple = (String,String,String,String,Int)
-
-data User = User Key String String String String String String String CalendarTime
-
-type UserTuple = (String
-                 ,String
-                 ,String
-                 ,String
-                 ,String
-                 ,String
-                 ,String
-                 ,CalendarTime)
-
-data ModData = ModData Key String String String String String Int String Int String Bool Key
-
-type ModDataTuple = (String
-                    ,String
-                    ,String
-                    ,String
-                    ,String
-                    ,Int
-                    ,String
-                    ,Int
-                    ,String
-                    ,Bool
-                    ,Key)
-
-data ModDescr = ModDescr Key String String String String String String String String String String String Key
-
-type ModDescrTuple = (String
-                     ,String
-                     ,String
-                     ,String
-                     ,String
-                     ,String
-                     ,String
-                     ,String
-                     ,String
-                     ,String
-                     ,String
-                     ,Key)
-
-data ModInst = ModInst Key String Int Key Key
-
-type ModInstTuple = (String,Int,Key,Key)
-
-data AdvisorStudyProgram = AdvisorStudyProgram Key String String Int String String String Bool Key Key
-
-type AdvisorStudyProgramTuple = (String
-                                ,String
-                                ,Int
-                                ,String
-                                ,String
-                                ,String
-                                ,Bool
-                                ,Key
-                                ,Key)
-
-data AdvisorModule = AdvisorModule Key Bool Key Key Key
-
-type AdvisorModuleTuple = (Bool,Key,Key,Key)
-
-data MasterProgram = MasterProgram Key String String Int String String String Bool Key Key
-
-type MasterProgramTuple = (String
-                          ,String
-                          ,Int
-                          ,String
-                          ,String
-                          ,String
-                          ,Bool
-                          ,Key
-                          ,Key)
-
-data MasterProgInfo = MasterProgInfo Key String String String String String String Key
-
-type MasterProgInfoTuple = (String,String,String,String,String,String,Key)
-
-data UnivisInfo = UnivisInfo Key String String Int String
-
-type UnivisInfoTuple = (String,String,Int,String)
-
-data StudyProgramKey = StudyProgramKey Key
-
-data CategoryKey = CategoryKey Key
-
-data MasterCoreAreaKey = MasterCoreAreaKey Key
-
-data UserKey = UserKey Key
-
-data ModDataKey = ModDataKey Key
-
-data ModDescrKey = ModDescrKey Key
-
-data ModInstKey = ModInstKey Key
-
-data AdvisorStudyProgramKey = AdvisorStudyProgramKey Key
-
-data AdvisorModuleKey = AdvisorModuleKey Key
-
-data MasterProgramKey = MasterProgramKey Key
-
-data MasterProgInfoKey = MasterProgInfoKey Key
-
-data UnivisInfoKey = UnivisInfoKey Key
-
-data Categorizing = Categorizing Key Key
-
-type CategorizingTuple = (Key,Key)
-
-dbFile :: String
-dbFile = storageDir++"MDB.db"
-
---- Transforms entity StudyProgram into tuple representation.
-studyProgram2tuple :: StudyProgram -> StudyProgramTuple
-studyProgram2tuple (StudyProgram _ x2 x3 x4 x5 x6) = (x2,x3,x4,x5,x6)
-
---- Transforms key and tuple into a StudyProgram entity.
-keytuple2StudyProgram :: Key -> StudyProgramTuple -> StudyProgram
-keytuple2StudyProgram x1 (x2,x3,x4,x5,x6) = StudyProgram x1 x2 x3 x4 x5 x6
-
---- Transforms entity Category into tuple representation.
-category2tuple :: Category -> CategoryTuple
-category2tuple (Category _ x2 x3 x4 x5 x6 x7 x8 x9) =
-  (x2,x3,x4,x5,x6,x7,x8,x9)
-
---- Transforms key and tuple into a Category entity.
-keytuple2Category :: Key -> CategoryTuple -> Category
-keytuple2Category x1 (x2,x3,x4,x5,x6,x7,x8,x9) =
-  Category x1 x2 x3 x4 x5 x6 x7 x8 x9
-
---- Transforms entity MasterCoreArea into tuple representation.
-masterCoreArea2tuple :: MasterCoreArea -> MasterCoreAreaTuple
-masterCoreArea2tuple (MasterCoreArea _ x2 x3 x4 x5 x6) = (x2,x3,x4,x5,x6)
-
---- Transforms key and tuple into a MasterCoreArea entity.
-keytuple2MasterCoreArea :: Key -> MasterCoreAreaTuple -> MasterCoreArea
-keytuple2MasterCoreArea x1 (x2,x3,x4,x5,x6) = MasterCoreArea x1 x2 x3 x4 x5 x6
-
---- Transforms entity User into tuple representation.
-user2tuple :: User -> UserTuple
-user2tuple (User _ x2 x3 x4 x5 x6 x7 x8 x9) = (x2,x3,x4,x5,x6,x7,x8,x9)
-
---- Transforms key and tuple into a User entity.
-keytuple2User :: Key -> UserTuple -> User
-keytuple2User x1 (x2,x3,x4,x5,x6,x7,x8,x9) = User x1 x2 x3 x4 x5 x6 x7 x8 x9
-
---- Transforms entity ModData into tuple representation.
-modData2tuple :: ModData -> ModDataTuple
-modData2tuple (ModData _ x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12) =
-  (x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12)
-
---- Transforms key and tuple into a ModData entity.
-keytuple2ModData :: Key -> ModDataTuple -> ModData
-keytuple2ModData x1 (x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12) =
-  ModData x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12
-
---- Transforms entity ModDescr into tuple representation.
-modDescr2tuple :: ModDescr -> ModDescrTuple
-modDescr2tuple (ModDescr _ x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13) =
-  (x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13)
-
---- Transforms key and tuple into a ModDescr entity.
-keytuple2ModDescr :: Key -> ModDescrTuple -> ModDescr
-keytuple2ModDescr x1 (x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13) =
-  ModDescr x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13
-
---- Transforms entity ModInst into tuple representation.
-modInst2tuple :: ModInst -> ModInstTuple
-modInst2tuple (ModInst _ x2 x3 x4 x5) = (x2,x3,x4,x5)
-
---- Transforms key and tuple into a ModInst entity.
-keytuple2ModInst :: Key -> ModInstTuple -> ModInst
-keytuple2ModInst x1 (x2,x3,x4,x5) = ModInst x1 x2 x3 x4 x5
-
---- Transforms entity AdvisorStudyProgram into tuple representation.
-advisorStudyProgram2tuple :: AdvisorStudyProgram -> AdvisorStudyProgramTuple
-advisorStudyProgram2tuple
-    (AdvisorStudyProgram _ x2 x3 x4 x5 x6 x7 x8 x9 x10) =
-  (x2,x3,x4,x5,x6,x7,x8,x9,x10)
-
---- Transforms key and tuple into a AdvisorStudyProgram entity.
-keytuple2AdvisorStudyProgram
-  :: Key -> AdvisorStudyProgramTuple -> AdvisorStudyProgram
-keytuple2AdvisorStudyProgram x1 (x2,x3,x4,x5,x6,x7,x8,x9,x10) =
-  AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x7 x8 x9 x10
-
---- Transforms entity AdvisorModule into tuple representation.
-advisorModule2tuple :: AdvisorModule -> AdvisorModuleTuple
-advisorModule2tuple (AdvisorModule _ x2 x3 x4 x5) = (x2,x3,x4,x5)
-
---- Transforms key and tuple into a AdvisorModule entity.
-keytuple2AdvisorModule :: Key -> AdvisorModuleTuple -> AdvisorModule
-keytuple2AdvisorModule x1 (x2,x3,x4,x5) = AdvisorModule x1 x2 x3 x4 x5
-
---- Transforms entity MasterProgram into tuple representation.
-masterProgram2tuple :: MasterProgram -> MasterProgramTuple
-masterProgram2tuple (MasterProgram _ x2 x3 x4 x5 x6 x7 x8 x9 x10) =
-  (x2,x3,x4,x5,x6,x7,x8,x9,x10)
-
---- Transforms key and tuple into a MasterProgram entity.
-keytuple2MasterProgram :: Key -> MasterProgramTuple -> MasterProgram
-keytuple2MasterProgram x1 (x2,x3,x4,x5,x6,x7,x8,x9,x10) =
-  MasterProgram x1 x2 x3 x4 x5 x6 x7 x8 x9 x10
-
---- Transforms entity MasterProgInfo into tuple representation.
-masterProgInfo2tuple :: MasterProgInfo -> MasterProgInfoTuple
-masterProgInfo2tuple (MasterProgInfo _ x2 x3 x4 x5 x6 x7 x8) =
-  (x2,x3,x4,x5,x6,x7,x8)
-
---- Transforms key and tuple into a MasterProgInfo entity.
-keytuple2MasterProgInfo :: Key -> MasterProgInfoTuple -> MasterProgInfo
-keytuple2MasterProgInfo x1 (x2,x3,x4,x5,x6,x7,x8) =
-  MasterProgInfo x1 x2 x3 x4 x5 x6 x7 x8
-
---- Transforms entity UnivisInfo into tuple representation.
-univisInfo2tuple :: UnivisInfo -> UnivisInfoTuple
-univisInfo2tuple (UnivisInfo _ x2 x3 x4 x5) = (x2,x3,x4,x5)
-
---- Transforms key and tuple into a UnivisInfo entity.
-keytuple2UnivisInfo :: Key -> UnivisInfoTuple -> UnivisInfo
-keytuple2UnivisInfo x1 (x2,x3,x4,x5) = UnivisInfo x1 x2 x3 x4 x5
-
---- Transforms relationship entity Categorizing into tuple representation.
-categorizing2tuple :: Categorizing -> CategorizingTuple
-categorizing2tuple (Categorizing x1 x2) = (x1,x2)
-
---- Transforms key and tuple into a Categorizing relationship entity.
-keytuple2Categorizing :: Key -> CategorizingTuple -> Categorizing
-keytuple2Categorizing _ (x1,x2) = Categorizing x1 x2
-
---- Sets the value of attribute "ModDataCategorizingKey" in a Categorizing entity.
+--- This file has been generated from
+--- 
+---     /net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.erdterm
+--- 
+--- and contains definitions for all entities and relations
+--- specified in this model.
+
+module MDB where
+
+import qualified Time
+import qualified Database.CDBI.ER
+import qualified Database.CDBI.Criteria
+import qualified Database.CDBI.Connection
+import qualified Database.CDBI.Description
+
+data Categorizing = Categorizing ModDataID CategoryID
+ deriving (Eq,Show,Read)
+
+data CategorizingID = CategorizingID Int
+ deriving (Eq,Show,Read)
+
+data StudyProgram = StudyProgram StudyProgramID String String String String Int
+ deriving (Eq,Show,Read)
+
+data StudyProgramID = StudyProgramID Int
+ deriving (Eq,Show,Read)
+
+data Category = Category CategoryID String String String String Int Int Int StudyProgramID
+ deriving (Eq,Show,Read)
+
+data CategoryID = CategoryID Int
+ deriving (Eq,Show,Read)
+
+data MasterCoreArea = MasterCoreArea MasterCoreAreaID String String String String Int
+ deriving (Eq,Show,Read)
+
+data MasterCoreAreaID = MasterCoreAreaID Int
+ deriving (Eq,Show,Read)
+
+data User = User UserID String String String String String String String Time.ClockTime
+ deriving (Eq,Show,Read)
+
+data UserID = UserID Int
+ deriving (Eq,Show,Read)
+
+data ModData = ModData ModDataID String String String String String Int String Int String Bool UserID
+ deriving (Eq,Show,Read)
+
+data ModDataID = ModDataID Int
+ deriving (Eq,Show,Read)
+
+data ModDescr = ModDescr ModDescrID String String String String String String String String String String String ModDataID
+ deriving (Eq,Show,Read)
+
+data ModDescrID = ModDescrID Int
+ deriving (Eq,Show,Read)
+
+data ModInst = ModInst ModInstID String Int UserID ModDataID
+ deriving (Eq,Show,Read)
+
+data ModInstID = ModInstID Int
+ deriving (Eq,Show,Read)
+
+data AdvisorStudyProgram = AdvisorStudyProgram AdvisorStudyProgramID String String Int String String String Bool UserID StudyProgramID
+ deriving (Eq,Show,Read)
+
+data AdvisorStudyProgramID = AdvisorStudyProgramID Int
+ deriving (Eq,Show,Read)
+
+data AdvisorModule = AdvisorModule AdvisorModuleID Bool AdvisorStudyProgramID CategoryID ModInstID
+ deriving (Eq,Show,Read)
+
+data AdvisorModuleID = AdvisorModuleID Int
+ deriving (Eq,Show,Read)
+
+data MasterProgram = MasterProgram MasterProgramID String String Int String String String Bool UserID MasterCoreAreaID
+ deriving (Eq,Show,Read)
+
+data MasterProgramID = MasterProgramID Int
+ deriving (Eq,Show,Read)
+
+data MasterProgInfo = MasterProgInfo MasterProgInfoID String String String String String String MasterProgramID
+ deriving (Eq,Show,Read)
+
+data MasterProgInfoID = MasterProgInfoID Int
+ deriving (Eq,Show,Read)
+
+data UnivisInfo = UnivisInfo UnivisInfoID String String Int String
+ deriving (Eq,Show,Read)
+
+data UnivisInfoID = UnivisInfoID Int
+ deriving (Eq,Show,Read)
+
+--- The name of the SQLite database file.
+sqliteDBFile :: String
+sqliteDBFile = "/net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.db"
+
+--- The ER description of the `Categorizing` entity.
+categorizing_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription Categorizing
+categorizing_CDBI_Description =
+  Database.CDBI.Description.ED "Categorizing"
+   [Database.CDBI.Connection.SQLTypeInt,Database.CDBI.Connection.SQLTypeInt]
+   (\(Categorizing
+       (ModDataID modDataCategorizingKey)
+       (CategoryID categoryCategorizingKey)) ->
+     [Database.CDBI.Connection.SQLInt modDataCategorizingKey
+     ,Database.CDBI.Connection.SQLInt categoryCategorizingKey])
+   (\(Categorizing
+       (ModDataID modDataCategorizingKey)
+       (CategoryID categoryCategorizingKey)) ->
+     [Database.CDBI.Connection.SQLInt modDataCategorizingKey
+     ,Database.CDBI.Connection.SQLInt categoryCategorizingKey])
+   (\[Database.CDBI.Connection.SQLInt modDataCategorizingKey
+     ,Database.CDBI.Connection.SQLInt categoryCategorizingKey] ->
+     Categorizing (ModDataID modDataCategorizingKey)
+      (CategoryID categoryCategorizingKey))
+
+--- The database table of the `Categorizing` entity.
+categorizingTable :: Database.CDBI.Description.Table
+categorizingTable = "Categorizing"
+
+--- The database column `ModDataCategorizingKey` of the `Categorizing` entity.
+categorizingColumnModDataCategorizingKey
+  :: Database.CDBI.Description.Column ModDataID
+categorizingColumnModDataCategorizingKey =
+  Database.CDBI.Description.Column "\"ModDataCategorizingKey\""
+   "\"Categorizing\".\"ModDataCategorizingKey\""
+
+--- The database column `CategoryCategorizingKey` of the `Categorizing` entity.
+categorizingColumnCategoryCategorizingKey
+  :: Database.CDBI.Description.Column CategoryID
+categorizingColumnCategoryCategorizingKey =
+  Database.CDBI.Description.Column "\"CategoryCategorizingKey\""
+   "\"Categorizing\".\"CategoryCategorizingKey\""
+
+--- The description of the database column `ModDataCategorizingKey` of the `Categorizing` entity.
+categorizingModDataCategorizingKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription ModDataID
+categorizingModDataCategorizingKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"Categorizing\".\"ModDataCategorizingKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(ModDataID modDataCategorizingKey) ->
+     Database.CDBI.Connection.SQLInt modDataCategorizingKey)
+   (\(Database.CDBI.Connection.SQLInt modDataCategorizingKey) ->
+     ModDataID modDataCategorizingKey)
+
+--- The description of the database column `CategoryCategorizingKey` of the `Categorizing` entity.
+categorizingCategoryCategorizingKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription CategoryID
+categorizingCategoryCategorizingKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"Categorizing\".\"CategoryCategorizingKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(CategoryID categoryCategorizingKey) ->
+     Database.CDBI.Connection.SQLInt categoryCategorizingKey)
+   (\(Database.CDBI.Connection.SQLInt categoryCategorizingKey) ->
+     CategoryID categoryCategorizingKey)
+
+--- Gets the attribute `ModDataCategorizingKey` of the `Categorizing` entity.
+categorizingModDataCategorizingKey :: Categorizing -> ModDataID
+categorizingModDataCategorizingKey (Categorizing a _) = a
+
+--- Gets the attribute `CategoryCategorizingKey` of the `Categorizing` entity.
+categorizingCategoryCategorizingKey :: Categorizing -> CategoryID
+categorizingCategoryCategorizingKey (Categorizing _ a) = a
+
+--- Sets the attribute `ModDataCategorizingKey` of the `Categorizing` entity.
 setCategorizingModDataCategorizingKey
-  :: Categorizing -> ModDataKey -> Categorizing
-setCategorizingModDataCategorizingKey (Categorizing _ x2) x =
-  Categorizing (modDataKeyToKey x) x2
+  :: Categorizing -> ModDataID -> Categorizing
+setCategorizingModDataCategorizingKey (Categorizing _ b1) a = Categorizing a b1
 
---- Sets the value of attribute "CategoryCategorizingKey" in a Categorizing entity.
+--- Sets the attribute `CategoryCategorizingKey` of the `Categorizing` entity.
 setCategorizingCategoryCategorizingKey
-  :: Categorizing -> CategoryKey -> Categorizing
-setCategorizingCategoryCategorizingKey (Categorizing x1 _) x =
-  Categorizing x1 (categoryKeyToKey x)
+  :: Categorizing -> CategoryID -> Categorizing
+setCategorizingCategoryCategorizingKey (Categorizing a2 _) a = Categorizing a2 a
 
---- Sets the value of attribute "Key" in a StudyProgram entity.
-setStudyProgramKey :: StudyProgram -> Key -> StudyProgram
-setStudyProgramKey (StudyProgram _ x2 x3 x4 x5 x6) x =
-  StudyProgram x x2 x3 x4 x5 x6
+--- Inserts a new `Categorizing` relation.
+newCategorizing
+  :: ModDataID -> CategoryID -> Database.CDBI.Connection.DBAction ()
+newCategorizing k1 k2 =
+  Database.CDBI.ER.insertEntry categorizing_CDBI_Description
+   (Categorizing k1 k2)
 
---- Gets the value of attribute "Name" of a StudyProgram entity.
+--- Deletes an existing `Categorizing` relation.
+deleteCategorizing
+  :: ModDataID -> CategoryID -> Database.CDBI.Connection.DBAction ()
+deleteCategorizing k1 k2 =
+  Database.CDBI.ER.deleteEntryR categorizing_CDBI_Description
+   categorizingColumnModDataCategorizingKey
+   (modDataID k1)
+   categorizingColumnCategoryCategorizingKey
+   (categoryID k2)
+
+--- Gets the associated `ModData` entities for a given `Category` entity
+--- w.r.t. the `Categorizing` relation.
+getModDataCategorys :: ModData -> Database.CDBI.Connection.DBAction [Category]
+getModDataCategorys en =
+  Database.CDBI.ER.getEntriesWithColVal categorizing_CDBI_Description
+   categorizingColumnModDataCategorizingKey
+   (modDataID (modDataKey en))
+   Database.CDBI.ER.>+= (\vals ->
+     mapM getCategory (map categorizingCategoryCategorizingKey vals))
+
+--- The ER description of the `StudyProgram` entity.
+studyProgram_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription StudyProgram
+studyProgram_CDBI_Description =
+  Database.CDBI.Description.ED "StudyProgram"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(StudyProgram
+       (StudyProgramID key) name nameE shortName progKey position) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Description.sqlString nameE
+     ,Database.CDBI.Connection.SQLString shortName
+     ,Database.CDBI.Connection.SQLString progKey
+     ,Database.CDBI.Connection.SQLInt position])
+   (\(StudyProgram _ name nameE shortName progKey position) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Description.sqlString nameE
+     ,Database.CDBI.Connection.SQLString shortName
+     ,Database.CDBI.Connection.SQLString progKey
+     ,Database.CDBI.Connection.SQLInt position])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString name
+     ,nameE
+     ,Database.CDBI.Connection.SQLString shortName
+     ,Database.CDBI.Connection.SQLString progKey
+     ,Database.CDBI.Connection.SQLInt position] ->
+     StudyProgram (StudyProgramID key) name
+      (Database.CDBI.Description.fromStringOrNull nameE)
+      shortName
+      progKey
+      position)
+
+--- The database table of the `StudyProgram` entity.
+studyProgramTable :: Database.CDBI.Description.Table
+studyProgramTable = "StudyProgram"
+
+--- The database column `Key` of the `StudyProgram` entity.
+studyProgramColumnKey :: Database.CDBI.Description.Column StudyProgramID
+studyProgramColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"StudyProgram\".\"Key\""
+
+--- The database column `Name` of the `StudyProgram` entity.
+studyProgramColumnName :: Database.CDBI.Description.Column String
+studyProgramColumnName =
+  Database.CDBI.Description.Column "\"Name\"" "\"StudyProgram\".\"Name\""
+
+--- The database column `NameE` of the `StudyProgram` entity.
+studyProgramColumnNameE :: Database.CDBI.Description.Column String
+studyProgramColumnNameE =
+  Database.CDBI.Description.Column "\"NameE\"" "\"StudyProgram\".\"NameE\""
+
+--- The database column `ShortName` of the `StudyProgram` entity.
+studyProgramColumnShortName :: Database.CDBI.Description.Column String
+studyProgramColumnShortName =
+  Database.CDBI.Description.Column "\"ShortName\""
+   "\"StudyProgram\".\"ShortName\""
+
+--- The database column `ProgKey` of the `StudyProgram` entity.
+studyProgramColumnProgKey :: Database.CDBI.Description.Column String
+studyProgramColumnProgKey =
+  Database.CDBI.Description.Column "\"ProgKey\"" "\"StudyProgram\".\"ProgKey\""
+
+--- The database column `Position` of the `StudyProgram` entity.
+studyProgramColumnPosition :: Database.CDBI.Description.Column Int
+studyProgramColumnPosition =
+  Database.CDBI.Description.Column "\"Position\""
+   "\"StudyProgram\".\"Position\""
+
+--- The description of the database column `Key` of the `StudyProgram` entity.
+studyProgramKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription StudyProgramID
+studyProgramKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"StudyProgram\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(StudyProgramID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> StudyProgramID key)
+
+--- The description of the database column `Name` of the `StudyProgram` entity.
+studyProgramNameColDesc :: Database.CDBI.Description.ColumnDescription String
+studyProgramNameColDesc =
+  Database.CDBI.Description.ColDesc "\"StudyProgram\".\"Name\""
+   Database.CDBI.Connection.SQLTypeString
+   (\name -> Database.CDBI.Connection.SQLString name)
+   (\(Database.CDBI.Connection.SQLString name) -> name)
+
+--- The description of the database column `NameE` of the `StudyProgram` entity.
+studyProgramNameEColDesc :: Database.CDBI.Description.ColumnDescription String
+studyProgramNameEColDesc =
+  Database.CDBI.Description.ColDesc "\"StudyProgram\".\"NameE\""
+   Database.CDBI.Connection.SQLTypeString
+   (\nameE -> Database.CDBI.Description.sqlString nameE)
+   (\nameE -> Database.CDBI.Description.fromStringOrNull nameE)
+
+--- The description of the database column `ShortName` of the `StudyProgram` entity.
+studyProgramShortNameColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+studyProgramShortNameColDesc =
+  Database.CDBI.Description.ColDesc "\"StudyProgram\".\"ShortName\""
+   Database.CDBI.Connection.SQLTypeString
+   (\shortName -> Database.CDBI.Connection.SQLString shortName)
+   (\(Database.CDBI.Connection.SQLString shortName) -> shortName)
+
+--- The description of the database column `ProgKey` of the `StudyProgram` entity.
+studyProgramProgKeyColDesc :: Database.CDBI.Description.ColumnDescription String
+studyProgramProgKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"StudyProgram\".\"ProgKey\""
+   Database.CDBI.Connection.SQLTypeString
+   (\progKey -> Database.CDBI.Connection.SQLString progKey)
+   (\(Database.CDBI.Connection.SQLString progKey) -> progKey)
+
+--- The description of the database column `Position` of the `StudyProgram` entity.
+studyProgramPositionColDesc :: Database.CDBI.Description.ColumnDescription Int
+studyProgramPositionColDesc =
+  Database.CDBI.Description.ColDesc "\"StudyProgram\".\"Position\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\position -> Database.CDBI.Connection.SQLInt position)
+   (\(Database.CDBI.Connection.SQLInt position) -> position)
+
+--- Gets the attribute `Key` of the `StudyProgram` entity.
+studyProgramKey :: StudyProgram -> StudyProgramID
+studyProgramKey (StudyProgram a _ _ _ _ _) = a
+
+--- Gets the attribute `Name` of the `StudyProgram` entity.
 studyProgramName :: StudyProgram -> String
-studyProgramName (StudyProgram _ x _ _ _ _) = x
+studyProgramName (StudyProgram _ a _ _ _ _) = a
 
---- Sets the value of attribute "Name" in a StudyProgram entity.
-setStudyProgramName :: StudyProgram -> String -> StudyProgram
-setStudyProgramName (StudyProgram x1 _ x3 x4 x5 x6) x =
-  StudyProgram x1 x x3 x4 x5 x6
-
---- Gets the value of attribute "NameE" of a StudyProgram entity.
+--- Gets the attribute `NameE` of the `StudyProgram` entity.
 studyProgramNameE :: StudyProgram -> String
-studyProgramNameE (StudyProgram _ _ x _ _ _) = x
+studyProgramNameE (StudyProgram _ _ a _ _ _) = a
 
---- Sets the value of attribute "NameE" in a StudyProgram entity.
-setStudyProgramNameE :: StudyProgram -> String -> StudyProgram
-setStudyProgramNameE (StudyProgram x1 x2 _ x4 x5 x6) x =
-  StudyProgram x1 x2 x x4 x5 x6
-
---- Gets the value of attribute "ShortName" of a StudyProgram entity.
+--- Gets the attribute `ShortName` of the `StudyProgram` entity.
 studyProgramShortName :: StudyProgram -> String
-studyProgramShortName (StudyProgram _ _ _ x _ _) = x
+studyProgramShortName (StudyProgram _ _ _ a _ _) = a
 
---- Sets the value of attribute "ShortName" in a StudyProgram entity.
-setStudyProgramShortName :: StudyProgram -> String -> StudyProgram
-setStudyProgramShortName (StudyProgram x1 x2 x3 _ x5 x6) x =
-  StudyProgram x1 x2 x3 x x5 x6
-
---- Gets the value of attribute "ProgKey" of a StudyProgram entity.
+--- Gets the attribute `ProgKey` of the `StudyProgram` entity.
 studyProgramProgKey :: StudyProgram -> String
-studyProgramProgKey (StudyProgram _ _ _ _ x _) = x
+studyProgramProgKey (StudyProgram _ _ _ _ a _) = a
 
---- Sets the value of attribute "ProgKey" in a StudyProgram entity.
-setStudyProgramProgKey :: StudyProgram -> String -> StudyProgram
-setStudyProgramProgKey (StudyProgram x1 x2 x3 x4 _ x6) x =
-  StudyProgram x1 x2 x3 x4 x x6
-
---- Gets the value of attribute "Position" of a StudyProgram entity.
+--- Gets the attribute `Position` of the `StudyProgram` entity.
 studyProgramPosition :: StudyProgram -> Int
-studyProgramPosition (StudyProgram _ _ _ _ _ x) = x
+studyProgramPosition (StudyProgram _ _ _ _ _ a) = a
 
---- Sets the value of attribute "Position" in a StudyProgram entity.
+--- Sets the attribute `Key` of the `StudyProgram` entity.
+setStudyProgramKey :: StudyProgram -> StudyProgramID -> StudyProgram
+setStudyProgramKey (StudyProgram _ b5 b4 b3 b2 b1) a =
+  StudyProgram a b5 b4 b3 b2 b1
+
+--- Sets the attribute `Name` of the `StudyProgram` entity.
+setStudyProgramName :: StudyProgram -> String -> StudyProgram
+setStudyProgramName (StudyProgram a2 _ b4 b3 b2 b1) a =
+  StudyProgram a2 a b4 b3 b2 b1
+
+--- Sets the attribute `NameE` of the `StudyProgram` entity.
+setStudyProgramNameE :: StudyProgram -> String -> StudyProgram
+setStudyProgramNameE (StudyProgram a3 a2 _ b3 b2 b1) a =
+  StudyProgram a3 a2 a b3 b2 b1
+
+--- Sets the attribute `ShortName` of the `StudyProgram` entity.
+setStudyProgramShortName :: StudyProgram -> String -> StudyProgram
+setStudyProgramShortName (StudyProgram a4 a3 a2 _ b2 b1) a =
+  StudyProgram a4 a3 a2 a b2 b1
+
+--- Sets the attribute `ProgKey` of the `StudyProgram` entity.
+setStudyProgramProgKey :: StudyProgram -> String -> StudyProgram
+setStudyProgramProgKey (StudyProgram a5 a4 a3 a2 _ b1) a =
+  StudyProgram a5 a4 a3 a2 a b1
+
+--- Sets the attribute `Position` of the `StudyProgram` entity.
 setStudyProgramPosition :: StudyProgram -> Int -> StudyProgram
-setStudyProgramPosition (StudyProgram x1 x2 x3 x4 x5 _) x =
-  StudyProgram x1 x2 x3 x4 x5 x
+setStudyProgramPosition (StudyProgram a6 a5 a4 a3 a2 _) a =
+  StudyProgram a6 a5 a4 a3 a2 a
 
---- Sets the value of attribute "Key" in a Category entity.
-setCategoryKey :: Category -> Key -> Category
-setCategoryKey (Category _ x2 x3 x4 x5 x6 x7 x8 x9) x =
-  Category x x2 x3 x4 x5 x6 x7 x8 x9
+--- id-to-value function for entity `StudyProgram`.
+studyProgramID :: StudyProgramID -> Database.CDBI.Criteria.Value StudyProgramID
+studyProgramID (StudyProgramID key) = Database.CDBI.Criteria.idVal key
 
---- Gets the value of attribute "Name" of a Category entity.
-categoryName :: Category -> String
-categoryName (Category _ x _ _ _ _ _ _ _) = x
+--- id-to-int function for entity `StudyProgram`.
+studyProgramKeyToInt :: StudyProgramID -> Int
+studyProgramKeyToInt (StudyProgramID key) = key
 
---- Sets the value of attribute "Name" in a Category entity.
-setCategoryName :: Category -> String -> Category
-setCategoryName (Category x1 _ x3 x4 x5 x6 x7 x8 x9) x =
-  Category x1 x x3 x4 x5 x6 x7 x8 x9
-
---- Gets the value of attribute "NameE" of a Category entity.
-categoryNameE :: Category -> String
-categoryNameE (Category _ _ x _ _ _ _ _ _) = x
-
---- Sets the value of attribute "NameE" in a Category entity.
-setCategoryNameE :: Category -> String -> Category
-setCategoryNameE (Category x1 x2 _ x4 x5 x6 x7 x8 x9) x =
-  Category x1 x2 x x4 x5 x6 x7 x8 x9
-
---- Gets the value of attribute "ShortName" of a Category entity.
-categoryShortName :: Category -> String
-categoryShortName (Category _ _ _ x _ _ _ _ _) = x
-
---- Sets the value of attribute "ShortName" in a Category entity.
-setCategoryShortName :: Category -> String -> Category
-setCategoryShortName (Category x1 x2 x3 _ x5 x6 x7 x8 x9) x =
-  Category x1 x2 x3 x x5 x6 x7 x8 x9
-
---- Gets the value of attribute "Comment" of a Category entity.
-categoryComment :: Category -> String
-categoryComment (Category _ _ _ _ x _ _ _ _) = x
-
---- Sets the value of attribute "Comment" in a Category entity.
-setCategoryComment :: Category -> String -> Category
-setCategoryComment (Category x1 x2 x3 x4 _ x6 x7 x8 x9) x =
-  Category x1 x2 x3 x4 x x6 x7 x8 x9
-
---- Gets the value of attribute "MinECTS" of a Category entity.
-categoryMinECTS :: Category -> Int
-categoryMinECTS (Category _ _ _ _ _ x _ _ _) = x
-
---- Sets the value of attribute "MinECTS" in a Category entity.
-setCategoryMinECTS :: Category -> Int -> Category
-setCategoryMinECTS (Category x1 x2 x3 x4 x5 _ x7 x8 x9) x =
-  Category x1 x2 x3 x4 x5 x x7 x8 x9
-
---- Gets the value of attribute "MaxECTS" of a Category entity.
-categoryMaxECTS :: Category -> Int
-categoryMaxECTS (Category _ _ _ _ _ _ x _ _) = x
-
---- Sets the value of attribute "MaxECTS" in a Category entity.
-setCategoryMaxECTS :: Category -> Int -> Category
-setCategoryMaxECTS (Category x1 x2 x3 x4 x5 x6 _ x8 x9) x =
-  Category x1 x2 x3 x4 x5 x6 x x8 x9
-
---- Gets the value of attribute "Position" of a Category entity.
-categoryPosition :: Category -> Int
-categoryPosition (Category _ _ _ _ _ _ _ x _) = x
-
---- Sets the value of attribute "Position" in a Category entity.
-setCategoryPosition :: Category -> Int -> Category
-setCategoryPosition (Category x1 x2 x3 x4 x5 x6 x7 _ x9) x =
-  Category x1 x2 x3 x4 x5 x6 x7 x x9
-
---- Gets the value of attribute "StudyProgramProgramCategoriesKey" of a Category entity.
-categoryStudyProgramProgramCategoriesKey :: Category -> StudyProgramKey
-categoryStudyProgramProgramCategoriesKey (Category _ _ _ _ _ _ _ _ x) =
-  StudyProgramKey x
-
---- Sets the value of attribute "StudyProgramProgramCategoriesKey" in a Category entity.
-setCategoryStudyProgramProgramCategoriesKey
-  :: Category -> StudyProgramKey -> Category
-setCategoryStudyProgramProgramCategoriesKey
-    (Category x1 x2 x3 x4 x5 x6 x7 x8 _) x =
-  Category x1 x2 x3 x4 x5 x6 x7 x8 (studyProgramKeyToKey x)
-
---- Sets the value of attribute "Key" in a MasterCoreArea entity.
-setMasterCoreAreaKey :: MasterCoreArea -> Key -> MasterCoreArea
-setMasterCoreAreaKey (MasterCoreArea _ x2 x3 x4 x5 x6) x =
-  MasterCoreArea x x2 x3 x4 x5 x6
-
---- Gets the value of attribute "Name" of a MasterCoreArea entity.
-masterCoreAreaName :: MasterCoreArea -> String
-masterCoreAreaName (MasterCoreArea _ x _ _ _ _) = x
-
---- Sets the value of attribute "Name" in a MasterCoreArea entity.
-setMasterCoreAreaName :: MasterCoreArea -> String -> MasterCoreArea
-setMasterCoreAreaName (MasterCoreArea x1 _ x3 x4 x5 x6) x =
-  MasterCoreArea x1 x x3 x4 x5 x6
-
---- Gets the value of attribute "ShortName" of a MasterCoreArea entity.
-masterCoreAreaShortName :: MasterCoreArea -> String
-masterCoreAreaShortName (MasterCoreArea _ _ x _ _ _) = x
-
---- Sets the value of attribute "ShortName" in a MasterCoreArea entity.
-setMasterCoreAreaShortName :: MasterCoreArea -> String -> MasterCoreArea
-setMasterCoreAreaShortName (MasterCoreArea x1 x2 _ x4 x5 x6) x =
-  MasterCoreArea x1 x2 x x4 x5 x6
-
---- Gets the value of attribute "Description" of a MasterCoreArea entity.
-masterCoreAreaDescription :: MasterCoreArea -> String
-masterCoreAreaDescription (MasterCoreArea _ _ _ x _ _) = x
-
---- Sets the value of attribute "Description" in a MasterCoreArea entity.
-setMasterCoreAreaDescription :: MasterCoreArea -> String -> MasterCoreArea
-setMasterCoreAreaDescription (MasterCoreArea x1 x2 x3 _ x5 x6) x =
-  MasterCoreArea x1 x2 x3 x x5 x6
-
---- Gets the value of attribute "AreaKey" of a MasterCoreArea entity.
-masterCoreAreaAreaKey :: MasterCoreArea -> String
-masterCoreAreaAreaKey (MasterCoreArea _ _ _ _ x _) = x
-
---- Sets the value of attribute "AreaKey" in a MasterCoreArea entity.
-setMasterCoreAreaAreaKey :: MasterCoreArea -> String -> MasterCoreArea
-setMasterCoreAreaAreaKey (MasterCoreArea x1 x2 x3 x4 _ x6) x =
-  MasterCoreArea x1 x2 x3 x4 x x6
-
---- Gets the value of attribute "Position" of a MasterCoreArea entity.
-masterCoreAreaPosition :: MasterCoreArea -> Int
-masterCoreAreaPosition (MasterCoreArea _ _ _ _ _ x) = x
-
---- Sets the value of attribute "Position" in a MasterCoreArea entity.
-setMasterCoreAreaPosition :: MasterCoreArea -> Int -> MasterCoreArea
-setMasterCoreAreaPosition (MasterCoreArea x1 x2 x3 x4 x5 _) x =
-  MasterCoreArea x1 x2 x3 x4 x5 x
-
---- Sets the value of attribute "Key" in a User entity.
-setUserKey :: User -> Key -> User
-setUserKey (User _ x2 x3 x4 x5 x6 x7 x8 x9) x = User x x2 x3 x4 x5 x6 x7 x8 x9
-
---- Gets the value of attribute "Login" of a User entity.
-userLogin :: User -> String
-userLogin (User _ x _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Login" in a User entity.
-setUserLogin :: User -> String -> User
-setUserLogin (User x1 _ x3 x4 x5 x6 x7 x8 x9) x =
-  User x1 x x3 x4 x5 x6 x7 x8 x9
-
---- Gets the value of attribute "Name" of a User entity.
-userName :: User -> String
-userName (User _ _ x _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Name" in a User entity.
-setUserName :: User -> String -> User
-setUserName (User x1 x2 _ x4 x5 x6 x7 x8 x9) x =
-  User x1 x2 x x4 x5 x6 x7 x8 x9
-
---- Gets the value of attribute "First" of a User entity.
-userFirst :: User -> String
-userFirst (User _ _ _ x _ _ _ _ _) = x
-
---- Sets the value of attribute "First" in a User entity.
-setUserFirst :: User -> String -> User
-setUserFirst (User x1 x2 x3 _ x5 x6 x7 x8 x9) x =
-  User x1 x2 x3 x x5 x6 x7 x8 x9
-
---- Gets the value of attribute "Title" of a User entity.
-userTitle :: User -> String
-userTitle (User _ _ _ _ x _ _ _ _) = x
-
---- Sets the value of attribute "Title" in a User entity.
-setUserTitle :: User -> String -> User
-setUserTitle (User x1 x2 x3 x4 _ x6 x7 x8 x9) x =
-  User x1 x2 x3 x4 x x6 x7 x8 x9
-
---- Gets the value of attribute "Email" of a User entity.
-userEmail :: User -> String
-userEmail (User _ _ _ _ _ x _ _ _) = x
-
---- Sets the value of attribute "Email" in a User entity.
-setUserEmail :: User -> String -> User
-setUserEmail (User x1 x2 x3 x4 x5 _ x7 x8 x9) x =
-  User x1 x2 x3 x4 x5 x x7 x8 x9
-
---- Gets the value of attribute "Url" of a User entity.
-userUrl :: User -> String
-userUrl (User _ _ _ _ _ _ x _ _) = x
-
---- Sets the value of attribute "Url" in a User entity.
-setUserUrl :: User -> String -> User
-setUserUrl (User x1 x2 x3 x4 x5 x6 _ x8 x9) x = User x1 x2 x3 x4 x5 x6 x x8 x9
-
---- Gets the value of attribute "Password" of a User entity.
-userPassword :: User -> String
-userPassword (User _ _ _ _ _ _ _ x _) = x
-
---- Sets the value of attribute "Password" in a User entity.
-setUserPassword :: User -> String -> User
-setUserPassword (User x1 x2 x3 x4 x5 x6 x7 _ x9) x =
-  User x1 x2 x3 x4 x5 x6 x7 x x9
-
---- Gets the value of attribute "LastLogin" of a User entity.
-userLastLogin :: User -> CalendarTime
-userLastLogin (User _ _ _ _ _ _ _ _ x) = x
-
---- Sets the value of attribute "LastLogin" in a User entity.
-setUserLastLogin :: User -> CalendarTime -> User
-setUserLastLogin (User x1 x2 x3 x4 x5 x6 x7 x8 _) x =
-  User x1 x2 x3 x4 x5 x6 x7 x8 x
-
---- Sets the value of attribute "Key" in a ModData entity.
-setModDataKey :: ModData -> Key -> ModData
-setModDataKey (ModData _ x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12) x =
-  ModData x x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12
-
---- Gets the value of attribute "Code" of a ModData entity.
-modDataCode :: ModData -> String
-modDataCode (ModData _ x _ _ _ _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Code" in a ModData entity.
-setModDataCode :: ModData -> String -> ModData
-setModDataCode (ModData x1 _ x3 x4 x5 x6 x7 x8 x9 x10 x11 x12) x =
-  ModData x1 x x3 x4 x5 x6 x7 x8 x9 x10 x11 x12
-
---- Gets the value of attribute "NameG" of a ModData entity.
-modDataNameG :: ModData -> String
-modDataNameG (ModData _ _ x _ _ _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "NameG" in a ModData entity.
-setModDataNameG :: ModData -> String -> ModData
-setModDataNameG (ModData x1 x2 _ x4 x5 x6 x7 x8 x9 x10 x11 x12) x =
-  ModData x1 x2 x x4 x5 x6 x7 x8 x9 x10 x11 x12
-
---- Gets the value of attribute "NameE" of a ModData entity.
-modDataNameE :: ModData -> String
-modDataNameE (ModData _ _ _ x _ _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "NameE" in a ModData entity.
-setModDataNameE :: ModData -> String -> ModData
-setModDataNameE (ModData x1 x2 x3 _ x5 x6 x7 x8 x9 x10 x11 x12) x =
-  ModData x1 x2 x3 x x5 x6 x7 x8 x9 x10 x11 x12
-
---- Gets the value of attribute "Cycle" of a ModData entity.
-modDataCycle :: ModData -> String
-modDataCycle (ModData _ _ _ _ x _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Cycle" in a ModData entity.
-setModDataCycle :: ModData -> String -> ModData
-setModDataCycle (ModData x1 x2 x3 x4 _ x6 x7 x8 x9 x10 x11 x12) x =
-  ModData x1 x2 x3 x4 x x6 x7 x8 x9 x10 x11 x12
-
---- Gets the value of attribute "Presence" of a ModData entity.
-modDataPresence :: ModData -> String
-modDataPresence (ModData _ _ _ _ _ x _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Presence" in a ModData entity.
-setModDataPresence :: ModData -> String -> ModData
-setModDataPresence (ModData x1 x2 x3 x4 x5 _ x7 x8 x9 x10 x11 x12) x =
-  ModData x1 x2 x3 x4 x5 x x7 x8 x9 x10 x11 x12
-
---- Gets the value of attribute "ECTS" of a ModData entity.
-modDataECTS :: ModData -> Int
-modDataECTS (ModData _ _ _ _ _ _ x _ _ _ _ _) = x
-
---- Sets the value of attribute "ECTS" in a ModData entity.
-setModDataECTS :: ModData -> Int -> ModData
-setModDataECTS (ModData x1 x2 x3 x4 x5 x6 _ x8 x9 x10 x11 x12) x =
-  ModData x1 x2 x3 x4 x5 x6 x x8 x9 x10 x11 x12
-
---- Gets the value of attribute "Workload" of a ModData entity.
-modDataWorkload :: ModData -> String
-modDataWorkload (ModData _ _ _ _ _ _ _ x _ _ _ _) = x
-
---- Sets the value of attribute "Workload" in a ModData entity.
-setModDataWorkload :: ModData -> String -> ModData
-setModDataWorkload (ModData x1 x2 x3 x4 x5 x6 x7 _ x9 x10 x11 x12) x =
-  ModData x1 x2 x3 x4 x5 x6 x7 x x9 x10 x11 x12
-
---- Gets the value of attribute "Length" of a ModData entity.
-modDataLength :: ModData -> Int
-modDataLength (ModData _ _ _ _ _ _ _ _ x _ _ _) = x
-
---- Sets the value of attribute "Length" in a ModData entity.
-setModDataLength :: ModData -> Int -> ModData
-setModDataLength (ModData x1 x2 x3 x4 x5 x6 x7 x8 _ x10 x11 x12) x =
-  ModData x1 x2 x3 x4 x5 x6 x7 x8 x x10 x11 x12
-
---- Gets the value of attribute "URL" of a ModData entity.
-modDataURL :: ModData -> String
-modDataURL (ModData _ _ _ _ _ _ _ _ _ x _ _) = x
-
---- Sets the value of attribute "URL" in a ModData entity.
-setModDataURL :: ModData -> String -> ModData
-setModDataURL (ModData x1 x2 x3 x4 x5 x6 x7 x8 x9 _ x11 x12) x =
-  ModData x1 x2 x3 x4 x5 x6 x7 x8 x9 x x11 x12
-
---- Gets the value of attribute "Visible" of a ModData entity.
-modDataVisible :: ModData -> Bool
-modDataVisible (ModData _ _ _ _ _ _ _ _ _ _ x _) = x
-
---- Sets the value of attribute "Visible" in a ModData entity.
-setModDataVisible :: ModData -> Bool -> ModData
-setModDataVisible (ModData x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 _ x12) x =
-  ModData x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x x12
-
---- Gets the value of attribute "UserResponsibleKey" of a ModData entity.
-modDataUserResponsibleKey :: ModData -> UserKey
-modDataUserResponsibleKey (ModData _ _ _ _ _ _ _ _ _ _ _ x) = UserKey x
-
---- Sets the value of attribute "UserResponsibleKey" in a ModData entity.
-setModDataUserResponsibleKey :: ModData -> UserKey -> ModData
-setModDataUserResponsibleKey
-    (ModData x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 _) x =
-  ModData x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 (userKeyToKey x)
-
---- Sets the value of attribute "Key" in a ModDescr entity.
-setModDescrKey :: ModDescr -> Key -> ModDescr
-setModDescrKey (ModDescr _ x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13) x =
-  ModDescr x x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13
-
---- Gets the value of attribute "Language" of a ModDescr entity.
-modDescrLanguage :: ModDescr -> String
-modDescrLanguage (ModDescr _ x _ _ _ _ _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Language" in a ModDescr entity.
-setModDescrLanguage :: ModDescr -> String -> ModDescr
-setModDescrLanguage (ModDescr x1 _ x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13) x =
-  ModDescr x1 x x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13
-
---- Gets the value of attribute "ShortDesc" of a ModDescr entity.
-modDescrShortDesc :: ModDescr -> String
-modDescrShortDesc (ModDescr _ _ x _ _ _ _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "ShortDesc" in a ModDescr entity.
-setModDescrShortDesc :: ModDescr -> String -> ModDescr
-setModDescrShortDesc (ModDescr x1 x2 _ x4 x5 x6 x7 x8 x9 x10 x11 x12 x13) x =
-  ModDescr x1 x2 x x4 x5 x6 x7 x8 x9 x10 x11 x12 x13
-
---- Gets the value of attribute "Objectives" of a ModDescr entity.
-modDescrObjectives :: ModDescr -> String
-modDescrObjectives (ModDescr _ _ _ x _ _ _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Objectives" in a ModDescr entity.
-setModDescrObjectives :: ModDescr -> String -> ModDescr
-setModDescrObjectives (ModDescr x1 x2 x3 _ x5 x6 x7 x8 x9 x10 x11 x12 x13) x =
-  ModDescr x1 x2 x3 x x5 x6 x7 x8 x9 x10 x11 x12 x13
-
---- Gets the value of attribute "Contents" of a ModDescr entity.
-modDescrContents :: ModDescr -> String
-modDescrContents (ModDescr _ _ _ _ x _ _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Contents" in a ModDescr entity.
-setModDescrContents :: ModDescr -> String -> ModDescr
-setModDescrContents (ModDescr x1 x2 x3 x4 _ x6 x7 x8 x9 x10 x11 x12 x13) x =
-  ModDescr x1 x2 x3 x4 x x6 x7 x8 x9 x10 x11 x12 x13
-
---- Gets the value of attribute "Prereq" of a ModDescr entity.
-modDescrPrereq :: ModDescr -> String
-modDescrPrereq (ModDescr _ _ _ _ _ x _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Prereq" in a ModDescr entity.
-setModDescrPrereq :: ModDescr -> String -> ModDescr
-setModDescrPrereq (ModDescr x1 x2 x3 x4 x5 _ x7 x8 x9 x10 x11 x12 x13) x =
-  ModDescr x1 x2 x3 x4 x5 x x7 x8 x9 x10 x11 x12 x13
-
---- Gets the value of attribute "Exam" of a ModDescr entity.
-modDescrExam :: ModDescr -> String
-modDescrExam (ModDescr _ _ _ _ _ _ x _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Exam" in a ModDescr entity.
-setModDescrExam :: ModDescr -> String -> ModDescr
-setModDescrExam (ModDescr x1 x2 x3 x4 x5 x6 _ x8 x9 x10 x11 x12 x13) x =
-  ModDescr x1 x2 x3 x4 x5 x6 x x8 x9 x10 x11 x12 x13
-
---- Gets the value of attribute "Methods" of a ModDescr entity.
-modDescrMethods :: ModDescr -> String
-modDescrMethods (ModDescr _ _ _ _ _ _ _ x _ _ _ _ _) = x
-
---- Sets the value of attribute "Methods" in a ModDescr entity.
-setModDescrMethods :: ModDescr -> String -> ModDescr
-setModDescrMethods (ModDescr x1 x2 x3 x4 x5 x6 x7 _ x9 x10 x11 x12 x13) x =
-  ModDescr x1 x2 x3 x4 x5 x6 x7 x x9 x10 x11 x12 x13
-
---- Gets the value of attribute "Use" of a ModDescr entity.
-modDescrUse :: ModDescr -> String
-modDescrUse (ModDescr _ _ _ _ _ _ _ _ x _ _ _ _) = x
-
---- Sets the value of attribute "Use" in a ModDescr entity.
-setModDescrUse :: ModDescr -> String -> ModDescr
-setModDescrUse (ModDescr x1 x2 x3 x4 x5 x6 x7 x8 _ x10 x11 x12 x13) x =
-  ModDescr x1 x2 x3 x4 x5 x6 x7 x8 x x10 x11 x12 x13
-
---- Gets the value of attribute "Literature" of a ModDescr entity.
-modDescrLiterature :: ModDescr -> String
-modDescrLiterature (ModDescr _ _ _ _ _ _ _ _ _ x _ _ _) = x
-
---- Sets the value of attribute "Literature" in a ModDescr entity.
-setModDescrLiterature :: ModDescr -> String -> ModDescr
-setModDescrLiterature (ModDescr x1 x2 x3 x4 x5 x6 x7 x8 x9 _ x11 x12 x13) x =
-  ModDescr x1 x2 x3 x4 x5 x6 x7 x8 x9 x x11 x12 x13
-
---- Gets the value of attribute "Links" of a ModDescr entity.
-modDescrLinks :: ModDescr -> String
-modDescrLinks (ModDescr _ _ _ _ _ _ _ _ _ _ x _ _) = x
-
---- Sets the value of attribute "Links" in a ModDescr entity.
-setModDescrLinks :: ModDescr -> String -> ModDescr
-setModDescrLinks (ModDescr x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 _ x12 x13) x =
-  ModDescr x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x x12 x13
-
---- Gets the value of attribute "Comments" of a ModDescr entity.
-modDescrComments :: ModDescr -> String
-modDescrComments (ModDescr _ _ _ _ _ _ _ _ _ _ _ x _) = x
-
---- Sets the value of attribute "Comments" in a ModDescr entity.
-setModDescrComments :: ModDescr -> String -> ModDescr
-setModDescrComments (ModDescr x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 _ x13) x =
-  ModDescr x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x x13
-
---- Gets the value of attribute "ModDataDataDescKey" of a ModDescr entity.
-modDescrModDataDataDescKey :: ModDescr -> ModDataKey
-modDescrModDataDataDescKey (ModDescr _ _ _ _ _ _ _ _ _ _ _ _ x) = ModDataKey x
-
---- Sets the value of attribute "ModDataDataDescKey" in a ModDescr entity.
-setModDescrModDataDataDescKey :: ModDescr -> ModDataKey -> ModDescr
-setModDescrModDataDataDescKey
-    (ModDescr x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 _) x =
-  ModDescr x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 (modDataKeyToKey x)
-
---- Sets the value of attribute "Key" in a ModInst entity.
-setModInstKey :: ModInst -> Key -> ModInst
-setModInstKey (ModInst _ x2 x3 x4 x5) x = ModInst x x2 x3 x4 x5
-
---- Gets the value of attribute "Term" of a ModInst entity.
-modInstTerm :: ModInst -> String
-modInstTerm (ModInst _ x _ _ _) = x
-
---- Sets the value of attribute "Term" in a ModInst entity.
-setModInstTerm :: ModInst -> String -> ModInst
-setModInstTerm (ModInst x1 _ x3 x4 x5) x = ModInst x1 x x3 x4 x5
-
---- Gets the value of attribute "Year" of a ModInst entity.
-modInstYear :: ModInst -> Int
-modInstYear (ModInst _ _ x _ _) = x
-
---- Sets the value of attribute "Year" in a ModInst entity.
-setModInstYear :: ModInst -> Int -> ModInst
-setModInstYear (ModInst x1 x2 _ x4 x5) x = ModInst x1 x2 x x4 x5
-
---- Gets the value of attribute "UserLecturerModsKey" of a ModInst entity.
-modInstUserLecturerModsKey :: ModInst -> UserKey
-modInstUserLecturerModsKey (ModInst _ _ _ x _) = UserKey x
-
---- Sets the value of attribute "UserLecturerModsKey" in a ModInst entity.
-setModInstUserLecturerModsKey :: ModInst -> UserKey -> ModInst
-setModInstUserLecturerModsKey (ModInst x1 x2 x3 _ x5) x =
-  ModInst x1 x2 x3 (userKeyToKey x) x5
-
---- Gets the value of attribute "ModDataModuleInstancesKey" of a ModInst entity.
-modInstModDataModuleInstancesKey :: ModInst -> ModDataKey
-modInstModDataModuleInstancesKey (ModInst _ _ _ _ x) = ModDataKey x
-
---- Sets the value of attribute "ModDataModuleInstancesKey" in a ModInst entity.
-setModInstModDataModuleInstancesKey :: ModInst -> ModDataKey -> ModInst
-setModInstModDataModuleInstancesKey (ModInst x1 x2 x3 x4 _) x =
-  ModInst x1 x2 x3 x4 (modDataKeyToKey x)
-
---- Sets the value of attribute "Key" in a AdvisorStudyProgram entity.
-setAdvisorStudyProgramKey :: AdvisorStudyProgram -> Key -> AdvisorStudyProgram
-setAdvisorStudyProgramKey
-    (AdvisorStudyProgram _ x2 x3 x4 x5 x6 x7 x8 x9 x10) x =
-  AdvisorStudyProgram x x2 x3 x4 x5 x6 x7 x8 x9 x10
-
---- Gets the value of attribute "Name" of a AdvisorStudyProgram entity.
-advisorStudyProgramName :: AdvisorStudyProgram -> String
-advisorStudyProgramName (AdvisorStudyProgram _ x _ _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Name" in a AdvisorStudyProgram entity.
-setAdvisorStudyProgramName
-  :: AdvisorStudyProgram -> String -> AdvisorStudyProgram
-setAdvisorStudyProgramName
-    (AdvisorStudyProgram x1 _ x3 x4 x5 x6 x7 x8 x9 x10) x =
-  AdvisorStudyProgram x1 x x3 x4 x5 x6 x7 x8 x9 x10
-
---- Gets the value of attribute "Term" of a AdvisorStudyProgram entity.
-advisorStudyProgramTerm :: AdvisorStudyProgram -> String
-advisorStudyProgramTerm (AdvisorStudyProgram _ _ x _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Term" in a AdvisorStudyProgram entity.
-setAdvisorStudyProgramTerm
-  :: AdvisorStudyProgram -> String -> AdvisorStudyProgram
-setAdvisorStudyProgramTerm
-    (AdvisorStudyProgram x1 x2 _ x4 x5 x6 x7 x8 x9 x10) x =
-  AdvisorStudyProgram x1 x2 x x4 x5 x6 x7 x8 x9 x10
-
---- Gets the value of attribute "Year" of a AdvisorStudyProgram entity.
-advisorStudyProgramYear :: AdvisorStudyProgram -> Int
-advisorStudyProgramYear (AdvisorStudyProgram _ _ _ x _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Year" in a AdvisorStudyProgram entity.
-setAdvisorStudyProgramYear
-  :: AdvisorStudyProgram -> Int -> AdvisorStudyProgram
-setAdvisorStudyProgramYear
-    (AdvisorStudyProgram x1 x2 x3 _ x5 x6 x7 x8 x9 x10) x =
-  AdvisorStudyProgram x1 x2 x3 x x5 x6 x7 x8 x9 x10
-
---- Gets the value of attribute "Desc" of a AdvisorStudyProgram entity.
-advisorStudyProgramDesc :: AdvisorStudyProgram -> String
-advisorStudyProgramDesc (AdvisorStudyProgram _ _ _ _ x _ _ _ _ _) = x
-
---- Sets the value of attribute "Desc" in a AdvisorStudyProgram entity.
-setAdvisorStudyProgramDesc
-  :: AdvisorStudyProgram -> String -> AdvisorStudyProgram
-setAdvisorStudyProgramDesc
-    (AdvisorStudyProgram x1 x2 x3 x4 _ x6 x7 x8 x9 x10) x =
-  AdvisorStudyProgram x1 x2 x3 x4 x x6 x7 x8 x9 x10
-
---- Gets the value of attribute "Prereq" of a AdvisorStudyProgram entity.
-advisorStudyProgramPrereq :: AdvisorStudyProgram -> String
-advisorStudyProgramPrereq (AdvisorStudyProgram _ _ _ _ _ x _ _ _ _) = x
-
---- Sets the value of attribute "Prereq" in a AdvisorStudyProgram entity.
-setAdvisorStudyProgramPrereq
-  :: AdvisorStudyProgram -> String -> AdvisorStudyProgram
-setAdvisorStudyProgramPrereq
-    (AdvisorStudyProgram x1 x2 x3 x4 x5 _ x7 x8 x9 x10) x =
-  AdvisorStudyProgram x1 x2 x3 x4 x5 x x7 x8 x9 x10
-
---- Gets the value of attribute "Comments" of a AdvisorStudyProgram entity.
-advisorStudyProgramComments :: AdvisorStudyProgram -> String
-advisorStudyProgramComments (AdvisorStudyProgram _ _ _ _ _ _ x _ _ _) = x
-
---- Sets the value of attribute "Comments" in a AdvisorStudyProgram entity.
-setAdvisorStudyProgramComments
-  :: AdvisorStudyProgram -> String -> AdvisorStudyProgram
-setAdvisorStudyProgramComments
-    (AdvisorStudyProgram x1 x2 x3 x4 x5 x6 _ x8 x9 x10) x =
-  AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x x8 x9 x10
-
---- Gets the value of attribute "Visible" of a AdvisorStudyProgram entity.
-advisorStudyProgramVisible :: AdvisorStudyProgram -> Bool
-advisorStudyProgramVisible (AdvisorStudyProgram _ _ _ _ _ _ _ x _ _) = x
-
---- Sets the value of attribute "Visible" in a AdvisorStudyProgram entity.
-setAdvisorStudyProgramVisible
-  :: AdvisorStudyProgram -> Bool -> AdvisorStudyProgram
-setAdvisorStudyProgramVisible
-    (AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x7 _ x9 x10) x =
-  AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x7 x x9 x10
-
---- Gets the value of attribute "UserStudyAdvisingKey" of a AdvisorStudyProgram entity.
-advisorStudyProgramUserStudyAdvisingKey :: AdvisorStudyProgram -> UserKey
-advisorStudyProgramUserStudyAdvisingKey
-    (AdvisorStudyProgram _ _ _ _ _ _ _ _ x _) =
-  UserKey x
-
---- Sets the value of attribute "UserStudyAdvisingKey" in a AdvisorStudyProgram entity.
-setAdvisorStudyProgramUserStudyAdvisingKey
-  :: AdvisorStudyProgram -> UserKey -> AdvisorStudyProgram
-setAdvisorStudyProgramUserStudyAdvisingKey
-    (AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x7 x8 _ x10) x =
-  AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x7 x8 (userKeyToKey x) x10
-
---- Gets the value of attribute "StudyProgramStudyProgramsAdvisedKey" of a AdvisorStudyProgram entity.
-advisorStudyProgramStudyProgramStudyProgramsAdvisedKey
-  :: AdvisorStudyProgram -> StudyProgramKey
-advisorStudyProgramStudyProgramStudyProgramsAdvisedKey
-    (AdvisorStudyProgram _ _ _ _ _ _ _ _ _ x) =
-  StudyProgramKey x
-
---- Sets the value of attribute "StudyProgramStudyProgramsAdvisedKey" in a AdvisorStudyProgram entity.
-setAdvisorStudyProgramStudyProgramStudyProgramsAdvisedKey
-  :: AdvisorStudyProgram -> StudyProgramKey -> AdvisorStudyProgram
-setAdvisorStudyProgramStudyProgramStudyProgramsAdvisedKey
-    (AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x7 x8 x9 _) x =
-  AdvisorStudyProgram x1 x2 x3 x4 x5 x6 x7 x8 x9 (studyProgramKeyToKey x)
-
---- Sets the value of attribute "Key" in a AdvisorModule entity.
-setAdvisorModuleKey :: AdvisorModule -> Key -> AdvisorModule
-setAdvisorModuleKey (AdvisorModule _ x2 x3 x4 x5) x =
-  AdvisorModule x x2 x3 x4 x5
-
---- Gets the value of attribute "Mandatory" of a AdvisorModule entity.
-advisorModuleMandatory :: AdvisorModule -> Bool
-advisorModuleMandatory (AdvisorModule _ x _ _ _) = x
-
---- Sets the value of attribute "Mandatory" in a AdvisorModule entity.
-setAdvisorModuleMandatory :: AdvisorModule -> Bool -> AdvisorModule
-setAdvisorModuleMandatory (AdvisorModule x1 _ x3 x4 x5) x =
-  AdvisorModule x1 x x3 x4 x5
-
---- Gets the value of attribute "AdvisorStudyProgramAdvisorProgramModulesKey" of a AdvisorModule entity.
-advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
-  :: AdvisorModule -> AdvisorStudyProgramKey
-advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
-    (AdvisorModule _ _ x _ _) =
-  AdvisorStudyProgramKey x
-
---- Sets the value of attribute "AdvisorStudyProgramAdvisorProgramModulesKey" in a AdvisorModule entity.
-setAdvisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
-  :: AdvisorModule -> AdvisorStudyProgramKey -> AdvisorModule
-setAdvisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
-    (AdvisorModule x1 x2 _ x4 x5) x =
-  AdvisorModule x1 x2 (advisorStudyProgramKeyToKey x) x4 x5
-
---- Gets the value of attribute "CategoryAdvisorCategorizingKey" of a AdvisorModule entity.
-advisorModuleCategoryAdvisorCategorizingKey :: AdvisorModule -> CategoryKey
-advisorModuleCategoryAdvisorCategorizingKey (AdvisorModule _ _ _ x _) =
-  CategoryKey x
-
---- Sets the value of attribute "CategoryAdvisorCategorizingKey" in a AdvisorModule entity.
-setAdvisorModuleCategoryAdvisorCategorizingKey
-  :: AdvisorModule -> CategoryKey -> AdvisorModule
-setAdvisorModuleCategoryAdvisorCategorizingKey
-    (AdvisorModule x1 x2 x3 _ x5) x =
-  AdvisorModule x1 x2 x3 (categoryKeyToKey x) x5
-
---- Gets the value of attribute "ModInstAdvisedProgramModuleInstancesKey" of a AdvisorModule entity.
-advisorModuleModInstAdvisedProgramModuleInstancesKey
-  :: AdvisorModule -> ModInstKey
-advisorModuleModInstAdvisedProgramModuleInstancesKey
-    (AdvisorModule _ _ _ _ x) =
-  ModInstKey x
-
---- Sets the value of attribute "ModInstAdvisedProgramModuleInstancesKey" in a AdvisorModule entity.
-setAdvisorModuleModInstAdvisedProgramModuleInstancesKey
-  :: AdvisorModule -> ModInstKey -> AdvisorModule
-setAdvisorModuleModInstAdvisedProgramModuleInstancesKey
-    (AdvisorModule x1 x2 x3 x4 _) x =
-  AdvisorModule x1 x2 x3 x4 (modInstKeyToKey x)
-
---- Sets the value of attribute "Key" in a MasterProgram entity.
-setMasterProgramKey :: MasterProgram -> Key -> MasterProgram
-setMasterProgramKey (MasterProgram _ x2 x3 x4 x5 x6 x7 x8 x9 x10) x =
-  MasterProgram x x2 x3 x4 x5 x6 x7 x8 x9 x10
-
---- Gets the value of attribute "Name" of a MasterProgram entity.
-masterProgramName :: MasterProgram -> String
-masterProgramName (MasterProgram _ x _ _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Name" in a MasterProgram entity.
-setMasterProgramName :: MasterProgram -> String -> MasterProgram
-setMasterProgramName (MasterProgram x1 _ x3 x4 x5 x6 x7 x8 x9 x10) x =
-  MasterProgram x1 x x3 x4 x5 x6 x7 x8 x9 x10
-
---- Gets the value of attribute "Term" of a MasterProgram entity.
-masterProgramTerm :: MasterProgram -> String
-masterProgramTerm (MasterProgram _ _ x _ _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Term" in a MasterProgram entity.
-setMasterProgramTerm :: MasterProgram -> String -> MasterProgram
-setMasterProgramTerm (MasterProgram x1 x2 _ x4 x5 x6 x7 x8 x9 x10) x =
-  MasterProgram x1 x2 x x4 x5 x6 x7 x8 x9 x10
-
---- Gets the value of attribute "Year" of a MasterProgram entity.
-masterProgramYear :: MasterProgram -> Int
-masterProgramYear (MasterProgram _ _ _ x _ _ _ _ _ _) = x
-
---- Sets the value of attribute "Year" in a MasterProgram entity.
-setMasterProgramYear :: MasterProgram -> Int -> MasterProgram
-setMasterProgramYear (MasterProgram x1 x2 x3 _ x5 x6 x7 x8 x9 x10) x =
-  MasterProgram x1 x2 x3 x x5 x6 x7 x8 x9 x10
-
---- Gets the value of attribute "Desc" of a MasterProgram entity.
-masterProgramDesc :: MasterProgram -> String
-masterProgramDesc (MasterProgram _ _ _ _ x _ _ _ _ _) = x
-
---- Sets the value of attribute "Desc" in a MasterProgram entity.
-setMasterProgramDesc :: MasterProgram -> String -> MasterProgram
-setMasterProgramDesc (MasterProgram x1 x2 x3 x4 _ x6 x7 x8 x9 x10) x =
-  MasterProgram x1 x2 x3 x4 x x6 x7 x8 x9 x10
-
---- Gets the value of attribute "Prereq" of a MasterProgram entity.
-masterProgramPrereq :: MasterProgram -> String
-masterProgramPrereq (MasterProgram _ _ _ _ _ x _ _ _ _) = x
-
---- Sets the value of attribute "Prereq" in a MasterProgram entity.
-setMasterProgramPrereq :: MasterProgram -> String -> MasterProgram
-setMasterProgramPrereq (MasterProgram x1 x2 x3 x4 x5 _ x7 x8 x9 x10) x =
-  MasterProgram x1 x2 x3 x4 x5 x x7 x8 x9 x10
-
---- Gets the value of attribute "Comments" of a MasterProgram entity.
-masterProgramComments :: MasterProgram -> String
-masterProgramComments (MasterProgram _ _ _ _ _ _ x _ _ _) = x
-
---- Sets the value of attribute "Comments" in a MasterProgram entity.
-setMasterProgramComments :: MasterProgram -> String -> MasterProgram
-setMasterProgramComments (MasterProgram x1 x2 x3 x4 x5 x6 _ x8 x9 x10) x =
-  MasterProgram x1 x2 x3 x4 x5 x6 x x8 x9 x10
-
---- Gets the value of attribute "Visible" of a MasterProgram entity.
-masterProgramVisible :: MasterProgram -> Bool
-masterProgramVisible (MasterProgram _ _ _ _ _ _ _ x _ _) = x
-
---- Sets the value of attribute "Visible" in a MasterProgram entity.
-setMasterProgramVisible :: MasterProgram -> Bool -> MasterProgram
-setMasterProgramVisible (MasterProgram x1 x2 x3 x4 x5 x6 x7 _ x9 x10) x =
-  MasterProgram x1 x2 x3 x4 x5 x6 x7 x x9 x10
-
---- Gets the value of attribute "UserAdvisingKey" of a MasterProgram entity.
-masterProgramUserAdvisingKey :: MasterProgram -> UserKey
-masterProgramUserAdvisingKey (MasterProgram _ _ _ _ _ _ _ _ x _) = UserKey x
-
---- Sets the value of attribute "UserAdvisingKey" in a MasterProgram entity.
-setMasterProgramUserAdvisingKey :: MasterProgram -> UserKey -> MasterProgram
-setMasterProgramUserAdvisingKey
-    (MasterProgram x1 x2 x3 x4 x5 x6 x7 x8 _ x10) x =
-  MasterProgram x1 x2 x3 x4 x5 x6 x7 x8 (userKeyToKey x) x10
-
---- Gets the value of attribute "MasterCoreAreaAreaProgramsKey" of a MasterProgram entity.
-masterProgramMasterCoreAreaAreaProgramsKey
-  :: MasterProgram -> MasterCoreAreaKey
-masterProgramMasterCoreAreaAreaProgramsKey
-    (MasterProgram _ _ _ _ _ _ _ _ _ x) =
-  MasterCoreAreaKey x
-
---- Sets the value of attribute "MasterCoreAreaAreaProgramsKey" in a MasterProgram entity.
-setMasterProgramMasterCoreAreaAreaProgramsKey
-  :: MasterProgram -> MasterCoreAreaKey -> MasterProgram
-setMasterProgramMasterCoreAreaAreaProgramsKey
-    (MasterProgram x1 x2 x3 x4 x5 x6 x7 x8 x9 _) x =
-  MasterProgram x1 x2 x3 x4 x5 x6 x7 x8 x9 (masterCoreAreaKeyToKey x)
-
---- Sets the value of attribute "Key" in a MasterProgInfo entity.
-setMasterProgInfoKey :: MasterProgInfo -> Key -> MasterProgInfo
-setMasterProgInfoKey (MasterProgInfo _ x2 x3 x4 x5 x6 x7 x8) x =
-  MasterProgInfo x x2 x3 x4 x5 x6 x7 x8
-
---- Gets the value of attribute "ProgModules" of a MasterProgInfo entity.
-masterProgInfoProgModules :: MasterProgInfo -> String
-masterProgInfoProgModules (MasterProgInfo _ x _ _ _ _ _ _) = x
-
---- Sets the value of attribute "ProgModules" in a MasterProgInfo entity.
-setMasterProgInfoProgModules :: MasterProgInfo -> String -> MasterProgInfo
-setMasterProgInfoProgModules (MasterProgInfo x1 _ x3 x4 x5 x6 x7 x8) x =
-  MasterProgInfo x1 x x3 x4 x5 x6 x7 x8
-
---- Gets the value of attribute "Praktikum" of a MasterProgInfo entity.
-masterProgInfoPraktikum :: MasterProgInfo -> String
-masterProgInfoPraktikum (MasterProgInfo _ _ x _ _ _ _ _) = x
-
---- Sets the value of attribute "Praktikum" in a MasterProgInfo entity.
-setMasterProgInfoPraktikum :: MasterProgInfo -> String -> MasterProgInfo
-setMasterProgInfoPraktikum (MasterProgInfo x1 x2 _ x4 x5 x6 x7 x8) x =
-  MasterProgInfo x1 x2 x x4 x5 x6 x7 x8
-
---- Gets the value of attribute "Seminar" of a MasterProgInfo entity.
-masterProgInfoSeminar :: MasterProgInfo -> String
-masterProgInfoSeminar (MasterProgInfo _ _ _ x _ _ _ _) = x
-
---- Sets the value of attribute "Seminar" in a MasterProgInfo entity.
-setMasterProgInfoSeminar :: MasterProgInfo -> String -> MasterProgInfo
-setMasterProgInfoSeminar (MasterProgInfo x1 x2 x3 _ x5 x6 x7 x8) x =
-  MasterProgInfo x1 x2 x3 x x5 x6 x7 x8
-
---- Gets the value of attribute "Thesis" of a MasterProgInfo entity.
-masterProgInfoThesis :: MasterProgInfo -> String
-masterProgInfoThesis (MasterProgInfo _ _ _ _ x _ _ _) = x
-
---- Sets the value of attribute "Thesis" in a MasterProgInfo entity.
-setMasterProgInfoThesis :: MasterProgInfo -> String -> MasterProgInfo
-setMasterProgInfoThesis (MasterProgInfo x1 x2 x3 x4 _ x6 x7 x8) x =
-  MasterProgInfo x1 x2 x3 x4 x x6 x7 x8
-
---- Gets the value of attribute "AllgGrundlagen" of a MasterProgInfo entity.
-masterProgInfoAllgGrundlagen :: MasterProgInfo -> String
-masterProgInfoAllgGrundlagen (MasterProgInfo _ _ _ _ _ x _ _) = x
-
---- Sets the value of attribute "AllgGrundlagen" in a MasterProgInfo entity.
-setMasterProgInfoAllgGrundlagen :: MasterProgInfo -> String -> MasterProgInfo
-setMasterProgInfoAllgGrundlagen (MasterProgInfo x1 x2 x3 x4 x5 _ x7 x8) x =
-  MasterProgInfo x1 x2 x3 x4 x5 x x7 x8
-
---- Gets the value of attribute "Anwendungsfach" of a MasterProgInfo entity.
-masterProgInfoAnwendungsfach :: MasterProgInfo -> String
-masterProgInfoAnwendungsfach (MasterProgInfo _ _ _ _ _ _ x _) = x
-
---- Sets the value of attribute "Anwendungsfach" in a MasterProgInfo entity.
-setMasterProgInfoAnwendungsfach :: MasterProgInfo -> String -> MasterProgInfo
-setMasterProgInfoAnwendungsfach (MasterProgInfo x1 x2 x3 x4 x5 x6 _ x8) x =
-  MasterProgInfo x1 x2 x3 x4 x5 x6 x x8
-
---- Gets the value of attribute "MasterProgramProgramInfoKey" of a MasterProgInfo entity.
-masterProgInfoMasterProgramProgramInfoKey
-  :: MasterProgInfo -> MasterProgramKey
-masterProgInfoMasterProgramProgramInfoKey (MasterProgInfo _ _ _ _ _ _ _ x) =
-  MasterProgramKey x
-
---- Sets the value of attribute "MasterProgramProgramInfoKey" in a MasterProgInfo entity.
-setMasterProgInfoMasterProgramProgramInfoKey
-  :: MasterProgInfo -> MasterProgramKey -> MasterProgInfo
-setMasterProgInfoMasterProgramProgramInfoKey
-    (MasterProgInfo x1 x2 x3 x4 x5 x6 x7 _) x =
-  MasterProgInfo x1 x2 x3 x4 x5 x6 x7 (masterProgramKeyToKey x)
-
---- Sets the value of attribute "Key" in a UnivisInfo entity.
-setUnivisInfoKey :: UnivisInfo -> Key -> UnivisInfo
-setUnivisInfoKey (UnivisInfo _ x2 x3 x4 x5) x = UnivisInfo x x2 x3 x4 x5
-
---- Gets the value of attribute "Code" of a UnivisInfo entity.
-univisInfoCode :: UnivisInfo -> String
-univisInfoCode (UnivisInfo _ x _ _ _) = x
-
---- Sets the value of attribute "Code" in a UnivisInfo entity.
-setUnivisInfoCode :: UnivisInfo -> String -> UnivisInfo
-setUnivisInfoCode (UnivisInfo x1 _ x3 x4 x5) x = UnivisInfo x1 x x3 x4 x5
-
---- Gets the value of attribute "Term" of a UnivisInfo entity.
-univisInfoTerm :: UnivisInfo -> String
-univisInfoTerm (UnivisInfo _ _ x _ _) = x
-
---- Sets the value of attribute "Term" in a UnivisInfo entity.
-setUnivisInfoTerm :: UnivisInfo -> String -> UnivisInfo
-setUnivisInfoTerm (UnivisInfo x1 x2 _ x4 x5) x = UnivisInfo x1 x2 x x4 x5
-
---- Gets the value of attribute "Year" of a UnivisInfo entity.
-univisInfoYear :: UnivisInfo -> Int
-univisInfoYear (UnivisInfo _ _ _ x _) = x
-
---- Sets the value of attribute "Year" in a UnivisInfo entity.
-setUnivisInfoYear :: UnivisInfo -> Int -> UnivisInfo
-setUnivisInfoYear (UnivisInfo x1 x2 x3 _ x5) x = UnivisInfo x1 x2 x3 x x5
-
---- Gets the value of attribute "URL" of a UnivisInfo entity.
-univisInfoURL :: UnivisInfo -> String
-univisInfoURL (UnivisInfo _ _ _ _ x) = x
-
---- Sets the value of attribute "URL" in a UnivisInfo entity.
-setUnivisInfoURL :: UnivisInfo -> String -> UnivisInfo
-setUnivisInfoURL (UnivisInfo x1 x2 x3 x4 _) x = UnivisInfo x1 x2 x3 x4 x
-
---- Database predicate representing the relation between keys and StudyProgram tuple entities.
-studyProgramEntry :: Key -> StudyProgramTuple -> Dynamic
-studyProgramEntry =
-  persistentSQLite dbFile "StudyProgram"
-   ["Name","NameE","ShortName","ProgKey","Position"]
-
---- Dynamic predicate representing the relation
---- between keys and StudyProgram entities.
-studyProgram :: StudyProgramKey -> StudyProgram -> Dynamic
-studyProgram key obj
-  | key =:= studyProgramKey obj
-  = studyProgramEntry (studyProgramKeyToKey key) (studyProgram2tuple obj)
-
---- Gets the key of a StudyProgram entity.
-studyProgramKey :: StudyProgram -> StudyProgramKey
-studyProgramKey (StudyProgram x _ _ _ _ _) = StudyProgramKey x
-
---- Shows the key of a StudyProgram entity as a string.
+--- Shows the key of a `StudyProgram` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showStudyProgramKey :: StudyProgram -> String
-showStudyProgramKey obj =
-  showDatabaseKey "StudyProgram" studyProgramKeyToKey (studyProgramKey obj)
+showStudyProgramKey entry =
+  Database.CDBI.ER.showDatabaseKey "StudyProgram" studyProgramKeyToInt
+   (studyProgramKey entry)
 
---- Transforms a string into a key of a StudyProgram entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readStudyProgramKey :: String -> Maybe StudyProgramKey
-readStudyProgramKey s = readDatabaseKey "StudyProgram" StudyProgramKey s
+--- Transforms a string into a key of a `StudyProgram` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readStudyProgramKey :: String -> Maybe StudyProgramID
+readStudyProgramKey =
+  Database.CDBI.ER.readDatabaseKey "StudyProgram" StudyProgramID
 
-studyProgramKeyToKey :: StudyProgramKey -> Key
-studyProgramKeyToKey (StudyProgramKey k) = k
-
-maybeStudyProgramKeyToKey :: Maybe StudyProgramKey -> Maybe Key
-maybeStudyProgramKeyToKey Nothing = Nothing
-maybeStudyProgramKeyToKey (Just (StudyProgramKey k)) = Just k
-
---- Inserts a new StudyProgram entity.
-newStudyProgram
-  :: String -> String -> String -> String -> Int -> Transaction StudyProgram
-newStudyProgram name_p nameE_p shortName_p progKey_p position_p =
-  unique "MDB" studyProgramEntry keytuple2StudyProgram studyProgramShortName
-   shortName_p
-   |>> (unique "MDB" studyProgramEntry keytuple2StudyProgram
-         studyProgramProgKey
-         progKey_p
-         |>> newEntry studyProgramEntry keytuple2StudyProgram
-              (name_p,nameE_p,shortName_p,progKey_p,position_p))
-
---- Updates an existing StudyProgram entity.
-updateStudyProgram :: StudyProgram -> Transaction ()
-updateStudyProgram studyProgram_p =
-  uniqueUpdate "MDB" studyProgramEntry keytuple2StudyProgram
-   (studyProgramKeyToKey . studyProgramKey)
-   studyProgramShortName
-   studyProgram_p
-   |>> (uniqueUpdate "MDB" studyProgramEntry keytuple2StudyProgram
-         (studyProgramKeyToKey . studyProgramKey)
-         studyProgramProgKey
-         studyProgram_p
-         |>> updateDBEntry studyProgramEntry
-              (studyProgramKeyToKey (studyProgramKey studyProgram_p))
-              (studyProgram2tuple studyProgram_p))
-
---- Deletes an existing StudyProgram entity.
-deleteStudyProgram :: StudyProgram -> Transaction ()
-deleteStudyProgram studyProgram_p =
-  requiredForeignDBKey "Category" categoryEntry keytuple2Category
-   categoryStudyProgramProgramCategoriesKey
-   (studyProgramKey studyProgram_p)
-   |>> (requiredForeignDBKey "AdvisorStudyProgram" advisorStudyProgramEntry
-         keytuple2AdvisorStudyProgram
-         advisorStudyProgramStudyProgramStudyProgramsAdvisedKey
-         (studyProgramKey studyProgram_p)
-         |>> deleteDBEntry studyProgramEntry
-              (studyProgramKeyToKey (studyProgramKey studyProgram_p)))
-
---- Gets a StudyProgram entity stored in the database with the given key.
-getStudyProgram :: StudyProgramKey -> Transaction StudyProgram
-getStudyProgram key =
-  getEntry studyProgramEntry keytuple2StudyProgram (studyProgramKeyToKey key)
-
---- Gets all StudyProgram entities stored in the database.
-queryAllStudyPrograms :: Query [StudyProgram]
+--- Gets all `StudyProgram` entities.
+queryAllStudyPrograms :: Database.CDBI.Connection.DBAction [StudyProgram]
 queryAllStudyPrograms =
-  transformQ (map (uncurry keytuple2StudyProgram))
-   (allDBKeyInfos studyProgramEntry)
+  Database.CDBI.ER.getAllEntries studyProgram_CDBI_Description
 
---- Gets all StudyProgram entities satisfying a given condition.
-queryCondStudyProgram :: (StudyProgram -> Bool) -> Query [StudyProgram]
-queryCondStudyProgram econd = transformQ (filter econd) queryAllStudyPrograms
+--- Gets all `StudyProgram` entities satisfying a given predicate.
+queryCondStudyProgram
+  :: (StudyProgram -> Bool) -> Database.CDBI.Connection.DBAction [StudyProgram]
+queryCondStudyProgram =
+  Database.CDBI.ER.getCondEntries studyProgram_CDBI_Description
 
---- Database predicate representing the relation between keys and Category tuple entities.
-categoryEntry :: Key -> CategoryTuple -> Dynamic
-categoryEntry =
-  persistentSQLite dbFile "Category"
-   ["Name"
-   ,"NameE"
-   ,"ShortName"
-   ,"Comment"
-   ,"MinECTS"
-   ,"MaxECTS"
-   ,"Position"
-   ,"StudyProgramProgramCategoriesKey"]
+--- Gets a `StudyProgram` entry by a given key.
+getStudyProgram
+  :: StudyProgramID -> Database.CDBI.Connection.DBAction StudyProgram
+getStudyProgram =
+  Database.CDBI.ER.getEntryWithKey studyProgram_CDBI_Description
+   studyProgramColumnKey
+   studyProgramID
 
---- Dynamic predicate representing the relation
---- between keys and Category entities.
-category :: CategoryKey -> Category -> Dynamic
-category key obj
-  | key =:= categoryKey obj
-  = categoryEntry (categoryKeyToKey key) (category2tuple obj)
+--- Inserts a new `StudyProgram` entity.
+newStudyProgram
+  :: String
+  -> String
+  -> String -> String -> Int -> Database.CDBI.Connection.DBAction StudyProgram
+newStudyProgram name_p nameE_p shortName_p progKey_p position_p =
+  Database.CDBI.ER.insertNewEntry studyProgram_CDBI_Description
+   setStudyProgramKey
+   StudyProgramID
+   (StudyProgram (StudyProgramID 0) name_p nameE_p shortName_p progKey_p
+     position_p)
 
---- Gets the key of a Category entity.
-categoryKey :: Category -> CategoryKey
-categoryKey (Category x _ _ _ _ _ _ _ _) = CategoryKey x
+--- Deletes an existing `StudyProgram` entry by its key.
+deleteStudyProgram :: StudyProgram -> Database.CDBI.Connection.DBAction ()
+deleteStudyProgram =
+  Database.CDBI.ER.deleteEntry studyProgram_CDBI_Description
+   studyProgramColumnKey
+   (studyProgramID . studyProgramKey)
 
---- Shows the key of a Category entity as a string.
+--- Updates an existing `StudyProgram` entry by its key.
+updateStudyProgram :: StudyProgram -> Database.CDBI.Connection.DBAction ()
+updateStudyProgram = Database.CDBI.ER.updateEntry studyProgram_CDBI_Description
+
+--- The ER description of the `Category` entity.
+category_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription Category
+category_CDBI_Description =
+  Database.CDBI.Description.ED "Category"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(Category
+       (CategoryID key)
+       name
+       nameE
+       shortName
+       comment
+       minECTS
+       maxECTS
+       position
+       (StudyProgramID studyProgramProgramCategoriesKey)) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Description.sqlString nameE
+     ,Database.CDBI.Connection.SQLString shortName
+     ,Database.CDBI.Description.sqlString comment
+     ,Database.CDBI.Connection.SQLInt minECTS
+     ,Database.CDBI.Connection.SQLInt maxECTS
+     ,Database.CDBI.Connection.SQLInt position
+     ,Database.CDBI.Connection.SQLInt studyProgramProgramCategoriesKey])
+   (\(Category
+       _
+       name
+       nameE
+       shortName
+       comment
+       minECTS
+       maxECTS
+       position
+       (StudyProgramID studyProgramProgramCategoriesKey)) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Description.sqlString nameE
+     ,Database.CDBI.Connection.SQLString shortName
+     ,Database.CDBI.Description.sqlString comment
+     ,Database.CDBI.Connection.SQLInt minECTS
+     ,Database.CDBI.Connection.SQLInt maxECTS
+     ,Database.CDBI.Connection.SQLInt position
+     ,Database.CDBI.Connection.SQLInt studyProgramProgramCategoriesKey])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString name
+     ,nameE
+     ,Database.CDBI.Connection.SQLString shortName
+     ,comment
+     ,Database.CDBI.Connection.SQLInt minECTS
+     ,Database.CDBI.Connection.SQLInt maxECTS
+     ,Database.CDBI.Connection.SQLInt position
+     ,Database.CDBI.Connection.SQLInt studyProgramProgramCategoriesKey] ->
+     Category (CategoryID key) name
+      (Database.CDBI.Description.fromStringOrNull nameE)
+      shortName
+      (Database.CDBI.Description.fromStringOrNull comment)
+      minECTS
+      maxECTS
+      position
+      (StudyProgramID studyProgramProgramCategoriesKey))
+
+--- The database table of the `Category` entity.
+categoryTable :: Database.CDBI.Description.Table
+categoryTable = "Category"
+
+--- The database column `Key` of the `Category` entity.
+categoryColumnKey :: Database.CDBI.Description.Column CategoryID
+categoryColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"Category\".\"Key\""
+
+--- The database column `Name` of the `Category` entity.
+categoryColumnName :: Database.CDBI.Description.Column String
+categoryColumnName =
+  Database.CDBI.Description.Column "\"Name\"" "\"Category\".\"Name\""
+
+--- The database column `NameE` of the `Category` entity.
+categoryColumnNameE :: Database.CDBI.Description.Column String
+categoryColumnNameE =
+  Database.CDBI.Description.Column "\"NameE\"" "\"Category\".\"NameE\""
+
+--- The database column `ShortName` of the `Category` entity.
+categoryColumnShortName :: Database.CDBI.Description.Column String
+categoryColumnShortName =
+  Database.CDBI.Description.Column "\"ShortName\"" "\"Category\".\"ShortName\""
+
+--- The database column `Comment` of the `Category` entity.
+categoryColumnComment :: Database.CDBI.Description.Column String
+categoryColumnComment =
+  Database.CDBI.Description.Column "\"Comment\"" "\"Category\".\"Comment\""
+
+--- The database column `MinECTS` of the `Category` entity.
+categoryColumnMinECTS :: Database.CDBI.Description.Column Int
+categoryColumnMinECTS =
+  Database.CDBI.Description.Column "\"MinECTS\"" "\"Category\".\"MinECTS\""
+
+--- The database column `MaxECTS` of the `Category` entity.
+categoryColumnMaxECTS :: Database.CDBI.Description.Column Int
+categoryColumnMaxECTS =
+  Database.CDBI.Description.Column "\"MaxECTS\"" "\"Category\".\"MaxECTS\""
+
+--- The database column `Position` of the `Category` entity.
+categoryColumnPosition :: Database.CDBI.Description.Column Int
+categoryColumnPosition =
+  Database.CDBI.Description.Column "\"Position\"" "\"Category\".\"Position\""
+
+--- The database column `StudyProgramProgramCategoriesKey` of the `Category` entity.
+categoryColumnStudyProgramProgramCategoriesKey
+  :: Database.CDBI.Description.Column StudyProgramID
+categoryColumnStudyProgramProgramCategoriesKey =
+  Database.CDBI.Description.Column "\"StudyProgramProgramCategoriesKey\""
+   "\"Category\".\"StudyProgramProgramCategoriesKey\""
+
+--- The description of the database column `Key` of the `Category` entity.
+categoryKeyColDesc :: Database.CDBI.Description.ColumnDescription CategoryID
+categoryKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"Category\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(CategoryID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> CategoryID key)
+
+--- The description of the database column `Name` of the `Category` entity.
+categoryNameColDesc :: Database.CDBI.Description.ColumnDescription String
+categoryNameColDesc =
+  Database.CDBI.Description.ColDesc "\"Category\".\"Name\""
+   Database.CDBI.Connection.SQLTypeString
+   (\name -> Database.CDBI.Connection.SQLString name)
+   (\(Database.CDBI.Connection.SQLString name) -> name)
+
+--- The description of the database column `NameE` of the `Category` entity.
+categoryNameEColDesc :: Database.CDBI.Description.ColumnDescription String
+categoryNameEColDesc =
+  Database.CDBI.Description.ColDesc "\"Category\".\"NameE\""
+   Database.CDBI.Connection.SQLTypeString
+   (\nameE -> Database.CDBI.Description.sqlString nameE)
+   (\nameE -> Database.CDBI.Description.fromStringOrNull nameE)
+
+--- The description of the database column `ShortName` of the `Category` entity.
+categoryShortNameColDesc :: Database.CDBI.Description.ColumnDescription String
+categoryShortNameColDesc =
+  Database.CDBI.Description.ColDesc "\"Category\".\"ShortName\""
+   Database.CDBI.Connection.SQLTypeString
+   (\shortName -> Database.CDBI.Connection.SQLString shortName)
+   (\(Database.CDBI.Connection.SQLString shortName) -> shortName)
+
+--- The description of the database column `Comment` of the `Category` entity.
+categoryCommentColDesc :: Database.CDBI.Description.ColumnDescription String
+categoryCommentColDesc =
+  Database.CDBI.Description.ColDesc "\"Category\".\"Comment\""
+   Database.CDBI.Connection.SQLTypeString
+   (\comment -> Database.CDBI.Description.sqlString comment)
+   (\comment -> Database.CDBI.Description.fromStringOrNull comment)
+
+--- The description of the database column `MinECTS` of the `Category` entity.
+categoryMinECTSColDesc :: Database.CDBI.Description.ColumnDescription Int
+categoryMinECTSColDesc =
+  Database.CDBI.Description.ColDesc "\"Category\".\"MinECTS\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\minECTS -> Database.CDBI.Connection.SQLInt minECTS)
+   (\(Database.CDBI.Connection.SQLInt minECTS) -> minECTS)
+
+--- The description of the database column `MaxECTS` of the `Category` entity.
+categoryMaxECTSColDesc :: Database.CDBI.Description.ColumnDescription Int
+categoryMaxECTSColDesc =
+  Database.CDBI.Description.ColDesc "\"Category\".\"MaxECTS\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\maxECTS -> Database.CDBI.Connection.SQLInt maxECTS)
+   (\(Database.CDBI.Connection.SQLInt maxECTS) -> maxECTS)
+
+--- The description of the database column `Position` of the `Category` entity.
+categoryPositionColDesc :: Database.CDBI.Description.ColumnDescription Int
+categoryPositionColDesc =
+  Database.CDBI.Description.ColDesc "\"Category\".\"Position\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\position -> Database.CDBI.Connection.SQLInt position)
+   (\(Database.CDBI.Connection.SQLInt position) -> position)
+
+--- The description of the database column `StudyProgramProgramCategoriesKey` of the `Category` entity.
+categoryStudyProgramProgramCategoriesKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription StudyProgramID
+categoryStudyProgramProgramCategoriesKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"Category\".\"StudyProgramProgramCategoriesKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(StudyProgramID studyProgramProgramCategoriesKey) ->
+     Database.CDBI.Connection.SQLInt studyProgramProgramCategoriesKey)
+   (\(Database.CDBI.Connection.SQLInt studyProgramProgramCategoriesKey) ->
+     StudyProgramID studyProgramProgramCategoriesKey)
+
+--- Gets the attribute `Key` of the `Category` entity.
+categoryKey :: Category -> CategoryID
+categoryKey (Category a _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Name` of the `Category` entity.
+categoryName :: Category -> String
+categoryName (Category _ a _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `NameE` of the `Category` entity.
+categoryNameE :: Category -> String
+categoryNameE (Category _ _ a _ _ _ _ _ _) = a
+
+--- Gets the attribute `ShortName` of the `Category` entity.
+categoryShortName :: Category -> String
+categoryShortName (Category _ _ _ a _ _ _ _ _) = a
+
+--- Gets the attribute `Comment` of the `Category` entity.
+categoryComment :: Category -> String
+categoryComment (Category _ _ _ _ a _ _ _ _) = a
+
+--- Gets the attribute `MinECTS` of the `Category` entity.
+categoryMinECTS :: Category -> Int
+categoryMinECTS (Category _ _ _ _ _ a _ _ _) = a
+
+--- Gets the attribute `MaxECTS` of the `Category` entity.
+categoryMaxECTS :: Category -> Int
+categoryMaxECTS (Category _ _ _ _ _ _ a _ _) = a
+
+--- Gets the attribute `Position` of the `Category` entity.
+categoryPosition :: Category -> Int
+categoryPosition (Category _ _ _ _ _ _ _ a _) = a
+
+--- Gets the attribute `StudyProgramProgramCategoriesKey` of the `Category` entity.
+categoryStudyProgramProgramCategoriesKey :: Category -> StudyProgramID
+categoryStudyProgramProgramCategoriesKey (Category _ _ _ _ _ _ _ _ a) = a
+
+--- Sets the attribute `Key` of the `Category` entity.
+setCategoryKey :: Category -> CategoryID -> Category
+setCategoryKey (Category _ b8 b7 b6 b5 b4 b3 b2 b1) a =
+  Category a b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Name` of the `Category` entity.
+setCategoryName :: Category -> String -> Category
+setCategoryName (Category a2 _ b7 b6 b5 b4 b3 b2 b1) a =
+  Category a2 a b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `NameE` of the `Category` entity.
+setCategoryNameE :: Category -> String -> Category
+setCategoryNameE (Category a3 a2 _ b6 b5 b4 b3 b2 b1) a =
+  Category a3 a2 a b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `ShortName` of the `Category` entity.
+setCategoryShortName :: Category -> String -> Category
+setCategoryShortName (Category a4 a3 a2 _ b5 b4 b3 b2 b1) a =
+  Category a4 a3 a2 a b5 b4 b3 b2 b1
+
+--- Sets the attribute `Comment` of the `Category` entity.
+setCategoryComment :: Category -> String -> Category
+setCategoryComment (Category a5 a4 a3 a2 _ b4 b3 b2 b1) a =
+  Category a5 a4 a3 a2 a b4 b3 b2 b1
+
+--- Sets the attribute `MinECTS` of the `Category` entity.
+setCategoryMinECTS :: Category -> Int -> Category
+setCategoryMinECTS (Category a6 a5 a4 a3 a2 _ b3 b2 b1) a =
+  Category a6 a5 a4 a3 a2 a b3 b2 b1
+
+--- Sets the attribute `MaxECTS` of the `Category` entity.
+setCategoryMaxECTS :: Category -> Int -> Category
+setCategoryMaxECTS (Category a7 a6 a5 a4 a3 a2 _ b2 b1) a =
+  Category a7 a6 a5 a4 a3 a2 a b2 b1
+
+--- Sets the attribute `Position` of the `Category` entity.
+setCategoryPosition :: Category -> Int -> Category
+setCategoryPosition (Category a8 a7 a6 a5 a4 a3 a2 _ b1) a =
+  Category a8 a7 a6 a5 a4 a3 a2 a b1
+
+--- Sets the attribute `StudyProgramProgramCategoriesKey` of the `Category` entity.
+setCategoryStudyProgramProgramCategoriesKey
+  :: Category -> StudyProgramID -> Category
+setCategoryStudyProgramProgramCategoriesKey
+    (Category a9 a8 a7 a6 a5 a4 a3 a2 _) a =
+  Category a9 a8 a7 a6 a5 a4 a3 a2 a
+
+--- id-to-value function for entity `Category`.
+categoryID :: CategoryID -> Database.CDBI.Criteria.Value CategoryID
+categoryID (CategoryID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `Category`.
+categoryKeyToInt :: CategoryID -> Int
+categoryKeyToInt (CategoryID key) = key
+
+--- Shows the key of a `Category` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showCategoryKey :: Category -> String
-showCategoryKey obj =
-  showDatabaseKey "Category" categoryKeyToKey (categoryKey obj)
+showCategoryKey entry =
+  Database.CDBI.ER.showDatabaseKey "Category" categoryKeyToInt
+   (categoryKey entry)
 
---- Transforms a string into a key of a Category entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readCategoryKey :: String -> Maybe CategoryKey
-readCategoryKey s = readDatabaseKey "Category" CategoryKey s
+--- Transforms a string into a key of a `Category` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readCategoryKey :: String -> Maybe CategoryID
+readCategoryKey = Database.CDBI.ER.readDatabaseKey "Category" CategoryID
 
-categoryKeyToKey :: CategoryKey -> Key
-categoryKeyToKey (CategoryKey k) = k
+--- Gets all `Category` entities.
+queryAllCategorys :: Database.CDBI.Connection.DBAction [Category]
+queryAllCategorys = Database.CDBI.ER.getAllEntries category_CDBI_Description
 
-maybeCategoryKeyToKey :: Maybe CategoryKey -> Maybe Key
-maybeCategoryKeyToKey Nothing = Nothing
-maybeCategoryKeyToKey (Just (CategoryKey k)) = Just k
+--- Gets all `Category` entities satisfying a given predicate.
+queryCondCategory
+  :: (Category -> Bool) -> Database.CDBI.Connection.DBAction [Category]
+queryCondCategory = Database.CDBI.ER.getCondEntries category_CDBI_Description
 
---- Inserts a new Category entity.
+--- Gets a `Category` entry by a given key.
+getCategory :: CategoryID -> Database.CDBI.Connection.DBAction Category
+getCategory =
+  Database.CDBI.ER.getEntryWithKey category_CDBI_Description categoryColumnKey
+   categoryID
+
+--- Inserts a new `Category` entity.
 newCategoryWithStudyProgramProgramCategoriesKey
   :: String
   -> String
   -> String
   -> String
-  -> Maybe Int -> Maybe Int -> Int -> StudyProgramKey -> Transaction Category
+  -> Maybe Int
+  -> Maybe Int
+  -> Int -> StudyProgramID -> Database.CDBI.Connection.DBAction Category
 newCategoryWithStudyProgramProgramCategoriesKey
     name_p
     nameE_p
@@ -1425,279 +781,974 @@ newCategoryWithStudyProgramProgramCategoriesKey
     maxECTS_p
     position_p
     studyProgramProgramCategoriesKey_p =
-  existsEntryWithDBKey "StudyProgram" studyProgramEntry
-   (studyProgramKeyToKey studyProgramProgramCategoriesKey_p)
-   |>> newEntry categoryEntry keytuple2Category
-        (name_p
-        ,nameE_p
-        ,shortName_p
-        ,comment_p
-        ,maybe 0 id minECTS_p
-        ,maybe 180 id maxECTS_p
-        ,position_p
-        ,studyProgramKeyToKey studyProgramProgramCategoriesKey_p)
+  Database.CDBI.ER.insertNewEntry category_CDBI_Description setCategoryKey
+   CategoryID
+   (Category (CategoryID 0) name_p nameE_p shortName_p comment_p
+     (maybe 0 id minECTS_p)
+     (maybe 180 id maxECTS_p)
+     position_p
+     studyProgramProgramCategoriesKey_p)
 
---- Updates an existing Category entity.
-updateCategory :: Category -> Transaction ()
-updateCategory category_p =
-  existsEntryWithDBKey "StudyProgram" studyProgramEntry
-   (studyProgramKeyToKey
-     (categoryStudyProgramProgramCategoriesKey category_p))
-   |>> updateDBEntry categoryEntry (categoryKeyToKey (categoryKey category_p))
-        (category2tuple category_p)
+--- Deletes an existing `Category` entry by its key.
+deleteCategory :: Category -> Database.CDBI.Connection.DBAction ()
+deleteCategory =
+  Database.CDBI.ER.deleteEntry category_CDBI_Description categoryColumnKey
+   (categoryID . categoryKey)
 
---- Deletes an existing Category entity.
-deleteCategory :: Category -> Transaction ()
-deleteCategory category_p =
-  requiredForeignDBKey "Categorizing" categorizingEntry keytuple2Categorizing
-   categorizingCategoryCategorizingKey
-   (categoryKey category_p)
-   |>> (requiredForeignDBKey "AdvisorModule" advisorModuleEntry
-         keytuple2AdvisorModule
-         advisorModuleCategoryAdvisorCategorizingKey
-         (categoryKey category_p)
-         |>> deleteDBEntry categoryEntry
-              (categoryKeyToKey (categoryKey category_p)))
+--- Updates an existing `Category` entry by its key.
+updateCategory :: Category -> Database.CDBI.Connection.DBAction ()
+updateCategory = Database.CDBI.ER.updateEntry category_CDBI_Description
 
---- Gets a Category entity stored in the database with the given key.
-getCategory :: CategoryKey -> Transaction Category
-getCategory key =
-  getEntry categoryEntry keytuple2Category (categoryKeyToKey key)
+--- The ER description of the `MasterCoreArea` entity.
+masterCoreArea_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription MasterCoreArea
+masterCoreArea_CDBI_Description =
+  Database.CDBI.Description.ED "MasterCoreArea"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(MasterCoreArea
+       (MasterCoreAreaID key) name shortName description areaKey position) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString shortName
+     ,Database.CDBI.Description.sqlString description
+     ,Database.CDBI.Connection.SQLString areaKey
+     ,Database.CDBI.Connection.SQLInt position])
+   (\(MasterCoreArea _ name shortName description areaKey position) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString shortName
+     ,Database.CDBI.Description.sqlString description
+     ,Database.CDBI.Connection.SQLString areaKey
+     ,Database.CDBI.Connection.SQLInt position])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString shortName
+     ,description
+     ,Database.CDBI.Connection.SQLString areaKey
+     ,Database.CDBI.Connection.SQLInt position] ->
+     MasterCoreArea (MasterCoreAreaID key) name shortName
+      (Database.CDBI.Description.fromStringOrNull description)
+      areaKey
+      position)
 
---- Gets all Category entities stored in the database.
-queryAllCategorys :: Query [Category]
-queryAllCategorys =
-  transformQ (map (uncurry keytuple2Category)) (allDBKeyInfos categoryEntry)
+--- The database table of the `MasterCoreArea` entity.
+masterCoreAreaTable :: Database.CDBI.Description.Table
+masterCoreAreaTable = "MasterCoreArea"
 
---- Gets all Category entities satisfying a given condition.
-queryCondCategory :: (Category -> Bool) -> Query [Category]
-queryCondCategory econd = transformQ (filter econd) queryAllCategorys
+--- The database column `Key` of the `MasterCoreArea` entity.
+masterCoreAreaColumnKey :: Database.CDBI.Description.Column MasterCoreAreaID
+masterCoreAreaColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"MasterCoreArea\".\"Key\""
 
---- Database predicate representing the relation between keys and MasterCoreArea tuple entities.
-masterCoreAreaEntry :: Key -> MasterCoreAreaTuple -> Dynamic
-masterCoreAreaEntry =
-  persistentSQLite dbFile "MasterCoreArea"
-   ["Name","ShortName","Description","AreaKey","Position"]
+--- The database column `Name` of the `MasterCoreArea` entity.
+masterCoreAreaColumnName :: Database.CDBI.Description.Column String
+masterCoreAreaColumnName =
+  Database.CDBI.Description.Column "\"Name\"" "\"MasterCoreArea\".\"Name\""
 
---- Dynamic predicate representing the relation
---- between keys and MasterCoreArea entities.
-masterCoreArea :: MasterCoreAreaKey -> MasterCoreArea -> Dynamic
-masterCoreArea key obj
-  | key =:= masterCoreAreaKey obj
-  = masterCoreAreaEntry (masterCoreAreaKeyToKey key)
-     (masterCoreArea2tuple obj)
+--- The database column `ShortName` of the `MasterCoreArea` entity.
+masterCoreAreaColumnShortName :: Database.CDBI.Description.Column String
+masterCoreAreaColumnShortName =
+  Database.CDBI.Description.Column "\"ShortName\""
+   "\"MasterCoreArea\".\"ShortName\""
 
---- Gets the key of a MasterCoreArea entity.
-masterCoreAreaKey :: MasterCoreArea -> MasterCoreAreaKey
-masterCoreAreaKey (MasterCoreArea x _ _ _ _ _) = MasterCoreAreaKey x
+--- The database column `Description` of the `MasterCoreArea` entity.
+masterCoreAreaColumnDescription :: Database.CDBI.Description.Column String
+masterCoreAreaColumnDescription =
+  Database.CDBI.Description.Column "\"Description\""
+   "\"MasterCoreArea\".\"Description\""
 
---- Shows the key of a MasterCoreArea entity as a string.
+--- The database column `AreaKey` of the `MasterCoreArea` entity.
+masterCoreAreaColumnAreaKey :: Database.CDBI.Description.Column String
+masterCoreAreaColumnAreaKey =
+  Database.CDBI.Description.Column "\"AreaKey\""
+   "\"MasterCoreArea\".\"AreaKey\""
+
+--- The database column `Position` of the `MasterCoreArea` entity.
+masterCoreAreaColumnPosition :: Database.CDBI.Description.Column Int
+masterCoreAreaColumnPosition =
+  Database.CDBI.Description.Column "\"Position\""
+   "\"MasterCoreArea\".\"Position\""
+
+--- The description of the database column `Key` of the `MasterCoreArea` entity.
+masterCoreAreaKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription MasterCoreAreaID
+masterCoreAreaKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterCoreArea\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(MasterCoreAreaID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> MasterCoreAreaID key)
+
+--- The description of the database column `Name` of the `MasterCoreArea` entity.
+masterCoreAreaNameColDesc :: Database.CDBI.Description.ColumnDescription String
+masterCoreAreaNameColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterCoreArea\".\"Name\""
+   Database.CDBI.Connection.SQLTypeString
+   (\name -> Database.CDBI.Connection.SQLString name)
+   (\(Database.CDBI.Connection.SQLString name) -> name)
+
+--- The description of the database column `ShortName` of the `MasterCoreArea` entity.
+masterCoreAreaShortNameColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+masterCoreAreaShortNameColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterCoreArea\".\"ShortName\""
+   Database.CDBI.Connection.SQLTypeString
+   (\shortName -> Database.CDBI.Connection.SQLString shortName)
+   (\(Database.CDBI.Connection.SQLString shortName) -> shortName)
+
+--- The description of the database column `Description` of the `MasterCoreArea` entity.
+masterCoreAreaDescriptionColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+masterCoreAreaDescriptionColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterCoreArea\".\"Description\""
+   Database.CDBI.Connection.SQLTypeString
+   (\description -> Database.CDBI.Description.sqlString description)
+   (\description -> Database.CDBI.Description.fromStringOrNull description)
+
+--- The description of the database column `AreaKey` of the `MasterCoreArea` entity.
+masterCoreAreaAreaKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+masterCoreAreaAreaKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterCoreArea\".\"AreaKey\""
+   Database.CDBI.Connection.SQLTypeString
+   (\areaKey -> Database.CDBI.Connection.SQLString areaKey)
+   (\(Database.CDBI.Connection.SQLString areaKey) -> areaKey)
+
+--- The description of the database column `Position` of the `MasterCoreArea` entity.
+masterCoreAreaPositionColDesc :: Database.CDBI.Description.ColumnDescription Int
+masterCoreAreaPositionColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterCoreArea\".\"Position\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\position -> Database.CDBI.Connection.SQLInt position)
+   (\(Database.CDBI.Connection.SQLInt position) -> position)
+
+--- Gets the attribute `Key` of the `MasterCoreArea` entity.
+masterCoreAreaKey :: MasterCoreArea -> MasterCoreAreaID
+masterCoreAreaKey (MasterCoreArea a _ _ _ _ _) = a
+
+--- Gets the attribute `Name` of the `MasterCoreArea` entity.
+masterCoreAreaName :: MasterCoreArea -> String
+masterCoreAreaName (MasterCoreArea _ a _ _ _ _) = a
+
+--- Gets the attribute `ShortName` of the `MasterCoreArea` entity.
+masterCoreAreaShortName :: MasterCoreArea -> String
+masterCoreAreaShortName (MasterCoreArea _ _ a _ _ _) = a
+
+--- Gets the attribute `Description` of the `MasterCoreArea` entity.
+masterCoreAreaDescription :: MasterCoreArea -> String
+masterCoreAreaDescription (MasterCoreArea _ _ _ a _ _) = a
+
+--- Gets the attribute `AreaKey` of the `MasterCoreArea` entity.
+masterCoreAreaAreaKey :: MasterCoreArea -> String
+masterCoreAreaAreaKey (MasterCoreArea _ _ _ _ a _) = a
+
+--- Gets the attribute `Position` of the `MasterCoreArea` entity.
+masterCoreAreaPosition :: MasterCoreArea -> Int
+masterCoreAreaPosition (MasterCoreArea _ _ _ _ _ a) = a
+
+--- Sets the attribute `Key` of the `MasterCoreArea` entity.
+setMasterCoreAreaKey :: MasterCoreArea -> MasterCoreAreaID -> MasterCoreArea
+setMasterCoreAreaKey (MasterCoreArea _ b5 b4 b3 b2 b1) a =
+  MasterCoreArea a b5 b4 b3 b2 b1
+
+--- Sets the attribute `Name` of the `MasterCoreArea` entity.
+setMasterCoreAreaName :: MasterCoreArea -> String -> MasterCoreArea
+setMasterCoreAreaName (MasterCoreArea a2 _ b4 b3 b2 b1) a =
+  MasterCoreArea a2 a b4 b3 b2 b1
+
+--- Sets the attribute `ShortName` of the `MasterCoreArea` entity.
+setMasterCoreAreaShortName :: MasterCoreArea -> String -> MasterCoreArea
+setMasterCoreAreaShortName (MasterCoreArea a3 a2 _ b3 b2 b1) a =
+  MasterCoreArea a3 a2 a b3 b2 b1
+
+--- Sets the attribute `Description` of the `MasterCoreArea` entity.
+setMasterCoreAreaDescription :: MasterCoreArea -> String -> MasterCoreArea
+setMasterCoreAreaDescription (MasterCoreArea a4 a3 a2 _ b2 b1) a =
+  MasterCoreArea a4 a3 a2 a b2 b1
+
+--- Sets the attribute `AreaKey` of the `MasterCoreArea` entity.
+setMasterCoreAreaAreaKey :: MasterCoreArea -> String -> MasterCoreArea
+setMasterCoreAreaAreaKey (MasterCoreArea a5 a4 a3 a2 _ b1) a =
+  MasterCoreArea a5 a4 a3 a2 a b1
+
+--- Sets the attribute `Position` of the `MasterCoreArea` entity.
+setMasterCoreAreaPosition :: MasterCoreArea -> Int -> MasterCoreArea
+setMasterCoreAreaPosition (MasterCoreArea a6 a5 a4 a3 a2 _) a =
+  MasterCoreArea a6 a5 a4 a3 a2 a
+
+--- id-to-value function for entity `MasterCoreArea`.
+masterCoreAreaID
+  :: MasterCoreAreaID -> Database.CDBI.Criteria.Value MasterCoreAreaID
+masterCoreAreaID (MasterCoreAreaID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `MasterCoreArea`.
+masterCoreAreaKeyToInt :: MasterCoreAreaID -> Int
+masterCoreAreaKeyToInt (MasterCoreAreaID key) = key
+
+--- Shows the key of a `MasterCoreArea` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showMasterCoreAreaKey :: MasterCoreArea -> String
-showMasterCoreAreaKey obj =
-  showDatabaseKey "MasterCoreArea" masterCoreAreaKeyToKey
-   (masterCoreAreaKey obj)
+showMasterCoreAreaKey entry =
+  Database.CDBI.ER.showDatabaseKey "MasterCoreArea" masterCoreAreaKeyToInt
+   (masterCoreAreaKey entry)
 
---- Transforms a string into a key of a MasterCoreArea entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readMasterCoreAreaKey :: String -> Maybe MasterCoreAreaKey
-readMasterCoreAreaKey s = readDatabaseKey "MasterCoreArea" MasterCoreAreaKey s
+--- Transforms a string into a key of a `MasterCoreArea` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readMasterCoreAreaKey :: String -> Maybe MasterCoreAreaID
+readMasterCoreAreaKey =
+  Database.CDBI.ER.readDatabaseKey "MasterCoreArea" MasterCoreAreaID
 
-masterCoreAreaKeyToKey :: MasterCoreAreaKey -> Key
-masterCoreAreaKeyToKey (MasterCoreAreaKey k) = k
+--- Gets all `MasterCoreArea` entities.
+queryAllMasterCoreAreas :: Database.CDBI.Connection.DBAction [MasterCoreArea]
+queryAllMasterCoreAreas =
+  Database.CDBI.ER.getAllEntries masterCoreArea_CDBI_Description
 
-maybeMasterCoreAreaKeyToKey :: Maybe MasterCoreAreaKey -> Maybe Key
-maybeMasterCoreAreaKeyToKey Nothing = Nothing
-maybeMasterCoreAreaKeyToKey (Just (MasterCoreAreaKey k)) = Just k
+--- Gets all `MasterCoreArea` entities satisfying a given predicate.
+queryCondMasterCoreArea
+  :: (MasterCoreArea -> Bool)
+  -> Database.CDBI.Connection.DBAction [MasterCoreArea]
+queryCondMasterCoreArea =
+  Database.CDBI.ER.getCondEntries masterCoreArea_CDBI_Description
 
---- Inserts a new MasterCoreArea entity.
+--- Gets a `MasterCoreArea` entry by a given key.
+getMasterCoreArea
+  :: MasterCoreAreaID -> Database.CDBI.Connection.DBAction MasterCoreArea
+getMasterCoreArea =
+  Database.CDBI.ER.getEntryWithKey masterCoreArea_CDBI_Description
+   masterCoreAreaColumnKey
+   masterCoreAreaID
+
+--- Inserts a new `MasterCoreArea` entity.
 newMasterCoreArea
   :: String
-  -> String -> String -> String -> Maybe Int -> Transaction MasterCoreArea
+  -> String
+  -> String
+  -> String -> Maybe Int -> Database.CDBI.Connection.DBAction MasterCoreArea
 newMasterCoreArea name_p shortName_p description_p areaKey_p position_p =
-  unique "MDB" masterCoreAreaEntry keytuple2MasterCoreArea
-   masterCoreAreaAreaKey
-   areaKey_p
-   |>> newEntry masterCoreAreaEntry keytuple2MasterCoreArea
-        (name_p,shortName_p,description_p,areaKey_p,maybe 1 id position_p)
+  Database.CDBI.ER.insertNewEntry masterCoreArea_CDBI_Description
+   setMasterCoreAreaKey
+   MasterCoreAreaID
+   (MasterCoreArea (MasterCoreAreaID 0) name_p shortName_p description_p
+     areaKey_p
+     (maybe 1 id position_p))
 
---- Updates an existing MasterCoreArea entity.
-updateMasterCoreArea :: MasterCoreArea -> Transaction ()
-updateMasterCoreArea masterCoreArea_p =
-  uniqueUpdate "MDB" masterCoreAreaEntry keytuple2MasterCoreArea
-   (masterCoreAreaKeyToKey . masterCoreAreaKey)
-   masterCoreAreaAreaKey
-   masterCoreArea_p
-   |>> updateDBEntry masterCoreAreaEntry
-        (masterCoreAreaKeyToKey (masterCoreAreaKey masterCoreArea_p))
-        (masterCoreArea2tuple masterCoreArea_p)
+--- Deletes an existing `MasterCoreArea` entry by its key.
+deleteMasterCoreArea :: MasterCoreArea -> Database.CDBI.Connection.DBAction ()
+deleteMasterCoreArea =
+  Database.CDBI.ER.deleteEntry masterCoreArea_CDBI_Description
+   masterCoreAreaColumnKey
+   (masterCoreAreaID . masterCoreAreaKey)
 
---- Deletes an existing MasterCoreArea entity.
-deleteMasterCoreArea :: MasterCoreArea -> Transaction ()
-deleteMasterCoreArea masterCoreArea_p =
-  requiredForeignDBKey "MasterProgram" masterProgramEntry
-   keytuple2MasterProgram
-   masterProgramMasterCoreAreaAreaProgramsKey
-   (masterCoreAreaKey masterCoreArea_p)
-   |>> deleteDBEntry masterCoreAreaEntry
-        (masterCoreAreaKeyToKey (masterCoreAreaKey masterCoreArea_p))
+--- Updates an existing `MasterCoreArea` entry by its key.
+updateMasterCoreArea :: MasterCoreArea -> Database.CDBI.Connection.DBAction ()
+updateMasterCoreArea =
+  Database.CDBI.ER.updateEntry masterCoreArea_CDBI_Description
 
---- Gets a MasterCoreArea entity stored in the database with the given key.
-getMasterCoreArea :: MasterCoreAreaKey -> Transaction MasterCoreArea
-getMasterCoreArea key =
-  getEntry masterCoreAreaEntry keytuple2MasterCoreArea
-   (masterCoreAreaKeyToKey key)
+--- The ER description of the `User` entity.
+user_CDBI_Description :: Database.CDBI.Description.EntityDescription User
+user_CDBI_Description =
+  Database.CDBI.Description.ED "User"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeDate]
+   (\(User (UserID key) login name first title email url password lastLogin) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString login
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Description.sqlString first
+     ,Database.CDBI.Description.sqlString title
+     ,Database.CDBI.Description.sqlString email
+     ,Database.CDBI.Description.sqlString url
+     ,Database.CDBI.Description.sqlString password
+     ,Database.CDBI.Connection.SQLDate lastLogin])
+   (\(User _ login name first title email url password lastLogin) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString login
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Description.sqlString first
+     ,Database.CDBI.Description.sqlString title
+     ,Database.CDBI.Description.sqlString email
+     ,Database.CDBI.Description.sqlString url
+     ,Database.CDBI.Description.sqlString password
+     ,Database.CDBI.Connection.SQLDate lastLogin])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString login
+     ,Database.CDBI.Connection.SQLString name
+     ,first
+     ,title
+     ,email
+     ,url
+     ,password
+     ,Database.CDBI.Connection.SQLDate lastLogin] ->
+     User (UserID key) login name
+      (Database.CDBI.Description.fromStringOrNull first)
+      (Database.CDBI.Description.fromStringOrNull title)
+      (Database.CDBI.Description.fromStringOrNull email)
+      (Database.CDBI.Description.fromStringOrNull url)
+      (Database.CDBI.Description.fromStringOrNull password)
+      lastLogin)
 
---- Gets all MasterCoreArea entities stored in the database.
-queryAllMasterCoreAreas :: Query [MasterCoreArea]
-queryAllMasterCoreAreas =
-  transformQ (map (uncurry keytuple2MasterCoreArea))
-   (allDBKeyInfos masterCoreAreaEntry)
+--- The database table of the `User` entity.
+userTable :: Database.CDBI.Description.Table
+userTable = "User"
 
---- Gets all MasterCoreArea entities satisfying a given condition.
-queryCondMasterCoreArea :: (MasterCoreArea -> Bool) -> Query [MasterCoreArea]
-queryCondMasterCoreArea econd =
-  transformQ (filter econd) queryAllMasterCoreAreas
+--- The database column `Key` of the `User` entity.
+userColumnKey :: Database.CDBI.Description.Column UserID
+userColumnKey = Database.CDBI.Description.Column "\"Key\"" "\"User\".\"Key\""
 
---- Database predicate representing the relation between keys and User tuple entities.
-userEntry :: Key -> UserTuple -> Dynamic
-userEntry =
-  persistentSQLite dbFile "User"
-   ["Login","Name","First","Title","Email","Url","Password","LastLogin"]
+--- The database column `Login` of the `User` entity.
+userColumnLogin :: Database.CDBI.Description.Column String
+userColumnLogin =
+  Database.CDBI.Description.Column "\"Login\"" "\"User\".\"Login\""
 
---- Dynamic predicate representing the relation
---- between keys and User entities.
-user :: UserKey -> User -> Dynamic
-user key obj
-  | key =:= userKey obj = userEntry (userKeyToKey key) (user2tuple obj)
+--- The database column `Name` of the `User` entity.
+userColumnName :: Database.CDBI.Description.Column String
+userColumnName = Database.CDBI.Description.Column "\"Name\"" "\"User\".\"Name\""
 
---- Gets the key of a User entity.
-userKey :: User -> UserKey
-userKey (User x _ _ _ _ _ _ _ _) = UserKey x
+--- The database column `First` of the `User` entity.
+userColumnFirst :: Database.CDBI.Description.Column String
+userColumnFirst =
+  Database.CDBI.Description.Column "\"First\"" "\"User\".\"First\""
 
---- Shows the key of a User entity as a string.
+--- The database column `Title` of the `User` entity.
+userColumnTitle :: Database.CDBI.Description.Column String
+userColumnTitle =
+  Database.CDBI.Description.Column "\"Title\"" "\"User\".\"Title\""
+
+--- The database column `Email` of the `User` entity.
+userColumnEmail :: Database.CDBI.Description.Column String
+userColumnEmail =
+  Database.CDBI.Description.Column "\"Email\"" "\"User\".\"Email\""
+
+--- The database column `Url` of the `User` entity.
+userColumnUrl :: Database.CDBI.Description.Column String
+userColumnUrl = Database.CDBI.Description.Column "\"Url\"" "\"User\".\"Url\""
+
+--- The database column `Password` of the `User` entity.
+userColumnPassword :: Database.CDBI.Description.Column String
+userColumnPassword =
+  Database.CDBI.Description.Column "\"Password\"" "\"User\".\"Password\""
+
+--- The database column `LastLogin` of the `User` entity.
+userColumnLastLogin :: Database.CDBI.Description.Column Time.ClockTime
+userColumnLastLogin =
+  Database.CDBI.Description.Column "\"LastLogin\"" "\"User\".\"LastLogin\""
+
+--- The description of the database column `Key` of the `User` entity.
+userKeyColDesc :: Database.CDBI.Description.ColumnDescription UserID
+userKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(UserID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> UserID key)
+
+--- The description of the database column `Login` of the `User` entity.
+userLoginColDesc :: Database.CDBI.Description.ColumnDescription String
+userLoginColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"Login\""
+   Database.CDBI.Connection.SQLTypeString
+   (\login -> Database.CDBI.Connection.SQLString login)
+   (\(Database.CDBI.Connection.SQLString login) -> login)
+
+--- The description of the database column `Name` of the `User` entity.
+userNameColDesc :: Database.CDBI.Description.ColumnDescription String
+userNameColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"Name\""
+   Database.CDBI.Connection.SQLTypeString
+   (\name -> Database.CDBI.Connection.SQLString name)
+   (\(Database.CDBI.Connection.SQLString name) -> name)
+
+--- The description of the database column `First` of the `User` entity.
+userFirstColDesc :: Database.CDBI.Description.ColumnDescription String
+userFirstColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"First\""
+   Database.CDBI.Connection.SQLTypeString
+   (\first -> Database.CDBI.Description.sqlString first)
+   (\first -> Database.CDBI.Description.fromStringOrNull first)
+
+--- The description of the database column `Title` of the `User` entity.
+userTitleColDesc :: Database.CDBI.Description.ColumnDescription String
+userTitleColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"Title\""
+   Database.CDBI.Connection.SQLTypeString
+   (\title -> Database.CDBI.Description.sqlString title)
+   (\title -> Database.CDBI.Description.fromStringOrNull title)
+
+--- The description of the database column `Email` of the `User` entity.
+userEmailColDesc :: Database.CDBI.Description.ColumnDescription String
+userEmailColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"Email\""
+   Database.CDBI.Connection.SQLTypeString
+   (\email -> Database.CDBI.Description.sqlString email)
+   (\email -> Database.CDBI.Description.fromStringOrNull email)
+
+--- The description of the database column `Url` of the `User` entity.
+userUrlColDesc :: Database.CDBI.Description.ColumnDescription String
+userUrlColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"Url\""
+   Database.CDBI.Connection.SQLTypeString
+   (\url -> Database.CDBI.Description.sqlString url)
+   (\url -> Database.CDBI.Description.fromStringOrNull url)
+
+--- The description of the database column `Password` of the `User` entity.
+userPasswordColDesc :: Database.CDBI.Description.ColumnDescription String
+userPasswordColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"Password\""
+   Database.CDBI.Connection.SQLTypeString
+   (\password -> Database.CDBI.Description.sqlString password)
+   (\password -> Database.CDBI.Description.fromStringOrNull password)
+
+--- The description of the database column `LastLogin` of the `User` entity.
+userLastLoginColDesc
+  :: Database.CDBI.Description.ColumnDescription Time.ClockTime
+userLastLoginColDesc =
+  Database.CDBI.Description.ColDesc "\"User\".\"LastLogin\""
+   Database.CDBI.Connection.SQLTypeDate
+   (\lastLogin -> Database.CDBI.Connection.SQLDate lastLogin)
+   (\(Database.CDBI.Connection.SQLDate lastLogin) -> lastLogin)
+
+--- Gets the attribute `Key` of the `User` entity.
+userKey :: User -> UserID
+userKey (User a _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Login` of the `User` entity.
+userLogin :: User -> String
+userLogin (User _ a _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Name` of the `User` entity.
+userName :: User -> String
+userName (User _ _ a _ _ _ _ _ _) = a
+
+--- Gets the attribute `First` of the `User` entity.
+userFirst :: User -> String
+userFirst (User _ _ _ a _ _ _ _ _) = a
+
+--- Gets the attribute `Title` of the `User` entity.
+userTitle :: User -> String
+userTitle (User _ _ _ _ a _ _ _ _) = a
+
+--- Gets the attribute `Email` of the `User` entity.
+userEmail :: User -> String
+userEmail (User _ _ _ _ _ a _ _ _) = a
+
+--- Gets the attribute `Url` of the `User` entity.
+userUrl :: User -> String
+userUrl (User _ _ _ _ _ _ a _ _) = a
+
+--- Gets the attribute `Password` of the `User` entity.
+userPassword :: User -> String
+userPassword (User _ _ _ _ _ _ _ a _) = a
+
+--- Gets the attribute `LastLogin` of the `User` entity.
+userLastLogin :: User -> Time.ClockTime
+userLastLogin (User _ _ _ _ _ _ _ _ a) = a
+
+--- Sets the attribute `Key` of the `User` entity.
+setUserKey :: User -> UserID -> User
+setUserKey (User _ b8 b7 b6 b5 b4 b3 b2 b1) a = User a b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Login` of the `User` entity.
+setUserLogin :: User -> String -> User
+setUserLogin (User a2 _ b7 b6 b5 b4 b3 b2 b1) a = User a2 a b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Name` of the `User` entity.
+setUserName :: User -> String -> User
+setUserName (User a3 a2 _ b6 b5 b4 b3 b2 b1) a = User a3 a2 a b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `First` of the `User` entity.
+setUserFirst :: User -> String -> User
+setUserFirst (User a4 a3 a2 _ b5 b4 b3 b2 b1) a = User a4 a3 a2 a b5 b4 b3 b2 b1
+
+--- Sets the attribute `Title` of the `User` entity.
+setUserTitle :: User -> String -> User
+setUserTitle (User a5 a4 a3 a2 _ b4 b3 b2 b1) a = User a5 a4 a3 a2 a b4 b3 b2 b1
+
+--- Sets the attribute `Email` of the `User` entity.
+setUserEmail :: User -> String -> User
+setUserEmail (User a6 a5 a4 a3 a2 _ b3 b2 b1) a = User a6 a5 a4 a3 a2 a b3 b2 b1
+
+--- Sets the attribute `Url` of the `User` entity.
+setUserUrl :: User -> String -> User
+setUserUrl (User a7 a6 a5 a4 a3 a2 _ b2 b1) a = User a7 a6 a5 a4 a3 a2 a b2 b1
+
+--- Sets the attribute `Password` of the `User` entity.
+setUserPassword :: User -> String -> User
+setUserPassword (User a8 a7 a6 a5 a4 a3 a2 _ b1) a =
+  User a8 a7 a6 a5 a4 a3 a2 a b1
+
+--- Sets the attribute `LastLogin` of the `User` entity.
+setUserLastLogin :: User -> Time.ClockTime -> User
+setUserLastLogin (User a9 a8 a7 a6 a5 a4 a3 a2 _) a =
+  User a9 a8 a7 a6 a5 a4 a3 a2 a
+
+--- id-to-value function for entity `User`.
+userID :: UserID -> Database.CDBI.Criteria.Value UserID
+userID (UserID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `User`.
+userKeyToInt :: UserID -> Int
+userKeyToInt (UserID key) = key
+
+--- Shows the key of a `User` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showUserKey :: User -> String
-showUserKey obj = showDatabaseKey "User" userKeyToKey (userKey obj)
+showUserKey entry =
+  Database.CDBI.ER.showDatabaseKey "User" userKeyToInt (userKey entry)
 
---- Transforms a string into a key of a User entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readUserKey :: String -> Maybe UserKey
-readUserKey s = readDatabaseKey "User" UserKey s
+--- Transforms a string into a key of a `User` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readUserKey :: String -> Maybe UserID
+readUserKey = Database.CDBI.ER.readDatabaseKey "User" UserID
 
-userKeyToKey :: UserKey -> Key
-userKeyToKey (UserKey k) = k
+--- Gets all `User` entities.
+queryAllUsers :: Database.CDBI.Connection.DBAction [User]
+queryAllUsers = Database.CDBI.ER.getAllEntries user_CDBI_Description
 
-maybeUserKeyToKey :: Maybe UserKey -> Maybe Key
-maybeUserKeyToKey Nothing = Nothing
-maybeUserKeyToKey (Just (UserKey k)) = Just k
+--- Gets all `User` entities satisfying a given predicate.
+queryCondUser :: (User -> Bool) -> Database.CDBI.Connection.DBAction [User]
+queryCondUser = Database.CDBI.ER.getCondEntries user_CDBI_Description
 
---- Inserts a new User entity.
+--- Gets a `User` entry by a given key.
+getUser :: UserID -> Database.CDBI.Connection.DBAction User
+getUser =
+  Database.CDBI.ER.getEntryWithKey user_CDBI_Description userColumnKey userID
+
+--- Inserts a new `User` entity.
 newUser
   :: String
   -> String
   -> String
-  -> String -> String -> String -> String -> CalendarTime -> Transaction User
+  -> String
+  -> String
+  -> String
+  -> String -> Time.ClockTime -> Database.CDBI.Connection.DBAction User
 newUser login_p name_p first_p title_p email_p url_p password_p lastLogin_p =
-  unique "MDB" userEntry keytuple2User userLogin login_p
-   |>> newEntry userEntry keytuple2User
-        (login_p,name_p,first_p,title_p,email_p,url_p,password_p,lastLogin_p)
+  Database.CDBI.ER.insertNewEntry user_CDBI_Description setUserKey UserID
+   (User (UserID 0) login_p name_p first_p title_p email_p url_p password_p
+     lastLogin_p)
 
---- Updates an existing User entity.
-updateUser :: User -> Transaction ()
-updateUser user_p =
-  uniqueUpdate "MDB" userEntry keytuple2User (userKeyToKey . userKey)
-   userLogin
-   user_p
-   |>> updateDBEntry userEntry (userKeyToKey (userKey user_p))
-        (user2tuple user_p)
+--- Deletes an existing `User` entry by its key.
+deleteUser :: User -> Database.CDBI.Connection.DBAction ()
+deleteUser =
+  Database.CDBI.ER.deleteEntry user_CDBI_Description userColumnKey
+   (userID . userKey)
 
---- Deletes an existing User entity.
-deleteUser :: User -> Transaction ()
-deleteUser user_p =
-  requiredForeignDBKey "ModData" modDataEntry keytuple2ModData
-   modDataUserResponsibleKey
-   (userKey user_p)
-   |>> (requiredForeignDBKey "ModInst" modInstEntry keytuple2ModInst
-         modInstUserLecturerModsKey
-         (userKey user_p)
-         |>> (requiredForeignDBKey "AdvisorStudyProgram"
-               advisorStudyProgramEntry
-               keytuple2AdvisorStudyProgram
-               advisorStudyProgramUserStudyAdvisingKey
-               (userKey user_p)
-               |>> (requiredForeignDBKey "MasterProgram" masterProgramEntry
-                     keytuple2MasterProgram
-                     masterProgramUserAdvisingKey
-                     (userKey user_p)
-                     |>> deleteDBEntry userEntry
-                          (userKeyToKey (userKey user_p)))))
+--- Updates an existing `User` entry by its key.
+updateUser :: User -> Database.CDBI.Connection.DBAction ()
+updateUser = Database.CDBI.ER.updateEntry user_CDBI_Description
 
---- Gets a User entity stored in the database with the given key.
-getUser :: UserKey -> Transaction User
-getUser key = getEntry userEntry keytuple2User (userKeyToKey key)
+--- The ER description of the `ModData` entity.
+modData_CDBI_Description :: Database.CDBI.Description.EntityDescription ModData
+modData_CDBI_Description =
+  Database.CDBI.Description.ED "ModData"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeBool
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(ModData
+       (ModDataID key)
+       code
+       nameG
+       nameE
+       cycle
+       presence
+       eCTS
+       workload
+       length
+       uRL
+       visible
+       (UserID userResponsibleKey)) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString code
+     ,Database.CDBI.Connection.SQLString nameG
+     ,Database.CDBI.Description.sqlString nameE
+     ,Database.CDBI.Description.sqlString cycle
+     ,Database.CDBI.Description.sqlString presence
+     ,Database.CDBI.Connection.SQLInt eCTS
+     ,Database.CDBI.Description.sqlString workload
+     ,Database.CDBI.Connection.SQLInt length
+     ,Database.CDBI.Description.sqlString uRL
+     ,Database.CDBI.Connection.SQLBool visible
+     ,Database.CDBI.Connection.SQLInt userResponsibleKey])
+   (\(ModData
+       _
+       code
+       nameG
+       nameE
+       cycle
+       presence
+       eCTS
+       workload
+       length
+       uRL
+       visible
+       (UserID userResponsibleKey)) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString code
+     ,Database.CDBI.Connection.SQLString nameG
+     ,Database.CDBI.Description.sqlString nameE
+     ,Database.CDBI.Description.sqlString cycle
+     ,Database.CDBI.Description.sqlString presence
+     ,Database.CDBI.Connection.SQLInt eCTS
+     ,Database.CDBI.Description.sqlString workload
+     ,Database.CDBI.Connection.SQLInt length
+     ,Database.CDBI.Description.sqlString uRL
+     ,Database.CDBI.Connection.SQLBool visible
+     ,Database.CDBI.Connection.SQLInt userResponsibleKey])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString code
+     ,Database.CDBI.Connection.SQLString nameG
+     ,nameE
+     ,cycle
+     ,presence
+     ,Database.CDBI.Connection.SQLInt eCTS
+     ,workload
+     ,Database.CDBI.Connection.SQLInt length
+     ,uRL
+     ,Database.CDBI.Connection.SQLBool visible
+     ,Database.CDBI.Connection.SQLInt userResponsibleKey] ->
+     ModData (ModDataID key) code nameG
+      (Database.CDBI.Description.fromStringOrNull nameE)
+      (Database.CDBI.Description.fromStringOrNull cycle)
+      (Database.CDBI.Description.fromStringOrNull presence)
+      eCTS
+      (Database.CDBI.Description.fromStringOrNull workload)
+      length
+      (Database.CDBI.Description.fromStringOrNull uRL)
+      visible
+      (UserID userResponsibleKey))
 
---- Gets all User entities stored in the database.
-queryAllUsers :: Query [User]
-queryAllUsers =
-  transformQ (map (uncurry keytuple2User)) (allDBKeyInfos userEntry)
+--- The database table of the `ModData` entity.
+modDataTable :: Database.CDBI.Description.Table
+modDataTable = "ModData"
 
---- Gets all User entities satisfying a given condition.
-queryCondUser :: (User -> Bool) -> Query [User]
-queryCondUser econd = transformQ (filter econd) queryAllUsers
+--- The database column `Key` of the `ModData` entity.
+modDataColumnKey :: Database.CDBI.Description.Column ModDataID
+modDataColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"ModData\".\"Key\""
 
---- Database predicate representing the relation between keys and ModData tuple entities.
-modDataEntry :: Key -> ModDataTuple -> Dynamic
-modDataEntry =
-  persistentSQLite dbFile "ModData"
-   ["Code"
-   ,"NameG"
-   ,"NameE"
-   ,"Cycle"
-   ,"Presence"
-   ,"ECTS"
-   ,"Workload"
-   ,"Length"
-   ,"URL"
-   ,"Visible"
-   ,"UserResponsibleKey"]
+--- The database column `Code` of the `ModData` entity.
+modDataColumnCode :: Database.CDBI.Description.Column String
+modDataColumnCode =
+  Database.CDBI.Description.Column "\"Code\"" "\"ModData\".\"Code\""
 
---- Dynamic predicate representing the relation
---- between keys and ModData entities.
-modData :: ModDataKey -> ModData -> Dynamic
-modData key obj
-  | key =:= modDataKey obj
-  = modDataEntry (modDataKeyToKey key) (modData2tuple obj)
+--- The database column `NameG` of the `ModData` entity.
+modDataColumnNameG :: Database.CDBI.Description.Column String
+modDataColumnNameG =
+  Database.CDBI.Description.Column "\"NameG\"" "\"ModData\".\"NameG\""
 
---- Gets the key of a ModData entity.
-modDataKey :: ModData -> ModDataKey
-modDataKey (ModData x _ _ _ _ _ _ _ _ _ _ _) = ModDataKey x
+--- The database column `NameE` of the `ModData` entity.
+modDataColumnNameE :: Database.CDBI.Description.Column String
+modDataColumnNameE =
+  Database.CDBI.Description.Column "\"NameE\"" "\"ModData\".\"NameE\""
 
---- Shows the key of a ModData entity as a string.
+--- The database column `Cycle` of the `ModData` entity.
+modDataColumnCycle :: Database.CDBI.Description.Column String
+modDataColumnCycle =
+  Database.CDBI.Description.Column "\"Cycle\"" "\"ModData\".\"Cycle\""
+
+--- The database column `Presence` of the `ModData` entity.
+modDataColumnPresence :: Database.CDBI.Description.Column String
+modDataColumnPresence =
+  Database.CDBI.Description.Column "\"Presence\"" "\"ModData\".\"Presence\""
+
+--- The database column `ECTS` of the `ModData` entity.
+modDataColumnECTS :: Database.CDBI.Description.Column Int
+modDataColumnECTS =
+  Database.CDBI.Description.Column "\"ECTS\"" "\"ModData\".\"ECTS\""
+
+--- The database column `Workload` of the `ModData` entity.
+modDataColumnWorkload :: Database.CDBI.Description.Column String
+modDataColumnWorkload =
+  Database.CDBI.Description.Column "\"Workload\"" "\"ModData\".\"Workload\""
+
+--- The database column `Length` of the `ModData` entity.
+modDataColumnLength :: Database.CDBI.Description.Column Int
+modDataColumnLength =
+  Database.CDBI.Description.Column "\"Length\"" "\"ModData\".\"Length\""
+
+--- The database column `URL` of the `ModData` entity.
+modDataColumnURL :: Database.CDBI.Description.Column String
+modDataColumnURL =
+  Database.CDBI.Description.Column "\"URL\"" "\"ModData\".\"URL\""
+
+--- The database column `Visible` of the `ModData` entity.
+modDataColumnVisible :: Database.CDBI.Description.Column Bool
+modDataColumnVisible =
+  Database.CDBI.Description.Column "\"Visible\"" "\"ModData\".\"Visible\""
+
+--- The database column `UserResponsibleKey` of the `ModData` entity.
+modDataColumnUserResponsibleKey :: Database.CDBI.Description.Column UserID
+modDataColumnUserResponsibleKey =
+  Database.CDBI.Description.Column "\"UserResponsibleKey\""
+   "\"ModData\".\"UserResponsibleKey\""
+
+--- The description of the database column `Key` of the `ModData` entity.
+modDataKeyColDesc :: Database.CDBI.Description.ColumnDescription ModDataID
+modDataKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(ModDataID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> ModDataID key)
+
+--- The description of the database column `Code` of the `ModData` entity.
+modDataCodeColDesc :: Database.CDBI.Description.ColumnDescription String
+modDataCodeColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"Code\""
+   Database.CDBI.Connection.SQLTypeString
+   (\code -> Database.CDBI.Connection.SQLString code)
+   (\(Database.CDBI.Connection.SQLString code) -> code)
+
+--- The description of the database column `NameG` of the `ModData` entity.
+modDataNameGColDesc :: Database.CDBI.Description.ColumnDescription String
+modDataNameGColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"NameG\""
+   Database.CDBI.Connection.SQLTypeString
+   (\nameG -> Database.CDBI.Connection.SQLString nameG)
+   (\(Database.CDBI.Connection.SQLString nameG) -> nameG)
+
+--- The description of the database column `NameE` of the `ModData` entity.
+modDataNameEColDesc :: Database.CDBI.Description.ColumnDescription String
+modDataNameEColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"NameE\""
+   Database.CDBI.Connection.SQLTypeString
+   (\nameE -> Database.CDBI.Description.sqlString nameE)
+   (\nameE -> Database.CDBI.Description.fromStringOrNull nameE)
+
+--- The description of the database column `Cycle` of the `ModData` entity.
+modDataCycleColDesc :: Database.CDBI.Description.ColumnDescription String
+modDataCycleColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"Cycle\""
+   Database.CDBI.Connection.SQLTypeString
+   (\cycle -> Database.CDBI.Description.sqlString cycle)
+   (\cycle -> Database.CDBI.Description.fromStringOrNull cycle)
+
+--- The description of the database column `Presence` of the `ModData` entity.
+modDataPresenceColDesc :: Database.CDBI.Description.ColumnDescription String
+modDataPresenceColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"Presence\""
+   Database.CDBI.Connection.SQLTypeString
+   (\presence -> Database.CDBI.Description.sqlString presence)
+   (\presence -> Database.CDBI.Description.fromStringOrNull presence)
+
+--- The description of the database column `ECTS` of the `ModData` entity.
+modDataECTSColDesc :: Database.CDBI.Description.ColumnDescription Int
+modDataECTSColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"ECTS\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\eCTS -> Database.CDBI.Connection.SQLInt eCTS)
+   (\(Database.CDBI.Connection.SQLInt eCTS) -> eCTS)
+
+--- The description of the database column `Workload` of the `ModData` entity.
+modDataWorkloadColDesc :: Database.CDBI.Description.ColumnDescription String
+modDataWorkloadColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"Workload\""
+   Database.CDBI.Connection.SQLTypeString
+   (\workload -> Database.CDBI.Description.sqlString workload)
+   (\workload -> Database.CDBI.Description.fromStringOrNull workload)
+
+--- The description of the database column `Length` of the `ModData` entity.
+modDataLengthColDesc :: Database.CDBI.Description.ColumnDescription Int
+modDataLengthColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"Length\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\length -> Database.CDBI.Connection.SQLInt length)
+   (\(Database.CDBI.Connection.SQLInt length) -> length)
+
+--- The description of the database column `URL` of the `ModData` entity.
+modDataURLColDesc :: Database.CDBI.Description.ColumnDescription String
+modDataURLColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"URL\""
+   Database.CDBI.Connection.SQLTypeString
+   (\uRL -> Database.CDBI.Description.sqlString uRL)
+   (\uRL -> Database.CDBI.Description.fromStringOrNull uRL)
+
+--- The description of the database column `Visible` of the `ModData` entity.
+modDataVisibleColDesc :: Database.CDBI.Description.ColumnDescription Bool
+modDataVisibleColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"Visible\""
+   Database.CDBI.Connection.SQLTypeBool
+   (\visible -> Database.CDBI.Connection.SQLBool visible)
+   (\(Database.CDBI.Connection.SQLBool visible) -> visible)
+
+--- The description of the database column `UserResponsibleKey` of the `ModData` entity.
+modDataUserResponsibleKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription UserID
+modDataUserResponsibleKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"ModData\".\"UserResponsibleKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(UserID userResponsibleKey) ->
+     Database.CDBI.Connection.SQLInt userResponsibleKey)
+   (\(Database.CDBI.Connection.SQLInt userResponsibleKey) ->
+     UserID userResponsibleKey)
+
+--- Gets the attribute `Key` of the `ModData` entity.
+modDataKey :: ModData -> ModDataID
+modDataKey (ModData a _ _ _ _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Code` of the `ModData` entity.
+modDataCode :: ModData -> String
+modDataCode (ModData _ a _ _ _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `NameG` of the `ModData` entity.
+modDataNameG :: ModData -> String
+modDataNameG (ModData _ _ a _ _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `NameE` of the `ModData` entity.
+modDataNameE :: ModData -> String
+modDataNameE (ModData _ _ _ a _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Cycle` of the `ModData` entity.
+modDataCycle :: ModData -> String
+modDataCycle (ModData _ _ _ _ a _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Presence` of the `ModData` entity.
+modDataPresence :: ModData -> String
+modDataPresence (ModData _ _ _ _ _ a _ _ _ _ _ _) = a
+
+--- Gets the attribute `ECTS` of the `ModData` entity.
+modDataECTS :: ModData -> Int
+modDataECTS (ModData _ _ _ _ _ _ a _ _ _ _ _) = a
+
+--- Gets the attribute `Workload` of the `ModData` entity.
+modDataWorkload :: ModData -> String
+modDataWorkload (ModData _ _ _ _ _ _ _ a _ _ _ _) = a
+
+--- Gets the attribute `Length` of the `ModData` entity.
+modDataLength :: ModData -> Int
+modDataLength (ModData _ _ _ _ _ _ _ _ a _ _ _) = a
+
+--- Gets the attribute `URL` of the `ModData` entity.
+modDataURL :: ModData -> String
+modDataURL (ModData _ _ _ _ _ _ _ _ _ a _ _) = a
+
+--- Gets the attribute `Visible` of the `ModData` entity.
+modDataVisible :: ModData -> Bool
+modDataVisible (ModData _ _ _ _ _ _ _ _ _ _ a _) = a
+
+--- Gets the attribute `UserResponsibleKey` of the `ModData` entity.
+modDataUserResponsibleKey :: ModData -> UserID
+modDataUserResponsibleKey (ModData _ _ _ _ _ _ _ _ _ _ _ a) = a
+
+--- Sets the attribute `Key` of the `ModData` entity.
+setModDataKey :: ModData -> ModDataID -> ModData
+setModDataKey (ModData _ b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1) a =
+  ModData a b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Code` of the `ModData` entity.
+setModDataCode :: ModData -> String -> ModData
+setModDataCode (ModData a2 _ b10 b9 b8 b7 b6 b5 b4 b3 b2 b1) a =
+  ModData a2 a b10 b9 b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `NameG` of the `ModData` entity.
+setModDataNameG :: ModData -> String -> ModData
+setModDataNameG (ModData a3 a2 _ b9 b8 b7 b6 b5 b4 b3 b2 b1) a =
+  ModData a3 a2 a b9 b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `NameE` of the `ModData` entity.
+setModDataNameE :: ModData -> String -> ModData
+setModDataNameE (ModData a4 a3 a2 _ b8 b7 b6 b5 b4 b3 b2 b1) a =
+  ModData a4 a3 a2 a b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Cycle` of the `ModData` entity.
+setModDataCycle :: ModData -> String -> ModData
+setModDataCycle (ModData a5 a4 a3 a2 _ b7 b6 b5 b4 b3 b2 b1) a =
+  ModData a5 a4 a3 a2 a b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Presence` of the `ModData` entity.
+setModDataPresence :: ModData -> String -> ModData
+setModDataPresence (ModData a6 a5 a4 a3 a2 _ b6 b5 b4 b3 b2 b1) a =
+  ModData a6 a5 a4 a3 a2 a b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `ECTS` of the `ModData` entity.
+setModDataECTS :: ModData -> Int -> ModData
+setModDataECTS (ModData a7 a6 a5 a4 a3 a2 _ b5 b4 b3 b2 b1) a =
+  ModData a7 a6 a5 a4 a3 a2 a b5 b4 b3 b2 b1
+
+--- Sets the attribute `Workload` of the `ModData` entity.
+setModDataWorkload :: ModData -> String -> ModData
+setModDataWorkload (ModData a8 a7 a6 a5 a4 a3 a2 _ b4 b3 b2 b1) a =
+  ModData a8 a7 a6 a5 a4 a3 a2 a b4 b3 b2 b1
+
+--- Sets the attribute `Length` of the `ModData` entity.
+setModDataLength :: ModData -> Int -> ModData
+setModDataLength (ModData a9 a8 a7 a6 a5 a4 a3 a2 _ b3 b2 b1) a =
+  ModData a9 a8 a7 a6 a5 a4 a3 a2 a b3 b2 b1
+
+--- Sets the attribute `URL` of the `ModData` entity.
+setModDataURL :: ModData -> String -> ModData
+setModDataURL (ModData a10 a9 a8 a7 a6 a5 a4 a3 a2 _ b2 b1) a =
+  ModData a10 a9 a8 a7 a6 a5 a4 a3 a2 a b2 b1
+
+--- Sets the attribute `Visible` of the `ModData` entity.
+setModDataVisible :: ModData -> Bool -> ModData
+setModDataVisible (ModData a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 _ b1) a =
+  ModData a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 a b1
+
+--- Sets the attribute `UserResponsibleKey` of the `ModData` entity.
+setModDataUserResponsibleKey :: ModData -> UserID -> ModData
+setModDataUserResponsibleKey (ModData a12 a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 _) a =
+  ModData a12 a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 a
+
+--- id-to-value function for entity `ModData`.
+modDataID :: ModDataID -> Database.CDBI.Criteria.Value ModDataID
+modDataID (ModDataID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `ModData`.
+modDataKeyToInt :: ModDataID -> Int
+modDataKeyToInt (ModDataID key) = key
+
+--- Shows the key of a `ModData` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showModDataKey :: ModData -> String
-showModDataKey obj =
-  showDatabaseKey "ModData" modDataKeyToKey (modDataKey obj)
+showModDataKey entry =
+  Database.CDBI.ER.showDatabaseKey "ModData" modDataKeyToInt (modDataKey entry)
 
---- Transforms a string into a key of a ModData entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readModDataKey :: String -> Maybe ModDataKey
-readModDataKey s = readDatabaseKey "ModData" ModDataKey s
+--- Transforms a string into a key of a `ModData` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readModDataKey :: String -> Maybe ModDataID
+readModDataKey = Database.CDBI.ER.readDatabaseKey "ModData" ModDataID
 
-modDataKeyToKey :: ModDataKey -> Key
-modDataKeyToKey (ModDataKey k) = k
+--- Gets all `ModData` entities.
+queryAllModDatas :: Database.CDBI.Connection.DBAction [ModData]
+queryAllModDatas = Database.CDBI.ER.getAllEntries modData_CDBI_Description
 
-maybeModDataKeyToKey :: Maybe ModDataKey -> Maybe Key
-maybeModDataKeyToKey Nothing = Nothing
-maybeModDataKeyToKey (Just (ModDataKey k)) = Just k
+--- Gets all `ModData` entities satisfying a given predicate.
+queryCondModData
+  :: (ModData -> Bool) -> Database.CDBI.Connection.DBAction [ModData]
+queryCondModData = Database.CDBI.ER.getCondEntries modData_CDBI_Description
 
---- Inserts a new ModData entity.
+--- Gets a `ModData` entry by a given key.
+getModData :: ModDataID -> Database.CDBI.Connection.DBAction ModData
+getModData =
+  Database.CDBI.ER.getEntryWithKey modData_CDBI_Description modDataColumnKey
+   modDataID
+
+--- Inserts a new `ModData` entity.
 newModDataWithUserResponsibleKey
   :: String
   -> String
@@ -1705,7 +1756,9 @@ newModDataWithUserResponsibleKey
   -> String
   -> String
   -> Maybe Int
-  -> String -> Maybe Int -> String -> Bool -> UserKey -> Transaction ModData
+  -> String
+  -> Maybe Int
+  -> String -> Bool -> UserID -> Database.CDBI.Connection.DBAction ModData
 newModDataWithUserResponsibleKey
     code_p
     nameG_p
@@ -1718,112 +1771,459 @@ newModDataWithUserResponsibleKey
     uRL_p
     visible_p
     userResponsibleKey_p =
-  unique "MDB" modDataEntry keytuple2ModData modDataCode code_p
-   |>> (existsEntryWithDBKey "User" userEntry
-         (userKeyToKey userResponsibleKey_p)
-         |>> newEntry modDataEntry keytuple2ModData
-              (code_p
-              ,nameG_p
-              ,nameE_p
-              ,cycle_p
-              ,presence_p
-              ,maybe 8 id eCTS_p
-              ,workload_p
-              ,maybe 1 id length_p
-              ,uRL_p
-              ,visible_p
-              ,userKeyToKey userResponsibleKey_p))
+  Database.CDBI.ER.insertNewEntry modData_CDBI_Description setModDataKey
+   ModDataID
+   (ModData (ModDataID 0) code_p nameG_p nameE_p cycle_p presence_p
+     (maybe 8 id eCTS_p)
+     workload_p
+     (maybe 1 id length_p)
+     uRL_p
+     visible_p
+     userResponsibleKey_p)
 
---- Updates an existing ModData entity.
-updateModData :: ModData -> Transaction ()
-updateModData modData_p =
-  uniqueUpdate "MDB" modDataEntry keytuple2ModData
-   (modDataKeyToKey . modDataKey)
-   modDataCode
-   modData_p
-   |>> (existsEntryWithDBKey "User" userEntry
-         (userKeyToKey (modDataUserResponsibleKey modData_p))
-         |>> updateDBEntry modDataEntry
-              (modDataKeyToKey (modDataKey modData_p))
-              (modData2tuple modData_p))
+--- Deletes an existing `ModData` entry by its key.
+deleteModData :: ModData -> Database.CDBI.Connection.DBAction ()
+deleteModData =
+  Database.CDBI.ER.deleteEntry modData_CDBI_Description modDataColumnKey
+   (modDataID . modDataKey)
 
---- Deletes an existing ModData entity.
-deleteModData :: ModData -> Transaction ()
-deleteModData modData_p =
-  requiredForeignDBKey "Categorizing" categorizingEntry keytuple2Categorizing
-   categorizingModDataCategorizingKey
-   (modDataKey modData_p)
-   |>> (requiredForeignDBKey "ModDescr" modDescrEntry keytuple2ModDescr
-         modDescrModDataDataDescKey
-         (modDataKey modData_p)
-         |>> (requiredForeignDBKey "ModInst" modInstEntry keytuple2ModInst
-               modInstModDataModuleInstancesKey
-               (modDataKey modData_p)
-               |>> deleteDBEntry modDataEntry
-                    (modDataKeyToKey (modDataKey modData_p))))
+--- Updates an existing `ModData` entry by its key.
+updateModData :: ModData -> Database.CDBI.Connection.DBAction ()
+updateModData = Database.CDBI.ER.updateEntry modData_CDBI_Description
 
---- Gets a ModData entity stored in the database with the given key.
-getModData :: ModDataKey -> Transaction ModData
-getModData key = getEntry modDataEntry keytuple2ModData (modDataKeyToKey key)
+--- The ER description of the `ModDescr` entity.
+modDescr_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription ModDescr
+modDescr_CDBI_Description =
+  Database.CDBI.Description.ED "ModDescr"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(ModDescr
+       (ModDescrID key)
+       language
+       shortDesc
+       objectives
+       contents
+       prereq
+       exam
+       methods
+       use
+       literature
+       links
+       comments
+       (ModDataID modDataDataDescKey)) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString language
+     ,Database.CDBI.Description.sqlString shortDesc
+     ,Database.CDBI.Description.sqlString objectives
+     ,Database.CDBI.Description.sqlString contents
+     ,Database.CDBI.Description.sqlString prereq
+     ,Database.CDBI.Description.sqlString exam
+     ,Database.CDBI.Description.sqlString methods
+     ,Database.CDBI.Description.sqlString use
+     ,Database.CDBI.Description.sqlString literature
+     ,Database.CDBI.Description.sqlString links
+     ,Database.CDBI.Description.sqlString comments
+     ,Database.CDBI.Connection.SQLInt modDataDataDescKey])
+   (\(ModDescr
+       _
+       language
+       shortDesc
+       objectives
+       contents
+       prereq
+       exam
+       methods
+       use
+       literature
+       links
+       comments
+       (ModDataID modDataDataDescKey)) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString language
+     ,Database.CDBI.Description.sqlString shortDesc
+     ,Database.CDBI.Description.sqlString objectives
+     ,Database.CDBI.Description.sqlString contents
+     ,Database.CDBI.Description.sqlString prereq
+     ,Database.CDBI.Description.sqlString exam
+     ,Database.CDBI.Description.sqlString methods
+     ,Database.CDBI.Description.sqlString use
+     ,Database.CDBI.Description.sqlString literature
+     ,Database.CDBI.Description.sqlString links
+     ,Database.CDBI.Description.sqlString comments
+     ,Database.CDBI.Connection.SQLInt modDataDataDescKey])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString language
+     ,shortDesc
+     ,objectives
+     ,contents
+     ,prereq
+     ,exam
+     ,methods
+     ,use
+     ,literature
+     ,links
+     ,comments
+     ,Database.CDBI.Connection.SQLInt modDataDataDescKey] ->
+     ModDescr (ModDescrID key) language
+      (Database.CDBI.Description.fromStringOrNull shortDesc)
+      (Database.CDBI.Description.fromStringOrNull objectives)
+      (Database.CDBI.Description.fromStringOrNull contents)
+      (Database.CDBI.Description.fromStringOrNull prereq)
+      (Database.CDBI.Description.fromStringOrNull exam)
+      (Database.CDBI.Description.fromStringOrNull methods)
+      (Database.CDBI.Description.fromStringOrNull use)
+      (Database.CDBI.Description.fromStringOrNull literature)
+      (Database.CDBI.Description.fromStringOrNull links)
+      (Database.CDBI.Description.fromStringOrNull comments)
+      (ModDataID modDataDataDescKey))
 
---- Gets all ModData entities stored in the database.
-queryAllModDatas :: Query [ModData]
-queryAllModDatas =
-  transformQ (map (uncurry keytuple2ModData)) (allDBKeyInfos modDataEntry)
+--- The database table of the `ModDescr` entity.
+modDescrTable :: Database.CDBI.Description.Table
+modDescrTable = "ModDescr"
 
---- Gets all ModData entities satisfying a given condition.
-queryCondModData :: (ModData -> Bool) -> Query [ModData]
-queryCondModData econd = transformQ (filter econd) queryAllModDatas
+--- The database column `Key` of the `ModDescr` entity.
+modDescrColumnKey :: Database.CDBI.Description.Column ModDescrID
+modDescrColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"ModDescr\".\"Key\""
 
---- Database predicate representing the relation between keys and ModDescr tuple entities.
-modDescrEntry :: Key -> ModDescrTuple -> Dynamic
-modDescrEntry =
-  persistentSQLite dbFile "ModDescr"
-   ["Language"
-   ,"ShortDesc"
-   ,"Objectives"
-   ,"Contents"
-   ,"Prereq"
-   ,"Exam"
-   ,"Methods"
-   ,"Use"
-   ,"Literature"
-   ,"Links"
-   ,"Comments"
-   ,"ModDataDataDescKey"]
+--- The database column `Language` of the `ModDescr` entity.
+modDescrColumnLanguage :: Database.CDBI.Description.Column String
+modDescrColumnLanguage =
+  Database.CDBI.Description.Column "\"Language\"" "\"ModDescr\".\"Language\""
 
---- Dynamic predicate representing the relation
---- between keys and ModDescr entities.
-modDescr :: ModDescrKey -> ModDescr -> Dynamic
-modDescr key obj
-  | key =:= modDescrKey obj
-  = modDescrEntry (modDescrKeyToKey key) (modDescr2tuple obj)
+--- The database column `ShortDesc` of the `ModDescr` entity.
+modDescrColumnShortDesc :: Database.CDBI.Description.Column String
+modDescrColumnShortDesc =
+  Database.CDBI.Description.Column "\"ShortDesc\"" "\"ModDescr\".\"ShortDesc\""
 
---- Gets the key of a ModDescr entity.
-modDescrKey :: ModDescr -> ModDescrKey
-modDescrKey (ModDescr x _ _ _ _ _ _ _ _ _ _ _ _) = ModDescrKey x
+--- The database column `Objectives` of the `ModDescr` entity.
+modDescrColumnObjectives :: Database.CDBI.Description.Column String
+modDescrColumnObjectives =
+  Database.CDBI.Description.Column "\"Objectives\""
+   "\"ModDescr\".\"Objectives\""
 
---- Shows the key of a ModDescr entity as a string.
+--- The database column `Contents` of the `ModDescr` entity.
+modDescrColumnContents :: Database.CDBI.Description.Column String
+modDescrColumnContents =
+  Database.CDBI.Description.Column "\"Contents\"" "\"ModDescr\".\"Contents\""
+
+--- The database column `Prereq` of the `ModDescr` entity.
+modDescrColumnPrereq :: Database.CDBI.Description.Column String
+modDescrColumnPrereq =
+  Database.CDBI.Description.Column "\"Prereq\"" "\"ModDescr\".\"Prereq\""
+
+--- The database column `Exam` of the `ModDescr` entity.
+modDescrColumnExam :: Database.CDBI.Description.Column String
+modDescrColumnExam =
+  Database.CDBI.Description.Column "\"Exam\"" "\"ModDescr\".\"Exam\""
+
+--- The database column `Methods` of the `ModDescr` entity.
+modDescrColumnMethods :: Database.CDBI.Description.Column String
+modDescrColumnMethods =
+  Database.CDBI.Description.Column "\"Methods\"" "\"ModDescr\".\"Methods\""
+
+--- The database column `Use` of the `ModDescr` entity.
+modDescrColumnUse :: Database.CDBI.Description.Column String
+modDescrColumnUse =
+  Database.CDBI.Description.Column "\"Use\"" "\"ModDescr\".\"Use\""
+
+--- The database column `Literature` of the `ModDescr` entity.
+modDescrColumnLiterature :: Database.CDBI.Description.Column String
+modDescrColumnLiterature =
+  Database.CDBI.Description.Column "\"Literature\""
+   "\"ModDescr\".\"Literature\""
+
+--- The database column `Links` of the `ModDescr` entity.
+modDescrColumnLinks :: Database.CDBI.Description.Column String
+modDescrColumnLinks =
+  Database.CDBI.Description.Column "\"Links\"" "\"ModDescr\".\"Links\""
+
+--- The database column `Comments` of the `ModDescr` entity.
+modDescrColumnComments :: Database.CDBI.Description.Column String
+modDescrColumnComments =
+  Database.CDBI.Description.Column "\"Comments\"" "\"ModDescr\".\"Comments\""
+
+--- The database column `ModDataDataDescKey` of the `ModDescr` entity.
+modDescrColumnModDataDataDescKey :: Database.CDBI.Description.Column ModDataID
+modDescrColumnModDataDataDescKey =
+  Database.CDBI.Description.Column "\"ModDataDataDescKey\""
+   "\"ModDescr\".\"ModDataDataDescKey\""
+
+--- The description of the database column `Key` of the `ModDescr` entity.
+modDescrKeyColDesc :: Database.CDBI.Description.ColumnDescription ModDescrID
+modDescrKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(ModDescrID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> ModDescrID key)
+
+--- The description of the database column `Language` of the `ModDescr` entity.
+modDescrLanguageColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrLanguageColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Language\""
+   Database.CDBI.Connection.SQLTypeString
+   (\language -> Database.CDBI.Connection.SQLString language)
+   (\(Database.CDBI.Connection.SQLString language) -> language)
+
+--- The description of the database column `ShortDesc` of the `ModDescr` entity.
+modDescrShortDescColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrShortDescColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"ShortDesc\""
+   Database.CDBI.Connection.SQLTypeString
+   (\shortDesc -> Database.CDBI.Description.sqlString shortDesc)
+   (\shortDesc -> Database.CDBI.Description.fromStringOrNull shortDesc)
+
+--- The description of the database column `Objectives` of the `ModDescr` entity.
+modDescrObjectivesColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrObjectivesColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Objectives\""
+   Database.CDBI.Connection.SQLTypeString
+   (\objectives -> Database.CDBI.Description.sqlString objectives)
+   (\objectives -> Database.CDBI.Description.fromStringOrNull objectives)
+
+--- The description of the database column `Contents` of the `ModDescr` entity.
+modDescrContentsColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrContentsColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Contents\""
+   Database.CDBI.Connection.SQLTypeString
+   (\contents -> Database.CDBI.Description.sqlString contents)
+   (\contents -> Database.CDBI.Description.fromStringOrNull contents)
+
+--- The description of the database column `Prereq` of the `ModDescr` entity.
+modDescrPrereqColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrPrereqColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Prereq\""
+   Database.CDBI.Connection.SQLTypeString
+   (\prereq -> Database.CDBI.Description.sqlString prereq)
+   (\prereq -> Database.CDBI.Description.fromStringOrNull prereq)
+
+--- The description of the database column `Exam` of the `ModDescr` entity.
+modDescrExamColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrExamColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Exam\""
+   Database.CDBI.Connection.SQLTypeString
+   (\exam -> Database.CDBI.Description.sqlString exam)
+   (\exam -> Database.CDBI.Description.fromStringOrNull exam)
+
+--- The description of the database column `Methods` of the `ModDescr` entity.
+modDescrMethodsColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrMethodsColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Methods\""
+   Database.CDBI.Connection.SQLTypeString
+   (\methods -> Database.CDBI.Description.sqlString methods)
+   (\methods -> Database.CDBI.Description.fromStringOrNull methods)
+
+--- The description of the database column `Use` of the `ModDescr` entity.
+modDescrUseColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrUseColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Use\""
+   Database.CDBI.Connection.SQLTypeString
+   (\use -> Database.CDBI.Description.sqlString use)
+   (\use -> Database.CDBI.Description.fromStringOrNull use)
+
+--- The description of the database column `Literature` of the `ModDescr` entity.
+modDescrLiteratureColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrLiteratureColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Literature\""
+   Database.CDBI.Connection.SQLTypeString
+   (\literature -> Database.CDBI.Description.sqlString literature)
+   (\literature -> Database.CDBI.Description.fromStringOrNull literature)
+
+--- The description of the database column `Links` of the `ModDescr` entity.
+modDescrLinksColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrLinksColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Links\""
+   Database.CDBI.Connection.SQLTypeString
+   (\links -> Database.CDBI.Description.sqlString links)
+   (\links -> Database.CDBI.Description.fromStringOrNull links)
+
+--- The description of the database column `Comments` of the `ModDescr` entity.
+modDescrCommentsColDesc :: Database.CDBI.Description.ColumnDescription String
+modDescrCommentsColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"Comments\""
+   Database.CDBI.Connection.SQLTypeString
+   (\comments -> Database.CDBI.Description.sqlString comments)
+   (\comments -> Database.CDBI.Description.fromStringOrNull comments)
+
+--- The description of the database column `ModDataDataDescKey` of the `ModDescr` entity.
+modDescrModDataDataDescKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription ModDataID
+modDescrModDataDataDescKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"ModDescr\".\"ModDataDataDescKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(ModDataID modDataDataDescKey) ->
+     Database.CDBI.Connection.SQLInt modDataDataDescKey)
+   (\(Database.CDBI.Connection.SQLInt modDataDataDescKey) ->
+     ModDataID modDataDataDescKey)
+
+--- Gets the attribute `Key` of the `ModDescr` entity.
+modDescrKey :: ModDescr -> ModDescrID
+modDescrKey (ModDescr a _ _ _ _ _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Language` of the `ModDescr` entity.
+modDescrLanguage :: ModDescr -> String
+modDescrLanguage (ModDescr _ a _ _ _ _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `ShortDesc` of the `ModDescr` entity.
+modDescrShortDesc :: ModDescr -> String
+modDescrShortDesc (ModDescr _ _ a _ _ _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Objectives` of the `ModDescr` entity.
+modDescrObjectives :: ModDescr -> String
+modDescrObjectives (ModDescr _ _ _ a _ _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Contents` of the `ModDescr` entity.
+modDescrContents :: ModDescr -> String
+modDescrContents (ModDescr _ _ _ _ a _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Prereq` of the `ModDescr` entity.
+modDescrPrereq :: ModDescr -> String
+modDescrPrereq (ModDescr _ _ _ _ _ a _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Exam` of the `ModDescr` entity.
+modDescrExam :: ModDescr -> String
+modDescrExam (ModDescr _ _ _ _ _ _ a _ _ _ _ _ _) = a
+
+--- Gets the attribute `Methods` of the `ModDescr` entity.
+modDescrMethods :: ModDescr -> String
+modDescrMethods (ModDescr _ _ _ _ _ _ _ a _ _ _ _ _) = a
+
+--- Gets the attribute `Use` of the `ModDescr` entity.
+modDescrUse :: ModDescr -> String
+modDescrUse (ModDescr _ _ _ _ _ _ _ _ a _ _ _ _) = a
+
+--- Gets the attribute `Literature` of the `ModDescr` entity.
+modDescrLiterature :: ModDescr -> String
+modDescrLiterature (ModDescr _ _ _ _ _ _ _ _ _ a _ _ _) = a
+
+--- Gets the attribute `Links` of the `ModDescr` entity.
+modDescrLinks :: ModDescr -> String
+modDescrLinks (ModDescr _ _ _ _ _ _ _ _ _ _ a _ _) = a
+
+--- Gets the attribute `Comments` of the `ModDescr` entity.
+modDescrComments :: ModDescr -> String
+modDescrComments (ModDescr _ _ _ _ _ _ _ _ _ _ _ a _) = a
+
+--- Gets the attribute `ModDataDataDescKey` of the `ModDescr` entity.
+modDescrModDataDataDescKey :: ModDescr -> ModDataID
+modDescrModDataDataDescKey (ModDescr _ _ _ _ _ _ _ _ _ _ _ _ a) = a
+
+--- Sets the attribute `Key` of the `ModDescr` entity.
+setModDescrKey :: ModDescr -> ModDescrID -> ModDescr
+setModDescrKey (ModDescr _ b12 b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1) a =
+  ModDescr a b12 b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Language` of the `ModDescr` entity.
+setModDescrLanguage :: ModDescr -> String -> ModDescr
+setModDescrLanguage (ModDescr a2 _ b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1) a =
+  ModDescr a2 a b11 b10 b9 b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `ShortDesc` of the `ModDescr` entity.
+setModDescrShortDesc :: ModDescr -> String -> ModDescr
+setModDescrShortDesc (ModDescr a3 a2 _ b10 b9 b8 b7 b6 b5 b4 b3 b2 b1) a =
+  ModDescr a3 a2 a b10 b9 b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Objectives` of the `ModDescr` entity.
+setModDescrObjectives :: ModDescr -> String -> ModDescr
+setModDescrObjectives (ModDescr a4 a3 a2 _ b9 b8 b7 b6 b5 b4 b3 b2 b1) a =
+  ModDescr a4 a3 a2 a b9 b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Contents` of the `ModDescr` entity.
+setModDescrContents :: ModDescr -> String -> ModDescr
+setModDescrContents (ModDescr a5 a4 a3 a2 _ b8 b7 b6 b5 b4 b3 b2 b1) a =
+  ModDescr a5 a4 a3 a2 a b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Prereq` of the `ModDescr` entity.
+setModDescrPrereq :: ModDescr -> String -> ModDescr
+setModDescrPrereq (ModDescr a6 a5 a4 a3 a2 _ b7 b6 b5 b4 b3 b2 b1) a =
+  ModDescr a6 a5 a4 a3 a2 a b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Exam` of the `ModDescr` entity.
+setModDescrExam :: ModDescr -> String -> ModDescr
+setModDescrExam (ModDescr a7 a6 a5 a4 a3 a2 _ b6 b5 b4 b3 b2 b1) a =
+  ModDescr a7 a6 a5 a4 a3 a2 a b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Methods` of the `ModDescr` entity.
+setModDescrMethods :: ModDescr -> String -> ModDescr
+setModDescrMethods (ModDescr a8 a7 a6 a5 a4 a3 a2 _ b5 b4 b3 b2 b1) a =
+  ModDescr a8 a7 a6 a5 a4 a3 a2 a b5 b4 b3 b2 b1
+
+--- Sets the attribute `Use` of the `ModDescr` entity.
+setModDescrUse :: ModDescr -> String -> ModDescr
+setModDescrUse (ModDescr a9 a8 a7 a6 a5 a4 a3 a2 _ b4 b3 b2 b1) a =
+  ModDescr a9 a8 a7 a6 a5 a4 a3 a2 a b4 b3 b2 b1
+
+--- Sets the attribute `Literature` of the `ModDescr` entity.
+setModDescrLiterature :: ModDescr -> String -> ModDescr
+setModDescrLiterature (ModDescr a10 a9 a8 a7 a6 a5 a4 a3 a2 _ b3 b2 b1) a =
+  ModDescr a10 a9 a8 a7 a6 a5 a4 a3 a2 a b3 b2 b1
+
+--- Sets the attribute `Links` of the `ModDescr` entity.
+setModDescrLinks :: ModDescr -> String -> ModDescr
+setModDescrLinks (ModDescr a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 _ b2 b1) a =
+  ModDescr a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 a b2 b1
+
+--- Sets the attribute `Comments` of the `ModDescr` entity.
+setModDescrComments :: ModDescr -> String -> ModDescr
+setModDescrComments (ModDescr a12 a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 _ b1) a =
+  ModDescr a12 a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 a b1
+
+--- Sets the attribute `ModDataDataDescKey` of the `ModDescr` entity.
+setModDescrModDataDataDescKey :: ModDescr -> ModDataID -> ModDescr
+setModDescrModDataDataDescKey
+    (ModDescr a13 a12 a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 _) a =
+  ModDescr a13 a12 a11 a10 a9 a8 a7 a6 a5 a4 a3 a2 a
+
+--- id-to-value function for entity `ModDescr`.
+modDescrID :: ModDescrID -> Database.CDBI.Criteria.Value ModDescrID
+modDescrID (ModDescrID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `ModDescr`.
+modDescrKeyToInt :: ModDescrID -> Int
+modDescrKeyToInt (ModDescrID key) = key
+
+--- Shows the key of a `ModDescr` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showModDescrKey :: ModDescr -> String
-showModDescrKey obj =
-  showDatabaseKey "ModDescr" modDescrKeyToKey (modDescrKey obj)
+showModDescrKey entry =
+  Database.CDBI.ER.showDatabaseKey "ModDescr" modDescrKeyToInt
+   (modDescrKey entry)
 
---- Transforms a string into a key of a ModDescr entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readModDescrKey :: String -> Maybe ModDescrKey
-readModDescrKey s = readDatabaseKey "ModDescr" ModDescrKey s
+--- Transforms a string into a key of a `ModDescr` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readModDescrKey :: String -> Maybe ModDescrID
+readModDescrKey = Database.CDBI.ER.readDatabaseKey "ModDescr" ModDescrID
 
-modDescrKeyToKey :: ModDescrKey -> Key
-modDescrKeyToKey (ModDescrKey k) = k
+--- Gets all `ModDescr` entities.
+queryAllModDescrs :: Database.CDBI.Connection.DBAction [ModDescr]
+queryAllModDescrs = Database.CDBI.ER.getAllEntries modDescr_CDBI_Description
 
-maybeModDescrKeyToKey :: Maybe ModDescrKey -> Maybe Key
-maybeModDescrKeyToKey Nothing = Nothing
-maybeModDescrKeyToKey (Just (ModDescrKey k)) = Just k
+--- Gets all `ModDescr` entities satisfying a given predicate.
+queryCondModDescr
+  :: (ModDescr -> Bool) -> Database.CDBI.Connection.DBAction [ModDescr]
+queryCondModDescr = Database.CDBI.ER.getCondEntries modDescr_CDBI_Description
 
---- Inserts a new ModDescr entity.
+--- Gets a `ModDescr` entry by a given key.
+getModDescr :: ModDescrID -> Database.CDBI.Connection.DBAction ModDescr
+getModDescr =
+  Database.CDBI.ER.getEntryWithKey modDescr_CDBI_Description modDescrColumnKey
+   modDescrID
+
+--- Inserts a new `ModDescr` entity.
 newModDescrWithModDataDataDescKey
   :: String
   -> String
@@ -1833,7 +2233,8 @@ newModDescrWithModDataDataDescKey
   -> String
   -> String
   -> String
-  -> String -> String -> String -> ModDataKey -> Transaction ModDescr
+  -> String
+  -> String -> String -> ModDataID -> Database.CDBI.Connection.DBAction ModDescr
 newModDescrWithModDataDataDescKey
     language_p
     shortDesc_p
@@ -1847,191 +2248,639 @@ newModDescrWithModDataDataDescKey
     links_p
     comments_p
     modDataDataDescKey_p =
-  unique "MDB" modDescrEntry keytuple2ModDescr modDescrModDataDataDescKey
-   modDataDataDescKey_p
-   |>> (existsEntryWithDBKey "ModData" modDataEntry
-         (modDataKeyToKey modDataDataDescKey_p)
-         |>> newEntry modDescrEntry keytuple2ModDescr
-              (language_p
-              ,shortDesc_p
-              ,objectives_p
-              ,contents_p
-              ,prereq_p
-              ,exam_p
-              ,methods_p
-              ,use_p
-              ,literature_p
-              ,links_p
-              ,comments_p
-              ,modDataKeyToKey modDataDataDescKey_p))
+  Database.CDBI.ER.insertNewEntry modDescr_CDBI_Description setModDescrKey
+   ModDescrID
+   (ModDescr (ModDescrID 0) language_p shortDesc_p objectives_p contents_p
+     prereq_p
+     exam_p
+     methods_p
+     use_p
+     literature_p
+     links_p
+     comments_p
+     modDataDataDescKey_p)
 
---- Updates an existing ModDescr entity.
-updateModDescr :: ModDescr -> Transaction ()
-updateModDescr modDescr_p =
-  uniqueUpdate "MDB" modDescrEntry keytuple2ModDescr
-   (modDescrKeyToKey . modDescrKey)
-   modDescrModDataDataDescKey
-   modDescr_p
-   |>> (existsEntryWithDBKey "ModData" modDataEntry
-         (modDataKeyToKey (modDescrModDataDataDescKey modDescr_p))
-         |>> updateDBEntry modDescrEntry
-              (modDescrKeyToKey (modDescrKey modDescr_p))
-              (modDescr2tuple modDescr_p))
+--- Deletes an existing `ModDescr` entry by its key.
+deleteModDescr :: ModDescr -> Database.CDBI.Connection.DBAction ()
+deleteModDescr =
+  Database.CDBI.ER.deleteEntry modDescr_CDBI_Description modDescrColumnKey
+   (modDescrID . modDescrKey)
 
---- Deletes an existing ModDescr entity.
-deleteModDescr :: ModDescr -> Transaction ()
-deleteModDescr modDescr_p =
-  deleteDBEntry modDescrEntry (modDescrKeyToKey (modDescrKey modDescr_p))
+--- Updates an existing `ModDescr` entry by its key.
+updateModDescr :: ModDescr -> Database.CDBI.Connection.DBAction ()
+updateModDescr = Database.CDBI.ER.updateEntry modDescr_CDBI_Description
 
---- Gets a ModDescr entity stored in the database with the given key.
-getModDescr :: ModDescrKey -> Transaction ModDescr
-getModDescr key =
-  getEntry modDescrEntry keytuple2ModDescr (modDescrKeyToKey key)
+--- The ER description of the `ModInst` entity.
+modInst_CDBI_Description :: Database.CDBI.Description.EntityDescription ModInst
+modInst_CDBI_Description =
+  Database.CDBI.Description.ED "ModInst"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(ModInst
+       (ModInstID key)
+       term
+       year
+       (UserID userLecturerModsKey)
+       (ModDataID modDataModuleInstancesKey)) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,Database.CDBI.Connection.SQLInt userLecturerModsKey
+     ,Database.CDBI.Connection.SQLInt modDataModuleInstancesKey])
+   (\(ModInst
+       _
+       term
+       year
+       (UserID userLecturerModsKey)
+       (ModDataID modDataModuleInstancesKey)) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,Database.CDBI.Connection.SQLInt userLecturerModsKey
+     ,Database.CDBI.Connection.SQLInt modDataModuleInstancesKey])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,Database.CDBI.Connection.SQLInt userLecturerModsKey
+     ,Database.CDBI.Connection.SQLInt modDataModuleInstancesKey] ->
+     ModInst (ModInstID key) term year (UserID userLecturerModsKey)
+      (ModDataID modDataModuleInstancesKey))
 
---- Gets all ModDescr entities stored in the database.
-queryAllModDescrs :: Query [ModDescr]
-queryAllModDescrs =
-  transformQ (map (uncurry keytuple2ModDescr)) (allDBKeyInfos modDescrEntry)
+--- The database table of the `ModInst` entity.
+modInstTable :: Database.CDBI.Description.Table
+modInstTable = "ModInst"
 
---- Gets all ModDescr entities satisfying a given condition.
-queryCondModDescr :: (ModDescr -> Bool) -> Query [ModDescr]
-queryCondModDescr econd = transformQ (filter econd) queryAllModDescrs
+--- The database column `Key` of the `ModInst` entity.
+modInstColumnKey :: Database.CDBI.Description.Column ModInstID
+modInstColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"ModInst\".\"Key\""
 
---- Database predicate representing the relation between keys and ModInst tuple entities.
-modInstEntry :: Key -> ModInstTuple -> Dynamic
-modInstEntry =
-  persistentSQLite dbFile "ModInst"
-   ["Term","Year","UserLecturerModsKey","ModDataModuleInstancesKey"]
+--- The database column `Term` of the `ModInst` entity.
+modInstColumnTerm :: Database.CDBI.Description.Column String
+modInstColumnTerm =
+  Database.CDBI.Description.Column "\"Term\"" "\"ModInst\".\"Term\""
 
---- Dynamic predicate representing the relation
---- between keys and ModInst entities.
-modInst :: ModInstKey -> ModInst -> Dynamic
-modInst key obj
-  | key =:= modInstKey obj
-  = modInstEntry (modInstKeyToKey key) (modInst2tuple obj)
+--- The database column `Year` of the `ModInst` entity.
+modInstColumnYear :: Database.CDBI.Description.Column Int
+modInstColumnYear =
+  Database.CDBI.Description.Column "\"Year\"" "\"ModInst\".\"Year\""
 
---- Gets the key of a ModInst entity.
-modInstKey :: ModInst -> ModInstKey
-modInstKey (ModInst x _ _ _ _) = ModInstKey x
+--- The database column `UserLecturerModsKey` of the `ModInst` entity.
+modInstColumnUserLecturerModsKey :: Database.CDBI.Description.Column UserID
+modInstColumnUserLecturerModsKey =
+  Database.CDBI.Description.Column "\"UserLecturerModsKey\""
+   "\"ModInst\".\"UserLecturerModsKey\""
 
---- Shows the key of a ModInst entity as a string.
+--- The database column `ModDataModuleInstancesKey` of the `ModInst` entity.
+modInstColumnModDataModuleInstancesKey
+  :: Database.CDBI.Description.Column ModDataID
+modInstColumnModDataModuleInstancesKey =
+  Database.CDBI.Description.Column "\"ModDataModuleInstancesKey\""
+   "\"ModInst\".\"ModDataModuleInstancesKey\""
+
+--- The description of the database column `Key` of the `ModInst` entity.
+modInstKeyColDesc :: Database.CDBI.Description.ColumnDescription ModInstID
+modInstKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"ModInst\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(ModInstID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> ModInstID key)
+
+--- The description of the database column `Term` of the `ModInst` entity.
+modInstTermColDesc :: Database.CDBI.Description.ColumnDescription String
+modInstTermColDesc =
+  Database.CDBI.Description.ColDesc "\"ModInst\".\"Term\""
+   Database.CDBI.Connection.SQLTypeString
+   (\term -> Database.CDBI.Connection.SQLString term)
+   (\(Database.CDBI.Connection.SQLString term) -> term)
+
+--- The description of the database column `Year` of the `ModInst` entity.
+modInstYearColDesc :: Database.CDBI.Description.ColumnDescription Int
+modInstYearColDesc =
+  Database.CDBI.Description.ColDesc "\"ModInst\".\"Year\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\year -> Database.CDBI.Connection.SQLInt year)
+   (\(Database.CDBI.Connection.SQLInt year) -> year)
+
+--- The description of the database column `UserLecturerModsKey` of the `ModInst` entity.
+modInstUserLecturerModsKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription UserID
+modInstUserLecturerModsKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"ModInst\".\"UserLecturerModsKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(UserID userLecturerModsKey) ->
+     Database.CDBI.Connection.SQLInt userLecturerModsKey)
+   (\(Database.CDBI.Connection.SQLInt userLecturerModsKey) ->
+     UserID userLecturerModsKey)
+
+--- The description of the database column `ModDataModuleInstancesKey` of the `ModInst` entity.
+modInstModDataModuleInstancesKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription ModDataID
+modInstModDataModuleInstancesKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"ModInst\".\"ModDataModuleInstancesKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(ModDataID modDataModuleInstancesKey) ->
+     Database.CDBI.Connection.SQLInt modDataModuleInstancesKey)
+   (\(Database.CDBI.Connection.SQLInt modDataModuleInstancesKey) ->
+     ModDataID modDataModuleInstancesKey)
+
+--- Gets the attribute `Key` of the `ModInst` entity.
+modInstKey :: ModInst -> ModInstID
+modInstKey (ModInst a _ _ _ _) = a
+
+--- Gets the attribute `Term` of the `ModInst` entity.
+modInstTerm :: ModInst -> String
+modInstTerm (ModInst _ a _ _ _) = a
+
+--- Gets the attribute `Year` of the `ModInst` entity.
+modInstYear :: ModInst -> Int
+modInstYear (ModInst _ _ a _ _) = a
+
+--- Gets the attribute `UserLecturerModsKey` of the `ModInst` entity.
+modInstUserLecturerModsKey :: ModInst -> UserID
+modInstUserLecturerModsKey (ModInst _ _ _ a _) = a
+
+--- Gets the attribute `ModDataModuleInstancesKey` of the `ModInst` entity.
+modInstModDataModuleInstancesKey :: ModInst -> ModDataID
+modInstModDataModuleInstancesKey (ModInst _ _ _ _ a) = a
+
+--- Sets the attribute `Key` of the `ModInst` entity.
+setModInstKey :: ModInst -> ModInstID -> ModInst
+setModInstKey (ModInst _ b4 b3 b2 b1) a = ModInst a b4 b3 b2 b1
+
+--- Sets the attribute `Term` of the `ModInst` entity.
+setModInstTerm :: ModInst -> String -> ModInst
+setModInstTerm (ModInst a2 _ b3 b2 b1) a = ModInst a2 a b3 b2 b1
+
+--- Sets the attribute `Year` of the `ModInst` entity.
+setModInstYear :: ModInst -> Int -> ModInst
+setModInstYear (ModInst a3 a2 _ b2 b1) a = ModInst a3 a2 a b2 b1
+
+--- Sets the attribute `UserLecturerModsKey` of the `ModInst` entity.
+setModInstUserLecturerModsKey :: ModInst -> UserID -> ModInst
+setModInstUserLecturerModsKey (ModInst a4 a3 a2 _ b1) a = ModInst a4 a3 a2 a b1
+
+--- Sets the attribute `ModDataModuleInstancesKey` of the `ModInst` entity.
+setModInstModDataModuleInstancesKey :: ModInst -> ModDataID -> ModInst
+setModInstModDataModuleInstancesKey (ModInst a5 a4 a3 a2 _) a =
+  ModInst a5 a4 a3 a2 a
+
+--- id-to-value function for entity `ModInst`.
+modInstID :: ModInstID -> Database.CDBI.Criteria.Value ModInstID
+modInstID (ModInstID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `ModInst`.
+modInstKeyToInt :: ModInstID -> Int
+modInstKeyToInt (ModInstID key) = key
+
+--- Shows the key of a `ModInst` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showModInstKey :: ModInst -> String
-showModInstKey obj =
-  showDatabaseKey "ModInst" modInstKeyToKey (modInstKey obj)
+showModInstKey entry =
+  Database.CDBI.ER.showDatabaseKey "ModInst" modInstKeyToInt (modInstKey entry)
 
---- Transforms a string into a key of a ModInst entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readModInstKey :: String -> Maybe ModInstKey
-readModInstKey s = readDatabaseKey "ModInst" ModInstKey s
+--- Transforms a string into a key of a `ModInst` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readModInstKey :: String -> Maybe ModInstID
+readModInstKey = Database.CDBI.ER.readDatabaseKey "ModInst" ModInstID
 
-modInstKeyToKey :: ModInstKey -> Key
-modInstKeyToKey (ModInstKey k) = k
+--- Gets all `ModInst` entities.
+queryAllModInsts :: Database.CDBI.Connection.DBAction [ModInst]
+queryAllModInsts = Database.CDBI.ER.getAllEntries modInst_CDBI_Description
 
-maybeModInstKeyToKey :: Maybe ModInstKey -> Maybe Key
-maybeModInstKeyToKey Nothing = Nothing
-maybeModInstKeyToKey (Just (ModInstKey k)) = Just k
+--- Gets all `ModInst` entities satisfying a given predicate.
+queryCondModInst
+  :: (ModInst -> Bool) -> Database.CDBI.Connection.DBAction [ModInst]
+queryCondModInst = Database.CDBI.ER.getCondEntries modInst_CDBI_Description
 
---- Inserts a new ModInst entity.
+--- Gets a `ModInst` entry by a given key.
+getModInst :: ModInstID -> Database.CDBI.Connection.DBAction ModInst
+getModInst =
+  Database.CDBI.ER.getEntryWithKey modInst_CDBI_Description modInstColumnKey
+   modInstID
+
+--- Inserts a new `ModInst` entity.
 newModInstWithUserLecturerModsKeyWithModDataModuleInstancesKey
-  :: String -> Maybe Int -> UserKey -> ModDataKey -> Transaction ModInst
+  :: String
+  -> Maybe Int
+  -> UserID -> ModDataID -> Database.CDBI.Connection.DBAction ModInst
 newModInstWithUserLecturerModsKeyWithModDataModuleInstancesKey
     term_p year_p userLecturerModsKey_p modDataModuleInstancesKey_p =
-  existsEntryWithDBKey "User" userEntry (userKeyToKey userLecturerModsKey_p)
-   |>> (existsEntryWithDBKey "ModData" modDataEntry
-         (modDataKeyToKey modDataModuleInstancesKey_p)
-         |>> newEntry modInstEntry keytuple2ModInst
-              (term_p
-              ,maybe 2011 id year_p
-              ,userKeyToKey userLecturerModsKey_p
-              ,modDataKeyToKey modDataModuleInstancesKey_p))
+  Database.CDBI.ER.insertNewEntry modInst_CDBI_Description setModInstKey
+   ModInstID
+   (ModInst (ModInstID 0) term_p (maybe 2011 id year_p) userLecturerModsKey_p
+     modDataModuleInstancesKey_p)
 
---- Updates an existing ModInst entity.
-updateModInst :: ModInst -> Transaction ()
-updateModInst modInst_p =
-  existsEntryWithDBKey "User" userEntry
-   (userKeyToKey (modInstUserLecturerModsKey modInst_p))
-   |>> (existsEntryWithDBKey "ModData" modDataEntry
-         (modDataKeyToKey (modInstModDataModuleInstancesKey modInst_p))
-         |>> updateDBEntry modInstEntry
-              (modInstKeyToKey (modInstKey modInst_p))
-              (modInst2tuple modInst_p))
+--- Deletes an existing `ModInst` entry by its key.
+deleteModInst :: ModInst -> Database.CDBI.Connection.DBAction ()
+deleteModInst =
+  Database.CDBI.ER.deleteEntry modInst_CDBI_Description modInstColumnKey
+   (modInstID . modInstKey)
 
---- Deletes an existing ModInst entity.
-deleteModInst :: ModInst -> Transaction ()
-deleteModInst modInst_p =
-  requiredForeignDBKey "AdvisorModule" advisorModuleEntry
-   keytuple2AdvisorModule
-   advisorModuleModInstAdvisedProgramModuleInstancesKey
-   (modInstKey modInst_p)
-   |>> deleteDBEntry modInstEntry (modInstKeyToKey (modInstKey modInst_p))
+--- Updates an existing `ModInst` entry by its key.
+updateModInst :: ModInst -> Database.CDBI.Connection.DBAction ()
+updateModInst = Database.CDBI.ER.updateEntry modInst_CDBI_Description
 
---- Gets a ModInst entity stored in the database with the given key.
-getModInst :: ModInstKey -> Transaction ModInst
-getModInst key = getEntry modInstEntry keytuple2ModInst (modInstKeyToKey key)
+--- The ER description of the `AdvisorStudyProgram` entity.
+advisorStudyProgram_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription AdvisorStudyProgram
+advisorStudyProgram_CDBI_Description =
+  Database.CDBI.Description.ED "AdvisorStudyProgram"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeBool
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(AdvisorStudyProgram
+       (AdvisorStudyProgramID key)
+       name
+       term
+       year
+       desc
+       prereq
+       comments
+       visible
+       (UserID userStudyAdvisingKey)
+       (StudyProgramID studyProgramStudyProgramsAdvisedKey)) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,Database.CDBI.Description.sqlString desc
+     ,Database.CDBI.Description.sqlString prereq
+     ,Database.CDBI.Description.sqlString comments
+     ,Database.CDBI.Connection.SQLBool visible
+     ,Database.CDBI.Connection.SQLInt userStudyAdvisingKey
+     ,Database.CDBI.Connection.SQLInt studyProgramStudyProgramsAdvisedKey])
+   (\(AdvisorStudyProgram
+       _
+       name
+       term
+       year
+       desc
+       prereq
+       comments
+       visible
+       (UserID userStudyAdvisingKey)
+       (StudyProgramID studyProgramStudyProgramsAdvisedKey)) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,Database.CDBI.Description.sqlString desc
+     ,Database.CDBI.Description.sqlString prereq
+     ,Database.CDBI.Description.sqlString comments
+     ,Database.CDBI.Connection.SQLBool visible
+     ,Database.CDBI.Connection.SQLInt userStudyAdvisingKey
+     ,Database.CDBI.Connection.SQLInt studyProgramStudyProgramsAdvisedKey])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,desc
+     ,prereq
+     ,comments
+     ,Database.CDBI.Connection.SQLBool visible
+     ,Database.CDBI.Connection.SQLInt userStudyAdvisingKey
+     ,Database.CDBI.Connection.SQLInt studyProgramStudyProgramsAdvisedKey] ->
+     AdvisorStudyProgram (AdvisorStudyProgramID key) name term year
+      (Database.CDBI.Description.fromStringOrNull desc)
+      (Database.CDBI.Description.fromStringOrNull prereq)
+      (Database.CDBI.Description.fromStringOrNull comments)
+      visible
+      (UserID userStudyAdvisingKey)
+      (StudyProgramID studyProgramStudyProgramsAdvisedKey))
 
---- Gets all ModInst entities stored in the database.
-queryAllModInsts :: Query [ModInst]
-queryAllModInsts =
-  transformQ (map (uncurry keytuple2ModInst)) (allDBKeyInfos modInstEntry)
+--- The database table of the `AdvisorStudyProgram` entity.
+advisorStudyProgramTable :: Database.CDBI.Description.Table
+advisorStudyProgramTable = "AdvisorStudyProgram"
 
---- Gets all ModInst entities satisfying a given condition.
-queryCondModInst :: (ModInst -> Bool) -> Query [ModInst]
-queryCondModInst econd = transformQ (filter econd) queryAllModInsts
+--- The database column `Key` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramColumnKey
+  :: Database.CDBI.Description.Column AdvisorStudyProgramID
+advisorStudyProgramColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"AdvisorStudyProgram\".\"Key\""
 
---- Database predicate representing the relation between keys and AdvisorStudyProgram tuple entities.
-advisorStudyProgramEntry :: Key -> AdvisorStudyProgramTuple -> Dynamic
-advisorStudyProgramEntry =
-  persistentSQLite dbFile "AdvisorStudyProgram"
-   ["Name"
-   ,"Term"
-   ,"Year"
-   ,"Desc"
-   ,"Prereq"
-   ,"Comments"
-   ,"Visible"
-   ,"UserStudyAdvisingKey"
-   ,"StudyProgramStudyProgramsAdvisedKey"]
+--- The database column `Name` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramColumnName :: Database.CDBI.Description.Column String
+advisorStudyProgramColumnName =
+  Database.CDBI.Description.Column "\"Name\"" "\"AdvisorStudyProgram\".\"Name\""
 
---- Dynamic predicate representing the relation
---- between keys and AdvisorStudyProgram entities.
-advisorStudyProgram
-  :: AdvisorStudyProgramKey -> AdvisorStudyProgram -> Dynamic
-advisorStudyProgram key obj
-  | key =:= advisorStudyProgramKey obj
-  = advisorStudyProgramEntry (advisorStudyProgramKeyToKey key)
-     (advisorStudyProgram2tuple obj)
+--- The database column `Term` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramColumnTerm :: Database.CDBI.Description.Column String
+advisorStudyProgramColumnTerm =
+  Database.CDBI.Description.Column "\"Term\"" "\"AdvisorStudyProgram\".\"Term\""
 
---- Gets the key of a AdvisorStudyProgram entity.
-advisorStudyProgramKey :: AdvisorStudyProgram -> AdvisorStudyProgramKey
-advisorStudyProgramKey (AdvisorStudyProgram x _ _ _ _ _ _ _ _ _) =
-  AdvisorStudyProgramKey x
+--- The database column `Year` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramColumnYear :: Database.CDBI.Description.Column Int
+advisorStudyProgramColumnYear =
+  Database.CDBI.Description.Column "\"Year\"" "\"AdvisorStudyProgram\".\"Year\""
 
---- Shows the key of a AdvisorStudyProgram entity as a string.
+--- The database column `Desc` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramColumnDesc :: Database.CDBI.Description.Column String
+advisorStudyProgramColumnDesc =
+  Database.CDBI.Description.Column "\"Desc\"" "\"AdvisorStudyProgram\".\"Desc\""
+
+--- The database column `Prereq` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramColumnPrereq :: Database.CDBI.Description.Column String
+advisorStudyProgramColumnPrereq =
+  Database.CDBI.Description.Column "\"Prereq\""
+   "\"AdvisorStudyProgram\".\"Prereq\""
+
+--- The database column `Comments` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramColumnComments :: Database.CDBI.Description.Column String
+advisorStudyProgramColumnComments =
+  Database.CDBI.Description.Column "\"Comments\""
+   "\"AdvisorStudyProgram\".\"Comments\""
+
+--- The database column `Visible` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramColumnVisible :: Database.CDBI.Description.Column Bool
+advisorStudyProgramColumnVisible =
+  Database.CDBI.Description.Column "\"Visible\""
+   "\"AdvisorStudyProgram\".\"Visible\""
+
+--- The database column `UserStudyAdvisingKey` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramColumnUserStudyAdvisingKey
+  :: Database.CDBI.Description.Column UserID
+advisorStudyProgramColumnUserStudyAdvisingKey =
+  Database.CDBI.Description.Column "\"UserStudyAdvisingKey\""
+   "\"AdvisorStudyProgram\".\"UserStudyAdvisingKey\""
+
+--- The database column `StudyProgramStudyProgramsAdvisedKey` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramColumnStudyProgramStudyProgramsAdvisedKey
+  :: Database.CDBI.Description.Column StudyProgramID
+advisorStudyProgramColumnStudyProgramStudyProgramsAdvisedKey =
+  Database.CDBI.Description.Column "\"StudyProgramStudyProgramsAdvisedKey\""
+   "\"AdvisorStudyProgram\".\"StudyProgramStudyProgramsAdvisedKey\""
+
+--- The description of the database column `Key` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription AdvisorStudyProgramID
+advisorStudyProgramKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"AdvisorStudyProgram\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(AdvisorStudyProgramID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> AdvisorStudyProgramID key)
+
+--- The description of the database column `Name` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramNameColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+advisorStudyProgramNameColDesc =
+  Database.CDBI.Description.ColDesc "\"AdvisorStudyProgram\".\"Name\""
+   Database.CDBI.Connection.SQLTypeString
+   (\name -> Database.CDBI.Connection.SQLString name)
+   (\(Database.CDBI.Connection.SQLString name) -> name)
+
+--- The description of the database column `Term` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramTermColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+advisorStudyProgramTermColDesc =
+  Database.CDBI.Description.ColDesc "\"AdvisorStudyProgram\".\"Term\""
+   Database.CDBI.Connection.SQLTypeString
+   (\term -> Database.CDBI.Connection.SQLString term)
+   (\(Database.CDBI.Connection.SQLString term) -> term)
+
+--- The description of the database column `Year` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramYearColDesc
+  :: Database.CDBI.Description.ColumnDescription Int
+advisorStudyProgramYearColDesc =
+  Database.CDBI.Description.ColDesc "\"AdvisorStudyProgram\".\"Year\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\year -> Database.CDBI.Connection.SQLInt year)
+   (\(Database.CDBI.Connection.SQLInt year) -> year)
+
+--- The description of the database column `Desc` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramDescColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+advisorStudyProgramDescColDesc =
+  Database.CDBI.Description.ColDesc "\"AdvisorStudyProgram\".\"Desc\""
+   Database.CDBI.Connection.SQLTypeString
+   (\desc -> Database.CDBI.Description.sqlString desc)
+   (\desc -> Database.CDBI.Description.fromStringOrNull desc)
+
+--- The description of the database column `Prereq` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramPrereqColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+advisorStudyProgramPrereqColDesc =
+  Database.CDBI.Description.ColDesc "\"AdvisorStudyProgram\".\"Prereq\""
+   Database.CDBI.Connection.SQLTypeString
+   (\prereq -> Database.CDBI.Description.sqlString prereq)
+   (\prereq -> Database.CDBI.Description.fromStringOrNull prereq)
+
+--- The description of the database column `Comments` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramCommentsColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+advisorStudyProgramCommentsColDesc =
+  Database.CDBI.Description.ColDesc "\"AdvisorStudyProgram\".\"Comments\""
+   Database.CDBI.Connection.SQLTypeString
+   (\comments -> Database.CDBI.Description.sqlString comments)
+   (\comments -> Database.CDBI.Description.fromStringOrNull comments)
+
+--- The description of the database column `Visible` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramVisibleColDesc
+  :: Database.CDBI.Description.ColumnDescription Bool
+advisorStudyProgramVisibleColDesc =
+  Database.CDBI.Description.ColDesc "\"AdvisorStudyProgram\".\"Visible\""
+   Database.CDBI.Connection.SQLTypeBool
+   (\visible -> Database.CDBI.Connection.SQLBool visible)
+   (\(Database.CDBI.Connection.SQLBool visible) -> visible)
+
+--- The description of the database column `UserStudyAdvisingKey` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramUserStudyAdvisingKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription UserID
+advisorStudyProgramUserStudyAdvisingKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"AdvisorStudyProgram\".\"UserStudyAdvisingKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(UserID userStudyAdvisingKey) ->
+     Database.CDBI.Connection.SQLInt userStudyAdvisingKey)
+   (\(Database.CDBI.Connection.SQLInt userStudyAdvisingKey) ->
+     UserID userStudyAdvisingKey)
+
+--- The description of the database column `StudyProgramStudyProgramsAdvisedKey` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramStudyProgramStudyProgramsAdvisedKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription StudyProgramID
+advisorStudyProgramStudyProgramStudyProgramsAdvisedKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"AdvisorStudyProgram\".\"StudyProgramStudyProgramsAdvisedKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(StudyProgramID studyProgramStudyProgramsAdvisedKey) ->
+     Database.CDBI.Connection.SQLInt studyProgramStudyProgramsAdvisedKey)
+   (\(Database.CDBI.Connection.SQLInt studyProgramStudyProgramsAdvisedKey) ->
+     StudyProgramID studyProgramStudyProgramsAdvisedKey)
+
+--- Gets the attribute `Key` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramKey :: AdvisorStudyProgram -> AdvisorStudyProgramID
+advisorStudyProgramKey (AdvisorStudyProgram a _ _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Name` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramName :: AdvisorStudyProgram -> String
+advisorStudyProgramName (AdvisorStudyProgram _ a _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Term` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramTerm :: AdvisorStudyProgram -> String
+advisorStudyProgramTerm (AdvisorStudyProgram _ _ a _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Year` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramYear :: AdvisorStudyProgram -> Int
+advisorStudyProgramYear (AdvisorStudyProgram _ _ _ a _ _ _ _ _ _) = a
+
+--- Gets the attribute `Desc` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramDesc :: AdvisorStudyProgram -> String
+advisorStudyProgramDesc (AdvisorStudyProgram _ _ _ _ a _ _ _ _ _) = a
+
+--- Gets the attribute `Prereq` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramPrereq :: AdvisorStudyProgram -> String
+advisorStudyProgramPrereq (AdvisorStudyProgram _ _ _ _ _ a _ _ _ _) = a
+
+--- Gets the attribute `Comments` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramComments :: AdvisorStudyProgram -> String
+advisorStudyProgramComments (AdvisorStudyProgram _ _ _ _ _ _ a _ _ _) = a
+
+--- Gets the attribute `Visible` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramVisible :: AdvisorStudyProgram -> Bool
+advisorStudyProgramVisible (AdvisorStudyProgram _ _ _ _ _ _ _ a _ _) = a
+
+--- Gets the attribute `UserStudyAdvisingKey` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramUserStudyAdvisingKey :: AdvisorStudyProgram -> UserID
+advisorStudyProgramUserStudyAdvisingKey
+    (AdvisorStudyProgram _ _ _ _ _ _ _ _ a _) =
+  a
+
+--- Gets the attribute `StudyProgramStudyProgramsAdvisedKey` of the `AdvisorStudyProgram` entity.
+advisorStudyProgramStudyProgramStudyProgramsAdvisedKey
+  :: AdvisorStudyProgram -> StudyProgramID
+advisorStudyProgramStudyProgramStudyProgramsAdvisedKey
+    (AdvisorStudyProgram _ _ _ _ _ _ _ _ _ a) =
+  a
+
+--- Sets the attribute `Key` of the `AdvisorStudyProgram` entity.
+setAdvisorStudyProgramKey
+  :: AdvisorStudyProgram -> AdvisorStudyProgramID -> AdvisorStudyProgram
+setAdvisorStudyProgramKey (AdvisorStudyProgram _ b9 b8 b7 b6 b5 b4 b3 b2 b1) a =
+  AdvisorStudyProgram a b9 b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Name` of the `AdvisorStudyProgram` entity.
+setAdvisorStudyProgramName
+  :: AdvisorStudyProgram -> String -> AdvisorStudyProgram
+setAdvisorStudyProgramName
+    (AdvisorStudyProgram a2 _ b8 b7 b6 b5 b4 b3 b2 b1) a =
+  AdvisorStudyProgram a2 a b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Term` of the `AdvisorStudyProgram` entity.
+setAdvisorStudyProgramTerm
+  :: AdvisorStudyProgram -> String -> AdvisorStudyProgram
+setAdvisorStudyProgramTerm
+    (AdvisorStudyProgram a3 a2 _ b7 b6 b5 b4 b3 b2 b1) a =
+  AdvisorStudyProgram a3 a2 a b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Year` of the `AdvisorStudyProgram` entity.
+setAdvisorStudyProgramYear :: AdvisorStudyProgram -> Int -> AdvisorStudyProgram
+setAdvisorStudyProgramYear
+    (AdvisorStudyProgram a4 a3 a2 _ b6 b5 b4 b3 b2 b1) a =
+  AdvisorStudyProgram a4 a3 a2 a b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Desc` of the `AdvisorStudyProgram` entity.
+setAdvisorStudyProgramDesc
+  :: AdvisorStudyProgram -> String -> AdvisorStudyProgram
+setAdvisorStudyProgramDesc
+    (AdvisorStudyProgram a5 a4 a3 a2 _ b5 b4 b3 b2 b1) a =
+  AdvisorStudyProgram a5 a4 a3 a2 a b5 b4 b3 b2 b1
+
+--- Sets the attribute `Prereq` of the `AdvisorStudyProgram` entity.
+setAdvisorStudyProgramPrereq
+  :: AdvisorStudyProgram -> String -> AdvisorStudyProgram
+setAdvisorStudyProgramPrereq
+    (AdvisorStudyProgram a6 a5 a4 a3 a2 _ b4 b3 b2 b1) a =
+  AdvisorStudyProgram a6 a5 a4 a3 a2 a b4 b3 b2 b1
+
+--- Sets the attribute `Comments` of the `AdvisorStudyProgram` entity.
+setAdvisorStudyProgramComments
+  :: AdvisorStudyProgram -> String -> AdvisorStudyProgram
+setAdvisorStudyProgramComments
+    (AdvisorStudyProgram a7 a6 a5 a4 a3 a2 _ b3 b2 b1) a =
+  AdvisorStudyProgram a7 a6 a5 a4 a3 a2 a b3 b2 b1
+
+--- Sets the attribute `Visible` of the `AdvisorStudyProgram` entity.
+setAdvisorStudyProgramVisible
+  :: AdvisorStudyProgram -> Bool -> AdvisorStudyProgram
+setAdvisorStudyProgramVisible
+    (AdvisorStudyProgram a8 a7 a6 a5 a4 a3 a2 _ b2 b1) a =
+  AdvisorStudyProgram a8 a7 a6 a5 a4 a3 a2 a b2 b1
+
+--- Sets the attribute `UserStudyAdvisingKey` of the `AdvisorStudyProgram` entity.
+setAdvisorStudyProgramUserStudyAdvisingKey
+  :: AdvisorStudyProgram -> UserID -> AdvisorStudyProgram
+setAdvisorStudyProgramUserStudyAdvisingKey
+    (AdvisorStudyProgram a9 a8 a7 a6 a5 a4 a3 a2 _ b1) a =
+  AdvisorStudyProgram a9 a8 a7 a6 a5 a4 a3 a2 a b1
+
+--- Sets the attribute `StudyProgramStudyProgramsAdvisedKey` of the `AdvisorStudyProgram` entity.
+setAdvisorStudyProgramStudyProgramStudyProgramsAdvisedKey
+  :: AdvisorStudyProgram -> StudyProgramID -> AdvisorStudyProgram
+setAdvisorStudyProgramStudyProgramStudyProgramsAdvisedKey
+    (AdvisorStudyProgram a10 a9 a8 a7 a6 a5 a4 a3 a2 _) a =
+  AdvisorStudyProgram a10 a9 a8 a7 a6 a5 a4 a3 a2 a
+
+--- id-to-value function for entity `AdvisorStudyProgram`.
+advisorStudyProgramID
+  :: AdvisorStudyProgramID -> Database.CDBI.Criteria.Value AdvisorStudyProgramID
+advisorStudyProgramID (AdvisorStudyProgramID key) =
+  Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `AdvisorStudyProgram`.
+advisorStudyProgramKeyToInt :: AdvisorStudyProgramID -> Int
+advisorStudyProgramKeyToInt (AdvisorStudyProgramID key) = key
+
+--- Shows the key of a `AdvisorStudyProgram` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showAdvisorStudyProgramKey :: AdvisorStudyProgram -> String
-showAdvisorStudyProgramKey obj =
-  showDatabaseKey "AdvisorStudyProgram" advisorStudyProgramKeyToKey
-   (advisorStudyProgramKey obj)
+showAdvisorStudyProgramKey entry =
+  Database.CDBI.ER.showDatabaseKey "AdvisorStudyProgram"
+   advisorStudyProgramKeyToInt
+   (advisorStudyProgramKey entry)
 
---- Transforms a string into a key of a AdvisorStudyProgram entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readAdvisorStudyProgramKey :: String -> Maybe AdvisorStudyProgramKey
-readAdvisorStudyProgramKey s =
-  readDatabaseKey "AdvisorStudyProgram" AdvisorStudyProgramKey s
+--- Transforms a string into a key of a `AdvisorStudyProgram` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readAdvisorStudyProgramKey :: String -> Maybe AdvisorStudyProgramID
+readAdvisorStudyProgramKey =
+  Database.CDBI.ER.readDatabaseKey "AdvisorStudyProgram" AdvisorStudyProgramID
 
-advisorStudyProgramKeyToKey :: AdvisorStudyProgramKey -> Key
-advisorStudyProgramKeyToKey (AdvisorStudyProgramKey k) = k
+--- Gets all `AdvisorStudyProgram` entities.
+queryAllAdvisorStudyPrograms
+  :: Database.CDBI.Connection.DBAction [AdvisorStudyProgram]
+queryAllAdvisorStudyPrograms =
+  Database.CDBI.ER.getAllEntries advisorStudyProgram_CDBI_Description
 
-maybeAdvisorStudyProgramKeyToKey :: Maybe AdvisorStudyProgramKey -> Maybe Key
-maybeAdvisorStudyProgramKeyToKey Nothing = Nothing
-maybeAdvisorStudyProgramKeyToKey (Just (AdvisorStudyProgramKey k)) = Just k
+--- Gets all `AdvisorStudyProgram` entities satisfying a given predicate.
+queryCondAdvisorStudyProgram
+  :: (AdvisorStudyProgram -> Bool)
+  -> Database.CDBI.Connection.DBAction [AdvisorStudyProgram]
+queryCondAdvisorStudyProgram =
+  Database.CDBI.ER.getCondEntries advisorStudyProgram_CDBI_Description
 
---- Inserts a new AdvisorStudyProgram entity.
+--- Gets a `AdvisorStudyProgram` entry by a given key.
+getAdvisorStudyProgram
+  :: AdvisorStudyProgramID
+  -> Database.CDBI.Connection.DBAction AdvisorStudyProgram
+getAdvisorStudyProgram =
+  Database.CDBI.ER.getEntryWithKey advisorStudyProgram_CDBI_Description
+   advisorStudyProgramColumnKey
+   advisorStudyProgramID
+
+--- Inserts a new `AdvisorStudyProgram` entity.
 newAdvisorStudyProgramWithUserStudyAdvisingKeyWithStudyProgramStudyProgramsAdvisedKey
   :: String
   -> String
@@ -2039,7 +2888,9 @@ newAdvisorStudyProgramWithUserStudyAdvisingKeyWithStudyProgramStudyProgramsAdvis
   -> String
   -> String
   -> String
-  -> Bool -> UserKey -> StudyProgramKey -> Transaction AdvisorStudyProgram
+  -> Bool
+  -> UserID
+  -> StudyProgramID -> Database.CDBI.Connection.DBAction AdvisorStudyProgram
 newAdvisorStudyProgramWithUserStudyAdvisingKeyWithStudyProgramStudyProgramsAdvisedKey
     name_p
     term_p
@@ -2050,216 +2901,661 @@ newAdvisorStudyProgramWithUserStudyAdvisingKeyWithStudyProgramStudyProgramsAdvis
     visible_p
     userStudyAdvisingKey_p
     studyProgramStudyProgramsAdvisedKey_p =
-  existsEntryWithDBKey "User" userEntry (userKeyToKey userStudyAdvisingKey_p)
-   |>> (existsEntryWithDBKey "StudyProgram" studyProgramEntry
-         (studyProgramKeyToKey studyProgramStudyProgramsAdvisedKey_p)
-         |>> newEntry advisorStudyProgramEntry keytuple2AdvisorStudyProgram
-              (name_p
-              ,term_p
-              ,maybe 2015 id year_p
-              ,desc_p
-              ,prereq_p
-              ,comments_p
-              ,visible_p
-              ,userKeyToKey userStudyAdvisingKey_p
-              ,studyProgramKeyToKey studyProgramStudyProgramsAdvisedKey_p))
+  Database.CDBI.ER.insertNewEntry advisorStudyProgram_CDBI_Description
+   setAdvisorStudyProgramKey
+   AdvisorStudyProgramID
+   (AdvisorStudyProgram (AdvisorStudyProgramID 0) name_p term_p
+     (maybe 2015 id year_p)
+     desc_p
+     prereq_p
+     comments_p
+     visible_p
+     userStudyAdvisingKey_p
+     studyProgramStudyProgramsAdvisedKey_p)
 
---- Updates an existing AdvisorStudyProgram entity.
-updateAdvisorStudyProgram :: AdvisorStudyProgram -> Transaction ()
-updateAdvisorStudyProgram advisorStudyProgram_p =
-  existsEntryWithDBKey "User" userEntry
-   (userKeyToKey
-     (advisorStudyProgramUserStudyAdvisingKey advisorStudyProgram_p))
-   |>> (existsEntryWithDBKey "StudyProgram" studyProgramEntry
-         (studyProgramKeyToKey
-           (advisorStudyProgramStudyProgramStudyProgramsAdvisedKey
-             advisorStudyProgram_p))
-         |>> updateDBEntry advisorStudyProgramEntry
-              (advisorStudyProgramKeyToKey
-                (advisorStudyProgramKey advisorStudyProgram_p))
-              (advisorStudyProgram2tuple advisorStudyProgram_p))
+--- Deletes an existing `AdvisorStudyProgram` entry by its key.
+deleteAdvisorStudyProgram
+  :: AdvisorStudyProgram -> Database.CDBI.Connection.DBAction ()
+deleteAdvisorStudyProgram =
+  Database.CDBI.ER.deleteEntry advisorStudyProgram_CDBI_Description
+   advisorStudyProgramColumnKey
+   (advisorStudyProgramID . advisorStudyProgramKey)
 
---- Deletes an existing AdvisorStudyProgram entity.
-deleteAdvisorStudyProgram :: AdvisorStudyProgram -> Transaction ()
-deleteAdvisorStudyProgram advisorStudyProgram_p =
-  requiredForeignDBKey "AdvisorModule" advisorModuleEntry
-   keytuple2AdvisorModule
-   advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
-   (advisorStudyProgramKey advisorStudyProgram_p)
-   |>> deleteDBEntry advisorStudyProgramEntry
-        (advisorStudyProgramKeyToKey
-          (advisorStudyProgramKey advisorStudyProgram_p))
+--- Updates an existing `AdvisorStudyProgram` entry by its key.
+updateAdvisorStudyProgram
+  :: AdvisorStudyProgram -> Database.CDBI.Connection.DBAction ()
+updateAdvisorStudyProgram =
+  Database.CDBI.ER.updateEntry advisorStudyProgram_CDBI_Description
 
---- Gets a AdvisorStudyProgram entity stored in the database with the given key.
-getAdvisorStudyProgram
-  :: AdvisorStudyProgramKey -> Transaction AdvisorStudyProgram
-getAdvisorStudyProgram key =
-  getEntry advisorStudyProgramEntry keytuple2AdvisorStudyProgram
-   (advisorStudyProgramKeyToKey key)
+--- The ER description of the `AdvisorModule` entity.
+advisorModule_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription AdvisorModule
+advisorModule_CDBI_Description =
+  Database.CDBI.Description.ED "AdvisorModule"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeBool
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(AdvisorModule
+       (AdvisorModuleID key)
+       mandatory
+       (AdvisorStudyProgramID advisorStudyProgramAdvisorProgramModulesKey)
+       (CategoryID categoryAdvisorCategorizingKey)
+       (ModInstID modInstAdvisedProgramModuleInstancesKey)) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLBool mandatory
+     ,Database.CDBI.Connection.SQLInt
+       advisorStudyProgramAdvisorProgramModulesKey
+     ,Database.CDBI.Connection.SQLInt categoryAdvisorCategorizingKey
+     ,Database.CDBI.Connection.SQLInt modInstAdvisedProgramModuleInstancesKey])
+   (\(AdvisorModule
+       _
+       mandatory
+       (AdvisorStudyProgramID advisorStudyProgramAdvisorProgramModulesKey)
+       (CategoryID categoryAdvisorCategorizingKey)
+       (ModInstID modInstAdvisedProgramModuleInstancesKey)) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLBool mandatory
+     ,Database.CDBI.Connection.SQLInt
+       advisorStudyProgramAdvisorProgramModulesKey
+     ,Database.CDBI.Connection.SQLInt categoryAdvisorCategorizingKey
+     ,Database.CDBI.Connection.SQLInt modInstAdvisedProgramModuleInstancesKey])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLBool mandatory
+     ,Database.CDBI.Connection.SQLInt
+       advisorStudyProgramAdvisorProgramModulesKey
+     ,Database.CDBI.Connection.SQLInt categoryAdvisorCategorizingKey
+     ,Database.CDBI.Connection.SQLInt
+       modInstAdvisedProgramModuleInstancesKey] ->
+     AdvisorModule (AdvisorModuleID key) mandatory
+      (AdvisorStudyProgramID advisorStudyProgramAdvisorProgramModulesKey)
+      (CategoryID categoryAdvisorCategorizingKey)
+      (ModInstID modInstAdvisedProgramModuleInstancesKey))
 
---- Gets all AdvisorStudyProgram entities stored in the database.
-queryAllAdvisorStudyPrograms :: Query [AdvisorStudyProgram]
-queryAllAdvisorStudyPrograms =
-  transformQ (map (uncurry keytuple2AdvisorStudyProgram))
-   (allDBKeyInfos advisorStudyProgramEntry)
+--- The database table of the `AdvisorModule` entity.
+advisorModuleTable :: Database.CDBI.Description.Table
+advisorModuleTable = "AdvisorModule"
 
---- Gets all AdvisorStudyProgram entities satisfying a given condition.
-queryCondAdvisorStudyProgram
-  :: (AdvisorStudyProgram -> Bool) -> Query [AdvisorStudyProgram]
-queryCondAdvisorStudyProgram econd =
-  transformQ (filter econd) queryAllAdvisorStudyPrograms
+--- The database column `Key` of the `AdvisorModule` entity.
+advisorModuleColumnKey :: Database.CDBI.Description.Column AdvisorModuleID
+advisorModuleColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"AdvisorModule\".\"Key\""
 
---- Database predicate representing the relation between keys and AdvisorModule tuple entities.
-advisorModuleEntry :: Key -> AdvisorModuleTuple -> Dynamic
-advisorModuleEntry =
-  persistentSQLite dbFile "AdvisorModule"
-   ["Mandatory"
-   ,"AdvisorStudyProgramAdvisorProgramModulesKey"
-   ,"CategoryAdvisorCategorizingKey"
-   ,"ModInstAdvisedProgramModuleInstancesKey"]
+--- The database column `Mandatory` of the `AdvisorModule` entity.
+advisorModuleColumnMandatory :: Database.CDBI.Description.Column Bool
+advisorModuleColumnMandatory =
+  Database.CDBI.Description.Column "\"Mandatory\""
+   "\"AdvisorModule\".\"Mandatory\""
 
---- Dynamic predicate representing the relation
---- between keys and AdvisorModule entities.
-advisorModule :: AdvisorModuleKey -> AdvisorModule -> Dynamic
-advisorModule key obj
-  | key =:= advisorModuleKey obj
-  = advisorModuleEntry (advisorModuleKeyToKey key) (advisorModule2tuple obj)
+--- The database column `AdvisorStudyProgramAdvisorProgramModulesKey` of the `AdvisorModule` entity.
+advisorModuleColumnAdvisorStudyProgramAdvisorProgramModulesKey
+  :: Database.CDBI.Description.Column AdvisorStudyProgramID
+advisorModuleColumnAdvisorStudyProgramAdvisorProgramModulesKey =
+  Database.CDBI.Description.Column
+   "\"AdvisorStudyProgramAdvisorProgramModulesKey\""
+   "\"AdvisorModule\".\"AdvisorStudyProgramAdvisorProgramModulesKey\""
 
---- Gets the key of a AdvisorModule entity.
-advisorModuleKey :: AdvisorModule -> AdvisorModuleKey
-advisorModuleKey (AdvisorModule x _ _ _ _) = AdvisorModuleKey x
+--- The database column `CategoryAdvisorCategorizingKey` of the `AdvisorModule` entity.
+advisorModuleColumnCategoryAdvisorCategorizingKey
+  :: Database.CDBI.Description.Column CategoryID
+advisorModuleColumnCategoryAdvisorCategorizingKey =
+  Database.CDBI.Description.Column "\"CategoryAdvisorCategorizingKey\""
+   "\"AdvisorModule\".\"CategoryAdvisorCategorizingKey\""
 
---- Shows the key of a AdvisorModule entity as a string.
+--- The database column `ModInstAdvisedProgramModuleInstancesKey` of the `AdvisorModule` entity.
+advisorModuleColumnModInstAdvisedProgramModuleInstancesKey
+  :: Database.CDBI.Description.Column ModInstID
+advisorModuleColumnModInstAdvisedProgramModuleInstancesKey =
+  Database.CDBI.Description.Column "\"ModInstAdvisedProgramModuleInstancesKey\""
+   "\"AdvisorModule\".\"ModInstAdvisedProgramModuleInstancesKey\""
+
+--- The description of the database column `Key` of the `AdvisorModule` entity.
+advisorModuleKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription AdvisorModuleID
+advisorModuleKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"AdvisorModule\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(AdvisorModuleID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> AdvisorModuleID key)
+
+--- The description of the database column `Mandatory` of the `AdvisorModule` entity.
+advisorModuleMandatoryColDesc
+  :: Database.CDBI.Description.ColumnDescription Bool
+advisorModuleMandatoryColDesc =
+  Database.CDBI.Description.ColDesc "\"AdvisorModule\".\"Mandatory\""
+   Database.CDBI.Connection.SQLTypeBool
+   (\mandatory -> Database.CDBI.Connection.SQLBool mandatory)
+   (\(Database.CDBI.Connection.SQLBool mandatory) -> mandatory)
+
+--- The description of the database column `AdvisorStudyProgramAdvisorProgramModulesKey` of the `AdvisorModule` entity.
+advisorModuleAdvisorStudyProgramAdvisorProgramModulesKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription AdvisorStudyProgramID
+advisorModuleAdvisorStudyProgramAdvisorProgramModulesKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"AdvisorModule\".\"AdvisorStudyProgramAdvisorProgramModulesKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(AdvisorStudyProgramID advisorStudyProgramAdvisorProgramModulesKey) ->
+     Database.CDBI.Connection.SQLInt
+      advisorStudyProgramAdvisorProgramModulesKey)
+   (\(Database.CDBI.Connection.SQLInt
+       advisorStudyProgramAdvisorProgramModulesKey) ->
+     AdvisorStudyProgramID advisorStudyProgramAdvisorProgramModulesKey)
+
+--- The description of the database column `CategoryAdvisorCategorizingKey` of the `AdvisorModule` entity.
+advisorModuleCategoryAdvisorCategorizingKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription CategoryID
+advisorModuleCategoryAdvisorCategorizingKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"AdvisorModule\".\"CategoryAdvisorCategorizingKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(CategoryID categoryAdvisorCategorizingKey) ->
+     Database.CDBI.Connection.SQLInt categoryAdvisorCategorizingKey)
+   (\(Database.CDBI.Connection.SQLInt categoryAdvisorCategorizingKey) ->
+     CategoryID categoryAdvisorCategorizingKey)
+
+--- The description of the database column `ModInstAdvisedProgramModuleInstancesKey` of the `AdvisorModule` entity.
+advisorModuleModInstAdvisedProgramModuleInstancesKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription ModInstID
+advisorModuleModInstAdvisedProgramModuleInstancesKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"AdvisorModule\".\"ModInstAdvisedProgramModuleInstancesKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(ModInstID modInstAdvisedProgramModuleInstancesKey) ->
+     Database.CDBI.Connection.SQLInt modInstAdvisedProgramModuleInstancesKey)
+   (\(Database.CDBI.Connection.SQLInt
+       modInstAdvisedProgramModuleInstancesKey) ->
+     ModInstID modInstAdvisedProgramModuleInstancesKey)
+
+--- Gets the attribute `Key` of the `AdvisorModule` entity.
+advisorModuleKey :: AdvisorModule -> AdvisorModuleID
+advisorModuleKey (AdvisorModule a _ _ _ _) = a
+
+--- Gets the attribute `Mandatory` of the `AdvisorModule` entity.
+advisorModuleMandatory :: AdvisorModule -> Bool
+advisorModuleMandatory (AdvisorModule _ a _ _ _) = a
+
+--- Gets the attribute `AdvisorStudyProgramAdvisorProgramModulesKey` of the `AdvisorModule` entity.
+advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+  :: AdvisorModule -> AdvisorStudyProgramID
+advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+    (AdvisorModule _ _ a _ _) =
+  a
+
+--- Gets the attribute `CategoryAdvisorCategorizingKey` of the `AdvisorModule` entity.
+advisorModuleCategoryAdvisorCategorizingKey :: AdvisorModule -> CategoryID
+advisorModuleCategoryAdvisorCategorizingKey (AdvisorModule _ _ _ a _) = a
+
+--- Gets the attribute `ModInstAdvisedProgramModuleInstancesKey` of the `AdvisorModule` entity.
+advisorModuleModInstAdvisedProgramModuleInstancesKey
+  :: AdvisorModule -> ModInstID
+advisorModuleModInstAdvisedProgramModuleInstancesKey (AdvisorModule _ _ _ _ a) =
+  a
+
+--- Sets the attribute `Key` of the `AdvisorModule` entity.
+setAdvisorModuleKey :: AdvisorModule -> AdvisorModuleID -> AdvisorModule
+setAdvisorModuleKey (AdvisorModule _ b4 b3 b2 b1) a =
+  AdvisorModule a b4 b3 b2 b1
+
+--- Sets the attribute `Mandatory` of the `AdvisorModule` entity.
+setAdvisorModuleMandatory :: AdvisorModule -> Bool -> AdvisorModule
+setAdvisorModuleMandatory (AdvisorModule a2 _ b3 b2 b1) a =
+  AdvisorModule a2 a b3 b2 b1
+
+--- Sets the attribute `AdvisorStudyProgramAdvisorProgramModulesKey` of the `AdvisorModule` entity.
+setAdvisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+  :: AdvisorModule -> AdvisorStudyProgramID -> AdvisorModule
+setAdvisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
+    (AdvisorModule a3 a2 _ b2 b1) a =
+  AdvisorModule a3 a2 a b2 b1
+
+--- Sets the attribute `CategoryAdvisorCategorizingKey` of the `AdvisorModule` entity.
+setAdvisorModuleCategoryAdvisorCategorizingKey
+  :: AdvisorModule -> CategoryID -> AdvisorModule
+setAdvisorModuleCategoryAdvisorCategorizingKey (AdvisorModule a4 a3 a2 _ b1) a =
+  AdvisorModule a4 a3 a2 a b1
+
+--- Sets the attribute `ModInstAdvisedProgramModuleInstancesKey` of the `AdvisorModule` entity.
+setAdvisorModuleModInstAdvisedProgramModuleInstancesKey
+  :: AdvisorModule -> ModInstID -> AdvisorModule
+setAdvisorModuleModInstAdvisedProgramModuleInstancesKey
+    (AdvisorModule a5 a4 a3 a2 _) a =
+  AdvisorModule a5 a4 a3 a2 a
+
+--- id-to-value function for entity `AdvisorModule`.
+advisorModuleID
+  :: AdvisorModuleID -> Database.CDBI.Criteria.Value AdvisorModuleID
+advisorModuleID (AdvisorModuleID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `AdvisorModule`.
+advisorModuleKeyToInt :: AdvisorModuleID -> Int
+advisorModuleKeyToInt (AdvisorModuleID key) = key
+
+--- Shows the key of a `AdvisorModule` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showAdvisorModuleKey :: AdvisorModule -> String
-showAdvisorModuleKey obj =
-  showDatabaseKey "AdvisorModule" advisorModuleKeyToKey (advisorModuleKey obj)
+showAdvisorModuleKey entry =
+  Database.CDBI.ER.showDatabaseKey "AdvisorModule" advisorModuleKeyToInt
+   (advisorModuleKey entry)
 
---- Transforms a string into a key of a AdvisorModule entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readAdvisorModuleKey :: String -> Maybe AdvisorModuleKey
-readAdvisorModuleKey s = readDatabaseKey "AdvisorModule" AdvisorModuleKey s
+--- Transforms a string into a key of a `AdvisorModule` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readAdvisorModuleKey :: String -> Maybe AdvisorModuleID
+readAdvisorModuleKey =
+  Database.CDBI.ER.readDatabaseKey "AdvisorModule" AdvisorModuleID
 
-advisorModuleKeyToKey :: AdvisorModuleKey -> Key
-advisorModuleKeyToKey (AdvisorModuleKey k) = k
+--- Gets all `AdvisorModule` entities.
+queryAllAdvisorModules :: Database.CDBI.Connection.DBAction [AdvisorModule]
+queryAllAdvisorModules =
+  Database.CDBI.ER.getAllEntries advisorModule_CDBI_Description
 
-maybeAdvisorModuleKeyToKey :: Maybe AdvisorModuleKey -> Maybe Key
-maybeAdvisorModuleKeyToKey Nothing = Nothing
-maybeAdvisorModuleKeyToKey (Just (AdvisorModuleKey k)) = Just k
+--- Gets all `AdvisorModule` entities satisfying a given predicate.
+queryCondAdvisorModule
+  :: (AdvisorModule -> Bool)
+  -> Database.CDBI.Connection.DBAction [AdvisorModule]
+queryCondAdvisorModule =
+  Database.CDBI.ER.getCondEntries advisorModule_CDBI_Description
 
---- Inserts a new AdvisorModule entity.
+--- Gets a `AdvisorModule` entry by a given key.
+getAdvisorModule
+  :: AdvisorModuleID -> Database.CDBI.Connection.DBAction AdvisorModule
+getAdvisorModule =
+  Database.CDBI.ER.getEntryWithKey advisorModule_CDBI_Description
+   advisorModuleColumnKey
+   advisorModuleID
+
+--- Inserts a new `AdvisorModule` entity.
 newAdvisorModuleWithAdvisorStudyProgramAdvisorProgramModulesKeyWithCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
   :: Bool
-  -> AdvisorStudyProgramKey
-  -> CategoryKey -> ModInstKey -> Transaction AdvisorModule
+  -> AdvisorStudyProgramID
+  -> CategoryID -> ModInstID -> Database.CDBI.Connection.DBAction AdvisorModule
 newAdvisorModuleWithAdvisorStudyProgramAdvisorProgramModulesKeyWithCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
     mandatory_p
     advisorStudyProgramAdvisorProgramModulesKey_p
     categoryAdvisorCategorizingKey_p
     modInstAdvisedProgramModuleInstancesKey_p =
-  existsEntryWithDBKey "AdvisorStudyProgram" advisorStudyProgramEntry
-   (advisorStudyProgramKeyToKey advisorStudyProgramAdvisorProgramModulesKey_p)
-   |>> (existsEntryWithDBKey "Category" categoryEntry
-         (categoryKeyToKey categoryAdvisorCategorizingKey_p)
-         |>> (existsEntryWithDBKey "ModInst" modInstEntry
-               (modInstKeyToKey modInstAdvisedProgramModuleInstancesKey_p)
-               |>> newEntry advisorModuleEntry keytuple2AdvisorModule
-                    (mandatory_p
-                    ,advisorStudyProgramKeyToKey
-                      advisorStudyProgramAdvisorProgramModulesKey_p
-                    ,categoryKeyToKey categoryAdvisorCategorizingKey_p
-                    ,modInstKeyToKey
-                      modInstAdvisedProgramModuleInstancesKey_p)))
+  Database.CDBI.ER.insertNewEntry advisorModule_CDBI_Description
+   setAdvisorModuleKey
+   AdvisorModuleID
+   (AdvisorModule (AdvisorModuleID 0) mandatory_p
+     advisorStudyProgramAdvisorProgramModulesKey_p
+     categoryAdvisorCategorizingKey_p
+     modInstAdvisedProgramModuleInstancesKey_p)
 
---- Updates an existing AdvisorModule entity.
-updateAdvisorModule :: AdvisorModule -> Transaction ()
-updateAdvisorModule advisorModule_p =
-  existsEntryWithDBKey "AdvisorStudyProgram" advisorStudyProgramEntry
-   (advisorStudyProgramKeyToKey
-     (advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
-       advisorModule_p))
-   |>> (existsEntryWithDBKey "Category" categoryEntry
-         (categoryKeyToKey
-           (advisorModuleCategoryAdvisorCategorizingKey advisorModule_p))
-         |>> (existsEntryWithDBKey "ModInst" modInstEntry
-               (modInstKeyToKey
-                 (advisorModuleModInstAdvisedProgramModuleInstancesKey
-                   advisorModule_p))
-               |>> updateDBEntry advisorModuleEntry
-                    (advisorModuleKeyToKey (advisorModuleKey advisorModule_p))
-                    (advisorModule2tuple advisorModule_p)))
+--- Deletes an existing `AdvisorModule` entry by its key.
+deleteAdvisorModule :: AdvisorModule -> Database.CDBI.Connection.DBAction ()
+deleteAdvisorModule =
+  Database.CDBI.ER.deleteEntry advisorModule_CDBI_Description
+   advisorModuleColumnKey
+   (advisorModuleID . advisorModuleKey)
 
---- Deletes an existing AdvisorModule entity.
-deleteAdvisorModule :: AdvisorModule -> Transaction ()
-deleteAdvisorModule advisorModule_p =
-  deleteDBEntry advisorModuleEntry
-   (advisorModuleKeyToKey (advisorModuleKey advisorModule_p))
+--- Updates an existing `AdvisorModule` entry by its key.
+updateAdvisorModule :: AdvisorModule -> Database.CDBI.Connection.DBAction ()
+updateAdvisorModule =
+  Database.CDBI.ER.updateEntry advisorModule_CDBI_Description
 
---- Gets a AdvisorModule entity stored in the database with the given key.
-getAdvisorModule :: AdvisorModuleKey -> Transaction AdvisorModule
-getAdvisorModule key =
-  getEntry advisorModuleEntry keytuple2AdvisorModule
-   (advisorModuleKeyToKey key)
+--- The ER description of the `MasterProgram` entity.
+masterProgram_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription MasterProgram
+masterProgram_CDBI_Description =
+  Database.CDBI.Description.ED "MasterProgram"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeBool
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(MasterProgram
+       (MasterProgramID key)
+       name
+       term
+       year
+       desc
+       prereq
+       comments
+       visible
+       (UserID userAdvisingKey)
+       (MasterCoreAreaID masterCoreAreaAreaProgramsKey)) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,Database.CDBI.Description.sqlString desc
+     ,Database.CDBI.Description.sqlString prereq
+     ,Database.CDBI.Description.sqlString comments
+     ,Database.CDBI.Connection.SQLBool visible
+     ,Database.CDBI.Connection.SQLInt userAdvisingKey
+     ,Database.CDBI.Connection.SQLInt masterCoreAreaAreaProgramsKey])
+   (\(MasterProgram
+       _
+       name
+       term
+       year
+       desc
+       prereq
+       comments
+       visible
+       (UserID userAdvisingKey)
+       (MasterCoreAreaID masterCoreAreaAreaProgramsKey)) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,Database.CDBI.Description.sqlString desc
+     ,Database.CDBI.Description.sqlString prereq
+     ,Database.CDBI.Description.sqlString comments
+     ,Database.CDBI.Connection.SQLBool visible
+     ,Database.CDBI.Connection.SQLInt userAdvisingKey
+     ,Database.CDBI.Connection.SQLInt masterCoreAreaAreaProgramsKey])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,desc
+     ,prereq
+     ,comments
+     ,Database.CDBI.Connection.SQLBool visible
+     ,Database.CDBI.Connection.SQLInt userAdvisingKey
+     ,Database.CDBI.Connection.SQLInt masterCoreAreaAreaProgramsKey] ->
+     MasterProgram (MasterProgramID key) name term year
+      (Database.CDBI.Description.fromStringOrNull desc)
+      (Database.CDBI.Description.fromStringOrNull prereq)
+      (Database.CDBI.Description.fromStringOrNull comments)
+      visible
+      (UserID userAdvisingKey)
+      (MasterCoreAreaID masterCoreAreaAreaProgramsKey))
 
---- Gets all AdvisorModule entities stored in the database.
-queryAllAdvisorModules :: Query [AdvisorModule]
-queryAllAdvisorModules =
-  transformQ (map (uncurry keytuple2AdvisorModule))
-   (allDBKeyInfos advisorModuleEntry)
+--- The database table of the `MasterProgram` entity.
+masterProgramTable :: Database.CDBI.Description.Table
+masterProgramTable = "MasterProgram"
 
---- Gets all AdvisorModule entities satisfying a given condition.
-queryCondAdvisorModule :: (AdvisorModule -> Bool) -> Query [AdvisorModule]
-queryCondAdvisorModule econd =
-  transformQ (filter econd) queryAllAdvisorModules
+--- The database column `Key` of the `MasterProgram` entity.
+masterProgramColumnKey :: Database.CDBI.Description.Column MasterProgramID
+masterProgramColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"MasterProgram\".\"Key\""
 
---- Database predicate representing the relation between keys and MasterProgram tuple entities.
-masterProgramEntry :: Key -> MasterProgramTuple -> Dynamic
-masterProgramEntry =
-  persistentSQLite dbFile "MasterProgram"
-   ["Name"
-   ,"Term"
-   ,"Year"
-   ,"Desc"
-   ,"Prereq"
-   ,"Comments"
-   ,"Visible"
-   ,"UserAdvisingKey"
-   ,"MasterCoreAreaAreaProgramsKey"]
+--- The database column `Name` of the `MasterProgram` entity.
+masterProgramColumnName :: Database.CDBI.Description.Column String
+masterProgramColumnName =
+  Database.CDBI.Description.Column "\"Name\"" "\"MasterProgram\".\"Name\""
 
---- Dynamic predicate representing the relation
---- between keys and MasterProgram entities.
-masterProgram :: MasterProgramKey -> MasterProgram -> Dynamic
-masterProgram key obj
-  | key =:= masterProgramKey obj
-  = masterProgramEntry (masterProgramKeyToKey key) (masterProgram2tuple obj)
+--- The database column `Term` of the `MasterProgram` entity.
+masterProgramColumnTerm :: Database.CDBI.Description.Column String
+masterProgramColumnTerm =
+  Database.CDBI.Description.Column "\"Term\"" "\"MasterProgram\".\"Term\""
 
---- Gets the key of a MasterProgram entity.
-masterProgramKey :: MasterProgram -> MasterProgramKey
-masterProgramKey (MasterProgram x _ _ _ _ _ _ _ _ _) = MasterProgramKey x
+--- The database column `Year` of the `MasterProgram` entity.
+masterProgramColumnYear :: Database.CDBI.Description.Column Int
+masterProgramColumnYear =
+  Database.CDBI.Description.Column "\"Year\"" "\"MasterProgram\".\"Year\""
 
---- Shows the key of a MasterProgram entity as a string.
+--- The database column `Desc` of the `MasterProgram` entity.
+masterProgramColumnDesc :: Database.CDBI.Description.Column String
+masterProgramColumnDesc =
+  Database.CDBI.Description.Column "\"Desc\"" "\"MasterProgram\".\"Desc\""
+
+--- The database column `Prereq` of the `MasterProgram` entity.
+masterProgramColumnPrereq :: Database.CDBI.Description.Column String
+masterProgramColumnPrereq =
+  Database.CDBI.Description.Column "\"Prereq\"" "\"MasterProgram\".\"Prereq\""
+
+--- The database column `Comments` of the `MasterProgram` entity.
+masterProgramColumnComments :: Database.CDBI.Description.Column String
+masterProgramColumnComments =
+  Database.CDBI.Description.Column "\"Comments\""
+   "\"MasterProgram\".\"Comments\""
+
+--- The database column `Visible` of the `MasterProgram` entity.
+masterProgramColumnVisible :: Database.CDBI.Description.Column Bool
+masterProgramColumnVisible =
+  Database.CDBI.Description.Column "\"Visible\"" "\"MasterProgram\".\"Visible\""
+
+--- The database column `UserAdvisingKey` of the `MasterProgram` entity.
+masterProgramColumnUserAdvisingKey :: Database.CDBI.Description.Column UserID
+masterProgramColumnUserAdvisingKey =
+  Database.CDBI.Description.Column "\"UserAdvisingKey\""
+   "\"MasterProgram\".\"UserAdvisingKey\""
+
+--- The database column `MasterCoreAreaAreaProgramsKey` of the `MasterProgram` entity.
+masterProgramColumnMasterCoreAreaAreaProgramsKey
+  :: Database.CDBI.Description.Column MasterCoreAreaID
+masterProgramColumnMasterCoreAreaAreaProgramsKey =
+  Database.CDBI.Description.Column "\"MasterCoreAreaAreaProgramsKey\""
+   "\"MasterProgram\".\"MasterCoreAreaAreaProgramsKey\""
+
+--- The description of the database column `Key` of the `MasterProgram` entity.
+masterProgramKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription MasterProgramID
+masterProgramKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgram\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(MasterProgramID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> MasterProgramID key)
+
+--- The description of the database column `Name` of the `MasterProgram` entity.
+masterProgramNameColDesc :: Database.CDBI.Description.ColumnDescription String
+masterProgramNameColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgram\".\"Name\""
+   Database.CDBI.Connection.SQLTypeString
+   (\name -> Database.CDBI.Connection.SQLString name)
+   (\(Database.CDBI.Connection.SQLString name) -> name)
+
+--- The description of the database column `Term` of the `MasterProgram` entity.
+masterProgramTermColDesc :: Database.CDBI.Description.ColumnDescription String
+masterProgramTermColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgram\".\"Term\""
+   Database.CDBI.Connection.SQLTypeString
+   (\term -> Database.CDBI.Connection.SQLString term)
+   (\(Database.CDBI.Connection.SQLString term) -> term)
+
+--- The description of the database column `Year` of the `MasterProgram` entity.
+masterProgramYearColDesc :: Database.CDBI.Description.ColumnDescription Int
+masterProgramYearColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgram\".\"Year\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\year -> Database.CDBI.Connection.SQLInt year)
+   (\(Database.CDBI.Connection.SQLInt year) -> year)
+
+--- The description of the database column `Desc` of the `MasterProgram` entity.
+masterProgramDescColDesc :: Database.CDBI.Description.ColumnDescription String
+masterProgramDescColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgram\".\"Desc\""
+   Database.CDBI.Connection.SQLTypeString
+   (\desc -> Database.CDBI.Description.sqlString desc)
+   (\desc -> Database.CDBI.Description.fromStringOrNull desc)
+
+--- The description of the database column `Prereq` of the `MasterProgram` entity.
+masterProgramPrereqColDesc :: Database.CDBI.Description.ColumnDescription String
+masterProgramPrereqColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgram\".\"Prereq\""
+   Database.CDBI.Connection.SQLTypeString
+   (\prereq -> Database.CDBI.Description.sqlString prereq)
+   (\prereq -> Database.CDBI.Description.fromStringOrNull prereq)
+
+--- The description of the database column `Comments` of the `MasterProgram` entity.
+masterProgramCommentsColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+masterProgramCommentsColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgram\".\"Comments\""
+   Database.CDBI.Connection.SQLTypeString
+   (\comments -> Database.CDBI.Description.sqlString comments)
+   (\comments -> Database.CDBI.Description.fromStringOrNull comments)
+
+--- The description of the database column `Visible` of the `MasterProgram` entity.
+masterProgramVisibleColDesc :: Database.CDBI.Description.ColumnDescription Bool
+masterProgramVisibleColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgram\".\"Visible\""
+   Database.CDBI.Connection.SQLTypeBool
+   (\visible -> Database.CDBI.Connection.SQLBool visible)
+   (\(Database.CDBI.Connection.SQLBool visible) -> visible)
+
+--- The description of the database column `UserAdvisingKey` of the `MasterProgram` entity.
+masterProgramUserAdvisingKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription UserID
+masterProgramUserAdvisingKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgram\".\"UserAdvisingKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(UserID userAdvisingKey) ->
+     Database.CDBI.Connection.SQLInt userAdvisingKey)
+   (\(Database.CDBI.Connection.SQLInt userAdvisingKey) ->
+     UserID userAdvisingKey)
+
+--- The description of the database column `MasterCoreAreaAreaProgramsKey` of the `MasterProgram` entity.
+masterProgramMasterCoreAreaAreaProgramsKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription MasterCoreAreaID
+masterProgramMasterCoreAreaAreaProgramsKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"MasterProgram\".\"MasterCoreAreaAreaProgramsKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(MasterCoreAreaID masterCoreAreaAreaProgramsKey) ->
+     Database.CDBI.Connection.SQLInt masterCoreAreaAreaProgramsKey)
+   (\(Database.CDBI.Connection.SQLInt masterCoreAreaAreaProgramsKey) ->
+     MasterCoreAreaID masterCoreAreaAreaProgramsKey)
+
+--- Gets the attribute `Key` of the `MasterProgram` entity.
+masterProgramKey :: MasterProgram -> MasterProgramID
+masterProgramKey (MasterProgram a _ _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Name` of the `MasterProgram` entity.
+masterProgramName :: MasterProgram -> String
+masterProgramName (MasterProgram _ a _ _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Term` of the `MasterProgram` entity.
+masterProgramTerm :: MasterProgram -> String
+masterProgramTerm (MasterProgram _ _ a _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `Year` of the `MasterProgram` entity.
+masterProgramYear :: MasterProgram -> Int
+masterProgramYear (MasterProgram _ _ _ a _ _ _ _ _ _) = a
+
+--- Gets the attribute `Desc` of the `MasterProgram` entity.
+masterProgramDesc :: MasterProgram -> String
+masterProgramDesc (MasterProgram _ _ _ _ a _ _ _ _ _) = a
+
+--- Gets the attribute `Prereq` of the `MasterProgram` entity.
+masterProgramPrereq :: MasterProgram -> String
+masterProgramPrereq (MasterProgram _ _ _ _ _ a _ _ _ _) = a
+
+--- Gets the attribute `Comments` of the `MasterProgram` entity.
+masterProgramComments :: MasterProgram -> String
+masterProgramComments (MasterProgram _ _ _ _ _ _ a _ _ _) = a
+
+--- Gets the attribute `Visible` of the `MasterProgram` entity.
+masterProgramVisible :: MasterProgram -> Bool
+masterProgramVisible (MasterProgram _ _ _ _ _ _ _ a _ _) = a
+
+--- Gets the attribute `UserAdvisingKey` of the `MasterProgram` entity.
+masterProgramUserAdvisingKey :: MasterProgram -> UserID
+masterProgramUserAdvisingKey (MasterProgram _ _ _ _ _ _ _ _ a _) = a
+
+--- Gets the attribute `MasterCoreAreaAreaProgramsKey` of the `MasterProgram` entity.
+masterProgramMasterCoreAreaAreaProgramsKey :: MasterProgram -> MasterCoreAreaID
+masterProgramMasterCoreAreaAreaProgramsKey (MasterProgram _ _ _ _ _ _ _ _ _ a) =
+  a
+
+--- Sets the attribute `Key` of the `MasterProgram` entity.
+setMasterProgramKey :: MasterProgram -> MasterProgramID -> MasterProgram
+setMasterProgramKey (MasterProgram _ b9 b8 b7 b6 b5 b4 b3 b2 b1) a =
+  MasterProgram a b9 b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Name` of the `MasterProgram` entity.
+setMasterProgramName :: MasterProgram -> String -> MasterProgram
+setMasterProgramName (MasterProgram a2 _ b8 b7 b6 b5 b4 b3 b2 b1) a =
+  MasterProgram a2 a b8 b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Term` of the `MasterProgram` entity.
+setMasterProgramTerm :: MasterProgram -> String -> MasterProgram
+setMasterProgramTerm (MasterProgram a3 a2 _ b7 b6 b5 b4 b3 b2 b1) a =
+  MasterProgram a3 a2 a b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Year` of the `MasterProgram` entity.
+setMasterProgramYear :: MasterProgram -> Int -> MasterProgram
+setMasterProgramYear (MasterProgram a4 a3 a2 _ b6 b5 b4 b3 b2 b1) a =
+  MasterProgram a4 a3 a2 a b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Desc` of the `MasterProgram` entity.
+setMasterProgramDesc :: MasterProgram -> String -> MasterProgram
+setMasterProgramDesc (MasterProgram a5 a4 a3 a2 _ b5 b4 b3 b2 b1) a =
+  MasterProgram a5 a4 a3 a2 a b5 b4 b3 b2 b1
+
+--- Sets the attribute `Prereq` of the `MasterProgram` entity.
+setMasterProgramPrereq :: MasterProgram -> String -> MasterProgram
+setMasterProgramPrereq (MasterProgram a6 a5 a4 a3 a2 _ b4 b3 b2 b1) a =
+  MasterProgram a6 a5 a4 a3 a2 a b4 b3 b2 b1
+
+--- Sets the attribute `Comments` of the `MasterProgram` entity.
+setMasterProgramComments :: MasterProgram -> String -> MasterProgram
+setMasterProgramComments (MasterProgram a7 a6 a5 a4 a3 a2 _ b3 b2 b1) a =
+  MasterProgram a7 a6 a5 a4 a3 a2 a b3 b2 b1
+
+--- Sets the attribute `Visible` of the `MasterProgram` entity.
+setMasterProgramVisible :: MasterProgram -> Bool -> MasterProgram
+setMasterProgramVisible (MasterProgram a8 a7 a6 a5 a4 a3 a2 _ b2 b1) a =
+  MasterProgram a8 a7 a6 a5 a4 a3 a2 a b2 b1
+
+--- Sets the attribute `UserAdvisingKey` of the `MasterProgram` entity.
+setMasterProgramUserAdvisingKey :: MasterProgram -> UserID -> MasterProgram
+setMasterProgramUserAdvisingKey (MasterProgram a9 a8 a7 a6 a5 a4 a3 a2 _ b1) a =
+  MasterProgram a9 a8 a7 a6 a5 a4 a3 a2 a b1
+
+--- Sets the attribute `MasterCoreAreaAreaProgramsKey` of the `MasterProgram` entity.
+setMasterProgramMasterCoreAreaAreaProgramsKey
+  :: MasterProgram -> MasterCoreAreaID -> MasterProgram
+setMasterProgramMasterCoreAreaAreaProgramsKey
+    (MasterProgram a10 a9 a8 a7 a6 a5 a4 a3 a2 _) a =
+  MasterProgram a10 a9 a8 a7 a6 a5 a4 a3 a2 a
+
+--- id-to-value function for entity `MasterProgram`.
+masterProgramID
+  :: MasterProgramID -> Database.CDBI.Criteria.Value MasterProgramID
+masterProgramID (MasterProgramID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `MasterProgram`.
+masterProgramKeyToInt :: MasterProgramID -> Int
+masterProgramKeyToInt (MasterProgramID key) = key
+
+--- Shows the key of a `MasterProgram` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showMasterProgramKey :: MasterProgram -> String
-showMasterProgramKey obj =
-  showDatabaseKey "MasterProgram" masterProgramKeyToKey (masterProgramKey obj)
+showMasterProgramKey entry =
+  Database.CDBI.ER.showDatabaseKey "MasterProgram" masterProgramKeyToInt
+   (masterProgramKey entry)
 
---- Transforms a string into a key of a MasterProgram entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readMasterProgramKey :: String -> Maybe MasterProgramKey
-readMasterProgramKey s = readDatabaseKey "MasterProgram" MasterProgramKey s
+--- Transforms a string into a key of a `MasterProgram` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readMasterProgramKey :: String -> Maybe MasterProgramID
+readMasterProgramKey =
+  Database.CDBI.ER.readDatabaseKey "MasterProgram" MasterProgramID
 
-masterProgramKeyToKey :: MasterProgramKey -> Key
-masterProgramKeyToKey (MasterProgramKey k) = k
+--- Gets all `MasterProgram` entities.
+queryAllMasterPrograms :: Database.CDBI.Connection.DBAction [MasterProgram]
+queryAllMasterPrograms =
+  Database.CDBI.ER.getAllEntries masterProgram_CDBI_Description
 
-maybeMasterProgramKeyToKey :: Maybe MasterProgramKey -> Maybe Key
-maybeMasterProgramKeyToKey Nothing = Nothing
-maybeMasterProgramKeyToKey (Just (MasterProgramKey k)) = Just k
+--- Gets all `MasterProgram` entities satisfying a given predicate.
+queryCondMasterProgram
+  :: (MasterProgram -> Bool)
+  -> Database.CDBI.Connection.DBAction [MasterProgram]
+queryCondMasterProgram =
+  Database.CDBI.ER.getCondEntries masterProgram_CDBI_Description
 
---- Inserts a new MasterProgram entity.
+--- Gets a `MasterProgram` entry by a given key.
+getMasterProgram
+  :: MasterProgramID -> Database.CDBI.Connection.DBAction MasterProgram
+getMasterProgram =
+  Database.CDBI.ER.getEntryWithKey masterProgram_CDBI_Description
+   masterProgramColumnKey
+   masterProgramID
+
+--- Inserts a new `MasterProgram` entity.
 newMasterProgramWithUserAdvisingKeyWithMasterCoreAreaAreaProgramsKey
   :: String
   -> String
@@ -2267,7 +3563,9 @@ newMasterProgramWithUserAdvisingKeyWithMasterCoreAreaAreaProgramsKey
   -> String
   -> String
   -> String
-  -> Bool -> UserKey -> MasterCoreAreaKey -> Transaction MasterProgram
+  -> Bool
+  -> UserID
+  -> MasterCoreAreaID -> Database.CDBI.Connection.DBAction MasterProgram
 newMasterProgramWithUserAdvisingKeyWithMasterCoreAreaAreaProgramsKey
     name_p
     term_p
@@ -2278,111 +3576,347 @@ newMasterProgramWithUserAdvisingKeyWithMasterCoreAreaAreaProgramsKey
     visible_p
     userAdvisingKey_p
     masterCoreAreaAreaProgramsKey_p =
-  existsEntryWithDBKey "User" userEntry (userKeyToKey userAdvisingKey_p)
-   |>> (existsEntryWithDBKey "MasterCoreArea" masterCoreAreaEntry
-         (masterCoreAreaKeyToKey masterCoreAreaAreaProgramsKey_p)
-         |>> newEntry masterProgramEntry keytuple2MasterProgram
-              (name_p
-              ,term_p
-              ,maybe 2011 id year_p
-              ,desc_p
-              ,prereq_p
-              ,comments_p
-              ,visible_p
-              ,userKeyToKey userAdvisingKey_p
-              ,masterCoreAreaKeyToKey masterCoreAreaAreaProgramsKey_p))
+  Database.CDBI.ER.insertNewEntry masterProgram_CDBI_Description
+   setMasterProgramKey
+   MasterProgramID
+   (MasterProgram (MasterProgramID 0) name_p term_p (maybe 2011 id year_p)
+     desc_p
+     prereq_p
+     comments_p
+     visible_p
+     userAdvisingKey_p
+     masterCoreAreaAreaProgramsKey_p)
 
---- Updates an existing MasterProgram entity.
-updateMasterProgram :: MasterProgram -> Transaction ()
-updateMasterProgram masterProgram_p =
-  existsEntryWithDBKey "User" userEntry
-   (userKeyToKey (masterProgramUserAdvisingKey masterProgram_p))
-   |>> (existsEntryWithDBKey "MasterCoreArea" masterCoreAreaEntry
-         (masterCoreAreaKeyToKey
-           (masterProgramMasterCoreAreaAreaProgramsKey masterProgram_p))
-         |>> updateDBEntry masterProgramEntry
-              (masterProgramKeyToKey (masterProgramKey masterProgram_p))
-              (masterProgram2tuple masterProgram_p))
+--- Deletes an existing `MasterProgram` entry by its key.
+deleteMasterProgram :: MasterProgram -> Database.CDBI.Connection.DBAction ()
+deleteMasterProgram =
+  Database.CDBI.ER.deleteEntry masterProgram_CDBI_Description
+   masterProgramColumnKey
+   (masterProgramID . masterProgramKey)
 
---- Deletes an existing MasterProgram entity.
-deleteMasterProgram :: MasterProgram -> Transaction ()
-deleteMasterProgram masterProgram_p =
-  requiredForeignDBKey "MasterProgInfo" masterProgInfoEntry
-   keytuple2MasterProgInfo
-   masterProgInfoMasterProgramProgramInfoKey
-   (masterProgramKey masterProgram_p)
-   |>> deleteDBEntry masterProgramEntry
-        (masterProgramKeyToKey (masterProgramKey masterProgram_p))
+--- Updates an existing `MasterProgram` entry by its key.
+updateMasterProgram :: MasterProgram -> Database.CDBI.Connection.DBAction ()
+updateMasterProgram =
+  Database.CDBI.ER.updateEntry masterProgram_CDBI_Description
 
---- Gets a MasterProgram entity stored in the database with the given key.
-getMasterProgram :: MasterProgramKey -> Transaction MasterProgram
-getMasterProgram key =
-  getEntry masterProgramEntry keytuple2MasterProgram
-   (masterProgramKeyToKey key)
+--- The ER description of the `MasterProgInfo` entity.
+masterProgInfo_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription MasterProgInfo
+masterProgInfo_CDBI_Description =
+  Database.CDBI.Description.ED "MasterProgInfo"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(MasterProgInfo
+       (MasterProgInfoID key)
+       progModules
+       praktikum
+       seminar
+       thesis
+       allgGrundlagen
+       anwendungsfach
+       (MasterProgramID masterProgramProgramInfoKey)) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString progModules
+     ,Database.CDBI.Description.sqlString praktikum
+     ,Database.CDBI.Description.sqlString seminar
+     ,Database.CDBI.Description.sqlString thesis
+     ,Database.CDBI.Description.sqlString allgGrundlagen
+     ,Database.CDBI.Description.sqlString anwendungsfach
+     ,Database.CDBI.Connection.SQLInt masterProgramProgramInfoKey])
+   (\(MasterProgInfo
+       _
+       progModules
+       praktikum
+       seminar
+       thesis
+       allgGrundlagen
+       anwendungsfach
+       (MasterProgramID masterProgramProgramInfoKey)) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString progModules
+     ,Database.CDBI.Description.sqlString praktikum
+     ,Database.CDBI.Description.sqlString seminar
+     ,Database.CDBI.Description.sqlString thesis
+     ,Database.CDBI.Description.sqlString allgGrundlagen
+     ,Database.CDBI.Description.sqlString anwendungsfach
+     ,Database.CDBI.Connection.SQLInt masterProgramProgramInfoKey])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString progModules
+     ,praktikum
+     ,seminar
+     ,thesis
+     ,allgGrundlagen
+     ,anwendungsfach
+     ,Database.CDBI.Connection.SQLInt masterProgramProgramInfoKey] ->
+     MasterProgInfo (MasterProgInfoID key) progModules
+      (Database.CDBI.Description.fromStringOrNull praktikum)
+      (Database.CDBI.Description.fromStringOrNull seminar)
+      (Database.CDBI.Description.fromStringOrNull thesis)
+      (Database.CDBI.Description.fromStringOrNull allgGrundlagen)
+      (Database.CDBI.Description.fromStringOrNull anwendungsfach)
+      (MasterProgramID masterProgramProgramInfoKey))
 
---- Gets all MasterProgram entities stored in the database.
-queryAllMasterPrograms :: Query [MasterProgram]
-queryAllMasterPrograms =
-  transformQ (map (uncurry keytuple2MasterProgram))
-   (allDBKeyInfos masterProgramEntry)
+--- The database table of the `MasterProgInfo` entity.
+masterProgInfoTable :: Database.CDBI.Description.Table
+masterProgInfoTable = "MasterProgInfo"
 
---- Gets all MasterProgram entities satisfying a given condition.
-queryCondMasterProgram :: (MasterProgram -> Bool) -> Query [MasterProgram]
-queryCondMasterProgram econd =
-  transformQ (filter econd) queryAllMasterPrograms
+--- The database column `Key` of the `MasterProgInfo` entity.
+masterProgInfoColumnKey :: Database.CDBI.Description.Column MasterProgInfoID
+masterProgInfoColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"MasterProgInfo\".\"Key\""
 
---- Database predicate representing the relation between keys and MasterProgInfo tuple entities.
-masterProgInfoEntry :: Key -> MasterProgInfoTuple -> Dynamic
-masterProgInfoEntry =
-  persistentSQLite dbFile "MasterProgInfo"
-   ["ProgModules"
-   ,"Praktikum"
-   ,"Seminar"
-   ,"Thesis"
-   ,"AllgGrundlagen"
-   ,"Anwendungsfach"
-   ,"MasterProgramProgramInfoKey"]
+--- The database column `ProgModules` of the `MasterProgInfo` entity.
+masterProgInfoColumnProgModules :: Database.CDBI.Description.Column String
+masterProgInfoColumnProgModules =
+  Database.CDBI.Description.Column "\"ProgModules\""
+   "\"MasterProgInfo\".\"ProgModules\""
 
---- Dynamic predicate representing the relation
---- between keys and MasterProgInfo entities.
-masterProgInfo :: MasterProgInfoKey -> MasterProgInfo -> Dynamic
-masterProgInfo key obj
-  | key =:= masterProgInfoKey obj
-  = masterProgInfoEntry (masterProgInfoKeyToKey key)
-     (masterProgInfo2tuple obj)
+--- The database column `Praktikum` of the `MasterProgInfo` entity.
+masterProgInfoColumnPraktikum :: Database.CDBI.Description.Column String
+masterProgInfoColumnPraktikum =
+  Database.CDBI.Description.Column "\"Praktikum\""
+   "\"MasterProgInfo\".\"Praktikum\""
 
---- Gets the key of a MasterProgInfo entity.
-masterProgInfoKey :: MasterProgInfo -> MasterProgInfoKey
-masterProgInfoKey (MasterProgInfo x _ _ _ _ _ _ _) = MasterProgInfoKey x
+--- The database column `Seminar` of the `MasterProgInfo` entity.
+masterProgInfoColumnSeminar :: Database.CDBI.Description.Column String
+masterProgInfoColumnSeminar =
+  Database.CDBI.Description.Column "\"Seminar\""
+   "\"MasterProgInfo\".\"Seminar\""
 
---- Shows the key of a MasterProgInfo entity as a string.
+--- The database column `Thesis` of the `MasterProgInfo` entity.
+masterProgInfoColumnThesis :: Database.CDBI.Description.Column String
+masterProgInfoColumnThesis =
+  Database.CDBI.Description.Column "\"Thesis\"" "\"MasterProgInfo\".\"Thesis\""
+
+--- The database column `AllgGrundlagen` of the `MasterProgInfo` entity.
+masterProgInfoColumnAllgGrundlagen :: Database.CDBI.Description.Column String
+masterProgInfoColumnAllgGrundlagen =
+  Database.CDBI.Description.Column "\"AllgGrundlagen\""
+   "\"MasterProgInfo\".\"AllgGrundlagen\""
+
+--- The database column `Anwendungsfach` of the `MasterProgInfo` entity.
+masterProgInfoColumnAnwendungsfach :: Database.CDBI.Description.Column String
+masterProgInfoColumnAnwendungsfach =
+  Database.CDBI.Description.Column "\"Anwendungsfach\""
+   "\"MasterProgInfo\".\"Anwendungsfach\""
+
+--- The database column `MasterProgramProgramInfoKey` of the `MasterProgInfo` entity.
+masterProgInfoColumnMasterProgramProgramInfoKey
+  :: Database.CDBI.Description.Column MasterProgramID
+masterProgInfoColumnMasterProgramProgramInfoKey =
+  Database.CDBI.Description.Column "\"MasterProgramProgramInfoKey\""
+   "\"MasterProgInfo\".\"MasterProgramProgramInfoKey\""
+
+--- The description of the database column `Key` of the `MasterProgInfo` entity.
+masterProgInfoKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription MasterProgInfoID
+masterProgInfoKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgInfo\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(MasterProgInfoID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> MasterProgInfoID key)
+
+--- The description of the database column `ProgModules` of the `MasterProgInfo` entity.
+masterProgInfoProgModulesColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+masterProgInfoProgModulesColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgInfo\".\"ProgModules\""
+   Database.CDBI.Connection.SQLTypeString
+   (\progModules -> Database.CDBI.Connection.SQLString progModules)
+   (\(Database.CDBI.Connection.SQLString progModules) -> progModules)
+
+--- The description of the database column `Praktikum` of the `MasterProgInfo` entity.
+masterProgInfoPraktikumColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+masterProgInfoPraktikumColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgInfo\".\"Praktikum\""
+   Database.CDBI.Connection.SQLTypeString
+   (\praktikum -> Database.CDBI.Description.sqlString praktikum)
+   (\praktikum -> Database.CDBI.Description.fromStringOrNull praktikum)
+
+--- The description of the database column `Seminar` of the `MasterProgInfo` entity.
+masterProgInfoSeminarColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+masterProgInfoSeminarColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgInfo\".\"Seminar\""
+   Database.CDBI.Connection.SQLTypeString
+   (\seminar -> Database.CDBI.Description.sqlString seminar)
+   (\seminar -> Database.CDBI.Description.fromStringOrNull seminar)
+
+--- The description of the database column `Thesis` of the `MasterProgInfo` entity.
+masterProgInfoThesisColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+masterProgInfoThesisColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgInfo\".\"Thesis\""
+   Database.CDBI.Connection.SQLTypeString
+   (\thesis -> Database.CDBI.Description.sqlString thesis)
+   (\thesis -> Database.CDBI.Description.fromStringOrNull thesis)
+
+--- The description of the database column `AllgGrundlagen` of the `MasterProgInfo` entity.
+masterProgInfoAllgGrundlagenColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+masterProgInfoAllgGrundlagenColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgInfo\".\"AllgGrundlagen\""
+   Database.CDBI.Connection.SQLTypeString
+   (\allgGrundlagen -> Database.CDBI.Description.sqlString allgGrundlagen)
+   (\allgGrundlagen ->
+     Database.CDBI.Description.fromStringOrNull allgGrundlagen)
+
+--- The description of the database column `Anwendungsfach` of the `MasterProgInfo` entity.
+masterProgInfoAnwendungsfachColDesc
+  :: Database.CDBI.Description.ColumnDescription String
+masterProgInfoAnwendungsfachColDesc =
+  Database.CDBI.Description.ColDesc "\"MasterProgInfo\".\"Anwendungsfach\""
+   Database.CDBI.Connection.SQLTypeString
+   (\anwendungsfach -> Database.CDBI.Description.sqlString anwendungsfach)
+   (\anwendungsfach ->
+     Database.CDBI.Description.fromStringOrNull anwendungsfach)
+
+--- The description of the database column `MasterProgramProgramInfoKey` of the `MasterProgInfo` entity.
+masterProgInfoMasterProgramProgramInfoKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription MasterProgramID
+masterProgInfoMasterProgramProgramInfoKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"MasterProgInfo\".\"MasterProgramProgramInfoKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(MasterProgramID masterProgramProgramInfoKey) ->
+     Database.CDBI.Connection.SQLInt masterProgramProgramInfoKey)
+   (\(Database.CDBI.Connection.SQLInt masterProgramProgramInfoKey) ->
+     MasterProgramID masterProgramProgramInfoKey)
+
+--- Gets the attribute `Key` of the `MasterProgInfo` entity.
+masterProgInfoKey :: MasterProgInfo -> MasterProgInfoID
+masterProgInfoKey (MasterProgInfo a _ _ _ _ _ _ _) = a
+
+--- Gets the attribute `ProgModules` of the `MasterProgInfo` entity.
+masterProgInfoProgModules :: MasterProgInfo -> String
+masterProgInfoProgModules (MasterProgInfo _ a _ _ _ _ _ _) = a
+
+--- Gets the attribute `Praktikum` of the `MasterProgInfo` entity.
+masterProgInfoPraktikum :: MasterProgInfo -> String
+masterProgInfoPraktikum (MasterProgInfo _ _ a _ _ _ _ _) = a
+
+--- Gets the attribute `Seminar` of the `MasterProgInfo` entity.
+masterProgInfoSeminar :: MasterProgInfo -> String
+masterProgInfoSeminar (MasterProgInfo _ _ _ a _ _ _ _) = a
+
+--- Gets the attribute `Thesis` of the `MasterProgInfo` entity.
+masterProgInfoThesis :: MasterProgInfo -> String
+masterProgInfoThesis (MasterProgInfo _ _ _ _ a _ _ _) = a
+
+--- Gets the attribute `AllgGrundlagen` of the `MasterProgInfo` entity.
+masterProgInfoAllgGrundlagen :: MasterProgInfo -> String
+masterProgInfoAllgGrundlagen (MasterProgInfo _ _ _ _ _ a _ _) = a
+
+--- Gets the attribute `Anwendungsfach` of the `MasterProgInfo` entity.
+masterProgInfoAnwendungsfach :: MasterProgInfo -> String
+masterProgInfoAnwendungsfach (MasterProgInfo _ _ _ _ _ _ a _) = a
+
+--- Gets the attribute `MasterProgramProgramInfoKey` of the `MasterProgInfo` entity.
+masterProgInfoMasterProgramProgramInfoKey :: MasterProgInfo -> MasterProgramID
+masterProgInfoMasterProgramProgramInfoKey (MasterProgInfo _ _ _ _ _ _ _ a) = a
+
+--- Sets the attribute `Key` of the `MasterProgInfo` entity.
+setMasterProgInfoKey :: MasterProgInfo -> MasterProgInfoID -> MasterProgInfo
+setMasterProgInfoKey (MasterProgInfo _ b7 b6 b5 b4 b3 b2 b1) a =
+  MasterProgInfo a b7 b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `ProgModules` of the `MasterProgInfo` entity.
+setMasterProgInfoProgModules :: MasterProgInfo -> String -> MasterProgInfo
+setMasterProgInfoProgModules (MasterProgInfo a2 _ b6 b5 b4 b3 b2 b1) a =
+  MasterProgInfo a2 a b6 b5 b4 b3 b2 b1
+
+--- Sets the attribute `Praktikum` of the `MasterProgInfo` entity.
+setMasterProgInfoPraktikum :: MasterProgInfo -> String -> MasterProgInfo
+setMasterProgInfoPraktikum (MasterProgInfo a3 a2 _ b5 b4 b3 b2 b1) a =
+  MasterProgInfo a3 a2 a b5 b4 b3 b2 b1
+
+--- Sets the attribute `Seminar` of the `MasterProgInfo` entity.
+setMasterProgInfoSeminar :: MasterProgInfo -> String -> MasterProgInfo
+setMasterProgInfoSeminar (MasterProgInfo a4 a3 a2 _ b4 b3 b2 b1) a =
+  MasterProgInfo a4 a3 a2 a b4 b3 b2 b1
+
+--- Sets the attribute `Thesis` of the `MasterProgInfo` entity.
+setMasterProgInfoThesis :: MasterProgInfo -> String -> MasterProgInfo
+setMasterProgInfoThesis (MasterProgInfo a5 a4 a3 a2 _ b3 b2 b1) a =
+  MasterProgInfo a5 a4 a3 a2 a b3 b2 b1
+
+--- Sets the attribute `AllgGrundlagen` of the `MasterProgInfo` entity.
+setMasterProgInfoAllgGrundlagen :: MasterProgInfo -> String -> MasterProgInfo
+setMasterProgInfoAllgGrundlagen (MasterProgInfo a6 a5 a4 a3 a2 _ b2 b1) a =
+  MasterProgInfo a6 a5 a4 a3 a2 a b2 b1
+
+--- Sets the attribute `Anwendungsfach` of the `MasterProgInfo` entity.
+setMasterProgInfoAnwendungsfach :: MasterProgInfo -> String -> MasterProgInfo
+setMasterProgInfoAnwendungsfach (MasterProgInfo a7 a6 a5 a4 a3 a2 _ b1) a =
+  MasterProgInfo a7 a6 a5 a4 a3 a2 a b1
+
+--- Sets the attribute `MasterProgramProgramInfoKey` of the `MasterProgInfo` entity.
+setMasterProgInfoMasterProgramProgramInfoKey
+  :: MasterProgInfo -> MasterProgramID -> MasterProgInfo
+setMasterProgInfoMasterProgramProgramInfoKey
+    (MasterProgInfo a8 a7 a6 a5 a4 a3 a2 _) a =
+  MasterProgInfo a8 a7 a6 a5 a4 a3 a2 a
+
+--- id-to-value function for entity `MasterProgInfo`.
+masterProgInfoID
+  :: MasterProgInfoID -> Database.CDBI.Criteria.Value MasterProgInfoID
+masterProgInfoID (MasterProgInfoID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `MasterProgInfo`.
+masterProgInfoKeyToInt :: MasterProgInfoID -> Int
+masterProgInfoKeyToInt (MasterProgInfoID key) = key
+
+--- Shows the key of a `MasterProgInfo` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showMasterProgInfoKey :: MasterProgInfo -> String
-showMasterProgInfoKey obj =
-  showDatabaseKey "MasterProgInfo" masterProgInfoKeyToKey
-   (masterProgInfoKey obj)
+showMasterProgInfoKey entry =
+  Database.CDBI.ER.showDatabaseKey "MasterProgInfo" masterProgInfoKeyToInt
+   (masterProgInfoKey entry)
 
---- Transforms a string into a key of a MasterProgInfo entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readMasterProgInfoKey :: String -> Maybe MasterProgInfoKey
-readMasterProgInfoKey s = readDatabaseKey "MasterProgInfo" MasterProgInfoKey s
+--- Transforms a string into a key of a `MasterProgInfo` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readMasterProgInfoKey :: String -> Maybe MasterProgInfoID
+readMasterProgInfoKey =
+  Database.CDBI.ER.readDatabaseKey "MasterProgInfo" MasterProgInfoID
 
-masterProgInfoKeyToKey :: MasterProgInfoKey -> Key
-masterProgInfoKeyToKey (MasterProgInfoKey k) = k
+--- Gets all `MasterProgInfo` entities.
+queryAllMasterProgInfos :: Database.CDBI.Connection.DBAction [MasterProgInfo]
+queryAllMasterProgInfos =
+  Database.CDBI.ER.getAllEntries masterProgInfo_CDBI_Description
 
-maybeMasterProgInfoKeyToKey :: Maybe MasterProgInfoKey -> Maybe Key
-maybeMasterProgInfoKeyToKey Nothing = Nothing
-maybeMasterProgInfoKeyToKey (Just (MasterProgInfoKey k)) = Just k
+--- Gets all `MasterProgInfo` entities satisfying a given predicate.
+queryCondMasterProgInfo
+  :: (MasterProgInfo -> Bool)
+  -> Database.CDBI.Connection.DBAction [MasterProgInfo]
+queryCondMasterProgInfo =
+  Database.CDBI.ER.getCondEntries masterProgInfo_CDBI_Description
 
---- Inserts a new MasterProgInfo entity.
+--- Gets a `MasterProgInfo` entry by a given key.
+getMasterProgInfo
+  :: MasterProgInfoID -> Database.CDBI.Connection.DBAction MasterProgInfo
+getMasterProgInfo =
+  Database.CDBI.ER.getEntryWithKey masterProgInfo_CDBI_Description
+   masterProgInfoColumnKey
+   masterProgInfoID
+
+--- Inserts a new `MasterProgInfo` entity.
 newMasterProgInfoWithMasterProgramProgramInfoKey
   :: String
   -> String
   -> String
   -> String
-  -> String -> String -> MasterProgramKey -> Transaction MasterProgInfo
+  -> String
+  -> String
+  -> MasterProgramID -> Database.CDBI.Connection.DBAction MasterProgInfo
 newMasterProgInfoWithMasterProgramProgramInfoKey
     progModules_p
     praktikum_p
@@ -2391,1032 +3925,286 @@ newMasterProgInfoWithMasterProgramProgramInfoKey
     allgGrundlagen_p
     anwendungsfach_p
     masterProgramProgramInfoKey_p =
-  existsEntryWithDBKey "MasterProgram" masterProgramEntry
-   (masterProgramKeyToKey masterProgramProgramInfoKey_p)
-   |>> newEntry masterProgInfoEntry keytuple2MasterProgInfo
-        (progModules_p
-        ,praktikum_p
-        ,seminar_p
-        ,thesis_p
-        ,allgGrundlagen_p
-        ,anwendungsfach_p
-        ,masterProgramKeyToKey masterProgramProgramInfoKey_p)
+  Database.CDBI.ER.insertNewEntry masterProgInfo_CDBI_Description
+   setMasterProgInfoKey
+   MasterProgInfoID
+   (MasterProgInfo (MasterProgInfoID 0) progModules_p praktikum_p seminar_p
+     thesis_p
+     allgGrundlagen_p
+     anwendungsfach_p
+     masterProgramProgramInfoKey_p)
 
---- Updates an existing MasterProgInfo entity.
-updateMasterProgInfo :: MasterProgInfo -> Transaction ()
-updateMasterProgInfo masterProgInfo_p =
-  existsEntryWithDBKey "MasterProgram" masterProgramEntry
-   (masterProgramKeyToKey
-     (masterProgInfoMasterProgramProgramInfoKey masterProgInfo_p))
-   |>> updateDBEntry masterProgInfoEntry
-        (masterProgInfoKeyToKey (masterProgInfoKey masterProgInfo_p))
-        (masterProgInfo2tuple masterProgInfo_p)
+--- Deletes an existing `MasterProgInfo` entry by its key.
+deleteMasterProgInfo :: MasterProgInfo -> Database.CDBI.Connection.DBAction ()
+deleteMasterProgInfo =
+  Database.CDBI.ER.deleteEntry masterProgInfo_CDBI_Description
+   masterProgInfoColumnKey
+   (masterProgInfoID . masterProgInfoKey)
 
---- Deletes an existing MasterProgInfo entity.
-deleteMasterProgInfo :: MasterProgInfo -> Transaction ()
-deleteMasterProgInfo masterProgInfo_p =
-  deleteDBEntry masterProgInfoEntry
-   (masterProgInfoKeyToKey (masterProgInfoKey masterProgInfo_p))
+--- Updates an existing `MasterProgInfo` entry by its key.
+updateMasterProgInfo :: MasterProgInfo -> Database.CDBI.Connection.DBAction ()
+updateMasterProgInfo =
+  Database.CDBI.ER.updateEntry masterProgInfo_CDBI_Description
 
---- Gets a MasterProgInfo entity stored in the database with the given key.
-getMasterProgInfo :: MasterProgInfoKey -> Transaction MasterProgInfo
-getMasterProgInfo key =
-  getEntry masterProgInfoEntry keytuple2MasterProgInfo
-   (masterProgInfoKeyToKey key)
+--- The ER description of the `UnivisInfo` entity.
+univisInfo_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription UnivisInfo
+univisInfo_CDBI_Description =
+  Database.CDBI.Description.ED "UnivisInfo"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString]
+   (\(UnivisInfo (UnivisInfoID key) code term year uRL) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString code
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,Database.CDBI.Connection.SQLString uRL])
+   (\(UnivisInfo _ code term year uRL) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString code
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,Database.CDBI.Connection.SQLString uRL])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString code
+     ,Database.CDBI.Connection.SQLString term
+     ,Database.CDBI.Connection.SQLInt year
+     ,Database.CDBI.Connection.SQLString uRL] ->
+     UnivisInfo (UnivisInfoID key) code term year uRL)
 
---- Gets all MasterProgInfo entities stored in the database.
-queryAllMasterProgInfos :: Query [MasterProgInfo]
-queryAllMasterProgInfos =
-  transformQ (map (uncurry keytuple2MasterProgInfo))
-   (allDBKeyInfos masterProgInfoEntry)
+--- The database table of the `UnivisInfo` entity.
+univisInfoTable :: Database.CDBI.Description.Table
+univisInfoTable = "UnivisInfo"
 
---- Gets all MasterProgInfo entities satisfying a given condition.
-queryCondMasterProgInfo :: (MasterProgInfo -> Bool) -> Query [MasterProgInfo]
-queryCondMasterProgInfo econd =
-  transformQ (filter econd) queryAllMasterProgInfos
+--- The database column `Key` of the `UnivisInfo` entity.
+univisInfoColumnKey :: Database.CDBI.Description.Column UnivisInfoID
+univisInfoColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"UnivisInfo\".\"Key\""
 
---- Database predicate representing the relation between keys and UnivisInfo tuple entities.
-univisInfoEntry :: Key -> UnivisInfoTuple -> Dynamic
-univisInfoEntry =
-  persistentSQLite dbFile "UnivisInfo" ["Code","Term","Year","URL"]
+--- The database column `Code` of the `UnivisInfo` entity.
+univisInfoColumnCode :: Database.CDBI.Description.Column String
+univisInfoColumnCode =
+  Database.CDBI.Description.Column "\"Code\"" "\"UnivisInfo\".\"Code\""
 
---- Dynamic predicate representing the relation
---- between keys and UnivisInfo entities.
-univisInfo :: UnivisInfoKey -> UnivisInfo -> Dynamic
-univisInfo key obj
-  | key =:= univisInfoKey obj
-  = univisInfoEntry (univisInfoKeyToKey key) (univisInfo2tuple obj)
+--- The database column `Term` of the `UnivisInfo` entity.
+univisInfoColumnTerm :: Database.CDBI.Description.Column String
+univisInfoColumnTerm =
+  Database.CDBI.Description.Column "\"Term\"" "\"UnivisInfo\".\"Term\""
 
---- Gets the key of a UnivisInfo entity.
-univisInfoKey :: UnivisInfo -> UnivisInfoKey
-univisInfoKey (UnivisInfo x _ _ _ _) = UnivisInfoKey x
+--- The database column `Year` of the `UnivisInfo` entity.
+univisInfoColumnYear :: Database.CDBI.Description.Column Int
+univisInfoColumnYear =
+  Database.CDBI.Description.Column "\"Year\"" "\"UnivisInfo\".\"Year\""
 
---- Shows the key of a UnivisInfo entity as a string.
+--- The database column `URL` of the `UnivisInfo` entity.
+univisInfoColumnURL :: Database.CDBI.Description.Column String
+univisInfoColumnURL =
+  Database.CDBI.Description.Column "\"URL\"" "\"UnivisInfo\".\"URL\""
+
+--- The description of the database column `Key` of the `UnivisInfo` entity.
+univisInfoKeyColDesc :: Database.CDBI.Description.ColumnDescription UnivisInfoID
+univisInfoKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"UnivisInfo\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(UnivisInfoID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> UnivisInfoID key)
+
+--- The description of the database column `Code` of the `UnivisInfo` entity.
+univisInfoCodeColDesc :: Database.CDBI.Description.ColumnDescription String
+univisInfoCodeColDesc =
+  Database.CDBI.Description.ColDesc "\"UnivisInfo\".\"Code\""
+   Database.CDBI.Connection.SQLTypeString
+   (\code -> Database.CDBI.Connection.SQLString code)
+   (\(Database.CDBI.Connection.SQLString code) -> code)
+
+--- The description of the database column `Term` of the `UnivisInfo` entity.
+univisInfoTermColDesc :: Database.CDBI.Description.ColumnDescription String
+univisInfoTermColDesc =
+  Database.CDBI.Description.ColDesc "\"UnivisInfo\".\"Term\""
+   Database.CDBI.Connection.SQLTypeString
+   (\term -> Database.CDBI.Connection.SQLString term)
+   (\(Database.CDBI.Connection.SQLString term) -> term)
+
+--- The description of the database column `Year` of the `UnivisInfo` entity.
+univisInfoYearColDesc :: Database.CDBI.Description.ColumnDescription Int
+univisInfoYearColDesc =
+  Database.CDBI.Description.ColDesc "\"UnivisInfo\".\"Year\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\year -> Database.CDBI.Connection.SQLInt year)
+   (\(Database.CDBI.Connection.SQLInt year) -> year)
+
+--- The description of the database column `URL` of the `UnivisInfo` entity.
+univisInfoURLColDesc :: Database.CDBI.Description.ColumnDescription String
+univisInfoURLColDesc =
+  Database.CDBI.Description.ColDesc "\"UnivisInfo\".\"URL\""
+   Database.CDBI.Connection.SQLTypeString
+   (\uRL -> Database.CDBI.Connection.SQLString uRL)
+   (\(Database.CDBI.Connection.SQLString uRL) -> uRL)
+
+--- Gets the attribute `Key` of the `UnivisInfo` entity.
+univisInfoKey :: UnivisInfo -> UnivisInfoID
+univisInfoKey (UnivisInfo a _ _ _ _) = a
+
+--- Gets the attribute `Code` of the `UnivisInfo` entity.
+univisInfoCode :: UnivisInfo -> String
+univisInfoCode (UnivisInfo _ a _ _ _) = a
+
+--- Gets the attribute `Term` of the `UnivisInfo` entity.
+univisInfoTerm :: UnivisInfo -> String
+univisInfoTerm (UnivisInfo _ _ a _ _) = a
+
+--- Gets the attribute `Year` of the `UnivisInfo` entity.
+univisInfoYear :: UnivisInfo -> Int
+univisInfoYear (UnivisInfo _ _ _ a _) = a
+
+--- Gets the attribute `URL` of the `UnivisInfo` entity.
+univisInfoURL :: UnivisInfo -> String
+univisInfoURL (UnivisInfo _ _ _ _ a) = a
+
+--- Sets the attribute `Key` of the `UnivisInfo` entity.
+setUnivisInfoKey :: UnivisInfo -> UnivisInfoID -> UnivisInfo
+setUnivisInfoKey (UnivisInfo _ b4 b3 b2 b1) a = UnivisInfo a b4 b3 b2 b1
+
+--- Sets the attribute `Code` of the `UnivisInfo` entity.
+setUnivisInfoCode :: UnivisInfo -> String -> UnivisInfo
+setUnivisInfoCode (UnivisInfo a2 _ b3 b2 b1) a = UnivisInfo a2 a b3 b2 b1
+
+--- Sets the attribute `Term` of the `UnivisInfo` entity.
+setUnivisInfoTerm :: UnivisInfo -> String -> UnivisInfo
+setUnivisInfoTerm (UnivisInfo a3 a2 _ b2 b1) a = UnivisInfo a3 a2 a b2 b1
+
+--- Sets the attribute `Year` of the `UnivisInfo` entity.
+setUnivisInfoYear :: UnivisInfo -> Int -> UnivisInfo
+setUnivisInfoYear (UnivisInfo a4 a3 a2 _ b1) a = UnivisInfo a4 a3 a2 a b1
+
+--- Sets the attribute `URL` of the `UnivisInfo` entity.
+setUnivisInfoURL :: UnivisInfo -> String -> UnivisInfo
+setUnivisInfoURL (UnivisInfo a5 a4 a3 a2 _) a = UnivisInfo a5 a4 a3 a2 a
+
+--- id-to-value function for entity `UnivisInfo`.
+univisInfoID :: UnivisInfoID -> Database.CDBI.Criteria.Value UnivisInfoID
+univisInfoID (UnivisInfoID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `UnivisInfo`.
+univisInfoKeyToInt :: UnivisInfoID -> Int
+univisInfoKeyToInt (UnivisInfoID key) = key
+
+--- Shows the key of a `UnivisInfo` entity as a string.
 --- This is useful if a textual representation of the key is necessary
 --- (e.g., as URL parameters in web pages), but it should no be used
 --- to store keys in other attributes!
 showUnivisInfoKey :: UnivisInfo -> String
-showUnivisInfoKey obj =
-  showDatabaseKey "UnivisInfo" univisInfoKeyToKey (univisInfoKey obj)
+showUnivisInfoKey entry =
+  Database.CDBI.ER.showDatabaseKey "UnivisInfo" univisInfoKeyToInt
+   (univisInfoKey entry)
 
---- Transforms a string into a key of a UnivisInfo entity.
---- Nothing is returned if the string does not represent a reasonable key.
-readUnivisInfoKey :: String -> Maybe UnivisInfoKey
-readUnivisInfoKey s = readDatabaseKey "UnivisInfo" UnivisInfoKey s
+--- Transforms a string into a key of a `UnivisInfo` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readUnivisInfoKey :: String -> Maybe UnivisInfoID
+readUnivisInfoKey = Database.CDBI.ER.readDatabaseKey "UnivisInfo" UnivisInfoID
 
-univisInfoKeyToKey :: UnivisInfoKey -> Key
-univisInfoKeyToKey (UnivisInfoKey k) = k
+--- Gets all `UnivisInfo` entities.
+queryAllUnivisInfos :: Database.CDBI.Connection.DBAction [UnivisInfo]
+queryAllUnivisInfos = Database.CDBI.ER.getAllEntries univisInfo_CDBI_Description
 
-maybeUnivisInfoKeyToKey :: Maybe UnivisInfoKey -> Maybe Key
-maybeUnivisInfoKeyToKey Nothing = Nothing
-maybeUnivisInfoKeyToKey (Just (UnivisInfoKey k)) = Just k
+--- Gets all `UnivisInfo` entities satisfying a given predicate.
+queryCondUnivisInfo
+  :: (UnivisInfo -> Bool) -> Database.CDBI.Connection.DBAction [UnivisInfo]
+queryCondUnivisInfo =
+  Database.CDBI.ER.getCondEntries univisInfo_CDBI_Description
 
---- Inserts a new UnivisInfo entity.
-newUnivisInfo :: String -> String -> Int -> String -> Transaction UnivisInfo
+--- Gets a `UnivisInfo` entry by a given key.
+getUnivisInfo :: UnivisInfoID -> Database.CDBI.Connection.DBAction UnivisInfo
+getUnivisInfo =
+  Database.CDBI.ER.getEntryWithKey univisInfo_CDBI_Description
+   univisInfoColumnKey
+   univisInfoID
+
+--- Inserts a new `UnivisInfo` entity.
+newUnivisInfo
+  :: String
+  -> String -> Int -> String -> Database.CDBI.Connection.DBAction UnivisInfo
 newUnivisInfo code_p term_p year_p uRL_p =
-  newEntry univisInfoEntry keytuple2UnivisInfo (code_p,term_p,year_p,uRL_p)
-
---- Updates an existing UnivisInfo entity.
-updateUnivisInfo :: UnivisInfo -> Transaction ()
-updateUnivisInfo univisInfo_p =
-  updateDBEntry univisInfoEntry
-   (univisInfoKeyToKey (univisInfoKey univisInfo_p))
-   (univisInfo2tuple univisInfo_p)
-
---- Deletes an existing UnivisInfo entity.
-deleteUnivisInfo :: UnivisInfo -> Transaction ()
-deleteUnivisInfo univisInfo_p =
-  deleteDBEntry univisInfoEntry
-   (univisInfoKeyToKey (univisInfoKey univisInfo_p))
-
---- Gets a UnivisInfo entity stored in the database with the given key.
-getUnivisInfo :: UnivisInfoKey -> Transaction UnivisInfo
-getUnivisInfo key =
-  getEntry univisInfoEntry keytuple2UnivisInfo (univisInfoKeyToKey key)
-
---- Gets all UnivisInfo entities stored in the database.
-queryAllUnivisInfos :: Query [UnivisInfo]
-queryAllUnivisInfos =
-  transformQ (map (uncurry keytuple2UnivisInfo))
-   (allDBKeyInfos univisInfoEntry)
-
---- Gets all UnivisInfo entities satisfying a given condition.
-queryCondUnivisInfo :: (UnivisInfo -> Bool) -> Query [UnivisInfo]
-queryCondUnivisInfo econd = transformQ (filter econd) queryAllUnivisInfos
-
---- Database predicate representing the relation between keys and Categorizing tuple entities.
-categorizingEntry :: Key -> CategorizingTuple -> Dynamic
-categorizingEntry =
-  persistentSQLite dbFile "Categorizing"
-   ["ModDataCategorizingKey","CategoryCategorizingKey"]
-
-categorizingModDataCategorizingKey :: Categorizing -> ModDataKey
-categorizingModDataCategorizingKey (Categorizing x _) = ModDataKey x
-
-categorizingCategoryCategorizingKey :: Categorizing -> CategoryKey
-categorizingCategoryCategorizingKey (Categorizing _ x) = CategoryKey x
-
---- Dynamic predicate representing the Categorizing relation between ModData entities and Category entities
-categorizing :: ModDataKey -> CategoryKey -> Dynamic
-categorizing (ModDataKey key1) (CategoryKey key2) =
-  categorizingEntry unknown (key1,key2)
-
---- Inserts a new Categorizing relation between a ModData entity and a Category entity
-newCategorizing :: ModDataKey -> CategoryKey -> Transaction ()
-newCategorizing key1 key2 =
-  existsEntryWithDBKey "ModData" modDataEntry (modDataKeyToKey key1)
-   |>> (existsEntryWithDBKey "Category" categoryEntry (categoryKeyToKey key2)
-         |>> (unique2 categorizingEntry (modDataKeyToKey key1)
-               (categoryKeyToKey key2)
-               |>> newEntryR categorizingEntry (modDataKeyToKey key1)
-                    (categoryKeyToKey key2)))
-
---- Deletes an existing Categorizing relation between a ModData entity and a Category entity
-deleteCategorizing :: ModDataKey -> CategoryKey -> Transaction ()
-deleteCategorizing key1 key2 =
-  minTestDelete "Categorizing" categorizingEntry keytuple2Categorizing
-   categorizingModDataCategorizingKey
-   1
-   key1
-   |>> deleteEntryR categorizingEntry (modDataKeyToKey key1)
-        (categoryKeyToKey key2)
-
---- Gets the associated ModData entities for a given Category entity
-getModDataCategorys :: ModData -> Transaction [Category]
-getModDataCategorys e =
-  let ekey = modDataKey e
-  in getDB
-      (queryCondCategorizing
-        (\t -> categorizingModDataCategorizingKey t == ekey))
-      |>>= (mapT getCategory . map categorizingCategoryCategorizingKey)
-
---- Gets all Categorizing relationship entities stored in the database.
-queryAllCategorizings :: Query [Categorizing]
-queryAllCategorizings =
-  transformQ (map (uncurry keytuple2Categorizing))
-   (allDBKeyInfos categorizingEntry)
-
---- Gets all Categorizing relationship entities satisfying a given condition.
-queryCondCategorizing :: (Categorizing -> Bool) -> Query [Categorizing]
-queryCondCategorizing econd = transformQ (filter econd) queryAllCategorizings
-
---- Dynamic predicate representing the ProgramInfo relation
---- between MasterProgram entities and MasterProgInfo entities.
-programInfo :: MasterProgramKey -> MasterProgInfoKey -> Dynamic
-programInfo key1 key2
-  | masterProgInfoMasterProgramProgramInfoKey en =:= key1
-  = masterProgInfoEntry (masterProgInfoKeyToKey key2)
-     (masterProgInfo2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "withProgInfo".
-withProgInfo :: MasterProgramKey -> MasterProgInfoKey -> Dynamic
-withProgInfo = programInfo
-
---- Dynamic predicate representing role "withProgInfo".
-programInfoOf :: MasterProgInfoKey -> MasterProgramKey -> Dynamic
-programInfoOf = flip withProgInfo
-
---- Dynamic predicate representing the AreaPrograms relation
---- between MasterCoreArea entities and MasterProgram entities.
-areaPrograms :: MasterCoreAreaKey -> MasterProgramKey -> Dynamic
-areaPrograms key1 key2
-  | masterProgramMasterCoreAreaAreaProgramsKey en =:= key1
-  = masterProgramEntry (masterProgramKeyToKey key2) (masterProgram2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "withProgram".
-withProgram :: MasterCoreAreaKey -> MasterProgramKey -> Dynamic
-withProgram = areaPrograms
-
---- Dynamic predicate representing role "withProgram".
-ofCoreArea :: MasterProgramKey -> MasterCoreAreaKey -> Dynamic
-ofCoreArea = flip withProgram
-
---- Dynamic predicate representing the Advising relation
---- between User entities and MasterProgram entities.
-advising :: UserKey -> MasterProgramKey -> Dynamic
-advising key1 key2
-  | masterProgramUserAdvisingKey en =:= key1
-  = masterProgramEntry (masterProgramKeyToKey key2) (masterProgram2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "organizes".
-organizes :: UserKey -> MasterProgramKey -> Dynamic
-organizes = advising
-
---- Dynamic predicate representing role "organizes".
-organizedBy :: MasterProgramKey -> UserKey -> Dynamic
-organizedBy = flip organizes
-
---- Dynamic predicate representing the AdvisedProgramModuleInstances relation
---- between ModInst entities and AdvisorModule entities.
-advisedProgramModuleInstances :: ModInstKey -> AdvisorModuleKey -> Dynamic
-advisedProgramModuleInstances key1 key2
-  | advisorModuleModInstAdvisedProgramModuleInstancesKey en =:= key1
-  = advisorModuleEntry (advisorModuleKeyToKey key2) (advisorModule2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "advisorUseofModInst".
-advisorUseofModInst :: ModInstKey -> AdvisorModuleKey -> Dynamic
-advisorUseofModInst = advisedProgramModuleInstances
-
---- Dynamic predicate representing role "advisorUseofModInst".
-withModInst :: AdvisorModuleKey -> ModInstKey -> Dynamic
-withModInst = flip advisorUseofModInst
-
---- Dynamic predicate representing the AdvisorCategorizing relation
---- between Category entities and AdvisorModule entities.
-advisorCategorizing :: CategoryKey -> AdvisorModuleKey -> Dynamic
-advisorCategorizing key1 key2
-  | advisorModuleCategoryAdvisorCategorizingKey en =:= key1
-  = advisorModuleEntry (advisorModuleKeyToKey key2) (advisorModule2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "containsAdvisorMods".
-containsAdvisorMods :: CategoryKey -> AdvisorModuleKey -> Dynamic
-containsAdvisorMods = advisorCategorizing
-
---- Dynamic predicate representing role "containsAdvisorMods".
-advisedBelongsTo :: AdvisorModuleKey -> CategoryKey -> Dynamic
-advisedBelongsTo = flip containsAdvisorMods
-
---- Dynamic predicate representing the AdvisorProgramModules relation
---- between AdvisorStudyProgram entities and AdvisorModule entities.
-advisorProgramModules :: AdvisorStudyProgramKey -> AdvisorModuleKey -> Dynamic
-advisorProgramModules key1 key2
-  | advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey en =:= key1
-  = advisorModuleEntry (advisorModuleKeyToKey key2) (advisorModule2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "moduleOfAdvisorProgram".
-moduleOfAdvisorProgram
-  :: AdvisorStudyProgramKey -> AdvisorModuleKey -> Dynamic
-moduleOfAdvisorProgram = advisorProgramModules
-
---- Dynamic predicate representing role "moduleOfAdvisorProgram".
-belongsToAdvisedProgram
-  :: AdvisorModuleKey -> AdvisorStudyProgramKey -> Dynamic
-belongsToAdvisedProgram = flip moduleOfAdvisorProgram
-
---- Dynamic predicate representing the StudyProgramsAdvised relation
---- between StudyProgram entities and AdvisorStudyProgram entities.
-studyProgramsAdvised :: StudyProgramKey -> AdvisorStudyProgramKey -> Dynamic
-studyProgramsAdvised key1 key2
-  | advisorStudyProgramStudyProgramStudyProgramsAdvisedKey en =:= key1
-  = advisorStudyProgramEntry (advisorStudyProgramKeyToKey key2)
-     (advisorStudyProgram2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "advisedProgram".
-advisedProgram :: StudyProgramKey -> AdvisorStudyProgramKey -> Dynamic
-advisedProgram = studyProgramsAdvised
-
---- Dynamic predicate representing role "advisedProgram".
-instanceOf :: AdvisorStudyProgramKey -> StudyProgramKey -> Dynamic
-instanceOf = flip advisedProgram
-
---- Dynamic predicate representing the StudyAdvising relation
---- between User entities and AdvisorStudyProgram entities.
-studyAdvising :: UserKey -> AdvisorStudyProgramKey -> Dynamic
-studyAdvising key1 key2
-  | advisorStudyProgramUserStudyAdvisingKey en =:= key1
-  = advisorStudyProgramEntry (advisorStudyProgramKeyToKey key2)
-     (advisorStudyProgram2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "advisesProgram".
-advisesProgram :: UserKey -> AdvisorStudyProgramKey -> Dynamic
-advisesProgram = studyAdvising
-
---- Dynamic predicate representing role "advisesProgram".
-advisedBy :: AdvisorStudyProgramKey -> UserKey -> Dynamic
-advisedBy = flip advisesProgram
-
---- Dynamic predicate representing the ModuleInstances relation
---- between ModData entities and ModInst entities.
-moduleInstances :: ModDataKey -> ModInstKey -> Dynamic
-moduleInstances key1 key2
-  | modInstModDataModuleInstancesKey en =:= key1
-  = modInstEntry (modInstKeyToKey key2) (modInst2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "instOfModule".
-instOfModule :: ModDataKey -> ModInstKey -> Dynamic
-instOfModule = moduleInstances
-
---- Dynamic predicate representing role "instOfModule".
-withModule :: ModInstKey -> ModDataKey -> Dynamic
-withModule = flip instOfModule
-
---- Dynamic predicate representing the LecturerMods relation
---- between User entities and ModInst entities.
-lecturerMods :: UserKey -> ModInstKey -> Dynamic
-lecturerMods key1 key2
-  | modInstUserLecturerModsKey en =:= key1
-  = modInstEntry (modInstKeyToKey key2) (modInst2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "instOfLecturer".
-instOfLecturer :: UserKey -> ModInstKey -> Dynamic
-instOfLecturer = lecturerMods
-
---- Dynamic predicate representing role "instOfLecturer".
-withLecturer :: ModInstKey -> UserKey -> Dynamic
-withLecturer = flip instOfLecturer
-
---- Dynamic predicate representing the DataDesc relation
---- between ModData entities and ModDescr entities.
-dataDesc :: ModDataKey -> ModDescrKey -> Dynamic
-dataDesc key1 key2
-  | modDescrModDataDataDescKey en =:= key1
-  = modDescrEntry (modDescrKeyToKey key2) (modDescr2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "withDesc".
-withDesc :: ModDataKey -> ModDescrKey -> Dynamic
-withDesc = dataDesc
-
---- Dynamic predicate representing role "withDesc".
-descOf :: ModDescrKey -> ModDataKey -> Dynamic
-descOf = flip withDesc
-
---- Dynamic predicate representing role "belongsTo".
-belongsTo :: ModDataKey -> CategoryKey -> Dynamic
-belongsTo = categorizing
-
---- Dynamic predicate representing role "contains".
-contains :: CategoryKey -> ModDataKey -> Dynamic
-contains = flip categorizing
-
---- Dynamic predicate representing the Responsible relation
---- between User entities and ModData entities.
-responsible :: UserKey -> ModDataKey -> Dynamic
-responsible key1 key2
-  | modDataUserResponsibleKey en =:= key1
-  = modDataEntry (modDataKeyToKey key2) (modData2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "responsibleFor".
-responsibleFor :: UserKey -> ModDataKey -> Dynamic
-responsibleFor = responsible
-
---- Dynamic predicate representing role "responsibleFor".
-managedBy :: ModDataKey -> UserKey -> Dynamic
-managedBy = flip responsibleFor
-
---- Dynamic predicate representing the ProgramCategories relation
---- between StudyProgram entities and Category entities.
-programCategories :: StudyProgramKey -> CategoryKey -> Dynamic
-programCategories key1 key2
-  | categoryStudyProgramProgramCategoriesKey en =:= key1
-  = categoryEntry (categoryKeyToKey key2) (category2tuple en)
-  where
-    en free
-
---- Dynamic predicate representing role "withCategory".
-withCategory :: StudyProgramKey -> CategoryKey -> Dynamic
-withCategory = programCategories
-
---- Dynamic predicate representing role "withCategory".
-ofProgram :: CategoryKey -> StudyProgramKey -> Dynamic
-ofProgram = flip withCategory
-
---- Checks the consistency of the complete database.
-checkAllData :: Transaction ()
-checkAllData =
-  checkCategorizing
-   |>> (checkStudyProgram
-         |>> (checkCategory
-               |>> (checkMasterCoreArea
-                     |>> (checkUser
-                           |>> (checkModData
-                                 |>> (checkModDescr
-                                       |>> (checkModInst
-                                             |>> (checkAdvisorStudyProgram
-                                                   |>> (checkAdvisorModule
-                                                         |>> (checkMasterProgram
-                                                               |>> (checkMasterProgInfo
-                                                                     |>> checkUnivisInfo)))))))))))
-
---- Checks the consistency of the database for Categorizing entities.
-checkCategorizing :: Transaction ()
-checkCategorizing =
-  getDB (allDBKeyInfos categorizingEntry)
-   |>>= (mapT_ checkCategorizingEntry . map (uncurry keytuple2Categorizing))
-
---- Checks the consistency of the database for StudyProgram entities.
-checkStudyProgram :: Transaction ()
-checkStudyProgram =
-  getDB (allDBKeyInfos studyProgramEntry)
-   |>>= (mapT_ checkStudyProgramEntry . map (uncurry keytuple2StudyProgram))
-
---- Checks the consistency of the database for Category entities.
-checkCategory :: Transaction ()
-checkCategory =
-  getDB (allDBKeyInfos categoryEntry)
-   |>>= (mapT_ checkCategoryEntry . map (uncurry keytuple2Category))
-
---- Checks the consistency of the database for MasterCoreArea entities.
-checkMasterCoreArea :: Transaction ()
-checkMasterCoreArea =
-  getDB (allDBKeyInfos masterCoreAreaEntry)
-   |>>= (mapT_ checkMasterCoreAreaEntry
-          . map (uncurry keytuple2MasterCoreArea))
-
---- Checks the consistency of the database for User entities.
-checkUser :: Transaction ()
-checkUser =
-  getDB (allDBKeyInfos userEntry)
-   |>>= (mapT_ checkUserEntry . map (uncurry keytuple2User))
-
---- Checks the consistency of the database for ModData entities.
-checkModData :: Transaction ()
-checkModData =
-  getDB (allDBKeyInfos modDataEntry)
-   |>>= (mapT_ checkModDataEntry . map (uncurry keytuple2ModData))
-
---- Checks the consistency of the database for ModDescr entities.
-checkModDescr :: Transaction ()
-checkModDescr =
-  getDB (allDBKeyInfos modDescrEntry)
-   |>>= (mapT_ checkModDescrEntry . map (uncurry keytuple2ModDescr))
-
---- Checks the consistency of the database for ModInst entities.
-checkModInst :: Transaction ()
-checkModInst =
-  getDB (allDBKeyInfos modInstEntry)
-   |>>= (mapT_ checkModInstEntry . map (uncurry keytuple2ModInst))
-
---- Checks the consistency of the database for AdvisorStudyProgram entities.
-checkAdvisorStudyProgram :: Transaction ()
-checkAdvisorStudyProgram =
-  getDB (allDBKeyInfos advisorStudyProgramEntry)
-   |>>= (mapT_ checkAdvisorStudyProgramEntry
-          . map (uncurry keytuple2AdvisorStudyProgram))
-
---- Checks the consistency of the database for AdvisorModule entities.
-checkAdvisorModule :: Transaction ()
-checkAdvisorModule =
-  getDB (allDBKeyInfos advisorModuleEntry)
-   |>>= (mapT_ checkAdvisorModuleEntry . map (uncurry keytuple2AdvisorModule))
-
---- Checks the consistency of the database for MasterProgram entities.
-checkMasterProgram :: Transaction ()
-checkMasterProgram =
-  getDB (allDBKeyInfos masterProgramEntry)
-   |>>= (mapT_ checkMasterProgramEntry . map (uncurry keytuple2MasterProgram))
-
---- Checks the consistency of the database for MasterProgInfo entities.
-checkMasterProgInfo :: Transaction ()
-checkMasterProgInfo =
-  getDB (allDBKeyInfos masterProgInfoEntry)
-   |>>= (mapT_ checkMasterProgInfoEntry
-          . map (uncurry keytuple2MasterProgInfo))
-
---- Checks the consistency of the database for UnivisInfo entities.
-checkUnivisInfo :: Transaction ()
-checkUnivisInfo =
-  getDB (allDBKeyInfos univisInfoEntry)
-   |>>= (mapT_ checkUnivisInfoEntry . map (uncurry keytuple2UnivisInfo))
-
-checkCategorizingEntry :: Categorizing -> Transaction ()
-checkCategorizingEntry categorizing_p =
-  existsEntryWithDBKey "ModData" modDataEntry
-   (modDataKeyToKey (categorizingModDataCategorizingKey categorizing_p))
-   |>> (existsEntryWithDBKey "Category" categoryEntry
-         (categoryKeyToKey
-           (categorizingCategoryCategorizingKey categorizing_p))
-         |>> unique2C categorizingEntry
-              (modDataKeyToKey
-                (categorizingModDataCategorizingKey categorizing_p))
-              (categoryKeyToKey
-                (categorizingCategoryCategorizingKey categorizing_p)))
-
-checkStudyProgramEntry :: StudyProgram -> Transaction ()
-checkStudyProgramEntry studyProgram_p =
-  duplicateKeyTest studyProgramEntry
-   |>> (uniqueC "MDB" studyProgramEntry keytuple2StudyProgram
-         studyProgramShortName
-         studyProgram_p
-         |>> uniqueC "MDB" studyProgramEntry keytuple2StudyProgram
-              studyProgramProgKey
-              studyProgram_p)
-
-checkCategoryEntry :: Category -> Transaction ()
-checkCategoryEntry category_p =
-  duplicateKeyTest categoryEntry
-   |>> existsEntryWithDBKey "StudyProgram" studyProgramEntry
-        (studyProgramKeyToKey
-          (categoryStudyProgramProgramCategoriesKey category_p))
-
-checkMasterCoreAreaEntry :: MasterCoreArea -> Transaction ()
-checkMasterCoreAreaEntry masterCoreArea_p =
-  duplicateKeyTest masterCoreAreaEntry
-   |>> uniqueC "MDB" masterCoreAreaEntry keytuple2MasterCoreArea
-        masterCoreAreaAreaKey
-        masterCoreArea_p
-
-checkUserEntry :: User -> Transaction ()
-checkUserEntry user_p =
-  duplicateKeyTest userEntry
-   |>> uniqueC "MDB" userEntry keytuple2User userLogin user_p
-
-checkModDataEntry :: ModData -> Transaction ()
-checkModDataEntry modData_p =
-  duplicateKeyTest modDataEntry
-   |>> (uniqueC "MDB" modDataEntry keytuple2ModData modDataCode modData_p
-         |>> (existsEntryWithDBKey "User" userEntry
-               (userKeyToKey (modDataUserResponsibleKey modData_p))
-               |>> minTestC "Categorizing" categorizingEntry
-                    keytuple2Categorizing
-                    categorizingModDataCategorizingKey
-                    1
-                    (modDataKey modData_p)))
-
-checkModDescrEntry :: ModDescr -> Transaction ()
-checkModDescrEntry modDescr_p =
-  duplicateKeyTest modDescrEntry
-   |>> (uniqueC "MDB" modDescrEntry keytuple2ModDescr
-         modDescrModDataDataDescKey
-         modDescr_p
-         |>> existsEntryWithDBKey "ModData" modDataEntry
-              (modDataKeyToKey (modDescrModDataDataDescKey modDescr_p)))
-
-checkModInstEntry :: ModInst -> Transaction ()
-checkModInstEntry modInst_p =
-  duplicateKeyTest modInstEntry
-   |>> (existsEntryWithDBKey "User" userEntry
-         (userKeyToKey (modInstUserLecturerModsKey modInst_p))
-         |>> existsEntryWithDBKey "ModData" modDataEntry
-              (modDataKeyToKey (modInstModDataModuleInstancesKey modInst_p)))
-
-checkAdvisorStudyProgramEntry :: AdvisorStudyProgram -> Transaction ()
-checkAdvisorStudyProgramEntry advisorStudyProgram_p =
-  duplicateKeyTest advisorStudyProgramEntry
-   |>> (existsEntryWithDBKey "User" userEntry
-         (userKeyToKey
-           (advisorStudyProgramUserStudyAdvisingKey advisorStudyProgram_p))
-         |>> existsEntryWithDBKey "StudyProgram" studyProgramEntry
-              (studyProgramKeyToKey
-                (advisorStudyProgramStudyProgramStudyProgramsAdvisedKey
-                  advisorStudyProgram_p)))
-
-checkAdvisorModuleEntry :: AdvisorModule -> Transaction ()
-checkAdvisorModuleEntry advisorModule_p =
-  duplicateKeyTest advisorModuleEntry
-   |>> (existsEntryWithDBKey "AdvisorStudyProgram" advisorStudyProgramEntry
-         (advisorStudyProgramKeyToKey
-           (advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey
-             advisorModule_p))
-         |>> (existsEntryWithDBKey "Category" categoryEntry
-               (categoryKeyToKey
-                 (advisorModuleCategoryAdvisorCategorizingKey
-                   advisorModule_p))
-               |>> existsEntryWithDBKey "ModInst" modInstEntry
-                    (modInstKeyToKey
-                      (advisorModuleModInstAdvisedProgramModuleInstancesKey
-                        advisorModule_p))))
-
-checkMasterProgramEntry :: MasterProgram -> Transaction ()
-checkMasterProgramEntry masterProgram_p =
-  duplicateKeyTest masterProgramEntry
-   |>> (existsEntryWithDBKey "User" userEntry
-         (userKeyToKey (masterProgramUserAdvisingKey masterProgram_p))
-         |>> existsEntryWithDBKey "MasterCoreArea" masterCoreAreaEntry
-              (masterCoreAreaKeyToKey
-                (masterProgramMasterCoreAreaAreaProgramsKey masterProgram_p)))
-
-checkMasterProgInfoEntry :: MasterProgInfo -> Transaction ()
-checkMasterProgInfoEntry masterProgInfo_p =
-  duplicateKeyTest masterProgInfoEntry
-   |>> existsEntryWithDBKey "MasterProgram" masterProgramEntry
-        (masterProgramKeyToKey
-          (masterProgInfoMasterProgramProgramInfoKey masterProgInfo_p))
-
-checkUnivisInfoEntry :: UnivisInfo -> Transaction ()
-checkUnivisInfoEntry _ = duplicateKeyTest univisInfoEntry
-
---- Saves the complete database as Curry terms.
---- The first argument is the directory where the term files should be stored.
-saveAllData :: String -> IO ()
-saveAllData path =
-  do saveDBTerms path "StudyProgram" studyProgramEntry keytuple2StudyProgram
-     saveDBTerms path "Category" categoryEntry keytuple2Category
-     saveDBTerms path "MasterCoreArea" masterCoreAreaEntry
-      keytuple2MasterCoreArea
-     saveDBTerms path "User" userEntry keytuple2User
-     saveDBTerms path "ModData" modDataEntry keytuple2ModData
-     saveDBTerms path "ModDescr" modDescrEntry keytuple2ModDescr
-     saveDBTerms path "ModInst" modInstEntry keytuple2ModInst
-     saveDBTerms path "AdvisorStudyProgram" advisorStudyProgramEntry
-      keytuple2AdvisorStudyProgram
-     saveDBTerms path "AdvisorModule" advisorModuleEntry
-      keytuple2AdvisorModule
-     saveDBTerms path "MasterProgram" masterProgramEntry
-      keytuple2MasterProgram
-     saveDBTerms path "MasterProgInfo" masterProgInfoEntry
-      keytuple2MasterProgInfo
-     saveDBTerms path "UnivisInfo" univisInfoEntry keytuple2UnivisInfo
-     saveDBTerms path "Categorizing" categorizingEntry keytuple2Categorizing
-
---- Restore the complete database from files containing Curry terms.
---- The first argument is the directory where the term files are stored.
-restoreAllData :: String -> IO ()
-restoreAllData path =
-  do restoreDBTerms path "StudyProgram" studyProgramEntry
-      (studyProgramKeyToKey . studyProgramKey)
-      studyProgram2tuple
-     restoreDBTerms path "Category" categoryEntry
-      (categoryKeyToKey . categoryKey)
-      category2tuple
-     restoreDBTerms path "MasterCoreArea" masterCoreAreaEntry
-      (masterCoreAreaKeyToKey . masterCoreAreaKey)
-      masterCoreArea2tuple
-     restoreDBTerms path "User" userEntry (userKeyToKey . userKey) user2tuple
-     restoreDBTerms path "ModData" modDataEntry (modDataKeyToKey . modDataKey)
-      modData2tuple
-     restoreDBTerms path "ModDescr" modDescrEntry
-      (modDescrKeyToKey . modDescrKey)
-      modDescr2tuple
-     restoreDBTerms path "ModInst" modInstEntry (modInstKeyToKey . modInstKey)
-      modInst2tuple
-     restoreDBTerms path "AdvisorStudyProgram" advisorStudyProgramEntry
-      (advisorStudyProgramKeyToKey . advisorStudyProgramKey)
-      advisorStudyProgram2tuple
-     restoreDBTerms path "AdvisorModule" advisorModuleEntry
-      (advisorModuleKeyToKey . advisorModuleKey)
-      advisorModule2tuple
-     restoreDBTerms path "MasterProgram" masterProgramEntry
-      (masterProgramKeyToKey . masterProgramKey)
-      masterProgram2tuple
-     restoreDBTerms path "MasterProgInfo" masterProgInfoEntry
-      (masterProgInfoKeyToKey . masterProgInfoKey)
-      masterProgInfo2tuple
-     restoreDBTerms path "UnivisInfo" univisInfoEntry
-      (univisInfoKeyToKey . univisInfoKey)
-      univisInfo2tuple
-     restoreDBRelTerms path "Categorizing" categorizingEntry
-      categorizing2tuple
-
------------------------------------------------------------------------
--- Some extensions to the generated MDB code:
-
-
--- store DBs in term files:
-storeTermDB :: IO ()
-storeTermDB = saveAllData storageDir
-
--- initialize DBs from term files:
-readTermDB :: IO ()
-readTermDB = restoreAllData storageDir
-
------------------------------------------------------------------------
---- Gets the pair of term and year of a ModInst entity.
-modInstSemester :: ModInst -> (String,Int)
-modInstSemester (ModInst _ t y _ _) = (t,y)
-
------------------------------------------------------------------------
---- Database table for ModData entities.
-modData'Table :: DBTable ModData
-modData'Table = dbTable modDataEntry keytuple2ModData
-
---- Attribute Key of entity ModData.
-modData'Key :: DBAttr ModData ModDataKey
-modData'Key = dbKeyAttr modData'Table (-1) modDataKeyToKey ModDataKey
-
---- Attribute Code of entity ModData.
-modData'Code :: DBAttr ModData String
-modData'Code = dbAttr modData'Table 0
-
---- Attribute NameG of entity ModData.
-modData'NameG :: DBAttr ModData String
-modData'NameG = dbAttr modData'Table 1
-
---- Attribute NameE of entity ModData.
-modData'NameE :: DBAttr ModData String
-modData'NameE = dbAttr modData'Table 2
-
---- Attribute UserResponsibleKey of entity ModData.
-modData'UserResponsibleKey :: DBAttr ModData UserKey
-modData'UserResponsibleKey = dbKeyAttr modData'Table 10 userKeyToKey UserKey
-
---- Gets all ModData entities with a given module code.
-queryModDataWithCode :: String -> Query [ModData]
-queryModDataWithCode mcode =
-  selectFrom modData'Table `whereQ` modData'Code @== mcode
-
---- Gets all ModData entities of a user.
-queryModDataOfUser :: UserKey -> Query [ModData]
-queryModDataOfUser ukey =
-  selectFrom modData'Table `whereQ` modData'UserResponsibleKey @== ukey
-
---- Query the key/code/name of all ModData entities.
-queryModDataCodeName :: Query [(ModDataKey,String,String,String)]
-queryModDataCodeName =
-  selectAll4 modData'Key modData'Code modData'NameG modData'NameE
-
------------------------------------------------------------------------
---- Database table for ModDescr entities.
-modDescr'Table :: DBTable ModDescr
-modDescr'Table = dbTable modDescrEntry keytuple2ModDescr
-
---- Attribute Exam of entity ModDescr.
-modDescr'Exam :: DBAttr ModDescr String
-modDescr'Exam = dbAttr modDescr'Table 5
-
---- Attribute ModDataDataDescKey of entity ModDescr.
-modDescr'ModDataDataDescKey :: DBAttr ModDescr ModDataKey
-modDescr'ModDataDataDescKey =
-  dbKeyAttr modDescr'Table 11 modDataKeyToKey ModDataKey
-
---- Gets the ModDescr entity associated to a given ModData key.
-queryDescriptionOfMod :: ModDataKey -> Query (Maybe ModDescr)
-queryDescriptionOfMod mdk =
-  transformQ
-   (\l -> if null l then Nothing else Just (head l))
-   (selectFrom modDescr'Table `whereQ` modDescr'ModDataDataDescKey @== mdk)
-
---- Gets the Exam attribute associated to a given ModData key.
-queryExamOfMod :: ModDataKey -> Query (Maybe String)
-queryExamOfMod mdk =
-  transformQ
-   (\l -> if null l then Nothing else Just (head l))
-   (select1 modDescr'Exam `whereQ` modDescr'ModDataDataDescKey @== mdk)
-
------------------------------------------------------------------------
---- Database table for ModData entities.
-modInst'Table :: DBTable ModInst
-modInst'Table = dbTable modInstEntry keytuple2ModInst
-
---- Attribute Code of entity ModData.
-modInst'Term :: DBAttr ModInst String
-modInst'Term = dbAttr modInst'Table 0
-
---- Attribute Code of entity ModData.
-modInst'Year :: DBAttr ModInst Int
-modInst'Year = dbAttr modInst'Table 1
-
---- Attribute Code of entity ModData.
-modInst'ModDataModuleInstancesKey :: DBAttr ModInst ModDataKey
-modInst'ModDataModuleInstancesKey =
- dbKeyAttr modInst'Table 3 modDataKeyToKey ModDataKey
-
---- Gets all module instances for a given module (key).
-queryInstancesOfMod :: ModDataKey -> Query [ModInst]
-queryInstancesOfMod mdk =
-  selectFrom modInst'Table `whereQ` modInst'ModDataModuleInstancesKey @== mdk
-
---- Gets the ModData keys of all module instances in a given semester.
-queryModKeysOfSem :: (String,Int) -> Query [ModDataKey]
-queryModKeysOfSem (term,year) =
-  select1 modInst'ModDataModuleInstancesKey
-    `whereQ` modInst'Term @== term @&& modInst'Year @== year
-
------------------------------------------------------------------------
---- Shows the key of a MasterProgram entity as a string.
---- This is useful if a textual representation of the key is necessary
---- (e.g., as URL parameters in web pages), but it should no be used
---- to store keys in other attributes!
-masterProgramKeyToString :: MasterProgramKey -> String
-masterProgramKeyToString key =
-  ERDGeneric.showDatabaseKey "MasterProgram" masterProgramKeyToKey key
-
------------------------------------------------------------------------
---- Database table for MasterProgram entities.
-masterProgram'Table :: DBTable MasterProgram
-masterProgram'Table = dbTable masterProgramEntry keytuple2MasterProgram
-
---- Attribute Key of entity ModData.
-masterProgram'Key :: DBAttr MasterProgram MasterProgramKey
-masterProgram'Key = dbKeyAttr masterProgram'Table (-1) masterProgramKeyToKey
-                              MasterProgramKey
-
---- Attribute Code of entity ModData.
-masterProgram'Name :: DBAttr MasterProgram String
-masterProgram'Name = dbAttr masterProgram'Table 0
-
---- Attribute Code of entity ModData.
-masterProgram'Term :: DBAttr MasterProgram String
-masterProgram'Term = dbAttr masterProgram'Table 1
-
---- Attribute Code of entity ModData.
-masterProgram'Year :: DBAttr MasterProgram Int
-masterProgram'Year = dbAttr masterProgram'Table 2
-
---- Attribute Code of entity ModData.
-masterProgram'Visible :: DBAttr MasterProgram Bool
-masterProgram'Visible = dbAttr masterProgram'Table 6
-
---- Attribute UserResponsibleKey of entity ModData.
-masterProgram'UserAdvisingKey :: DBAttr MasterProgram UserKey
-masterProgram'UserAdvisingKey =
-  dbKeyAttr masterProgram'Table 7 userKeyToKey UserKey
-
---- Attribute UserResponsibleKey of entity ModData.
-masterProgram'MasterCoreAreaAreaProgramsKey
-  :: DBAttr MasterProgram MasterCoreAreaKey
-masterProgram'MasterCoreAreaAreaProgramsKey =
-  dbKeyAttr masterProgram'Table 8 masterCoreAreaKeyToKey MasterCoreAreaKey
-
-queryMasterProgramMainInfos
-  :: Query [(MasterProgramKey,String,String,Int,Bool,MasterCoreAreaKey)]
-queryMasterProgramMainInfos =
-  selectAll6 masterProgram'Key masterProgram'Name masterProgram'Term
-             masterProgram'Year masterProgram'Visible
-             masterProgram'MasterCoreAreaAreaProgramsKey
-
---- Gets all MasterProgram entities belonging to a user.
-queryMasterProgramOfUser :: UserKey -> Query [MasterProgram]
-queryMasterProgramOfUser ukey =
-  selectFrom masterProgram'Table `whereQ` masterProgram'UserAdvisingKey @== ukey
-
---- Gets all MasterProgram (keys) for each ModInst of a given ModInst list.
-getMasterProgramKeysOfModInst :: [ModInst] -> Query [[MasterProgramKey]]
-getMasterProgramKeysOfModInst mis =
-  transformQ
-   (\mpis ->
-     map (\mi -> let mdk = modInstModDataModuleInstancesKey mi in
-           map snd
-               (filter (\mpi ->
-                         any (\ (_,_,smpk,trm,yr) ->
-                               readModDataKey smpk == Just mdk &&
-                               modInstTerm mi == trm && modInstYear mi == yr)
-                             (readProgModules (fst mpi)))
-                       mpis))
-         mis)
-   (selectAll2 masterProgInfo'ProgModules
-               masterProgInfo'MasterProgramProgramInfoKey)
-
--- to avoid typing problem with kics2
-readProgModules :: String -> [(String,Bool,String,String,Int)]
-readProgModules s = readQTerm s
-
------------------------------------------------------------------------
---- Database table for MasterProgram entities.
-masterProgInfo'Table :: DBTable MasterProgInfo
-masterProgInfo'Table = dbTable masterProgInfoEntry keytuple2MasterProgInfo
-
---- Attribute Code of entity ModData.
-masterProgInfo'ProgModules :: DBAttr MasterProgInfo String
-masterProgInfo'ProgModules = dbAttr masterProgInfo'Table 0
-
---- Attribute Code of entity ModData.
-masterProgInfo'MasterProgramProgramInfoKey
-  :: DBAttr MasterProgInfo MasterProgramKey
-masterProgInfo'MasterProgramProgramInfoKey =
-  dbKeyAttr masterProgInfo'Table 6 masterProgramKeyToKey MasterProgramKey
-
---- Gets the MasterProgInfo entity associated to a MasterProgram key.
-queryInfoOfMasterProgram :: MasterProgramKey
-                         -> Query (Maybe MasterProgInfo)
-queryInfoOfMasterProgram mpk =
-  transformQ
-   (\l -> if null l then Nothing else Just (head l))
-   (selectFrom masterProgInfo'Table
-      `whereQ` masterProgInfo'MasterProgramProgramInfoKey @== mpk)
-{-
-  transformQ
-   ((\l -> if null l then Nothing else Just (head l))
-      . map (uncurry keytuple2MasterProgInfo))
-   (KeyDatabase.someDBKeyInfos masterProgInfoEntry
-                               [6 @= masterProgramKeyToKey mpk])
--}
-
------------------------------------------------------------------------
---- Database table for UnivisInfo entities.
-advisorModule'Table :: DBTable AdvisorModule
-advisorModule'Table = dbTable advisorModuleEntry keytuple2AdvisorModule
-
-advisorModule'ProgKey :: DBAttr AdvisorModule AdvisorStudyProgramKey
-advisorModule'ProgKey =
-  dbKeyAttr advisorModule'Table 1
-            advisorStudyProgramKeyToKey AdvisorStudyProgramKey
-
-advisorModule'ModInstKey :: DBAttr AdvisorModule ModInstKey
-advisorModule'ModInstKey =
-  dbKeyAttr advisorModule'Table 3 modInstKeyToKey ModInstKey
-
---- Query to get the AdvisorModules where a module instance is used.
-queryAdvisorStudyProgramOfModInst :: ModInst -> Query [AdvisorModule]
-queryAdvisorStudyProgramOfModInst modinst =
- selectFrom advisorModule'Table
-   `whereQ` advisorModule'ModInstKey @== modInstKey modinst
-
---- Gets all AdvisorStudyProgram (keys) for each ModInst of a given
---- ModInst list.
-getAdvisorStudyProgramKeysOfModInst :: ModInst
-                                    -> Query [AdvisorStudyProgramKey]
-getAdvisorStudyProgramKeysOfModInst mi =
-  transformQ (map advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey)
-                  (queryAdvisorStudyProgramOfModInst mi)
-
------------------------------------------------------------------------
---- Database table for UnivisInfo entities.
-univisInfo'Table :: DBTable UnivisInfo
-univisInfo'Table = dbTable univisInfoEntry keytuple2UnivisInfo
-
---- Query condition for equality of attribute Code of entity UnivisInfo.
-univisInfo'Code :: DBAttr UnivisInfo String
-univisInfo'Code = dbAttr univisInfo'Table 0
-
---- Query condition for equality of attribute Term of entity UnivisInfo.
-univisInfo'Term :: DBAttr UnivisInfo String
-univisInfo'Term = dbAttr univisInfo'Table 1
-
---- Attribute Term of entity UnivisInfo.
-univisInfo'Year :: DBAttr UnivisInfo Int
-univisInfo'Year = dbAttr univisInfo'Table 2
-
---- query the univis URLs for a module in a semester:
-queryUnivisURL :: String -> (String,Int) -> Query [String]
-queryUnivisURL mcode (term,year) = transformQ (map univisInfoURL) $
-  selectFrom univisInfo'Table
-   `whereQ` univisInfo'Code @== mcode @&&
-            univisInfo'Term @== term @&&
-            univisInfo'Year @== year
-
---- query whether a module has a UnivIS instance in a semester:
-queryHasUnivisEntry :: String -> (String,Int) -> Query Bool
-queryHasUnivisEntry mcode (term,year) = transformQ (not . null) $
-  selectFrom univisInfo'Table
-   `whereQ` univisInfo'Code @== mcode @&&
-            univisInfo'Term @== term @&&
-            univisInfo'Year @== year
-
------------------------------------------------------------------------
---- Destroy an existing Categorizing relation between a ModData entity
---- and a Category entity without ensuring the minimal constraint.
---- This can be used instead of `deleteCategorizing` if the corresponding
---- module is also deleted.
-destroyCategorizing :: ModDataKey -> CategoryKey -> Transaction ()
-destroyCategorizing key1 key2 =
-  ERDGeneric.deleteEntryR categorizingEntry (modDataKeyToKey key1)
-    (categoryKeyToKey key2)
-
---- Gets all categories for a given module (key).
-queryModDataKeyCategorys :: ModDataKey -> Query [Categorizing]
-queryModDataKeyCategorys mdk =
-  transformQ
-   (map (uncurry keytuple2Categorizing))
-   (KeyDatabase.someDBKeyInfos categorizingEntry [0 @= modDataKeyToKey mdk])
-
---- Gets all categories for a given module (key).
-queryModDataKeysOfCategory :: CategoryKey -> Query [ModDataKey]
-queryModDataKeysOfCategory ck =
-  transformQ
-   (map (categorizingModDataCategorizingKey . uncurry keytuple2Categorizing))
-   (KeyDatabase.someDBKeyInfos categorizingEntry [1 @= categoryKeyToKey ck])
-
---- Gets the associated Category entities for a given ModData entity
-getModDataCategories :: ModData -> Transaction [Category]
-getModDataCategories e = getModDataKeyCategorys (modDataKey e)
-
---- Gets the associated Category entities for a given ModDataKey
-getModDataKeyCategorys :: ModDataKey -> Transaction [Category]
-getModDataKeyCategorys mdk =
-  getDB (queryModDataKeyCategorys mdk) |>>=
-  mapT getCategory . map categorizingCategoryCategorizingKey
-
------------------------------------------------------------------------
--- Tests for better querying
-
-ex1 = runQ (selectAll1 modData'Key)
-        >>= putStrLn . unlines . map show
-
-ex2 = runQ (selectAll3 modData'Key modData'Code modData'NameG)
-        >>= putStrLn . unlines . map show
-
-ex3 = runQ (selectAll2 modData'Code modData'UserResponsibleKey)
-        >>= putStrLn . unlines . map show
-
-ex4 = runQ (selectAll2 modData'Key modData'Code)
-        >>= putStrLn . unlines . map show
-
-ex5 = runQ (select1 modData'NameG `whereQ` modData'Code @=="Inf-Prog")
-
-ex5' = runQ (selectFrom modData'Table `whereQ` modData'Code @=="Inf-Prog")
-
-ex6 = runQ (select2 modData'NameG modData'UserResponsibleKey
-              `whereQ` modData'Code @=="Inf-Prog")
-
-ex7 = runQ queryAllMasterPrograms
-ex8 = runQ (selectAll1 masterProgram'UserAdvisingKey)
-ex9 = runQ (selectAll6 masterProgram'Key masterProgram'Name masterProgram'Term
-                       masterProgram'Year masterProgram'Visible
-                       --masterProgram'UserAdvisingKey
-                       masterProgram'MasterCoreAreaAreaProgramsKey)
-
-------------------------------------------------------------------------
+  Database.CDBI.ER.insertNewEntry univisInfo_CDBI_Description setUnivisInfoKey
+   UnivisInfoID
+   (UnivisInfo (UnivisInfoID 0) code_p term_p year_p uRL_p)
+
+--- Deletes an existing `UnivisInfo` entry by its key.
+deleteUnivisInfo :: UnivisInfo -> Database.CDBI.Connection.DBAction ()
+deleteUnivisInfo =
+  Database.CDBI.ER.deleteEntry univisInfo_CDBI_Description univisInfoColumnKey
+   (univisInfoID . univisInfoKey)
+
+--- Updates an existing `UnivisInfo` entry by its key.
+updateUnivisInfo :: UnivisInfo -> Database.CDBI.Connection.DBAction ()
+updateUnivisInfo = Database.CDBI.ER.updateEntry univisInfo_CDBI_Description
+
+--- Saves complete database as term files into an existing directory
+--- provided as a parameter.
+saveDBTo :: String -> IO ()
+saveDBTo dir =
+  do Database.CDBI.ER.saveDBTerms categorizing_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.saveDBTerms studyProgram_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.saveDBTerms category_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.saveDBTerms masterCoreArea_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.saveDBTerms user_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.saveDBTerms modData_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.saveDBTerms modDescr_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.saveDBTerms modInst_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.saveDBTerms advisorStudyProgram_CDBI_Description
+      sqliteDBFile
+      dir
+     Database.CDBI.ER.saveDBTerms advisorModule_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.saveDBTerms masterProgram_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.saveDBTerms masterProgInfo_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.saveDBTerms univisInfo_CDBI_Description sqliteDBFile dir
+
+--- Restores complete database from term files which are stored
+--- in a directory provided as a parameter.
+restoreDBFrom :: String -> IO ()
+restoreDBFrom dir =
+  do Database.CDBI.ER.restoreDBTerms categorizing_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.restoreDBTerms studyProgram_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.restoreDBTerms category_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.restoreDBTerms masterCoreArea_CDBI_Description
+      sqliteDBFile
+      dir
+     Database.CDBI.ER.restoreDBTerms user_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.restoreDBTerms modData_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.restoreDBTerms modDescr_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.restoreDBTerms modInst_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.restoreDBTerms advisorStudyProgram_CDBI_Description
+      sqliteDBFile
+      dir
+     Database.CDBI.ER.restoreDBTerms advisorModule_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.restoreDBTerms masterProgram_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.restoreDBTerms masterProgInfo_CDBI_Description
+      sqliteDBFile
+      dir
+     Database.CDBI.ER.restoreDBTerms univisInfo_CDBI_Description sqliteDBFile
+      dir
+
+--- Runs a DB action (typically a query).
+runQ :: Database.CDBI.Connection.DBAction a -> IO a
+runQ = Database.CDBI.ER.runQueryOnDB sqliteDBFile
+
+--- Runs a DB action as a transaction.
+runT
+  :: Database.CDBI.Connection.DBAction a
+  -> IO (Database.CDBI.Connection.SQLResult a)
+runT = Database.CDBI.ER.runTransactionOnDB sqliteDBFile
+
+--- Runs a DB action as a transaction. Emits an error in case of failure.
+runJustT :: Database.CDBI.Connection.DBAction a -> IO a
+runJustT = Database.CDBI.ER.runJustTransactionOnDB sqliteDBFile

@@ -3,7 +3,7 @@ module StudyProgramController (
  ) where
 
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import Time
 import MDB
@@ -68,7 +68,7 @@ updateStudyProgramController :: Bool -> StudyProgram -> Controller
 updateStudyProgramController False _ = listStudyProgramController
 updateStudyProgramController True studyProgram =
   do transResult <- runT (updateStudyProgram studyProgram)
-     either (\ _ -> nextInProcessOr listStudyProgramController Nothing)
+     flip either (\ _ -> nextInProcessOr listStudyProgramController Nothing)
       (\ error -> displayError (showTError error)) transResult
 
 --- Deletes a given StudyProgram entity (after asking for confirmation)
@@ -94,7 +94,7 @@ deleteStudyProgramController studyProgram =
   checkAuthorization
    (studyProgramOperationAllowed (DeleteEntity studyProgram)) $ \_ ->
    (do transResult <- runT (deleteStudyProgram studyProgram)
-       either (\ _ -> listStudyProgramController)
+       flip either (\ _ -> listStudyProgramController)
         (\ error -> displayError (showTError error)) transResult)
 
 --- Lists all StudyProgram entities with buttons to show, delete,

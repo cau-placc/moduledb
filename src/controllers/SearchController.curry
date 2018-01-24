@@ -1,6 +1,7 @@
 --------------------------------------------------------------------------
 --- This module contains a controller for search modules.
 --------------------------------------------------------------------------
+{-# OPTIONS_CYMAKE -F --pgmF=currypp --optF=foreigncode #-}
 
 module SearchController(searchController,searchUserModules)
  where
@@ -9,10 +10,13 @@ import Sort (mergeSortBy)
 import Spicey
 import Authentication
 import MDB
-import KeyDatabase
+import MDBExts
+import Transaction
 import Char
 import List
 import Maybe
+import Database.CDBI.ER 
+
 import ModDataController
 import CategoryController
 import CategoryView
@@ -47,8 +51,12 @@ searchModules pat = do
   sinfo <- getUserSessionInfo
   csem  <- getCurrentSemester
   let t = translate sinfo
-  modcodes <- runQ $ transformQ (filter isMatching) queryModDataCodeName
-  mods <- runJustT $ mapT (\ (k,_,_,_) -> getModData k) modcodes
+  let pattern = "%" ++ filter (`notElem` "%_") pat ++ "%"
+  mods <- runQ $
+           ``sql* Select *
+                  From ModData as md
+                  Where md.Code like {pattern} Or md.NameG like {pattern}
+                                               Or md.NameE like {pattern};''
   let vismods = maybe (filter modDataVisible mods) (const mods)
                       (userLoginOfSession sinfo)
   return (listCategoryView sinfo csem
@@ -58,15 +66,10 @@ searchModules pat = do
             [] []
             showCategoryPlanController formatCatModulesForm
             showEmailCorrectionController)
- where
-   isMatching (_,code,nameG,nameE) =
-     match pat (map toLower code) ||
-     match pat (map toLower nameG) ||
-     match pat (map toLower nameE)
 
 
 -- simple generic string pattern matcher:
-match :: [a] -> [a] -> Bool
+match :: Eq a => [a] -> [a] -> Bool
 match pattern string = loop pattern string pattern string
   where
     loop []     _      _  _  = True
@@ -101,36 +104,35 @@ searchUserModules user = do
                formatCatModulesForm showEmailCorrectionController)
 
 
-
 --- Controller to list all (visible) modules.
 showAllModulesController :: Controller
 showAllModulesController = do
-  mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
+  mods  <- runQ $ liftM (filter modDataVisible) queryAllModDatas
   showModulesController mods
 
 --- Controller to list all responsible persons of all modules.
 showAllModuleResponsibleController :: Controller
 showAllModuleResponsibleController = do
-  mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
+  mods  <- runQ $ liftM (filter modDataVisible) queryAllModDatas
   let respkeys = nub (map modDataUserResponsibleKey mods)
-  respusers <- runJustT (mapT getUser respkeys)
+  respusers <- runJustT (mapM getUser respkeys)
   return (showAllModuleResponsibleView "Alle Modulverantwortlichen" respusers)
 
 --- Controller to list all responsible persons of the modules
 --- in the given semester.
 showModSemResponsibleController :: (String,Int) -> Controller
 showModSemResponsibleController sem = do
-  semmodkeys <- runQ $ transformQ nub (queryModKeysOfSem sem)
-  semmods    <- runJustT $ mapT getModData semmodkeys
+  semmodkeys <- runQ $ queryModKeysOfSem sem
+  semmods    <- runJustT $ mapM getModData semmodkeys
   let respkeys = nub (map modDataUserResponsibleKey semmods)
-  respusers <- runJustT (mapT getUser respkeys)
+  respusers <- runJustT (mapM getUser respkeys)
   return (showAllModuleResponsibleView
             ("Alle Modulverantwortlichen im " ++ showSemester sem) respusers)
 
 --- Controller to list all (visible) modules taught in English.
 showAllEnglishModulesController :: Controller
 showAllEnglishModulesController = do
-  mods  <- runQ $ transformQ (filter modDataVisible) queryAllModDatas
+  mods  <- runQ $ liftM (filter modDataVisible) queryAllModDatas
   emods <- mapIO checkEnglishMod mods
   showModulesController (concat emods)
  where
@@ -178,17 +180,17 @@ mandatoryModulCodes =
 --- Controller to show all modules in the given semester.
 showSemModsController :: (String,Int) -> Controller
 showSemModsController sem = do
-  semmodkeys <- runQ $ transformQ nub (queryModKeysOfSem sem)
-  semmods    <- runJustT $ mapT getModData semmodkeys
+  semmodkeys <- runQ $ queryModKeysOfSem sem
+  semmods    <- runJustT $ mapM getModData semmodkeys
   showModulesController semmods
 
---- Controller to show all examination requirement of the modules
+--- Controller to show all examination requirements of the modules
 --- in the given semester.
 showExamController :: (String,Int) -> Controller
 showExamController sem = do
-  semmodkeys <- runQ $ transformQ nub (queryModKeysOfSem sem)
-  semmods    <- runJustT $ mapT getModData semmodkeys
-  semexams   <- runJustT $ mapT (getDB . queryExamOfMod) semmodkeys
+  semmodkeys <- runQ $ queryModKeysOfSem sem
+  semmods    <- runJustT $ mapM getModData semmodkeys
+  semexams   <- runJustT $ mapM queryExamOfMod semmodkeys
   return $ showExamOverview sem
               (map (\ (x,Just y) -> (x,y))
                    (filter (\ (m,e) -> modDataVisible m && isJust e)
@@ -197,8 +199,15 @@ showExamController sem = do
 --- Controller to show all modules in the given semester.
 showHandbookController :: (String,Int) -> Controller
 showHandbookController sem = do
-  modkeys <- runQ $ transformQ nub (queryModKeysOfSem sem)
-  mods    <- runJustT $ mapT getModData modkeys
+  modkeys <- runQ $ queryModKeysOfSem sem
+  mods    <- runJustT $ mapM getModData modkeys
   formatCatModulesForm [("Alle Module im " ++ showLongSemester sem, mods)]
+
+--- Gets the ModData keys of all module instances in a given semester.
+queryModKeysOfSem :: (String,Int) -> DBAction [ModDataID]
+queryModKeysOfSem (term,year) =
+  ``sql* Select Distinct mi.ModDataModuleInstancesKey
+         From   ModInst As mi
+         Where  mi.Term = {term} And mi.Year = {year};''
 
 -----------------------------------------------------------------------------

@@ -28,16 +28,14 @@ mainPageView sinfo studyPrograms =
                                     (studyProgramToListView sp !! 1)
                                     (head (studyProgramToListView sp))])
                 (sortBy leqStudyProgram studyPrograms)),
-   h2 [htxt $ t "Master studies in computer science:"],
-   par [spHref "?MCA/list" [htxt $ t "Core areas"], nbsp,
-        spHref "?AdvisorStudyProgram/list" [htxt $ t "Master programs (since WS15/16)"],
-        spHref "?MasterProgram/list" [htxt $ t "Master programs (until SS15)"],
-        nbsp,
-        spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
-                [htxt $ t "Study planner"]],
    h3 [htxt $ t "Further information:"],
    ulist
-    [[htxt $ t "Overview on the ",
+    [[htxt $ t "Master studies in computer science:", nbsp,
+      spHref "?MCA/list" [htxt $ t "Core areas"], nbsp,
+      spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
+              [htxt $ t "Study planner"]
+     ],
+     [htxt $ t "Overview on the ",
       ehref "lehrplanung.html"
             [htxt $ t "planning instruments of the institute"]],
      [bold [htxt $ t "For persons in charge for modules: "],

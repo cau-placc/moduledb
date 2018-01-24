@@ -23,7 +23,6 @@ studyProgramToHRef sinfo sprog =
 studyProgramToListView :: StudyProgram -> [[HtmlExp]]
 studyProgramToListView studyProgram =
   [name2href (studyProgramName studyProgram)
-  ,name2href (studyProgramNameE studyProgram)
   ,[stringToHtml (studyProgramShortName studyProgram)]
   ,[stringToHtml (studyProgramProgKey studyProgram)]
   ,[intToHtml (studyProgramPosition studyProgram)]]
@@ -66,7 +65,6 @@ studyProgramLabelList =
 categoryToListView :: Category -> [[HtmlExp]]
 categoryToListView category =
   [name2href (categoryName category)
-  ,name2href (categoryNameE category)
   ,[stringToHtml (categoryShortName category)]
   ,[intToHtml (categoryPosition category)]]
  where
@@ -157,7 +155,7 @@ userToListView user =
   [[stringToHtml (userLogin user)]
   ,[stringToHtml (userName user)]
   ,[stringToHtml (userFirst user)]
-  ,[calendarTimeToHtml (userLastLogin user)]]
+  ,[dateToHtml (userLastLogin user)]]
 
 --- The HTML view of a User entity.
 userToHtmlView :: User -> HtmlExp
@@ -189,7 +187,7 @@ userToDetailsView user =
       ,[stringToHtml (userEmail user)]
       ,[stringToHtml (userUrl user)]
       ,[stringToHtml (userPassword user)]
-      ,[calendarTimeToHtml (userLastLogin user)]]
+      ,[dateToHtml (userLastLogin user)]]
 
 --- The labels of a User entity, as used in HTML tables.
 userLabelList :: [[HtmlExp]]

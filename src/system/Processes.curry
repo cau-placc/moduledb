@@ -16,7 +16,7 @@ import HTML.Base
 
 import Routes
 import RoutesData
-import Session
+import System.Session
 
 import ReadShowTerm
 import AllSolutions

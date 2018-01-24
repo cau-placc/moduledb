@@ -179,11 +179,9 @@ showMasterProgInfoView masterProgInfo relatedMasterProgram controller =
 leqMasterProgInfo :: MasterProgInfo -> MasterProgInfo -> Bool
 leqMasterProgInfo x1 x2 =
   (masterProgInfoProgModules x1,masterProgInfoPraktikum x1
-  ,masterProgInfoSeminar x1,masterProgInfoThesis x1
-  ,masterProgInfoAllgGrundlagen x1,masterProgInfoAnwendungsfach x1) <=
+  ,masterProgInfoSeminar x1,masterProgInfoThesis x1) <=
    (masterProgInfoProgModules x2,masterProgInfoPraktikum x2
-   ,masterProgInfoSeminar x2,masterProgInfoThesis x2
-   ,masterProgInfoAllgGrundlagen x2,masterProgInfoAnwendungsfach x2)
+   ,masterProgInfoSeminar x2,masterProgInfoThesis x2)
 
 --- Supplies a list view for a given list of MasterProgInfo entities.
 --- Shows also buttons to show, delete, or edit entries.

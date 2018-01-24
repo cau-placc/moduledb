@@ -2,8 +2,10 @@ module MasterProgramController (
  mainMasterProgramController,
  showAllXmlMasterPrograms,showXmlMasterProgram) where
 
+import Database.CDBI.ER
+
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import Time
 import ConfigMDB
@@ -82,7 +84,8 @@ createMasterProgramController True
         newMasterProgInfoWithMasterProgramProgramInfoKey
           "[]" radv radv radv aadv aadv (masterProgramKey mprog) |>>= \mpi ->
         returnT (mprog,mpi) ) >>=
-  either (\ (mp,mpi) ->
+  continueOrError
+    (\ (mp,mpi) ->
            logEvent (NewMasterProgram mp) >>
            logEvent (NewMasterProgInfo mpi) >>
            nextInProcessOr
@@ -91,7 +94,6 @@ createMasterProgramController True
                    href ("?MasterProgram/show/"++showMasterProgramKey mp)
                         [htxt "hier"], htxt " ergänzen!"]])
             Nothing)
-         (\ error -> displayError (showTError error))
  where
    radv = "beim Research Advisor"
    aadv = "nach Wahl der Studierenden in Absprache mit dem Academic Advisor"
@@ -121,16 +123,16 @@ updateMasterProgramController False mprog = showMasterProgramController mprog
 updateMasterProgramController True mprog =
   isAdmin >>= \admin ->
   runT ((if masterProgramVisible mprog
-         then getDB (queryInfoOfMasterProgram (masterProgramKey mprog)) |>>=
+         then queryInfoOfMasterProgram (masterProgramKey mprog) |>>=
               maybe (returnT "") reasonableMasterProgInfo
          else returnT "") |>>= \reas ->
         if null reas || admin then updateMasterProgram mprog |>> returnT ""
         else updateMasterProgram (setMasterProgramVisible mprog False) |>>
              returnT ("Masterprogramm nicht sichtbar, denn "++reas)) >>=
-  either (\ reas -> logEvent (UpdateMasterProgram mprog) >>
-                    (if null reas then done else setPageMessage reas) >>
-                    nextInProcessOr (showMasterProgramController mprog) Nothing)
-         (\ error -> displayError (showTError error))
+  continueOrError
+    (\ reas -> logEvent (UpdateMasterProgram mprog) >>
+               (if null reas then done else setPageMessage reas) >>
+               nextInProcessOr (showMasterProgramController mprog) Nothing)
 
 --- Deletes a given MasterProgram entity (depending on the Boolean
 --- argument) and proceeds with the list controller.
@@ -139,13 +141,13 @@ deleteMasterProgramController _ False = defaultController
 deleteMasterProgramController mprog True =
   checkAuthorization
    (masterProgramOperationAllowed (DeleteEntity mprog)) $ \_ ->
-     runT (getDB (queryInfoOfMasterProgram (masterProgramKey mprog)) |>>= \mpi->
-           maybe doneT deleteMasterProgInfo mpi |>>
+     runT (queryInfoOfMasterProgram (masterProgramKey mprog) |>>= \mpi->
+           maybe (returnT ()) deleteMasterProgInfo mpi |>>
            deleteMasterProgram mprog |>> returnT mpi) >>=
-     either (\ mpi -> logEvent (DeleteMasterProgram mprog) >>
-                      maybe done (logEvent . DeleteMasterProgInfo) mpi >>
-                      defaultController)
-            (\ error -> displayError (showTError error))
+     continueOrError
+       (\ mpi -> logEvent (DeleteMasterProgram mprog) >>
+                 maybe done (logEvent . DeleteMasterProgInfo) mpi >>
+                 defaultController)
 
 --- Lists all MasterProgram entities with buttons to show, delete,
 --- or edit an entity.
@@ -172,9 +174,10 @@ listMasterProgramController listall =
 
 -- Transform the module table by replacing the ModData key with
 -- the actual ModData:
-getMCodeForInfo (c,b,mk,t,y) =
-  getModData (fromJust (readModDataKey mk)) |>>= \mod ->
-  returnT (c,b,mod,t,y)
+getMCodeForInfo :: (a, b, String, c, d) -> DBAction (a, b, ModData, c, d)
+getMCodeForInfo (c,b,mk,t,y) = do
+  mod <- getModData (fromJust (readModDataKey mk))
+  return (c,b,mod,t,y)
 
 --- Shows a MasterProgram entity.
 showMasterProgramController :: MasterProgram -> Controller
@@ -221,15 +224,15 @@ queryModInstInSemesters semyear n =
 --- of next n semesters from a given one:
 getModInstCatsInSemesters :: (String,Int) -> Int
                           -> Transaction [(ModInst,[Category])]
-getModInstCatsInSemesters semyear n =
-  getDB (queryModInstInSemesters semyear n) |>>= \mis ->
-  --mapT (\mi -> getModDataKeyCategorys (modInstModDataModuleInstancesKey mi)
-  --              |>>= \cats -> returnT (mi,cats)) mis
-  mapT (\mdk -> getModDataKeyCategorys mdk |>>= \cats -> returnT (mdk,cats))
-       (nub (map modInstModDataModuleInstancesKey mis)) |>>= \mdkcats ->
-  returnT
-   (map (\mi -> (mi,fromJust
-                  (lookup (modInstModDataModuleInstancesKey mi) mdkcats))) mis)
+getModInstCatsInSemesters semyear n = do
+  mis <- queryModInstInSemesters semyear n
+  mdkcats <-
+    mapT (\mdk -> getModDataKeyCategories mdk >>= \cats -> return (mdk,cats))
+         (nub (map modInstModDataModuleInstancesKey mis))
+  return $
+   map (\mi -> (mi,fromJust
+                    (lookup (modInstModDataModuleInstancesKey mi) mdkcats)))
+       mis
 
 --- Get module instances (and their categories) belonging to given
 --- list of categories (specified by their ShortNames)
@@ -265,13 +268,12 @@ masterProgURL mp =
 -- Show XML document containing all visible master programs
 showAllXmlMasterPrograms :: IO HtmlForm
 showAllXmlMasterPrograms = do
-  allmprogs <- runQ $ transformQ (filter masterProgramVisible)
-                                 queryAllMasterPrograms
+  allmprogs <- runQ $ liftM (filter masterProgramVisible) queryAllMasterPrograms
   mpxmls <- mapIO getMasterProgramXML allmprogs
   return (HtmlAnswer "text/xml"
-             (showXmlDoc (xml "studyprograms" (catMaybes mpxmls))))
+                     (showXmlDoc (xml "studyprograms" (catMaybes mpxmls))))
 
-showXmlMasterProgram :: MasterProgramKey -> IO HtmlForm
+showXmlMasterProgram :: MasterProgramID -> IO HtmlForm
 showXmlMasterProgram mpkey = do
   mprog <- runJustT $ getMasterProgram mpkey
   mbxml <- getMasterProgramXML mprog

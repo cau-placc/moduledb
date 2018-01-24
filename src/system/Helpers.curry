@@ -29,7 +29,6 @@ import IOExts
 import Time
 import System(getEnviron,getHostname)
 import List
-import Integer(abs)
 import WUI
 import Char
 import Authentication

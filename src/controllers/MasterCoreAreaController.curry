@@ -4,7 +4,7 @@ module MasterCoreAreaController (
  ) where
 
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import Time
 import MDB
@@ -47,7 +47,7 @@ createMasterCoreAreaController True (name ,shortName ,description ,areaKey
   do transResult <- runT
                      (newMasterCoreArea name shortName description areaKey
                        (Just position))
-     either (\ _ -> nextInProcessOr listMasterCoreAreaController Nothing)
+     flip either (\ _ -> nextInProcessOr listMasterCoreAreaController Nothing)
       (\ error -> displayError (showTError error)) transResult
 
 --- Shows a form to edit the given MasterCoreArea entity.
@@ -66,7 +66,7 @@ updateMasterCoreAreaController :: Bool -> MasterCoreArea -> Controller
 updateMasterCoreAreaController False mca = showMasterCoreAreaController mca
 updateMasterCoreAreaController True mca =
   do transResult <- runT (updateMasterCoreArea mca)
-     either (\ _ -> nextInProcessOr (showMasterCoreAreaController mca) Nothing)
+     flip either (\ _ -> nextInProcessOr (showMasterCoreAreaController mca) Nothing)
       (\ error -> displayError (showTError error)) transResult
 
 --- Deletes a given MasterCoreArea entity (after asking for acknowledgment)
@@ -87,7 +87,7 @@ deleteMasterCoreAreaController masterCoreArea =
   checkAuthorization
    (masterCoreAreaOperationAllowed (DeleteEntity masterCoreArea)) $ \_ ->
    (do transResult <- runT (deleteMasterCoreArea masterCoreArea)
-       either (\ _ -> listMasterCoreAreaController)
+       flip either (\ _ -> listMasterCoreAreaController)
         (\ error -> displayError (showTError error)) transResult)
 
 --- Lists all MasterCoreArea entities with buttons to show, delete,

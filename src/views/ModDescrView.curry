@@ -109,13 +109,9 @@ showModDescrView modDescr relatedModData controller =
 --- Compares two ModDescr entities. This order is used in the list view.
 leqModDescr :: ModDescr -> ModDescr -> Bool
 leqModDescr x1 x2 =
-  (modDescrLanguage x1,modDescrShortDesc x1,modDescrObjectives x1
-  ,modDescrContents x1,modDescrPrereq x1,modDescrExam x1,modDescrMethods x1
-  ,modDescrUse x1,modDescrLiterature x1,modDescrLinks x1,modDescrComments x1)
+  (modDescrLanguage x1,modDescrShortDesc x1,modDescrObjectives x1)
    <=
-   (modDescrLanguage x2,modDescrShortDesc x2,modDescrObjectives x2
-   ,modDescrContents x2,modDescrPrereq x2,modDescrExam x2,modDescrMethods x2
-   ,modDescrUse x2,modDescrLiterature x2,modDescrLinks x2,modDescrComments x2)
+   (modDescrLanguage x2,modDescrShortDesc x2,modDescrObjectives x2)
 
 --- Supplies a list view for a given list of ModDescr entities.
 --- Shows also buttons to show, delete, or edit entries.

@@ -4,10 +4,11 @@ module ModInstController (
  ) where
 
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import Time
 import MDB
+import MDBExts
 import ModInstView
 import UserView
 import Maybe
@@ -36,7 +37,7 @@ mainModInstController =
 addModInstController :: ModData -> User -> Controller -> Controller
 addModInstController md user cntcontroller =
   checkAuthorization (modInstOperationAllowed NewEntity) $ \_ -> do
-    allUsers <- runQ (transformQ (mergeSortBy leqUser) queryAllUsers)
+    allUsers <- runQ (liftM (mergeSortBy leqUser) queryAllUsers)
     csem  <- getCurrentSemester
     return (addModInstView user allUsers csem
                            (createModInstController md cntcontroller))
@@ -52,7 +53,7 @@ createModInstController moddata cntcontroller True (term,year,user) = do
   if mb==Nothing
    then runT (newModInstWithUserLecturerModsKeyWithModDataModuleInstancesKey
                     term (Just year) (userKey user) (modDataKey moddata)) >>=
-        either (\ mi -> logEvent (NewModInst mi) >>
+        flip either (\ mi -> logEvent (NewModInst mi) >>
                         setPageMessage "Semester hinzugefügt" >>
                         nextInProcessOr cntcontroller Nothing)
                (\ error -> displayError (showTError error))
@@ -64,14 +65,14 @@ editAllModInstController md cntcontroller = do
    --checkAuthorization (modInstOperationAllowed (UpdateEntity md)) $ do
    admin <- isAdmin
    cursem   <- getCurrentSemester
-   allinsts <- runQ $ transformQ
+   allinsts <- runQ $ liftM
                         (mergeSortBy leqModInst . filterModInsts admin cursem)
                         (queryInstancesOfMod (modDataKey md))
    allmpkeys <- runQ $ getMasterProgramKeysOfModInst allinsts
    allspkeys <- runJustT $
-                 mapT (\mi -> getDB (getAdvisorStudyProgramKeysOfModInst mi))
+                 mapT (\mi -> getAdvisorStudyProgramKeysOfModInst mi)
                       allinsts
-   allUsers <- runQ (transformQ (mergeSortBy leqUser) queryAllUsers)
+   allUsers <- runQ (liftM (mergeSortBy leqUser) queryAllUsers)
    -- select instances not used in master programs:
    let editinsts = concatMap
                        (\ (mi,mks,sks) -> if (null mks && null sks) || admin
@@ -129,7 +130,7 @@ updateAllModInstController oldinsts cntcontroller True modinsts = do
                     then returnT [Nothing]
                     else updateModInst ni |>> returnT [Just (UpdateModInst ni)])
              oldnewinsts) >>=
-    either (\ upds  -> do
+    flip either (\ upds  -> do
                mapIO_ (maybe done logEvent) (concat upds)
                if all isJust (concat upds) then done
                                            else setPageMessage useMsg
@@ -145,7 +146,7 @@ updateAllModInstController oldinsts cntcontroller True modinsts = do
            (\ (oi,(ni,del)) -> del || modInstSemester oi /= modInstSemester ni)
            oldnewinsts)
 
-  inUse mi = getDB (getMasterProgramKeysOfModInst [mi]) |>>= \[mpkeys] ->
+  inUse mi = getMasterProgramKeysOfModInst [mi] |>>= \[mpkeys] ->
              returnT (not (null mpkeys))
 
   useMsg = "Einige Modulinstanzen können nicht mehr verändert werden, "++
@@ -163,7 +164,7 @@ updateModInstController :: Bool -> ModInst -> Controller
 updateModInstController False _ = listModInstController
 updateModInstController True modInst =
   do transResult <- runT (updateModInst modInst)
-     either (\ _ -> nextInProcessOr listModInstController Nothing)
+     flip either (\ _ -> nextInProcessOr listModInstController Nothing)
       (\ error -> displayError (showTError error)) transResult
 
 --- Deletes a given ModInst entity (depending on the Boolean
@@ -173,7 +174,7 @@ deleteModInstController _ False = listModInstController
 deleteModInstController modInst True =
   checkAuthorization (modInstOperationAllowed (DeleteEntity modInst)) $ \_ ->
    (do transResult <- runT (deleteModInst modInst)
-       either (\ _ -> listModInstController)
+       flip either (\ _ -> listModInstController)
         (\ error -> displayError (showTError error)) transResult)
 
 --- Lists all ModInst entities with buttons to show, delete,

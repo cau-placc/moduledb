@@ -1,4 +1,4 @@
-{- ERD specification transformed from /net/medoc/home/mh/home/curry/applications/MDB/MDB.erdterm -}
+{- ERD specification transformed from /net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.erdterm -}
 
  ERD "MDB"
    [Entity "Categorizing"
@@ -34,19 +34,19 @@
             Attribute "Name" (StringDom Nothing) NoKey False,
             Attribute "First" (StringDom Nothing) NoKey True,
             Attribute "Title" (StringDom Nothing) NoKey True,
-            Attribute "Email" (StringDom Nothing) NoKey False,
+            Attribute "Email" (StringDom Nothing) NoKey True,
             Attribute "Url" (StringDom Nothing) NoKey True,
-            Attribute "Password" (StringDom Nothing) NoKey False,
+            Attribute "Password" (StringDom Nothing) NoKey True,
             Attribute "LastLogin" (DateDom Nothing) NoKey False],
     Entity "ModData"
            [Attribute "Key" (IntDom Nothing) PKey False,
             Attribute "Code" (StringDom Nothing) Unique False,
             Attribute "NameG" (StringDom Nothing) NoKey False,
             Attribute "NameE" (StringDom Nothing) NoKey True,
-            Attribute "Cycle" (StringDom Nothing) NoKey False,
-            Attribute "Presence" (StringDom Nothing) NoKey False,
+            Attribute "Cycle" (StringDom Nothing) NoKey True,
+            Attribute "Presence" (StringDom Nothing) NoKey True,
             Attribute "ECTS" (IntDom (Just 8)) NoKey False,
-            Attribute "Workload" (StringDom Nothing) NoKey False,
+            Attribute "Workload" (StringDom Nothing) NoKey True,
             Attribute "Length" (IntDom (Just 1)) NoKey False,
             Attribute "URL" (StringDom Nothing) NoKey True,
             Attribute "Visible" (BoolDom Nothing) NoKey False,
@@ -148,10 +148,10 @@
                  [REnd "ModData" "descOf" (Exactly 1),
                   REnd "ModDescr" "withDesc" (Between 0 (Max 1))],
     Relationship ""
-                 [REnd "ModData" [] (Exactly 1),
+                 [REnd "ModData" "" (Exactly 1),
                   REnd "Categorizing" "belongsTo" (Between 1 Infinite)],
     Relationship ""
-                 [REnd "Category" [] (Exactly 1),
+                 [REnd "Category" "" (Exactly 1),
                   REnd "Categorizing" "contains" (Between 0 Infinite)],
     Relationship "Responsible"
                  [REnd "User" "managedBy" (Exactly 1),

@@ -232,8 +232,7 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
    else []) ++
   [spTable
     (if isAdminSession sinfo && null (concatMap snd catmods)
-     then [take 3 categoryLabelList ++
-           [categoryLabelList!!6, categoryLabelList!!7]] ++
+     then map (categoryLabelList!!) [0,2,6] :
           map listCategory
               (mergeSortBy leqCategory
                (concatMap (\ (c,_) -> either (:[]) (const []) c) catmods))

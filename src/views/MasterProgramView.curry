@@ -10,6 +10,7 @@ import Time
 import Sort
 import Spicey
 import MDB
+import MDBExts
 import MDBEntitiesToHtml
 import Helpers
 import ReadShowTerm
@@ -183,7 +184,7 @@ leqMasterProgram x1 x2 =
 --- and the controller functions to show, delete and edit entities.
 listMasterProgramView
   :: UserSessionInfo -> Bool
-  -> [(MasterProgramKey,String,String,Int,Bool,MasterCoreAreaKey)]
+  -> [(MasterProgramID,String,String,Int,Bool,MasterCoreAreaID)]
   -> [MasterCoreArea] -> [HtmlExp]
 listMasterProgramView sinfo listall mpinfos allcoreareas =
   [h1 [htxt $ t "Master programs in computer science"]] ++

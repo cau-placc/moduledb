@@ -20,7 +20,7 @@ module Spicey (
   nextInProcessOr,
   stringToHtml, maybeStringToHtml,
   intToHtml,maybeIntToHtml, floatToHtml, maybeFloatToHtml,
-  boolToHtml, maybeBoolToHtml, calendarTimeToHtml, maybeCalendarTimeToHtml,
+  boolToHtml, maybeBoolToHtml, dateToHtml, maybeDateToHtml,
   userDefinedToHtml, maybeUserDefinedToHtml,
   hrefStudyProgram, hrefCategory, smallHrefCategory,
   hrefModule, smallHrefModule, hrefExtModule, hrefModInst,
@@ -29,19 +29,19 @@ module Spicey (
   spButton, spPrimButton, spSmallButton, spTable, spHeadedTable, addTitle,
   spShortSelectionInitial,
   setPageMessage, getPageMessage,
-  saveLastUrl, getLastUrl, getLastUrlParameters, getLastUrls
+  saveLastUrl, getLastUrl, getLastUrlParameters, getLastUrls,
+  continueOrError
   ) where
 
 import System
 import HTML.Base
 import ReadNumeric
-import KeyDatabase
 import WUI
 import Time
 import Routes
 import Processes
 import UserProcesses
-import Session
+import System.Session
 import Global
 import Authentication
 import Helpers
@@ -49,6 +49,9 @@ import Distribution
 import MultiLang
 import SessionInfo
 import List(last)
+
+import Database.CDBI.ER
+import MDB (runT, runJustT)
 
 ---------------- vvvv -- Framework functions -- vvvv -----------------------
 
@@ -67,7 +70,7 @@ type ViewBlock = [HtmlExp]
 type Controller = IO ViewBlock
 
 --- Reads an entity for a given key and applies a controller to it.
-applyControllerOn :: Maybe enkey -> (enkey -> Transaction en)
+applyControllerOn :: Maybe enkey -> (enkey -> DBAction en)
                   -> (en -> Controller) -> Controller
 applyControllerOn Nothing _ _ = displayError "Illegal URL"
 applyControllerOn (Just userkey) getuser usercontroller =
@@ -115,11 +118,11 @@ confirmController question yescontroller nocontroller = do
 --- transaction error is shown.
 --- @param trans - the transaction to be executed
 --- @param controller - the controller executed in case of success
-transactionController :: (Transaction _) -> Controller -> Controller
+transactionController :: (DBAction _) -> Controller -> Controller
 transactionController trans controller = do
   transResult <- runT trans
-  either (\_     -> controller)
-         (\error -> displayError (showTError error))
+  either (\error -> displayError (show error))
+         (\_     -> controller)
          transResult
 
 --- A controller to execute a transaction and proceed with a given
@@ -128,11 +131,11 @@ transactionController trans controller = do
 --- @param trans - the transaction to be executed
 --- @param controller - the controller executed on the result of a successful
 ---                     transaction
-transactionBindController :: (Transaction a) -> (a -> Controller) -> Controller
+transactionBindController :: (DBAction a) -> (a -> Controller) -> Controller
 transactionBindController trans controller = do
   transResult <- runT trans
-  either controller
-         (\error -> displayError (showTError error))
+  either (\error -> displayError (show error))
+         controller
          transResult
 
 --- If we are in a process, execute the next process depending on
@@ -230,14 +233,16 @@ renderWuiForm wuispec initdata controller cancelcontroller title buttontag =
 
 --- A WUI for manipulating CalendarTime entities.
 --- It is based on a WUI for dates, i.e., the time is ignored.
-wDateType :: WuiSpec CalendarTime
+wDateType :: WuiSpec ClockTime
 wDateType = transformWSpec (tuple2date,date2tuple) wDate
  where
-  tuple2date :: (Int, Int, Int) -> CalendarTime
-  tuple2date (day, month, year) = CalendarTime year month day 0 0 0 0
+  tuple2date :: (Int, Int, Int) -> ClockTime
+  tuple2date (day, month, year) =
+    toClockTime (CalendarTime year month day 0 0 0 0)
 
-  date2tuple :: CalendarTime -> (Int, Int, Int)
-  date2tuple( CalendarTime year month day _ _ _ _) = (day, month, year)
+  date2tuple :: ClockTime -> (Int, Int, Int)
+  date2tuple ct = let CalendarTime year month day _ _ _ _ = toUTCTime ct
+                  in (day, month, year)
 
 --- A WUI for manipulating date entities.
 wDate :: WuiSpec (Int, Int, Int)
@@ -251,7 +256,7 @@ wBoolean :: WuiSpec Bool
 wBoolean = wSelectBool "True" "False"
 
 --- A WUI transformer to map WUIs into WUIs for corresponding Maybe types.
-wUncheckMaybe :: a -> WuiSpec a -> WuiSpec (Maybe a)
+wUncheckMaybe :: Eq a => a -> WuiSpec a -> WuiSpec (Maybe a)
 wUncheckMaybe defval wspec =
   wMaybe (transformWSpec (not,not) (wCheckBool [htxt "No value"]))
          wspec
@@ -289,15 +294,20 @@ addLayout viewblock = do
   login      <- getSessionLogin
   sinfo      <- getUserSessionInfo
   usermenu   <- getUserMenu login sinfo
-  (routemenu1,routemenu2) <- getRouteMenus
   msg        <- getPageMessage
   admin      <- isAdmin
+  (routemenu1,routemenu2) <- getRouteMenus
+  let adminmenu =  HtmlStruct "ul" [] $
+                     map litem routemenu2 ++
+                     [litem [htxt " "] `addClass` "divider"] ++
+                     map litem routemenu1
   let (mainTitle,mainDoc) =
           case viewblock of
             (HtmlStruct "h1" [] t : hexps) -> (t,hexps)
             _ -> ([htxt (translate sinfo spiceyTitle)], viewblock)
   return $
-    stdNavBar usermenu login sinfo ++
+    stdNavBar usermenu (if admin then Just adminmenu else Nothing)
+              login sinfo ++
     [blockstyle "container-fluid" $
       [HtmlStruct "header" [("class","jumbotron")] [h1 mainTitle],
        if null msg
@@ -306,8 +316,6 @@ addLayout viewblock = do
         else HtmlStruct "header" [("class","pagemessage")] [htxt msg],
        blockstyle "row"
         [blockstyle "col-md-12" mainDoc]] ++
-       (if admin then adminNavBar routemenu1 ++ adminNavBar routemenu2
-                 else []) ++
       [hrule,
        HtmlStruct "footer" []
         [par [htxt "powered by",
@@ -334,9 +342,11 @@ mainContentsWithSideMenu menuitems contents =
 
 -- Standard navigation bar at the top.
 -- The first argument is the route menu (a ulist).
--- The second argument is the possible login name.
-stdNavBar :: HtmlExp -> Maybe String -> UserSessionInfo -> [HtmlExp]
-stdNavBar routemenu login sinfo =
+-- The second argument is the possible admin menu (a ulist).
+-- The third argument is the possible login name.
+stdNavBar :: HtmlExp -> Maybe HtmlExp -> Maybe String -> UserSessionInfo
+          -> [HtmlExp]
+stdNavBar routemenu adminmenu login sinfo =
   [blockstyle "navbar navbar-inverse navbar-fixed-top"
     [blockstyle "container-fluid"
       [navBarHeaderItem,
@@ -377,9 +387,21 @@ stdNavBar routemenu login sinfo =
        
   appendDropdownItem (HtmlStruct tag ats items) =
     HtmlStruct tag ats
-      (take (length items - 1) items ++ [dropDownMenuItem] ++ [last items])
+      (take (length items - 1) items ++
+       maybe [] (\m -> [adminDropDownMenu m]) adminmenu ++
+       [gotoDropDownMenu] ++
+       [last items])
 
-  dropDownMenuItem =
+  -- The admin menu as a dropdown menu (represented as a HTML list item).
+  -- The first argument is the admin menu (a ulist).
+  adminDropDownMenu :: HtmlExp -> HtmlExp
+  adminDropDownMenu adminmenu =
+    HtmlStruct "li" [("class","dropdown")]
+       [href "#" [htxt $ "Administrator", bold [htxt " "] `addClass` "caret"]
+         `addAttrs` [("class","dropdown-toggle"),("data-toggle","dropdown")],
+        adminmenu `addClass` "dropdown-menu"]
+
+  gotoDropDownMenu =
     HtmlStruct "li" [("class","dropdown")]
      [href "#" [htxt $ t "Go to", bold [htxt " "] `addClass` "caret"]
        `addAttrs` [("class","dropdown-toggle"),("data-toggle","dropdown")],
@@ -406,24 +428,15 @@ stdNavBar routemenu login sinfo =
 
   toEHref url s = litem [ehref url [arrowIcon, nbsp, htxt s]]
 
--- Admin navigation bar at the bottom.
--- The first argument is the menu (a ulist).
-adminNavBar :: HtmlExp -> [HtmlExp]
-adminNavBar routemenu =
-  [blockstyle "navbar navbar-inverse"
-    [blockstyle "container-fluid"
-         [routemenu `addClass` "nav navbar-nav"]
-    ]
-  ]
 
 getForm :: ViewBlock -> IO HtmlForm
-getForm viewBlock =
-  if viewBlock == [HtmlText ""]
-  then return $ HtmlForm "forward to Spicey"
+getForm viewBlock = case viewBlock of
+  [HtmlText ""] ->
+       return $ HtmlForm "forward to Spicey"
                   [formMetaInfo [("http-equiv","refresh"),
                                  ("content","1; url=show.cgi")]]
                   [par [htxt "You will be forwarded..."]]
-  else do
+  _ -> do
     cookie  <- sessionCookie
     body    <- addLayout viewBlock
     return $ HtmlForm spiceyTitle
@@ -504,17 +517,17 @@ boolToHtml b = textstyle "type_bool" (show b)
 maybeBoolToHtml :: Maybe Bool -> HtmlExp
 maybeBoolToHtml b = textstyle "type_bool" (maybe "" show b)
 
-calendarTimeToHtml :: CalendarTime -> HtmlExp
-calendarTimeToHtml ct = textstyle "type_calendartime" (toDayString ct)
+dateToHtml :: ClockTime -> HtmlExp
+dateToHtml ct = textstyle "type_calendartime" (toDayString (toUTCTime ct))
 
-maybeCalendarTimeToHtml :: Maybe CalendarTime -> HtmlExp
-maybeCalendarTimeToHtml ct =
-  textstyle "type_calendartime" (maybe "" toDayString ct)
+maybeDateToHtml :: Maybe ClockTime -> HtmlExp
+maybeDateToHtml ct =
+  textstyle "type_calendartime" (maybe "" (toDayString . toUTCTime) ct)
 
-userDefinedToHtml :: _ -> HtmlExp
+userDefinedToHtml :: Show a => a -> HtmlExp
 userDefinedToHtml ud = textstyle "type_string" (show ud)
 
-maybeUserDefinedToHtml :: Maybe a -> HtmlExp
+maybeUserDefinedToHtml :: Show a => Maybe a -> HtmlExp
 maybeUserDefinedToHtml ud = textstyle "type_string" (maybe "" show ud)
 
 --------------------------------------------------------------------------
@@ -718,5 +731,11 @@ saveLastUrl :: String -> IO ()
 saveLastUrl url = do
   urls <- getLastUrls
   putSessionData (url : take 2 urls) lastUrls
+
+--------------------------------------------------------------------------
+--- If the SQLResult is an error, display it, otherwise apply the
+--- controller (first argument) to the result.
+continueOrError :: (a -> Controller) -> SQLResult a -> Controller
+continueOrError = either (displayError . show)
 
 --------------------------------------------------------------------------

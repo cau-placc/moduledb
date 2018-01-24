@@ -15,12 +15,13 @@ module SessionInfo (
   getUserSessionInfo, updateUserSessionInfo
  ) where
 
-import Session
+import System.Session
 import Global
 
 --------------------------------------------------------------------------
 --- The languages which are currently supported.
 data Language = German | English
+ deriving Eq
 
 --------------------------------------------------------------------------
 --- The data associated to a user session.

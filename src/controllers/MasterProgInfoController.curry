@@ -5,7 +5,7 @@ module MasterProgInfoController (
  ) where
 
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import Time
 import MDB
@@ -55,7 +55,7 @@ updateMasterProgInfoController cntcontroller True mpinfo =
                            returnT ("Masterprogramm nicht sichtbar, denn "++reas)
                       else returnT "") |>>= \cmt ->
             returnT (cmt,progmods==exprogmods)) >>=
-  either (\ (cmt,exall) ->
+  flip either (\ (cmt,exall) ->
               logEvent (UpdateMasterProgInfo mpinfo) >>
               (if exall
                 then if null cmt then done else setPageMessage cmt
@@ -74,7 +74,7 @@ deleteMasterProgInfoController masterProgInfo True =
   checkAuthorization
    (masterProgInfoOperationAllowed (DeleteEntity masterProgInfo)) $ \_ ->
    (do transResult <- runT (deleteMasterProgInfo masterProgInfo)
-       either (\ _ -> listMasterProgInfoController)
+       flip either (\ _ -> listMasterProgInfoController)
         (\ error -> displayError (showTError error)) transResult)
 
 --- Lists all MasterProgInfo entities with buttons to show, delete,
@@ -110,13 +110,15 @@ getProgramInfoMasterProgram mMasterProgram =
 --- of next n semesters from a given one:
 getModInstCatsInSemesters :: (String,Int) -> Int
                           -> Transaction [(ModInst,[Category])]
-getModInstCatsInSemesters semyear n =
-  getDB (queryModInstInSemesters semyear n) |>>= \mis ->
-  mapT (\mdk -> getModDataKeyCategorys mdk |>>= \cats -> returnT (mdk,cats))
-       (nub (map modInstModDataModuleInstancesKey mis)) |>>= \mdkcats ->
-  returnT
+getModInstCatsInSemesters semyear n = do
+  mis <- queryModInstInSemesters semyear n
+  mdkcats <- mapM (\mdk -> do cats <- getModDataKeyCategories mdk
+                              return (mdk,cats))
+                  (nub (map modInstModDataModuleInstancesKey mis))
+  return
    (map (\mi -> (mi,fromJust
-                  (lookup (modInstModDataModuleInstancesKey mi) mdkcats))) mis)
+                      (lookup (modInstModDataModuleInstancesKey mi) mdkcats)))
+        mis)
 
 --- Get module instances (and their categories) belonging to given
 --- list of categories (specified by their ShortNames)
@@ -148,7 +150,7 @@ cleanProgMods :: [(String,Bool,String,String,Int)]
               -> Transaction [(String,Bool,String,String,Int)]
 cleanProgMods pms =
   mapT (\ (ck,p,mdk,term,year) ->
-         getDB (queryInstancesOfMod (fromJust(readModDataKey mdk))) |>>= \mis ->
+         queryInstancesOfMod (fromJust(readModDataKey mdk)) |>>= \mis ->
          if (term,year) `elem` (map modInstSemester mis)
          then returnT [(ck,p,mdk,term,year)]
          else returnT [])

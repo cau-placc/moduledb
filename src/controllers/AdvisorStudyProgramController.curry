@@ -6,7 +6,7 @@ where
 
 import Helpers
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import List(find)
 import Time
@@ -118,7 +118,7 @@ editAdvisorStudyProgramController advisorStudyProgramToEdit =
            showctrl))
 
 --- A show controller for a given AdvisorStudyProgram key:
-showASPController :: AdvisorStudyProgramKey -> Controller
+showASPController :: AdvisorStudyProgramID -> Controller
 showASPController aspkey =
   runJustT (getAdvisorStudyProgram aspkey)
                        >>= showAdvisorStudyProgramController
@@ -184,7 +184,7 @@ showAdvisorStudyProgramController asprog =
    (advisorStudyProgramOperationAllowed (ShowEntity asprog))
    $ (\sinfo ->
      do studyprog <- runJustT (getStudyProgramsAdvisedStudyProgram asprog)
-        categories <- runQ $ transformQ (sortBy leqCategory) $
+        categories <- runQ $ liftM (sortBy leqCategory) $
                                queryCategorysOfStudyProgram (studyProgramKey studyprog)
         amods <- runQ $ queryCondAdvisorModule
            (\am -> advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey am
@@ -235,13 +235,13 @@ advisorProgURL asp =
 -- Show XML document containing all visible master programs
 showAllXmlAdvisorStudyPrograms :: IO HtmlForm
 showAllXmlAdvisorStudyPrograms = do
-  allasprogs <- runQ $ transformQ (filter advisorStudyProgramVisible)
-                                 queryAllAdvisorStudyPrograms
+  allasprogs <- runQ $ liftM (filter advisorStudyProgramVisible)
+                             queryAllAdvisorStudyPrograms
   aspxmls <- mapIO getAdvisorStudyProgramAsXML allasprogs
   return (HtmlAnswer "text/xml"
                      (showXmlDoc (xml "studyprograms" aspxmls)))
 
-showXmlAdvisorStudyProgram :: AdvisorStudyProgramKey -> IO HtmlForm
+showXmlAdvisorStudyProgram :: AdvisorStudyProgramID -> IO HtmlForm
 showXmlAdvisorStudyProgram aspkey = do
   asprog <- runJustT $ getAdvisorStudyProgram aspkey
   xmldoc <- getAdvisorStudyProgramAsXML asprog
@@ -250,7 +250,7 @@ showXmlAdvisorStudyProgram aspkey = do
 getAdvisorStudyProgramAsXML :: AdvisorStudyProgram -> IO XmlExp
 getAdvisorStudyProgramAsXML asprog = do
   studyprog <- runJustT (getStudyProgramsAdvisedStudyProgram asprog)
-  categories <- runQ $ transformQ (sortBy leqCategory) $
+  categories <- runQ $ liftM (sortBy leqCategory) $
                          queryCategorysOfStudyProgram (studyProgramKey studyprog)
   amods <- runQ $ queryCondAdvisorModule
                        (\am -> advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey am

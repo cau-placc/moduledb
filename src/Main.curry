@@ -14,16 +14,17 @@ import Processes
 import ModDataController
 import AdvisorStudyProgramController(showXmlAdvisorStudyProgram,showAllXmlAdvisorStudyPrograms)
 import MasterProgramController(showXmlMasterProgram,showAllXmlMasterPrograms)
-import KeyDatabase
+import Transaction
 import MDB
 import MDBExts
 import MDBEntitiesToHtml
 import Helpers
 import List
 import Sort
-import CSV
 import MultiLang
 import SessionInfo
+
+import Text.CSV
 
 dispatcher :: IO HtmlForm
 dispatcher = do
@@ -137,8 +138,8 @@ moduleCSV studyprogs mods = do
 
 -------------------------------------------------------------------------
 -- For benchmarking:
-benchMDB :: IO ()
-benchMDB = allModuleCSV >>= print . length . show
+--benchMDB :: IO ()
+--benchMDB = allModuleCSV >>= print . length . show
 --> lussac/pakcs: 13.8s
 --> lussac/kics2: 0.88s
 --> lascombes/pakcs: 7.26

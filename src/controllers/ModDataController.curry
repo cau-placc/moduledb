@@ -1,12 +1,12 @@
 module ModDataController (
- mainModDataController, getModDataOfCategory, showModDataWithCode,
+ mainModDataController, showModDataWithCode,
  showXmlIndex, showXmlModule,
  formatCatModulesForm, emailModuleMessageController
  ) where
 
 import ConfigMDB
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import XML
 import Time
@@ -102,7 +102,7 @@ createModDataController isimport True
          else newModDescrWithModDataDataDescKey "Deutsch" "" "" "" "" "" ""
                        "" "" "" "" (modDataKey md) |>>= \mi ->
               returnT (md,Just mi)) >>=
-  either (\ (md,mi) -> logEvent (NewModData md) >>
+  flip either (\ (md,mi) -> logEvent (NewModData md) >>
                        maybe done (logEvent . NewModDescr) mi >>
                        nextInProcessOr defaultController Nothing)
          (\ error -> displayError (showTError error))
@@ -134,7 +134,8 @@ updateModDataController True (modData,newcats) = do
          addCategorizing (filter (`notElem` oldcats) newcats) modData |>>
          removeCategorizing (filter (`notElem` newcats) oldcats) modData
     else updateModData modData
-  either (\ _ -> logEvent (UpdateModData modData) >>
+  flip either
+         (\ _ -> logEvent (UpdateModData modData) >>
                  nextInProcessOr (showModDataController modData) Nothing)
          (\ error -> displayError (showTError error)) tr
 
@@ -157,11 +158,11 @@ deleteModDataController modData =
   checkAuthorization checkAdmin $ \_->
     runT (getModDataCategories modData |>>= \oldCategorizingCategorys ->
           killCategorizing oldCategorizingCategorys |>>
-          getDB (queryDescriptionOfMod (modDataKey modData)) |>>= \mbdescr ->
-          maybe doneT deleteModDescr mbdescr |>>
+          queryDescriptionOfMod (modDataKey modData) |>>= \mbdescr ->
+          maybe (returnT ()) deleteModDescr mbdescr |>>
           deleteModData modData |>>
           returnT mbdescr) >>=
-    either (\ mbdescr -> logEvent (DeleteModData modData) >>
+    flip either (\ mbdescr -> logEvent (DeleteModData modData) >>
                          maybe done (logEvent . DeleteModDescr) mbdescr >>
                          defaultController)
            (\ error -> displayError (showTError error))
@@ -218,7 +219,7 @@ storeCopiedModController mdata mdesc newcode = do
             (modDescrComments mdesc)
             (modDataKey md) |>>= \mi ->
           returnT (md,mi)) >>=
-        either (\ (md,mi) -> logEvent (NewModData md) >>
+        flip either (\ (md,mi) -> logEvent (NewModData md) >>
                              logEvent (NewModDescr mi) >>
                              setPageMessage "Modul kopiert" >>
                              nextInProcessOr defaultController Nothing)
@@ -298,28 +299,22 @@ showModDataController modData = do
 --- Associates given entities with the ModData entity.
 addCategorizing :: [Category] -> ModData -> Transaction ()
 addCategorizing categorys modData =
-  mapT_ (\ t -> newCategorizing (modDataKey modData) (categoryKey t))
-   categorys
+  mapM_ (\ t -> newCategorizing (modDataKey modData) (categoryKey t))
+        categorys
 
 --- Removes association to the given entities with the ModData entity.
 removeCategorizing :: [Category] -> ModData -> Transaction ()
 removeCategorizing categorys modData =
-  mapT_ (\ t -> deleteCategorizing (modDataKey modData) (categoryKey t))
-   categorys
-
---- Query the module descriptions of a given category.
-getModDataOfCategory :: CategoryKey -> Transaction [ModData]
-getModDataOfCategory ck =
-  getDB (queryModDataKeysOfCategory ck) |>>= mapT getModData
-
+  mapM_ (\ t -> deleteCategorizing (modDataKey modData) (categoryKey t))
+        categorys
 
 -- Get all study programs with their categories:
 getStudyProgramsWithCats :: IO [(StudyProgram,[Category])]
-getStudyProgramsWithCats = do
-  sps <- runQ $ transformQ (mergeSortBy leqStudyProgram) queryAllStudyPrograms
-  mapIO (\sp -> do cs <- runQ (queryCategorysOfStudyProgram (studyProgramKey sp))
-                   return (sp,cs))
-        sps
+getStudyProgramsWithCats = runQ $ do
+  sps <- liftM (mergeSortBy leqStudyProgram) queryAllStudyPrograms
+  mapM (\sp -> do cs <- queryCategorysOfStudyProgram (studyProgramKey sp)
+                  return (sp,cs))
+       sps
 
 -------------------------------------------------------------------------
 -- A controller (and view) to send an email:

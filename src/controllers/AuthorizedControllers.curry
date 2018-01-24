@@ -3,7 +3,6 @@ module AuthorizedControllers where
 import Authorization
 import MDB
 import MDBExts
-import KeyDatabase
 import Authentication
 import SessionInfo
 

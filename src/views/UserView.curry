@@ -14,17 +14,17 @@ import MDBEntitiesToHtml
 
 --- The WUI specification for the entity type User.
 wUser
- :: WuiSpec (String,String,String,String,String,String,String,CalendarTime)
+ :: WuiSpec (String,String,String,String,String,String,String,ClockTime)
 wUser =
   withRendering
    (w8Tuple wMediumRequiredString wMediumRequiredString wMediumString
             wMediumString wMediumRequiredString wMediumString
-            (wConstant htxt) (wConstant (htxt . calendarTimeToString)))
+            (wConstant htxt) (wConstant (htxt . calendarTimeToString . toUTCTime )))
    (renderLabels userLabelList)
 
 --- Transformation from data of a WUI form to entity type User.
 tuple2User
- :: User -> (String,String,String,String,String,String,String,CalendarTime)
+ :: User -> (String,String,String,String,String,String,String,ClockTime)
   -> User
 tuple2User userToUpdate (login ,name ,first ,title ,email ,url ,password
                          ,lastLogin) =
@@ -46,7 +46,7 @@ tuple2User userToUpdate (login ,name ,first ,title ,email ,url ,password
 --- Transformation from entity type User to a tuple
 --- which can be used in WUI specifications.
 user2Tuple
- :: User -> (String,String,String,String,String,String,String,CalendarTime)
+ :: User -> (String,String,String,String,String,String,String,ClockTime)
 user2Tuple user =
   (userLogin user,userName user,userFirst user,userTitle user,userEmail user
   ,userUrl user,userPassword user,userLastLogin user)
@@ -59,8 +59,8 @@ wUserType user = transformWSpec (tuple2User user,user2Tuple) wUser
 --- Supplies a WUI form to create a new User entity.
 --- The fields of the entity have some default values.
 blankUserView
- :: CalendarTime
-  -> (Bool -> (String,String,String,String,String,String,String,CalendarTime)
+ :: ClockTime
+  -> (Bool -> (String,String,String,String,String,String,String,ClockTime)
        -> Controller)
   -> [HtmlExp]
 blankUserView ctime controller =
@@ -70,8 +70,8 @@ blankUserView ctime controller =
 --- Takes default values to be prefilled in the form fields.
 createUserView
  :: String -> String -> String -> String -> String -> String -> String
-  -> CalendarTime
-  -> (Bool -> (String,String,String,String,String,String,String,CalendarTime)
+  -> ClockTime
+  -> (Bool -> (String,String,String,String,String,String,String,ClockTime)
        -> Controller)
   -> [HtmlExp]
 createUserView defaultLogin defaultName defaultFirst defaultTitle defaultEmail
@@ -119,10 +119,8 @@ showUserView user =
 --- Compares two User entities. This order is used in the list view.
 leqUser :: User -> User -> Bool
 leqUser x1 x2 =
-  (userName x1,userFirst x1,userLogin x1,userTitle x1,userEmail x1,userUrl x1
-  ,userPassword x1,userLastLogin x1) <=
-   (userName x2,userFirst x2,userLogin x2,userTitle x2,userEmail x2,userUrl x2
-   ,userPassword x2,userLastLogin x2)
+  (userName x1,userFirst x1,userLogin x1,userTitle x1,userEmail x1) <=
+   (userName x2,userFirst x2,userLogin x2,userTitle x2,userEmail x2)
 
 --- Supplies a list view for a given list of User entities.
 listUserView :: [User] -> [HtmlExp]

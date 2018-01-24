@@ -10,7 +10,7 @@ module SpiceySystemController
  where
 
 import Spicey
-import Session
+import System.Session
 import UserProcesses
 import Processes
 import SpiceySystemView

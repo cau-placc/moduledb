@@ -3,7 +3,7 @@ module UnivisInfoController (
  ) where
 
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import Time
 import MDB
@@ -41,7 +41,7 @@ createUnivisInfoController :: Bool -> (String,String,Int,String) -> Controller
 createUnivisInfoController False _ = listUnivisInfoController
 createUnivisInfoController True (code ,term ,year ,uRL) =
   do transResult <- runT (newUnivisInfo code term year uRL)
-     either (\ _ -> nextInProcessOr listUnivisInfoController Nothing)
+     flip either (\ _ -> nextInProcessOr listUnivisInfoController Nothing)
       (\ error -> displayError (showTError error)) transResult
 
 --- Shows a form to edit the given UnivisInfo entity.
@@ -59,7 +59,7 @@ updateUnivisInfoController :: Bool -> UnivisInfo -> Controller
 updateUnivisInfoController False _ = listUnivisInfoController
 updateUnivisInfoController True univisInfo =
   do transResult <- runT (updateUnivisInfo univisInfo)
-     either (\ _ -> nextInProcessOr listUnivisInfoController Nothing)
+     flip either (\ _ -> nextInProcessOr listUnivisInfoController Nothing)
       (\ error -> displayError (showTError error)) transResult
 
 --- Deletes a given UnivisInfo entity (depending on the Boolean
@@ -69,7 +69,7 @@ deleteUnivisInfoController _ False = listUnivisInfoController
 deleteUnivisInfoController univisInfo True =
   checkAuthorization (univisInfoOperationAllowed (DeleteEntity univisInfo)) $ \_ ->
    (do transResult <- runT (deleteUnivisInfo univisInfo)
-       either (\ _ -> listUnivisInfoController)
+       flip either (\ _ -> listUnivisInfoController)
         (\ error -> displayError (showTError error)) transResult)
 
 --- Lists all UnivisInfo entities with buttons to show, delete,
@@ -94,7 +94,7 @@ showModDataUnivisInfoController terms years mdata =
                         mis
     lecturer <- if null semmis then return Nothing else
       runT (getUser (modInstUserLecturerModsKey (head semmis)))
-           >>= return . either Just (const Nothing)
+           >>= return . flip either Just (const Nothing)
     return (showUnivisLinks mdata sem lecturer urls admin
                (emailModuleMessageController listUnivisInfoController
                                              mdata responsible))

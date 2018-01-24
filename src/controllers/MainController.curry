@@ -8,7 +8,6 @@ module MainController(mainPageController)
 import Spicey
 import MainView
 import MDB
-import KeyDatabase
 import SessionInfo
 
 -----------------------------------------------------------------------------

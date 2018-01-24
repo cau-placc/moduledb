@@ -14,7 +14,7 @@ module Authentication (
  ) where
 
 import SessionInfo
-import Crypto
+import System.Crypto
 
 --------------------------------------------------------------------------
 -- Operations for hashing.

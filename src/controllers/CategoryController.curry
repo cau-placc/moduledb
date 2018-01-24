@@ -4,7 +4,7 @@ module CategoryController (
  ) where
 
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import Time
 import MDB
@@ -68,13 +68,13 @@ newCategoryController =
 createCategoryT
   :: (String,String,String,String,Int,Int,Int,StudyProgram) -> Transaction ()
 createCategoryT
-    (name,nameE,shortName,comment,minECTS,maxECTS,position,studyProgram) =
+    (name,nameE,shortName,comment,minECTS,maxECTS,position,studyProgram) = do
   newCategoryWithStudyProgramProgramCategoriesKey name nameE shortName comment
    (Just minECTS)
    (Just maxECTS)
    position
    (studyProgramKey studyProgram)
-   |>> returnT ()
+  return ()
 
 --- Shows a form to edit the given Category entity.
 editCategoryController :: Category -> Controller
@@ -82,9 +82,8 @@ editCategoryController categoryToEdit =
   checkAuthorization (categoryOperationAllowed (UpdateEntity categoryToEdit))
    $ \_ ->
    (do allStudyPrograms <- runQ queryAllStudyPrograms
-       programCategoriesStudyProgram <- runJustT
-                                         (getProgramCategoriesStudyProgram
-                                           categoryToEdit)
+       programCategoriesStudyProgram <-
+         runJustT (getProgramCategoriesStudyProgram categoryToEdit)
        return
         (editCategoryView categoryToEdit programCategoriesStudyProgram
           allStudyPrograms updateCategoryController))
@@ -96,8 +95,9 @@ updateCategoryController :: Bool -> Category -> Controller
 updateCategoryController False category = showCategoryController category
 updateCategoryController True category =
   do transResult <- runT (updateCategory category)
-     either (\ _ -> nextInProcessOr (showCategoryController category) Nothing)
-      (\ error -> displayError (showTError error)) transResult
+     continueOrError
+        (\ _ -> nextInProcessOr (showCategoryController category) Nothing)
+        transResult
 
 --- Deletes a given Category entity (after asking for acknowledgment)
 --- and proceeds with the show controller.
@@ -115,8 +115,7 @@ deleteCategoryController :: Category -> Controller
 deleteCategoryController category =
   checkAuthorization (categoryOperationAllowed (DeleteEntity category)) $ \_ ->
    (do transResult <- runT (deleteCategory category)
-       either (\ _ -> listAllCategoryController)
-        (\ error -> displayError (showTError error)) transResult)
+       continueOrError (\ _ -> listAllCategoryController) transResult)
 
 --- Lists all Category entities with buttons to show, delete,
 --- or edit an entity.
@@ -163,9 +162,9 @@ listCurrentUserCategoryController listall =
        else [htxt $ t "My modules", nbsp, htxt "(",
              href "?Category/userall" [htxt $ t "All my modules"], htxt ")"]
              
-   addModInsts md = runJustT $
-     getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->
-     returnT (md, mis)
+   addModInsts md = runJustT $ do
+     mis <- queryInstancesOfMod (modDataKey md)
+     return (md, mis)
 
    -- Has a module empty instances or instances in the current semester frame?
    isCurrentModInst cursem (_,mis) =
@@ -176,19 +175,19 @@ listCurrentUserCategoryController listall =
 listStudyProgramCategoryController :: Bool -> StudyProgram -> Controller
 listStudyProgramCategoryController listall studyprog =
   checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
-    do categorys <- runQ $ transformQ (mergeSortBy leqCategory) $
+    do categorys <- runQ $ liftM (mergeSortBy leqCategory) $
                              queryCategorysOfStudyProgram
                                            (studyProgramKey studyprog)
        catmods <- runJustT $
         if listall
-        then mapT (\c ->
-                     getModDataOfCategory (categoryKey c) |>>= \mods ->
+        then mapM (\c -> do
+                     mods <- getModDataOfCategory c
                      returnT (Left c,map (\m->(m,[],[]))
                                       (maybe (filter modDataVisible mods)
                                              (const mods)
                                              (userLoginOfSession sinfo))))
                   categorys
-        else mapT (\c -> returnT (Left c,[])) categorys
+        else mapM (\c -> return (Left c,[])) categorys
        csem  <- getCurrentSemester
        return (listCategoryView sinfo csem (Left studyprog)
                   catmods [] []
@@ -220,19 +219,18 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem
    getModInsts md =
     if withstudyplan
     then do
-     mis <- runJustT (getDB (queryInstancesOfMod (modDataKey md)))
+     mis <- runJustT (queryInstancesOfMod (modDataKey md))
      studnums <- getModuleInstancesStudents md mis
      return (md,map (instOfSem (zip mis studnums)) semPeriod, [])
-    else runJustT $
-     getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->
-     (if withmprogs
-      then getDB (transformQ (map length)
-                             (getMasterProgramKeysOfModInst mis))
-      else returnT (repeat 0)) |>>= \nummps ->
-     (if withunivis
-      then mapT (\s -> getDB $ queryHasUnivisEntry (modDataCode md) s) semPeriod
-      else returnT []) |>>= \univs ->
-     returnT (md,map (instOfSem (zip mis nummps)) semPeriod,univs)
+    else runJustT $ do
+     mis <- queryInstancesOfMod (modDataKey md)
+     nummps <- if withmprogs
+               then liftM (map length) (getMasterProgramKeysOfModInst mis)
+               else return (repeat 0)
+     univs <- if withunivis
+                then mapM (queryHasUnivisEntry (modDataCode md)) semPeriod
+                else return []
+     return (md,map (instOfSem (zip mis nummps)) semPeriod,univs)
 
    instOfSem misnums sem =
      find (\ (mi,_) -> (modInstTerm mi,modInstYear mi) == sem) misnums
@@ -249,21 +247,19 @@ showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
   sinfo <- getUserSessionInfo
   users <- runQ queryAllUsers
   modinsts <- runJustT $
-                   mapT (\ (_,mods) ->
-                               mapT getModInsts
+                   mapM (\ (_,mods) ->
+                               mapM getModInsts
                                     (maybe (filter modDataVisible mods)
                                            (const mods)
-                                           (userLoginOfSession sinfo)) |>>= \mmis ->
-                               returnT mmis)
+                                           (userLoginOfSession sinfo)))
                         catmods
   return (listEmailCorrectionView mbstudyprog
                                   (concat modinsts) semPeriod users)
  where
-   getModInsts md =
-     getDB (queryInstancesOfMod (modDataKey md)) |>>= \mis ->
-     mapT (\s -> getDB $ queryHasUnivisEntry (modDataCode md) s) semPeriod
-      |>>= \univs ->
-     returnT (md,map (instOfSem mis) semPeriod,univs)
+   getModInsts md = do
+     mis <- queryInstancesOfMod (modDataKey md)
+     univs <- mapM (\s -> queryHasUnivisEntry (modDataCode md) s) semPeriod
+     return (md, map (instOfSem mis) semPeriod, univs)
 
    instOfSem mis sem =
      find (\mi -> (modInstTerm mi,modInstYear mi) == sem) mis
@@ -278,7 +274,7 @@ showCategoryController cat =
    (do sprogs <- runQ queryAllStudyPrograms
        let spk     = categoryStudyProgramProgramCategoriesKey cat
            mbsprog = find (\p -> studyProgramKey p == spk) sprogs
-       mods <- runJustT $ getModDataOfCategory (categoryKey cat)
+       mods <- runJustT $ getModDataOfCategory cat
        csem  <- getCurrentSemester
        return (listCategoryView sinfo csem
                  (maybe (Right [htxt "???"]) Left mbsprog)

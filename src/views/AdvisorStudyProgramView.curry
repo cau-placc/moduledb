@@ -14,6 +14,8 @@ import Spicey
 import CategoryView
 import SessionInfo
 import MDB
+import MDBExts (modInstSemester)
+
 import MDBEntitiesToHtml
 import MultiLang
 

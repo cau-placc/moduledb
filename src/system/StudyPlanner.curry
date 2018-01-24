@@ -7,10 +7,10 @@
 module StudyPlanner where
 
 import MDB
+import MDBExts(modInstSemester)
 import URL(getContentsOfUrl)
 import ReadNumeric(readInt)
 import Helpers(showSemesterCode)
-import KeyDatabase(runJustT)
 import Spicey(spEHref)
 import HTML.Base
 import ConfigMDB(studyPlannerURL)

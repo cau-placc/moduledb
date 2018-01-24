@@ -279,12 +279,8 @@ copyModView oldmod controller =
 --- Compares two ModData entities. This order is used in the list view.
 leqModData :: ModData -> ModData -> Bool
 leqModData x1 x2 =
-  (modDataCode x1,modDataNameG x1,modDataNameE x1,modDataCycle x1
-  ,modDataPresence x1,modDataECTS x1,modDataWorkload x1,modDataLength x1
-  ,modDataURL x1,modDataVisible x1) <=
-   (modDataCode x2,modDataNameG x2,modDataNameE x2,modDataCycle x2
-   ,modDataPresence x2,modDataECTS x2,modDataWorkload x2,modDataLength x2
-   ,modDataURL x2,modDataVisible x2)
+  (modDataCode x1,modDataNameG x1,modDataNameE x1) <=
+   (modDataCode x2,modDataNameG x2,modDataNameE x2)
 
 --- Supplies a list view for a given list of ModData entities.
 --- Shows also buttons to show, delete, or edit entries.

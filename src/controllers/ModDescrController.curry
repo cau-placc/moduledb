@@ -4,7 +4,7 @@ module ModDescrController (
  ) where
 
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import Time
 import MDB
@@ -29,9 +29,10 @@ createModDescrController True (language ,shortDesc ,objectives ,contents
                      (newModDescrWithModDataDataDescKey language shortDesc
                        objectives contents prereq exam methods use literature
                        links comments (modDataKey modData))
-     either (\ _ -> nextInProcessOr listModDescrController Nothing)
-      (\ error -> displayError (showTError error)) transResult
-
+     either (\ error -> displayError (showTError error))
+            (\ _ -> nextInProcessOr listModDescrController Nothing)
+            transResult
+ 
 --- Shows a form to edit the given ModDescr entity.
 editModDescrController :: Controller -> ModDescr -> Controller
 editModDescrController cntcontroller modDescrToEdit =
@@ -46,9 +47,9 @@ updateModDescrController :: Controller -> Bool -> ModDescr -> Controller
 updateModDescrController cntcontroller False _ = cntcontroller
 updateModDescrController cntcontroller True modDescr =
   runT (updateModDescr modDescr) >>=
-  either (\ _ -> logEvent (UpdateModDescr modDescr) >>
+  either (\ error -> displayError (showTError error))
+         (\ _ -> logEvent (UpdateModDescr modDescr) >>
                  nextInProcessOr cntcontroller Nothing)
-         (\ error -> displayError (showTError error))
 
 --- Deletes a given ModDescr entity (depending on the Boolean
 --- argument) and proceeds with the list controller.
@@ -57,8 +58,9 @@ deleteModDescrController _ False = listModDescrController
 deleteModDescrController modDescr True =
   checkAuthorization (modDescrOperationAllowed (DeleteEntity modDescr)) $ \_ ->
    (do transResult <- runT (deleteModDescr modDescr)
-       either (\ _ -> listModDescrController)
-        (\ error -> displayError (showTError error)) transResult)
+       either (\ error -> displayError (showTError error))
+              (\ _ -> listModDescrController)
+              transResult)
 
 --- Lists all ModDescr entities with buttons to show, delete,
 --- or edit an entity.

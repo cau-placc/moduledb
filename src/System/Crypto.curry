@@ -6,7 +6,7 @@
 --- @author Michael Hanus
 ----------------------------------------------------------------------------
 
-module Crypto (
+module System.Crypto (
   getHash, randomString
  ) where
 

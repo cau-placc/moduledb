@@ -124,8 +124,8 @@ listStudyProgramView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
 listStudyProgramView sinfo studyPrograms =
   if isAdminSession sinfo
   then [h1 [htxt $ t "Degree programs"],
-        spTable ([take 5 studyProgramLabelList] ++
-                map listStudyProgram (sortBy leqStudyProgram studyPrograms))]
+        spTable (map (studyProgramLabelList!!) [0,2,3,4] :
+                 map listStudyProgram (sortBy leqStudyProgram studyPrograms))]
   else [h1 [htxt $ t "Degree programs"],
         spTable (map (\sp -> [langSelect sinfo
                                 (studyProgramToListView sp !! 1)

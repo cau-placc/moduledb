@@ -1,7 +1,7 @@
 module UserController (userController) where
 
 import Spicey
-import KeyDatabase
+import Transaction
 import HTML.Base
 import Time
 import MDB
@@ -39,12 +39,12 @@ userController = do
 newUserController :: Controller
 newUserController =
   checkAuthorization (userOperationAllowed NewEntity) $ \_ ->
-   (do ctime <- getLocalTime
+   (do ctime <- getClockTime
        return (blankUserView ctime createUserController))
 
 --- Persists a new User entity to the database.
 createUserController
- :: Bool -> (String,String,String,String,String,String,String,CalendarTime)
+ :: Bool -> (String,String,String,String,String,String,String,ClockTime)
   -> Controller
 createUserController False _ = listUserController
 createUserController True (login ,name ,first ,title ,email ,url ,password
@@ -52,7 +52,7 @@ createUserController True (login ,name ,first ,title ,email ,url ,password
   do transResult <- runT
                      (newUser login name first title email url password
                        lastLogin)
-     either (\ _ -> nextInProcessOr listUserController Nothing)
+     flip either (\ _ -> nextInProcessOr listUserController Nothing)
       (\ error -> displayError (showTError error)) transResult
 
 --- Shows a form to edit the given User entity.
@@ -68,7 +68,7 @@ updateUserController :: Bool -> User -> Controller
 updateUserController False user = showUserController user
 updateUserController True user =
   do transResult <- runT (updateUser user)
-     either (\ _ -> nextInProcessOr (showUserController user) Nothing)
+     flip either (\ _ -> nextInProcessOr (showUserController user) Nothing)
       (\ error -> displayError (showTError error)) transResult
 
 --- Deletes a given User entity (after asking for acknowledgment)
@@ -87,7 +87,7 @@ deleteUserController :: User -> Controller
 deleteUserController user =
   checkAuthorization (userOperationAllowed (DeleteEntity user)) $ \_ ->
    (do transResult <- runT (deleteUser user)
-       either (\ _ -> listUserController)
+       flip either (\ _ -> listUserController)
         (\ error -> displayError (showTError error)) transResult)
 
 --- Login as a given User entity.

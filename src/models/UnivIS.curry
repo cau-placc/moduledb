@@ -1,9 +1,11 @@
 -- Operations to connect UnivIS data to module database
 
+import ReadShowTerm
+import Database.CDBI.ER
+
 import ConfigMDB
 import MDB
-import ReadShowTerm
-import KeyDatabase
+import MDBExts
 import Helpers
 import ReadUnivIS
 
@@ -20,7 +22,7 @@ initUnivisDB = do
 processUnivisFile :: (String,Int) -> IO [(String,String,Int,String)]
 processUnivisFile (term,year) = do
   let fname = storageDir++"UnivisLectureURL_"++showSemUnivis++".terms"
-  allmcodes <- runQ (transformQ (map modDataCode) queryAllModDatas)
+  allmcodes <- runQ (liftM (map modDataCode) queryAllModDatas)
   infos <- readQTermListFile fname
   return $ process allmcodes infos
  where
@@ -36,10 +38,10 @@ processUnivisFile (term,year) = do
   showSemUnivis = show year ++ if term=="SS" then "s" else "w"
 
 -- delete all infos for some semester:
-deleteUnivisOfSemester :: (String,Int) -> Transaction ()
+deleteUnivisOfSemester :: (String,Int) -> DBAction ()
 deleteUnivisOfSemester sem =
-  getDB (queryCondUnivisInfo (\u -> (univisInfoTerm u,univisInfoYear u) == sem))
-  |>>= mapT_ deleteUnivisInfo
+  queryCondUnivisInfo (\u -> (univisInfoTerm u,univisInfoYear u) == sem)
+  >>= mapM_ deleteUnivisInfo
 
 
 -- add infos from UnivIS term file for some semester and delete
@@ -47,8 +49,8 @@ deleteUnivisOfSemester sem =
 addUnivisOfSemester :: (String,Int) -> IO String
 addUnivisOfSemester sem = do
   uisdata <- processUnivisFile sem
-  runJustT (deleteUnivisOfSemester sem |>>
-            mapT_  (\ (c,t,y,u) -> newUnivisInfo c t y u) uisdata)
+  runJustT $ do deleteUnivisOfSemester sem
+                mapM_  (\ (c,t,y,u) -> newUnivisInfo c t y u) uisdata
   return $ "Univis infos for semester " ++ showSemester sem ++ " added."
 
 

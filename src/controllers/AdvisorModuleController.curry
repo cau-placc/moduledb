@@ -3,7 +3,6 @@ module AdvisorModuleController
    , deleteAdvisorModuleController ) where
 
 import Spicey
-import KeyDatabase
 import HTML.Base
 import Time
 import MDB
@@ -14,6 +13,8 @@ import Authorization
 import AuthorizedControllers
 import UserProcesses
 import MDBEntitiesToHtml
+
+import Transaction
 
 --- Choose the controller for a AdvisorModule entity according to the URL parameter.
 mainAdvisorModuleController :: Controller

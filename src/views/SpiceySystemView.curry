@@ -12,7 +12,7 @@ import UserProcesses
 import Processes
 import Spicey
 import Authentication
-import KeyDatabase
+import Transaction
 import MDB
 import DefaultController
 import Mail
@@ -54,7 +54,7 @@ loginView controller sinfo =
       then do setPageMessage $ t "Wrong login data!"
               nextInProcessOr controller Nothing >>= getForm
       else do loginToSession loginname
-              ctime <- getLocalTime
+              ctime <- getClockTime
               runT (updateUser (setUserLastLogin (head users) ctime))
               setPageMessage (t "Logged in as: " ++ loginname)
               urls <- getLastUrls
