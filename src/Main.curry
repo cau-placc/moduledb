@@ -4,25 +4,26 @@
 
 module Main where
 
-import ControllerMapping
-import Spicey
+import Config.ControllerMapping
+import System.Spicey
 import WUI
 import HTML.Base
-import Routes
-import RoutesData
-import Processes
-import ModDataController
-import AdvisorStudyProgramController(showXmlAdvisorStudyProgram,showAllXmlAdvisorStudyPrograms)
-import MasterProgramController(showXmlMasterProgram,showAllXmlMasterPrograms)
-import Transaction
+import System.Routes
+import Config.RoutesData
+import System.Processes
+import Controller.ModData
+import Controller.AdvisorStudyProgram ( showXmlAdvisorStudyProgram
+                                      , showAllXmlAdvisorStudyPrograms)
+import Controller.MasterProgram (showXmlMasterProgram,showAllXmlMasterPrograms)
+import System.Transaction
 import MDB
 import MDBExts
-import MDBEntitiesToHtml
-import Helpers
+import View.MDBEntitiesToHtml
+import System.Helpers
 import List
 import Sort
-import MultiLang
-import SessionInfo
+import System.MultiLang
+import System.SessionInfo
 
 import Text.CSV
 

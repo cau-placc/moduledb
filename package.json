@@ -17,5 +17,5 @@
         "pakcs": ">= 2.0.0",
         "kics2": ">= 2.0.0"
     },
-    "sourceDirs": [ "src", "src/config", "src/models", "src/controllers", "src/views", "src/system" ]
+    "sourceDirs": [ "src", "src/Model" ]
 }
