@@ -1,7 +1,8 @@
 module View.ModData (
  wModData, tuple2ModData, modData2Tuple, wModDataType, blankModDataView,
  createModDataView, editModDataView, showModDataView, listModDataView,
- singleModDataView, numberModuleView, leqModData, copyModView, improveCycle
+ singleModDataView, numberModuleView, leqModData, copyModView, improveCycle,
+ selectPreqModuleView, deletePreqModuleView
  ) where
 
 import WUI
@@ -328,12 +329,13 @@ getUniqueTerm mis
 --- and the controller functions to show, delete and edit entities.
 singleModDataView
  :: UserSessionInfo -> Bool -> ModData -> User -> [StudyProgram] -> [Category]
+  -> [ModData]
   -> [ModInst] -> Maybe ModDescr -> String
   -> (ModDescr -> Controller)
   -> Controller -> Controller
   -> [HtmlExp]
 singleModDataView sinfo editallowed modData responsibleUser
-     sprogs categorys modinsts maybedesc xmlurl
+     sprogs categorys prerequisites modinsts maybedesc xmlurl
      editModDescrController modinstaddController modinsteditController =
   [h1 [htxt ((langSelect sinfo modDataNameE modDataNameG) modData), nbsp,
        ehref ("?ModData/url/"++showModDataKey modData)
@@ -346,6 +348,10 @@ singleModDataView sinfo editallowed modData responsibleUser
                        (nextController modinstaddController),
                 spSmallButton (t "Change semesters")
                        (nextController modinsteditController),
+                spHref ("?ModData/newpreq/"++showModDataKey modData)
+                       [htxt $ t "Add prerequisite"], nbsp,
+                spHref ("?ModData/editpreq/"++showModDataKey modData)
+                       [htxt $ t "Delete prerequisites"], nbsp,
                 spHref ("?ModData/edit/" ++ showModDataKey modData)
                        [htxt $ t "Change module data"] ] ++
                 maybe []
@@ -394,7 +400,10 @@ singleModDataView sinfo editallowed modData responsibleUser
       [stringToHtml
            (maybe ""
                   (\md -> langSelect sinfo toEnglish id (modDescrLanguage md))
-                  maybedesc)]]] ++
+                  maybedesc)]],
+     [[bold [stringToHtml $ t "Prerequisites:"]],
+      [showModDatasAsLinks sinfo prerequisites]]
+    ] ++
      (let url = modDataURL modData
        in if null url then [] else
           [[[bold [stringToHtml "URL:"]],[ehref url [stringToHtml url]]]]) ++
@@ -424,10 +433,10 @@ singleModDataView sinfo editallowed modData responsibleUser
    t = translate sinfo
 
    descTitles = langSelect sinfo
-      ["Abstract","Objectives","Contents","Prerequisites",
+      ["Abstract","Objectives","Contents","Additional prerequisites",
        "Examination","Learning methods","Usage",
        "Literature","Links","Comments"]
-      ["Kurzfassung","Lernziele","Lehrinhalte","Voraussetzungen",
+      ["Kurzfassung","Lernziele","Lehrinhalte","Weitere Voraussetzungen",
        "Prüfungsleistung","Lehr- und Lernmethoden","Verwendbarkeit",
        "Literatur","Verweise","Kommentar"]
 
@@ -446,4 +455,53 @@ showSemsOfModInstances mis =
     ehref ("?ModInst/show/"++showModInstKey mi)
           [htxt $ showSemester (modInstTerm mi,modInstYear mi)]
 
-----------------------------------------------------------------------
+-----------------------------------------------------------------------------
+--- A view to select a module and to add it as a prerequisite.
+selectPreqModuleView :: UserSessionInfo -> [(ModDataID,String)]
+                     -> (Maybe ModDataID -> Controller) -> [HtmlExp]
+selectPreqModuleView sinfo mods addpreqcontroller =
+  [h1 [htxt $ t "Prerequisite selection"],
+   htxt $ t "Select a module:",
+   selection selmod modSelection,
+   spPrimButton (t "Add") selectModule,
+   spButton (t "Cancel") (\_ -> addpreqcontroller Nothing >>= getForm)
+  ]
+ where
+  selmod free
+  
+  t = translate sinfo
+
+  modSelection = map (\ ((_,ms),i) -> (ms, show i))
+                     (zip mods [0..])
+
+  selectModule env =
+    let msel = maybe Nothing
+                     (\i -> Just (fst (mods!!i)))
+                     (findIndex (\ (_,i) -> i == env selmod) modSelection)
+    in addpreqcontroller msel >>= getForm
+
+--- A view to select prerequisites for deletion.
+deletePreqModuleView :: UserSessionInfo -> [(ModDataID,String)]
+                     -> ([(ModDataID,String,Bool)] -> Controller) -> [HtmlExp]
+deletePreqModuleView sinfo mods delpreqcontroller =
+  let wuiframe = wuiEditForm (t "Prerequisite selection")
+                             (t "Store")
+                             (delpreqcontroller [])
+      
+      (hexp ,handler) = wuiWithErrorForm
+                         wListDelete
+                         (map (\ (k,s) -> (k,s,False)) mods)
+                         (nextControllerForData delpreqcontroller)
+                         (wuiFrameToForm wuiframe)
+   in wuiframe hexp handler
+ where
+  t = translate sinfo
+
+  --- A WUI specification for a list of strings with a deletion option.
+  wListDelete :: WuiSpec [(ModDataID,String,Bool)]
+  wListDelete =
+    wList (wTriple (wConstant (\_ -> bold [htxt $ t "Module: "]))
+                   (wConstant htxt)
+                   (wCheckBool [htxt $ t "delete as prerequisite"]))
+
+-----------------------------------------------------------------------------

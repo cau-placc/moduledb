@@ -103,6 +103,9 @@ mdbERD =
       Relationship "DataDesc"
        [REnd "ModData"  "descOf"   (Exactly 1),
         REnd "ModDescr" "withDesc" (Between 0 (Max 1))],
+      Relationship "Prerequisites"
+       [REnd "ModData" "isRequiredBy" (Between 0 Infinite),
+        REnd "ModData" "requires"     (Between 0 Infinite)],
       Relationship "LecturerMods"
        [REnd "User"     "withLecturer"   (Exactly 1),
         REnd "ModInst"  "instOfLecturer" (Between 0 Infinite)],

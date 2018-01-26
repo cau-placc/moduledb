@@ -1,7 +1,10 @@
 {- ERD specification transformed from /net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.erdterm -}
 
  ERD "MDB"
-   [Entity "Categorizing"
+   [Entity "Prerequisites"
+           [Attribute "ModDataPrerequisitesKey1" (KeyDom "ModData") PKey False,
+            Attribute "ModDataPrerequisitesKey" (KeyDom "ModData") PKey False],
+    Entity "Categorizing"
            [Attribute "ModDataCategorizingKey" (KeyDom "ModData") PKey False,
             Attribute "CategoryCategorizingKey" (KeyDom "Category") PKey False],
     Entity "StudyProgram"
@@ -144,6 +147,12 @@
     Relationship "LecturerMods"
                  [REnd "User" "withLecturer" (Exactly 1),
                   REnd "ModInst" "instOfLecturer" (Between 0 Infinite)],
+    Relationship ""
+                 [REnd "ModData" "" (Exactly 1),
+                  REnd "Prerequisites" "requires" (Between 0 Infinite)],
+    Relationship ""
+                 [REnd "ModData" "" (Exactly 1),
+                  REnd "Prerequisites" "isRequiredBy" (Between 0 Infinite)],
     Relationship "DataDesc"
                  [REnd "ModData" "descOf" (Exactly 1),
                   REnd "ModDescr" "withDesc" (Between 0 (Max 1))],

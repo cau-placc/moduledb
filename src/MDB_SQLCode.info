@@ -37,6 +37,10 @@ SQLParserInfoType.PInfo
   ,SQLParserInfoType.OnetoN "ModuleInstances")
  ,(("ModInst","withLecturer","User"),SQLParserInfoType.NtoOne "LecturerMods")
  ,(("User","instOfLecturer","ModInst"),SQLParserInfoType.OnetoN "LecturerMods")
+ ,(("ModData","requires",""),SQLParserInfoType.MtoN "Prerequisites")
+ ,(("ModData","Prerequisites",""),SQLParserInfoType.MtoN "Prerequisites")
+ ,(("ModData","isRequiredBy",""),SQLParserInfoType.MtoN "Prerequisites")
+ ,(("ModData","Prerequisites",""),SQLParserInfoType.MtoN "Prerequisites")
  ,(("ModDescr","descOf","ModData"),SQLParserInfoType.NtoOne "DataDesc")
  ,(("ModData","withDesc","ModDescr"),SQLParserInfoType.OnetoN "DataDesc")
  ,(("ModData","belongsTo","Category"),SQLParserInfoType.MtoN "Categorizing")
@@ -49,7 +53,9 @@ SQLParserInfoType.PInfo
   ,SQLParserInfoType.NtoOne "ProgramCategories")
  ,(("StudyProgram","withCategory","Category")
   ,SQLParserInfoType.OnetoN "ProgramCategories")]
- [("categorizingModDataCategorizingKey",False)
+ [("prerequisitesModDataPrerequisitesKey1",False)
+ ,("prerequisitesModDataPrerequisitesKey",False)
+ ,("categorizingModDataCategorizingKey",False)
  ,("categorizingCategoryCategorizingKey",False)
  ,("studyProgramKey",False)
  ,("studyProgramName",False)
@@ -149,7 +155,9 @@ SQLParserInfoType.PInfo
  ,("univisInfoTerm",False)
  ,("univisInfoYear",False)
  ,("univisInfoURL",False)]
- [("categorizing"
+ [("prerequisites"
+  ,("Prerequisites",["ModDataPrerequisitesKey1","ModDataPrerequisitesKey"]))
+ ,("categorizing"
   ,("Categorizing",["ModDataCategorizingKey","CategoryCategorizingKey"]))
  ,("studyprogram"
   ,("StudyProgram",["Key","Name","NameE","ShortName","ProgKey","Position"]))
@@ -252,7 +260,9 @@ SQLParserInfoType.PInfo
     ,"Anwendungsfach"
     ,"MasterProgramProgramInfoKey"]))
  ,("univisinfo",("UnivisInfo",["Key","Code","Term","Year","URL"]))]
- [("categorizingModDataCategorizingKey","ModData")
+ [("prerequisitesModDataPrerequisitesKey1","ModData")
+ ,("prerequisitesModDataPrerequisitesKey","ModData")
+ ,("categorizingModDataCategorizingKey","ModData")
  ,("categorizingCategoryCategorizingKey","Category")
  ,("studyProgramKey","StudyProgram")
  ,("studyProgramName","string")

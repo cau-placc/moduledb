@@ -13,6 +13,12 @@ import qualified Database.CDBI.Criteria
 import qualified Database.CDBI.Connection
 import qualified Database.CDBI.Description
 
+data Prerequisites = Prerequisites ModDataID ModDataID
+ deriving (Eq,Show,Read)
+
+data PrerequisitesID = PrerequisitesID Int
+ deriving (Eq,Show,Read)
+
 data Categorizing = Categorizing ModDataID CategoryID
  deriving (Eq,Show,Read)
 
@@ -94,6 +100,116 @@ data UnivisInfoID = UnivisInfoID Int
 --- The name of the SQLite database file.
 sqliteDBFile :: String
 sqliteDBFile = "/net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.db"
+
+--- The ER description of the `Prerequisites` entity.
+prerequisites_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription Prerequisites
+prerequisites_CDBI_Description =
+  Database.CDBI.Description.ED "Prerequisites"
+   [Database.CDBI.Connection.SQLTypeInt,Database.CDBI.Connection.SQLTypeInt]
+   (\(Prerequisites
+       (ModDataID modDataPrerequisitesKey1)
+       (ModDataID modDataPrerequisitesKey)) ->
+     [Database.CDBI.Connection.SQLInt modDataPrerequisitesKey1
+     ,Database.CDBI.Connection.SQLInt modDataPrerequisitesKey])
+   (\(Prerequisites
+       (ModDataID modDataPrerequisitesKey1)
+       (ModDataID modDataPrerequisitesKey)) ->
+     [Database.CDBI.Connection.SQLInt modDataPrerequisitesKey1
+     ,Database.CDBI.Connection.SQLInt modDataPrerequisitesKey])
+   (\[Database.CDBI.Connection.SQLInt modDataPrerequisitesKey1
+     ,Database.CDBI.Connection.SQLInt modDataPrerequisitesKey] ->
+     Prerequisites (ModDataID modDataPrerequisitesKey1)
+      (ModDataID modDataPrerequisitesKey))
+
+--- The database table of the `Prerequisites` entity.
+prerequisitesTable :: Database.CDBI.Description.Table
+prerequisitesTable = "Prerequisites"
+
+--- The database column `ModDataPrerequisitesKey1` of the `Prerequisites` entity.
+prerequisitesColumnModDataPrerequisitesKey1
+  :: Database.CDBI.Description.Column ModDataID
+prerequisitesColumnModDataPrerequisitesKey1 =
+  Database.CDBI.Description.Column "\"ModDataPrerequisitesKey1\""
+   "\"Prerequisites\".\"ModDataPrerequisitesKey1\""
+
+--- The database column `ModDataPrerequisitesKey` of the `Prerequisites` entity.
+prerequisitesColumnModDataPrerequisitesKey
+  :: Database.CDBI.Description.Column ModDataID
+prerequisitesColumnModDataPrerequisitesKey =
+  Database.CDBI.Description.Column "\"ModDataPrerequisitesKey\""
+   "\"Prerequisites\".\"ModDataPrerequisitesKey\""
+
+--- The description of the database column `ModDataPrerequisitesKey1` of the `Prerequisites` entity.
+prerequisitesModDataPrerequisitesKey1ColDesc
+  :: Database.CDBI.Description.ColumnDescription ModDataID
+prerequisitesModDataPrerequisitesKey1ColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"Prerequisites\".\"ModDataPrerequisitesKey1\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(ModDataID modDataPrerequisitesKey1) ->
+     Database.CDBI.Connection.SQLInt modDataPrerequisitesKey1)
+   (\(Database.CDBI.Connection.SQLInt modDataPrerequisitesKey1) ->
+     ModDataID modDataPrerequisitesKey1)
+
+--- The description of the database column `ModDataPrerequisitesKey` of the `Prerequisites` entity.
+prerequisitesModDataPrerequisitesKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription ModDataID
+prerequisitesModDataPrerequisitesKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"Prerequisites\".\"ModDataPrerequisitesKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(ModDataID modDataPrerequisitesKey) ->
+     Database.CDBI.Connection.SQLInt modDataPrerequisitesKey)
+   (\(Database.CDBI.Connection.SQLInt modDataPrerequisitesKey) ->
+     ModDataID modDataPrerequisitesKey)
+
+--- Gets the attribute `ModDataPrerequisitesKey1` of the `Prerequisites` entity.
+prerequisitesModDataPrerequisitesKey1 :: Prerequisites -> ModDataID
+prerequisitesModDataPrerequisitesKey1 (Prerequisites a _) = a
+
+--- Gets the attribute `ModDataPrerequisitesKey` of the `Prerequisites` entity.
+prerequisitesModDataPrerequisitesKey :: Prerequisites -> ModDataID
+prerequisitesModDataPrerequisitesKey (Prerequisites _ a) = a
+
+--- Sets the attribute `ModDataPrerequisitesKey1` of the `Prerequisites` entity.
+setPrerequisitesModDataPrerequisitesKey1
+  :: Prerequisites -> ModDataID -> Prerequisites
+setPrerequisitesModDataPrerequisitesKey1 (Prerequisites _ b1) a =
+  Prerequisites a b1
+
+--- Sets the attribute `ModDataPrerequisitesKey` of the `Prerequisites` entity.
+setPrerequisitesModDataPrerequisitesKey
+  :: Prerequisites -> ModDataID -> Prerequisites
+setPrerequisitesModDataPrerequisitesKey (Prerequisites a2 _) a =
+  Prerequisites a2 a
+
+--- Inserts a new `Prerequisites` relation.
+newPrerequisites
+  :: ModDataID -> ModDataID -> Database.CDBI.Connection.DBAction ()
+newPrerequisites k1 k2 =
+  Database.CDBI.ER.insertEntry prerequisites_CDBI_Description
+   (Prerequisites k1 k2)
+
+--- Deletes an existing `Prerequisites` relation.
+deletePrerequisites
+  :: ModDataID -> ModDataID -> Database.CDBI.Connection.DBAction ()
+deletePrerequisites k1 k2 =
+  Database.CDBI.ER.deleteEntryR prerequisites_CDBI_Description
+   prerequisitesColumnModDataPrerequisitesKey1
+   (modDataID k1)
+   prerequisitesColumnModDataPrerequisitesKey
+   (modDataID k2)
+
+--- Gets the associated `ModData` entities for a given `ModData` entity
+--- w.r.t. the `Prerequisites` relation.
+getModDataModDatas :: ModData -> Database.CDBI.Connection.DBAction [ModData]
+getModDataModDatas en =
+  Database.CDBI.ER.getEntriesWithColVal prerequisites_CDBI_Description
+   prerequisitesColumnModDataPrerequisitesKey1
+   (modDataID (modDataKey en))
+   Database.CDBI.ER.>+= (\vals ->
+     mapM getModData (map prerequisitesModDataPrerequisitesKey vals))
 
 --- The ER description of the `Categorizing` entity.
 categorizing_CDBI_Description
@@ -4146,7 +4262,9 @@ updateUnivisInfo = Database.CDBI.ER.updateEntry univisInfo_CDBI_Description
 --- provided as a parameter.
 saveDBTo :: String -> IO ()
 saveDBTo dir =
-  do Database.CDBI.ER.saveDBTerms categorizing_CDBI_Description sqliteDBFile dir
+  do Database.CDBI.ER.saveDBTerms prerequisites_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.saveDBTerms categorizing_CDBI_Description sqliteDBFile dir
      Database.CDBI.ER.saveDBTerms studyProgram_CDBI_Description sqliteDBFile dir
      Database.CDBI.ER.saveDBTerms category_CDBI_Description sqliteDBFile dir
      Database.CDBI.ER.saveDBTerms masterCoreArea_CDBI_Description sqliteDBFile
@@ -4170,7 +4288,9 @@ saveDBTo dir =
 --- in a directory provided as a parameter.
 restoreDBFrom :: String -> IO ()
 restoreDBFrom dir =
-  do Database.CDBI.ER.restoreDBTerms categorizing_CDBI_Description sqliteDBFile
+  do Database.CDBI.ER.restoreDBTerms prerequisites_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.restoreDBTerms categorizing_CDBI_Description sqliteDBFile
       dir
      Database.CDBI.ER.restoreDBTerms studyProgram_CDBI_Description sqliteDBFile
       dir

@@ -623,3 +623,14 @@ showStudyProgCategory sinfo short sprogs cat =
           (find (\p -> studyProgramKey p == spk) sprogs)
 
 -----------------------------------------------------------------------------
+-- Shows a list of modules as HTML links to the module description:
+showModDatasAsLinks :: UserSessionInfo -> [ModData] -> HtmlExp
+showModDatasAsLinks sinfo mods =
+  inline
+    (intersperse nbsp
+       (map (\md -> smallHrefModule ("?ModData/show/"++showModDataKey md)
+                     [stringToHtml (modDataCode md)]
+                    `addTitle` (modDataNameG md))
+            mods))
+
+-----------------------------------------------------------------------------

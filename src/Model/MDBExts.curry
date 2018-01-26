@@ -48,6 +48,13 @@ queryInfoOfMasterProgram mpk = sqlToMaybe
   ``sql* Select * From MasterProgInfo As mpi
          Where mpi.MasterProgramProgramInfoKey = {mpk};''
 
+--- Gets the key/code/name of all visible ModData entities.
+queryAllModDataShortInfo :: DBAction [(ModDataID,String,String)]
+queryAllModDataShortInfo =
+  ``sql* Select md.Key, md.Code, md.NameG
+         From ModData As md
+         Where md.Visible = true;''
+
 --- Gets all ModData entities with a given module code.
 queryModDataWithCode :: String -> DBAction [ModData]
 queryModDataWithCode mcode =

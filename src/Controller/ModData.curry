@@ -61,6 +61,10 @@ mainModDataController =
       ["number" ,s,sem] ->
        applyControllerOn (readModDataKey s) getModData
                          (numberModuleController sem)
+      ["newpreq",  s] -> applyControllerOn (readModDataKey s) getModData
+                                           newPreqModDataController
+      ["editpreq", s] -> applyControllerOn (readModDataKey s) getModData
+                                            editPreqModDataController
       _ -> displayError "Illegal URL"
 
 --- Shows a form to create a new ModData entity.
@@ -281,7 +285,8 @@ showModDataWithCode mcode = do
 showModDataController :: ModData -> Controller
 showModDataController modData = do
   responsibleUser <- runJustT (getResponsibleUser modData)
-  categories <- runJustT (getModDataCategories modData)
+  categories      <- runJustT (getModDataCategories modData)
+  prerequisites   <- runJustT (getModDataModDatas modData)
   sprogs <- runQ queryAllStudyPrograms
   moddesc <- runQ $ queryDescriptionOfMod (modDataKey modData)
   modinsts <- runQ $ queryInstancesOfMod (modDataKey modData)
@@ -289,7 +294,7 @@ showModDataController modData = do
   return (singleModDataView sinfo
             (Just (userLogin responsibleUser) == userLoginOfSession sinfo)
             modData responsibleUser
-            sprogs categories modinsts moddesc (xmlURL modData)
+            sprogs categories prerequisites modinsts moddesc (xmlURL modData)
             (editModDescrController (showModDataController modData))
             (addModInstController modData responsibleUser
                                   (showModDataController modData))
@@ -596,3 +601,60 @@ mod2xml md _ _ _ _ _  Nothing =
        xml "importurl" [xtxt (modDataURL md)]]
 
 -----------------------------------------------------------------------------
+-- A controller to add a new prerequisite to module.
+newPreqModDataController :: ModData -> Controller
+newPreqModDataController mdata =
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
+  allmods <- runJustT queryAllModDataShortInfo
+  let selmods = mergeSortBy (\m1 m2 -> snd m1 <= snd m2)
+                            (map mod2KeyShortView allmods)
+  sinfo <- getUserSessionInfo
+  return $ selectPreqModuleView sinfo selmods (addPreqModDataController mdata)
+ where
+  mod2KeyShortView (key,code,name) = (key, code ++ ": " ++ name)
+
+addPreqModDataController :: ModData -> Maybe ModDataID -> Controller
+addPreqModDataController mdata Nothing =
+  nextInProcessOr (showModDataController mdata) Nothing
+addPreqModDataController mdata (Just preqmodkey) = do
+  tr <- runT $ do
+          prerequisites <- getModDataModDatas mdata
+          if preqmodkey `elem` map modDataKey prerequisites
+            then return ()
+            else newPrerequisites (modDataKey mdata) preqmodkey
+  either (\ error -> displayError (showTError error))
+         (\ _ -> do logEvent (NewPrerequisite mdata preqmodkey)
+                    setPageMessage "Neue Voraussetzung hinzugefügt"
+                    nextInProcessOr (showModDataController mdata) Nothing
+         )
+         tr
+
+-- A controller to delete prerequisites of a module.
+editPreqModDataController :: ModData -> Controller
+editPreqModDataController mdata =
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
+  prerequisites <- runQ $ getModDataModDatas mdata
+  let preqmods = mergeSortBy (\m1 m2 -> snd m1 <= snd m2)
+                             (map mod2KeyShortView prerequisites)
+  sinfo <- getUserSessionInfo
+  return $ deletePreqModuleView sinfo preqmods
+             (deletePreqModDataController mdata)
+ where
+  mod2KeyShortView md =
+    (modDataKey md, modDataCode md ++ ": " ++ modDataNameG md)
+
+deletePreqModDataController :: ModData -> [(ModDataID,String,Bool)]
+                            -> Controller
+deletePreqModDataController mdata delmods = do
+  let delkeys = map (\ (k,_,_) -> k) (filter (\ (_,_,b) -> b) delmods)
+  tr <- runT $
+          mapM_ (\mkey -> deletePrerequisites (modDataKey mdata) mkey) delkeys
+  either (\ error -> displayError (showTError error))
+         (\ _ -> do
+            logEvent (DeletePrerequisites mdata delkeys)
+            unless (null delkeys) $ setPageMessage "Voraussetzungen gelöscht"
+            nextInProcessOr (showModDataController mdata) Nothing
+         )
+         tr
+
+----------------------------------------------------------------------------

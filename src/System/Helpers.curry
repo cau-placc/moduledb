@@ -51,6 +51,7 @@ data LogEvent =
     NewModData  ModData  | UpdateModData  ModData  | DeleteModData  ModData
   | NewModDescr ModDescr | UpdateModDescr ModDescr | DeleteModDescr ModDescr
   | NewModInst  ModInst  | UpdateModInst  ModInst  | DeleteModInst  ModInst
+  | NewPrerequisite ModData ModDataID | DeletePrerequisites ModData [ModDataID]
   | NewMasterProgram MasterProgram | UpdateMasterProgram MasterProgram
   | DeleteMasterProgram MasterProgram
   | NewMasterProgInfo MasterProgInfo | UpdateMasterProgInfo MasterProgInfo
@@ -59,7 +60,7 @@ data LogEvent =
   | UpdateAdvisorStudyProgram AdvisorStudyProgram
   | DeleteAdvisorStudyProgram AdvisorStudyProgram
 
--- A info in the log file consists of info about the time,
+-- An information in the log file consists of info about the time,
 -- the current user, the remote host, and a log event.
 data LogInfo = LogInfo String String String LogEvent
 
