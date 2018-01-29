@@ -123,8 +123,7 @@ queryAdvisorStudyProgramOfModInst mi =
   ``sql* Select * From AdvisorModule As am
          Where am.ModInstAdvisedProgramModuleInstancesKey = {modInstKey mi};''
 
---- Gets all AdvisorStudyProgram (keys) for each ModInst of a given
---- ModInst list.
+--- Gets all AdvisorStudyProgram (keys) for a given ModInst.
 getAdvisorStudyProgramKeysOfModInst :: ModInst
                                     -> DBAction [AdvisorStudyProgramID]
 getAdvisorStudyProgramKeysOfModInst mi =

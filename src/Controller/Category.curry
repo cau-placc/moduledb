@@ -224,13 +224,20 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem
      return (md,map (instOfSem (zip mis studnums)) semPeriod, [])
     else runJustT $ do
      mis <- queryInstancesOfMod (modDataKey md)
+     -- compute usages in old master programs (unnecessary in the future):
      nummps <- if withmprogs
                then liftM (map length) (getMasterProgramKeysOfModInst mis)
                else return (repeat 0)
+     -- compute usages in AdvisorStudyPrograms:
+     numaps <- if withmprogs
+               then liftM (map length)
+                          (mapM getAdvisorStudyProgramKeysOfModInst mis)
+               else return (repeat 0)
+     let numbermprogs = map (uncurry (+)) (zip nummps numaps)
      univs <- if withunivis
                 then mapM (queryHasUnivisEntry (modDataCode md)) semPeriod
                 else return []
-     return (md,map (instOfSem (zip mis nummps)) semPeriod,univs)
+     return (md,map (instOfSem (zip mis numbermprogs)) semPeriod,univs)
 
    instOfSem misnums sem =
      find (\ (mi,_) -> (modInstTerm mi,modInstYear mi) == sem) misnums
