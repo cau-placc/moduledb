@@ -26,7 +26,8 @@ module System.Spicey (
   hrefModule, smallHrefModule, hrefExtModule, hrefModInst,
   hrefUnivisInfo, hrefUnivisDanger,
   spHref, spHrefBlock, spEHref, hrefPrimButton,
-  spButton, spPrimButton, spSmallButton, spTable, spHeadedTable, addTitle,
+  spButton, spPrimButton, spSmallButton, spSmallPrimaryButton,
+  spTable, spHeadedTable, addTitle,
   spShortSelectionInitial,
   setPageMessage, getPageMessage,
   saveLastUrl, getLastUrl, getLastUrlParameters, getLastUrls,
@@ -627,6 +628,11 @@ spPrimButton label handler =
 spSmallButton :: String -> HtmlHandler -> HtmlExp
 spSmallButton label handler =
   button label handler `addClass` "btn btn-sm btn-default"
+
+--- Small input button in Spicey (rendered as a small primary button):
+spSmallPrimaryButton :: String -> HtmlHandler -> HtmlExp
+spSmallPrimaryButton label handler =
+  button label handler `addClass` "btn btn-sm btn-primary"
 
 --- Short selectionInitial input field:
 spShortSelectionInitial :: CgiRef -> [(String,String)] -> Int -> HtmlExp

@@ -281,7 +281,8 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
                  then findSemesterSelection cursem cursem + 3
                  else findSemesterSelection cursem (last semperiod)),
             htxt ": ",
-            spSmallButton (t "Show") (showPlan False False False mbsprog)] ++
+            spSmallPrimaryButton (t "Show")
+                                 (showPlan False False False mbsprog)] ++
            (maybe []
                   (\_ -> [spSmallButton (t "with UnivIS comparison")
                                         (showPlan True False False mbsprog),
