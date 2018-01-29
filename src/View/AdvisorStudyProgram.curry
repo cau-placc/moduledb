@@ -219,15 +219,13 @@ editAdvisorStudyProgramView
 --- Supplies a view to show the details of a AdvisorStudyProgram.
 showAdvisorStudyProgramView
   :: UserSessionInfo -> Bool -> Bool
-  -> (AdvisorStudyProgram -> Controller)
-  -> Controller
   -> (Category -> Controller)
   -> (AdvisorModule -> Controller)
   -> AdvisorStudyProgram -> String -> StudyProgram
   -> [(AdvisorModule,ModInst,ModData)] -> [Category] -> User
   -> [HtmlExp]
 showAdvisorStudyProgramView
-    sinfo admin editallowed editcontroller _ {-showcontroller-}
+    sinfo admin editallowed
     addcatmodcontroller delmodcontroller
     asprog xmlurl relatedsprog amdatas cats advisor =
   [h1 [htxt (advisorStudyProgramName asprog)
@@ -239,11 +237,12 @@ showAdvisorStudyProgramView
   [h3 [htxt $ t "Start: " ++ showSemester (startSem,startYear) ++
               " / Research advisor: ", userToHtmlView advisor]] ++
   [par $ (if admin || editallowed
-          then [spButton "Beschreibung/Sichtbarkeit ändern"
-                       (nextController (editcontroller asprog))]
+          then [spHref ("?AdvisorStudyProgram/edit/" ++
+                        showAdvisorStudyProgramKey asprog)
+                       [htxt "Beschreibung/Sichtbarkeit ändern"]]
           else []) ++
-         (if admin then [spHref ("?AdvisorStudyProgram/delete/"
-                                 ++ showAdvisorStudyProgramKey asprog)
+         (if admin then [spHref ("?AdvisorStudyProgram/delete/" ++
+                                 showAdvisorStudyProgramKey asprog)
                                  [htxt "Studienprogramm löschen"]]
                    else [])] ++
   [h4 [htxt $ t "Description"++":"],

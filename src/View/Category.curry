@@ -5,6 +5,7 @@ module View.Category (
  ) where
 
 import Either
+import Maybe ( isJust )
 import WUI
 import HTML.Base
 import Time
@@ -211,15 +212,16 @@ showCategoryInfo sinfo cat =
 ---   has a UnivIS entry (if this list is empty, UnivIS entries should not
 ---   be shown)
 listCategoryView
-  :: UserSessionInfo -> (String,Int)
+  :: UserSessionInfo
+  -> (String,Int)
   -> Either StudyProgram [HtmlExp]
-  -> [(Either Category String,[(ModData,[Maybe (ModInst,Int)],[Bool])])]
+  -> [(Either Category String, [(ModData,[Maybe (ModInst,Int)],[Bool])])]
   -> [(String,Int)]
   -> [User]
-  -> (Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
+  -> (Either StudyProgram [HtmlExp] -> [(Either Category String, [ModData])]
         -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller)
   -> ([(String,[ModData])] -> Controller)
-  -> (Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
+  -> (Either StudyProgram [HtmlExp] -> [(Either Category String, [ModData])]
         -> (String,Int) -> (String,Int) -> Controller)
   -> [HtmlExp]
 listCategoryView sinfo cursem mbsprog catmods semperiod users
@@ -253,7 +255,12 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
                   then map (maybe [] showModInst) mis
                   else map (showUnivisInst md)
                            (zip3 semperiod mis univs))
-               (mergeSortBy (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2) mods))
+               (mergeSortBy (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2)
+                  -- if a semester planning is shown, show only modules
+                  -- having an instance or a UnivIS instance in the plan
+                  (filter (\ (_,mis,univs) -> null semperiod || any isJust mis
+                                                             || or univs)
+                          mods)))
         catmods)] ++
    (if null (concatMap snd catmods)
     then either
@@ -311,13 +318,13 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
 
    -- show UnivIS instance of a semester
    showUnivisInst md ((term,year),mbmi,hasinst)
-     | hasinst && mbmi/=Nothing
+     | hasinst && isJust mbmi
      = [hrefUnivisInfo univisUrl [htxt "UnivIS"]
           `addTitle` (t "to UnivIS entry")]
      | hasinst
      = [hrefUnivisDanger univisUrl [htxt  "!UnivIS!"]
           `addTitle` (t "UnivIS entry without MDB entry!")]
-     | mbmi/=Nothing
+     | isJust mbmi
      = [hrefUnivisDanger univisUrl [htxt "???"]
           `addTitle` (t "Missing UnivIS entry!")]
      | otherwise                = [nbsp]

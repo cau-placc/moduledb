@@ -198,8 +198,6 @@ showAdvisorStudyProgramController asprog =
            sinfo
            (isAdminSession sinfo)
            (Just (userLogin advisor) == userLoginOfSession sinfo)
-           editAdvisorStudyProgramController
-           showcontroller
            (addCatModController asprog showcontroller)
            (deleteAdvisorModuleController showcontroller)
            asprog (xmlURL asprog)

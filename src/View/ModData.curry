@@ -327,48 +327,36 @@ getUniqueTerm mis
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of ModData entities
 --- and the controller functions to show, delete and edit entities.
-singleModDataView
- :: UserSessionInfo -> Bool -> ModData -> User -> [StudyProgram] -> [Category]
-  -> [ModData]
-  -> [ModInst] -> Maybe ModDescr -> String
-  -> (ModDescr -> Controller)
-  -> Controller -> Controller
-  -> [HtmlExp]
+singleModDataView :: UserSessionInfo -> Bool -> ModData -> User
+                  -> [StudyProgram] -> [Category]
+                  -> [ModData] -> [ModInst] -> Maybe ModDescr -> String
+                  -> [HtmlExp]
 singleModDataView sinfo editallowed modData responsibleUser
-     sprogs categorys prerequisites modinsts maybedesc xmlurl
-     editModDescrController modinstaddController modinsteditController =
+     sprogs categorys prerequisites modinsts maybedesc xmlurl =
   [h1 [htxt ((langSelect sinfo modDataNameE modDataNameG) modData), nbsp,
-       ehref ("?ModData/url/"++showModDataKey modData)
+       ehref ("?ModData/url/" ++ modKeyString)
              [imageNB "images/url.png" "Show URL"], nbsp,
-       ehref ("?ModData/pdf/"++showModDataKey modData)
+       ehref ("?ModData/pdf/" ++ modKeyString)
              [imageNB "images/pdf.png" "Convert to PDF"], nbsp,
        ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
   [par $ (if admin || editallowed
-          then [spSmallButton (t "Add semester")
-                       (nextController modinstaddController),
-                spSmallButton (t "Change semesters")
-                       (nextController modinsteditController),
-                spHref ("?ModData/newpreq/"++showModDataKey modData)
-                       [htxt $ t "Add prerequisite"], nbsp,
-                spHref ("?ModData/editpreq/"++showModDataKey modData)
-                       [htxt $ t "Delete prerequisites"], nbsp,
-                spHref ("?ModData/edit/" ++ showModDataKey modData)
-                       [htxt $ t "Change module data"] ] ++
-                maybe []
-                      (\desc ->
-                        [spSmallButton (t "Change module description")
-                             (nextController (editModDescrController desc))] ++
-                        if admin
-                        then [spHref ("?ModData/copy/"++showModDataKey modData)
-                                     [htxt $ t "Copy module"], nbsp ]
-                        else [])
-                      maybedesc
+          then [modDataEditButton "edit" "Change module data", nbsp ] ++
+               (maybe []
+                  (\_ ->
+                    [modDataEditButton "editdesc" "Change module description",
+                     nbsp])
+                  maybedesc) ++
+               [modDataEditButton "addinst" "Add semester", nbsp,
+                modDataEditButton "editinst" "Change semesters", nbsp,
+                modDataEditButton "newpreq" "Add prerequisite", nbsp,
+                modDataEditButton "editpreq" "Delete prerequisites", nbsp]
           else []) ++
          (if admin
-          then [spHref ("?ModData/email/" ++ showModDataKey modData)
-                       [htxt $ t "Email"], nbsp,
-                spHref ("?ModData/delete/" ++ showModDataKey modData)
-                       [htxt $ t "Delete module"]]
+          then (maybe []
+                      (\_ -> [modDataEditButton "copy" "Copy module", nbsp])
+                      maybedesc) ++
+               [modDataEditButton "email" "Email", nbsp,
+                modDataEditButton "delete" "Delete module"]
           else [])] ++
   mainContentsWithSideMenu
    (map (\tag -> [href ('#':tag) [htxt tag]]) descTitles)
@@ -428,6 +416,12 @@ singleModDataView sinfo editallowed modData responsibleUser
                        modDescrLiterature,modDescrLinks,modDescrComments])))
    maybedesc)
  where
+   modKeyString = showModDataKey modData
+
+   modDataEditButton act label =
+     hrefPrimButton ("?ModData/" ++ act ++ "/" ++ modKeyString)
+                    [htxt $ t label]
+
    admin = isAdminSession sinfo
 
    t = translate sinfo
@@ -440,8 +434,8 @@ singleModDataView sinfo editallowed modData responsibleUser
        "Prüfungsleistung","Lehr- und Lernmethoden","Verwendbarkeit",
        "Literatur","Verweise","Kommentar"]
 
-   showLen l | l==1 = t "one"
-             | l==2 = t "two"
+   showLen l | l==1      = t "one"
+             | l==2      = t "two"
              | otherwise = show l
 
 -- show the semesters of module instances enclosed in brackets:

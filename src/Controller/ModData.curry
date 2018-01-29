@@ -61,10 +61,16 @@ mainModDataController =
       ["number" ,s,sem] ->
        applyControllerOn (readModDataKey s) getModData
                          (numberModuleController sem)
+      ["addinst",  s] -> applyControllerOn (readModDataKey s) getModData
+                                           addInstToModDataController
+      ["editinst", s] -> applyControllerOn (readModDataKey s) getModData
+                                           editInstOfModDataController
+      ["editdesc", s] -> applyControllerOn (readModDataKey s) getModData
+                                           editDescrOfModDataController
       ["newpreq",  s] -> applyControllerOn (readModDataKey s) getModData
                                            newPreqModDataController
       ["editpreq", s] -> applyControllerOn (readModDataKey s) getModData
-                                            editPreqModDataController
+                                           editPreqModDataController
       _ -> displayError "Illegal URL"
 
 --- Shows a form to create a new ModData entity.
@@ -294,11 +300,7 @@ showModDataController modData = do
   return (singleModDataView sinfo
             (Just (userLogin responsibleUser) == userLoginOfSession sinfo)
             modData responsibleUser
-            sprogs categories prerequisites modinsts moddesc (xmlURL modData)
-            (editModDescrController (showModDataController modData))
-            (addModInstController modData responsibleUser
-                                  (showModDataController modData))
-            (editAllModInstController modData (showModDataController modData)))
+            sprogs categories prerequisites modinsts moddesc (xmlURL modData))
 
 
 --- Associates given entities with the ModData entity.
@@ -599,6 +601,29 @@ mod2xml md _ _ _ _ _  Nothing =
        xml "modulname" [xml "deutsch" [xtxt (modDataNameG md)],
                         xml "englisch" [xtxt (modDataNameE md)]],
        xml "importurl" [xtxt (modDataURL md)]]
+
+-----------------------------------------------------------------------------
+-- A controller to add module instance to the given module.
+addInstToModDataController :: ModData -> Controller
+addInstToModDataController mdata =
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
+   responsibleUser <- runJustT (getResponsibleUser mdata)
+   addModInstController mdata responsibleUser (showModDataController mdata)
+
+-- A controller to edit all module instances of the given module.
+editInstOfModDataController :: ModData -> Controller
+editInstOfModDataController mdata =
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
+   editAllModInstController mdata (showModDataController mdata)
+
+-- A controller to edit the description of the given module.
+editDescrOfModDataController :: ModData -> Controller
+editDescrOfModDataController mdata =
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
+   moddesc <- runQ $ queryDescriptionOfMod (modDataKey mdata)
+   maybe (displayError "Illegal URL")
+         (editModDescrController (showModDataController mdata))
+         moddesc
 
 -----------------------------------------------------------------------------
 -- A controller to add a new prerequisite to module.
