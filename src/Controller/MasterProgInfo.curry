@@ -5,7 +5,6 @@ module Controller.MasterProgInfo (
  ) where
 
 import System.Spicey
-import System.Transaction
 import HTML.Base
 import Time
 import MDB
@@ -101,7 +100,7 @@ showMasterProgInfoController masterProgInfo =
           listMasterProgInfoController))
 
 --- Gets the associated MasterProgram entity for a given MasterProgInfo entity.
-getProgramInfoMasterProgram :: MasterProgInfo -> Transaction MasterProgram
+getProgramInfoMasterProgram :: MasterProgInfo -> DBAction MasterProgram
 getProgramInfoMasterProgram mMasterProgram =
   getMasterProgram (masterProgInfoMasterProgramProgramInfoKey mMasterProgram)
 
@@ -109,7 +108,7 @@ getProgramInfoMasterProgram mMasterProgram =
 --- Get module instances and their categories
 --- of next n semesters from a given one:
 getModInstCatsInSemesters :: (String,Int) -> Int
-                          -> Transaction [(ModInst,[Category])]
+                          -> DBAction [(ModInst,[Category])]
 getModInstCatsInSemesters semyear n = do
   mis <- queryModInstInSemesters semyear n
   mdkcats <- mapM (\mdk -> do cats <- getModDataKeyCategories mdk
@@ -124,7 +123,7 @@ getModInstCatsInSemesters semyear n = do
 --- list of categories (specified by their ShortNames)
 --- of next n semesters from a given one:
 getCategoryModInstInSemesters :: (String,Int) -> Int -> [String]
-                          -> Transaction [(ModInst,[Category])]
+                          -> DBAction [(ModInst,[Category])]
 getCategoryModInstInSemesters semyear n catkeys =
   getModInstCatsInSemesters semyear n |>>=
   returnT .
@@ -133,10 +132,10 @@ getCategoryModInstInSemesters semyear n catkeys =
 --- Get master module instances (and their module data and categories)
 --- of next n semesters from a given one:
 getMasterModInstInSemesters :: (String,Int) -> Int
-                          -> Transaction [(ModInst,ModData,[Category])]
+                          -> DBAction [(ModInst,ModData,[Category])]
 getMasterModInstInSemesters semyear n =
   getCategoryModInstInSemesters semyear n ["IG","TG","IS","MV"] |>>=
-  mapT (\ (mi,cats) -> getModData (modInstModDataModuleInstancesKey mi)
+  mapM (\ (mi,cats) -> getModData (modInstModDataModuleInstancesKey mi)
                        |>>= \md -> returnT (mi,md,cats))
 
 
@@ -147,9 +146,9 @@ progModsOfMasterProgInfo mpi = readQTerm (masterProgInfoProgModules mpi)
 
 --- Deletes non-existing module instances in a list.
 cleanProgMods :: [(String,Bool,String,String,Int)]
-              -> Transaction [(String,Bool,String,String,Int)]
+              -> DBAction [(String,Bool,String,String,Int)]
 cleanProgMods pms =
-  mapT (\ (ck,p,mdk,term,year) ->
+  mapM (\ (ck,p,mdk,term,year) ->
          queryInstancesOfMod (fromJust(readModDataKey mdk)) |>>= \mis ->
          if (term,year) `elem` (map modInstSemester mis)
          then returnT [(ck,p,mdk,term,year)]
@@ -161,9 +160,9 @@ cleanProgMods pms =
 --- and at least 48 points in all categories IG/TG/IS/MV.
 --- The returned string is empty if there are enough modules, otherwise
 --- it contains an explanation about the missing points.
-reasonableMasterProgInfo :: MasterProgInfo -> Transaction String
+reasonableMasterProgInfo :: MasterProgInfo -> DBAction String
 reasonableMasterProgInfo mpi =
-  mapT getMCodeForInfo (progModsOfMasterProgInfo mpi) |>>= \catmods ->
+  mapM getMCodeForInfo (progModsOfMasterProgInfo mpi) |>>= \catmods ->
   let catpoints = map (\ck -> foldr (+) 0 (map (modDataECTS . snd)
                                           (filter (\ (c,_) -> c==ck) catmods)))
                       ["IG","TG","IS","MV"]

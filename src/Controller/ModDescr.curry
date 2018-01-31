@@ -4,7 +4,6 @@ module Controller.ModDescr (
  ) where
 
 import System.Spicey
-import System.Transaction
 import HTML.Base
 import Time
 import MDB
@@ -82,5 +81,5 @@ showModDescrController modDescr =
         (showModDescrView modDescr dataDescModData listModDescrController))
 
 --- Gets the associated ModData entity for a given ModDescr entity.
-getDataDescModData :: ModDescr -> Transaction ModData
+getDataDescModData :: ModDescr -> DBAction ModData
 getDataDescModData mModData = getModData (modDescrModDataDataDescKey mModData)

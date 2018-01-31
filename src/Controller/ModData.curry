@@ -6,7 +6,6 @@ module Controller.ModData (
 
 import ConfigMDB
 import System.Spicey
-import System.Transaction
 import HTML.Base
 import XML
 import Time
@@ -178,7 +177,7 @@ deleteModDataController modData =
            (\ error -> displayError (showTError error))
  where
   killCategorizing categorys =
-    mapT_ (\t -> destroyCategorizing (modDataKey modData) (categoryKey t))
+    mapM_ (\t -> destroyCategorizing (modDataKey modData) (categoryKey t))
           categorys
 
 
@@ -304,13 +303,13 @@ showModDataController modData = do
 
 
 --- Associates given entities with the ModData entity.
-addCategorizing :: [Category] -> ModData -> Transaction ()
+addCategorizing :: [Category] -> ModData -> DBAction ()
 addCategorizing categorys modData =
   mapM_ (\ t -> newCategorizing (modDataKey modData) (categoryKey t))
         categorys
 
 --- Removes association to the given entities with the ModData entity.
-removeCategorizing :: [Category] -> ModData -> Transaction ()
+removeCategorizing :: [Category] -> ModData -> DBAction ()
 removeCategorizing categorys modData =
   mapM_ (\ t -> deleteCategorizing (modDataKey modData) (categoryKey t))
         categorys

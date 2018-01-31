@@ -2,8 +2,8 @@ module Controller.StudyProgram
   ( mainStudyProgramController )
  where
 
+import System.Helpers
 import System.Spicey
-import System.Transaction
 import HTML.Base
 import Time
 import MDB
@@ -48,7 +48,7 @@ newStudyProgramController =
            listStudyProgramController))
 
 --- Transaction to persist a new StudyProgram entity to the database.
-createStudyProgramT :: (String,String,String,String,Int) -> Transaction ()
+createStudyProgramT :: (String,String,String,String,Int) -> DBAction ()
 createStudyProgramT (name,nameE,shortName,progKey,position) =
   newStudyProgram name nameE shortName progKey position |>> returnT ()
 

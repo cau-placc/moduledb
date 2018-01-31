@@ -2,6 +2,7 @@ module Controller.AdvisorModule
    ( mainAdvisorModuleController, selectAdvisorModuleController
    , deleteAdvisorModuleController ) where
 
+import System.Helpers
 import System.Spicey
 import HTML.Base
 import Time
@@ -13,8 +14,6 @@ import System.Authorization
 import System.AuthorizedActions
 import Config.UserProcesses
 import View.MDBEntitiesToHtml
-
-import System.Transaction
 
 --- Choose the controller for a AdvisorModule entity according to the URL parameter.
 mainAdvisorModuleController :: Controller
@@ -66,7 +65,7 @@ selectAdvisorModuleController asprog cat modinstdatas nextctrl = do
 
 --- Transaction to persist a new AdvisorModule entity to the database.
 createAdvisorModuleT
-  :: (Bool,ModInst,Category,AdvisorStudyProgram) -> Transaction ()
+  :: (Bool,ModInst,Category,AdvisorStudyProgram) -> DBAction ()
 createAdvisorModuleT (mandatory,modInst,category,advisorStudyProgram) =
   newAdvisorModuleWithAdvisorStudyProgramAdvisorProgramModulesKeyWithCategoryAdvisorCategorizingKeyWithModInstAdvisedProgramModuleInstancesKey
    mandatory
@@ -107,7 +106,7 @@ editAdvisorModuleController advisorModuleToEdit =
 
 --- Transaction to persist modifications of a given AdvisorModule entity
 --- to the database.
-updateAdvisorModuleT :: AdvisorModule -> Transaction ()
+updateAdvisorModuleT :: AdvisorModule -> DBAction ()
 updateAdvisorModuleT advisorModule = updateAdvisorModule advisorModule
 
 --- Deletes a given AdvisorModule entity (after asking for confirmation)
@@ -125,7 +124,7 @@ deleteAdvisorModuleController nextctrl advisorModule =
       nextctrl)
 
 --- Transaction to delete a given AdvisorModule entity.
-deleteAdvisorModuleT :: AdvisorModule -> Transaction ()
+deleteAdvisorModuleT :: AdvisorModule -> DBAction ()
 deleteAdvisorModuleT advisorModule = deleteAdvisorModule advisorModule
 
 --- Lists all AdvisorModule entities with buttons to show, delete,
@@ -157,18 +156,18 @@ showAdvisorModuleController advisorModule =
 
 --- Gets the associated ModInst entity for a given AdvisorModule entity.
 getAdvisedProgramModuleInstancesModInst
-  :: AdvisorModule -> Transaction ModInst
+  :: AdvisorModule -> DBAction ModInst
 getAdvisedProgramModuleInstancesModInst aModInst =
   getModInst (advisorModuleModInstAdvisedProgramModuleInstancesKey aModInst)
 
 --- Gets the associated Category entity for a given AdvisorModule entity.
-getAdvisorCategorizingCategory :: AdvisorModule -> Transaction Category
+getAdvisorCategorizingCategory :: AdvisorModule -> DBAction Category
 getAdvisorCategorizingCategory aCategory =
   getCategory (advisorModuleCategoryAdvisorCategorizingKey aCategory)
 
 --- Gets the associated AdvisorStudyProgram entity for a given AdvisorModule entity.
 getAdvisorProgramModulesAdvisorStudyProgram
-  :: AdvisorModule -> Transaction AdvisorStudyProgram
+  :: AdvisorModule -> DBAction AdvisorStudyProgram
 getAdvisorProgramModulesAdvisorStudyProgram aAdvisorStudyProgram =
   getAdvisorStudyProgram
    (advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey

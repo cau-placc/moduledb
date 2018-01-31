@@ -4,7 +4,6 @@ module Controller.Category
  ) where
 
 import System.Spicey
-import System.Transaction
 import HTML.Base
 import Time
 import MDB
@@ -66,7 +65,7 @@ newCategoryController =
 
 --- Transaction to persist a new Category entity to the database.
 createCategoryT
-  :: (String,String,String,String,Int,Int,Int,StudyProgram) -> Transaction ()
+  :: (String,String,String,String,Int,Int,Int,StudyProgram) -> DBAction ()
 createCategoryT
     (name,nameE,shortName,comment,minECTS,maxECTS,position,studyProgram) = do
   newCategoryWithStudyProgramProgramCategoriesKey name nameE shortName comment
@@ -294,6 +293,6 @@ showCategoryController cat =
                  formatCatModulesForm showEmailCorrectionController))
 
 --- Gets the associated StudyProgram entity for a given Category entity.
-getProgramCategoriesStudyProgram :: Category -> Transaction StudyProgram
+getProgramCategoriesStudyProgram :: Category -> DBAction StudyProgram
 getProgramCategoriesStudyProgram cStudyProgram =
   getStudyProgram (categoryStudyProgramProgramCategoriesKey cStudyProgram)

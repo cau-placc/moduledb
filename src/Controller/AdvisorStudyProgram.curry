@@ -6,7 +6,6 @@ where
 
 import System.Helpers
 import System.Spicey
-import System.Transaction
 import HTML.Base
 import List(find)
 import Time
@@ -74,7 +73,7 @@ newAdvisorStudyProgramController =
 --- Transaction to persist a new AdvisorStudyProgram entity to the database.
 createAdvisorStudyProgramT
   :: (String,String,Int,String,String,String,Bool,StudyProgram,User)
-  -> Transaction AdvisorStudyProgram
+  -> DBAction AdvisorStudyProgram
 createAdvisorStudyProgramT
     (name,term,year,desc,prereq,comments,visible,studyProgram,user) =
   newAdvisorStudyProgramWithUserStudyAdvisingKeyWithStudyProgramStudyProgramsAdvisedKey
@@ -125,7 +124,7 @@ showASPController aspkey =
 
 --- Transaction to persist modifications of a given AdvisorStudyProgram entity
 --- to the database.
-updateAdvisorStudyProgramT :: AdvisorStudyProgram -> Transaction ()
+updateAdvisorStudyProgramT :: AdvisorStudyProgram -> DBAction ()
 updateAdvisorStudyProgramT advisorStudyProgram =
   updateAdvisorStudyProgram advisorStudyProgram
 
@@ -150,7 +149,7 @@ deleteAdvisorStudyProgramController asprog =
       (showAdvisorStudyProgramController asprog))
 
 --- Transaction to delete a given AdvisorStudyProgram entity.
-deleteAdvisorStudyProgramT :: AdvisorStudyProgram -> Transaction ()
+deleteAdvisorStudyProgramT :: AdvisorStudyProgram -> DBAction ()
 deleteAdvisorStudyProgramT advisorStudyProgram =
   deleteAdvisorStudyProgram advisorStudyProgram
 
@@ -164,7 +163,7 @@ listAdvisorStudyProgramController =
                                      (\_ -> const True)
                                      (userLoginOfSession sinfo))
        asprogs <- runQ queryAllAdvisorStudyPrograms >>= return . visfilter
-       sprogs <- runJustT (mapT getStudyProgramsAdvisedStudyProgram asprogs)
+       sprogs <- runJustT (mapM getStudyProgramsAdvisedStudyProgram asprogs)
        return (listAdvisorStudyProgramView sinfo (zip asprogs sprogs))
 
 --- Shows a AdvisorStudyProgram entity.
@@ -208,13 +207,13 @@ showAdvisorStudyProgramController asprog =
 
 --- Gets the associated StudyProgram entity for a given AdvisorStudyProgram entity.
 getStudyProgramsAdvisedStudyProgram
-  :: AdvisorStudyProgram -> Transaction StudyProgram
+  :: AdvisorStudyProgram -> DBAction StudyProgram
 getStudyProgramsAdvisedStudyProgram aStudyProgram =
   getStudyProgram
    (advisorStudyProgramStudyProgramStudyProgramsAdvisedKey aStudyProgram)
 
 --- Gets the associated User entity for a given AdvisorStudyProgram entity.
-getStudyAdvisingUser :: AdvisorStudyProgram -> Transaction User
+getStudyAdvisingUser :: AdvisorStudyProgram -> DBAction User
 getStudyAdvisingUser aUser =
   getUser (advisorStudyProgramUserStudyAdvisingKey aUser)
 

@@ -3,7 +3,9 @@
 -------------------------------------------------------------------------------
 
 module System.Helpers
-  ( LogEvent(..),logEvent,
+  ( returnT, (|>>), (|>>=), showTError, -- compatibilities
+    Database.CDBI.Connection.DBAction,
+    LogEvent(..),logEvent,
     masterProgsLatexFile,
     modInfoLatexFile,modTableLatexFile,semTableLatexFile,
     shortModInfoLatexFile,
@@ -23,28 +25,49 @@ module System.Helpers
     shorttextinputRendering, renderWithFormControl )
   where
 
-import ConfigMDB
-import MDB
+import Char
 import IO
 import IOExts
-import Time
-import System(getEnviron,getHostname)
 import List
-import WUI
-import Char
-import System.Authentication
 import ReadShowTerm
-import Markdown
+import System(getEnviron,getHostname)
+import Time
 import Unsafe(unsafePerformIO)
+import WUI
 
+import Database.CDBI.Connection
 import HTML.Base
+import Markdown
 
--------------------------------------------------------------------------------
+import ConfigMDB
+import MDB
+import System.Authentication
+
+-----------------------------------------------------------------------------
+-- Some auxiliary definition for compatibility with old 
+-- Database.KeyDatabaseSQLite API
+-- Will be removed in the future.
+
+infixl 1 |>>, |>>=
+
+showTError :: DBError -> String
+showTError dberr = show dberr
+
+returnT :: a -> DBAction a
+returnT = return
+
+(|>>) :: DBAction a -> DBAction b -> DBAction b
+ta |>> tb = ta >+ tb
+
+(|>>=) :: DBAction a -> (a -> DBAction b) -> DBAction b
+ta |>>= tb = ta >+= tb
+
+-----------------------------------------------------------------------------
 -- Logging:
 
 -- logfile:
 logFile :: String
-logFile = storageDir++"CHANGE.LOG"
+logFile = storageDir ++ "CHANGE.LOG"
 
 -- The kind of events we want to log.
 data LogEvent =

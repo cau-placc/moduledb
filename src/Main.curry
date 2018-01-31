@@ -15,7 +15,6 @@ import Controller.ModData
 import Controller.AdvisorStudyProgram ( showXmlAdvisorStudyProgram
                                       , showAllXmlAdvisorStudyPrograms)
 import Controller.MasterProgram (showXmlMasterProgram,showAllXmlMasterPrograms)
-import System.Transaction
 import MDB
 import MDBExts
 import View.MDBEntitiesToHtml

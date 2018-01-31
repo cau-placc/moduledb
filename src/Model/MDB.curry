@@ -99,7 +99,8 @@ data UnivisInfoID = UnivisInfoID Int
 
 --- The name of the SQLite database file.
 sqliteDBFile :: String
-sqliteDBFile = "/net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.db"
+sqliteDBFile =
+  "/net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.db"
 
 --- The ER description of the `Prerequisites` entity.
 prerequisites_CDBI_Description

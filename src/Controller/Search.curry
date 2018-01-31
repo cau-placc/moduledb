@@ -12,7 +12,6 @@ import System.Spicey
 import System.Authentication
 import MDB
 import MDBExts
-import System.Transaction
 import Char
 import List
 import Maybe

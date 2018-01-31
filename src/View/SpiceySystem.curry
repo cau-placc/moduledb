@@ -5,18 +5,21 @@
 --- and a view of a list of user processes.
 --------------------------------------------------------------------------
 
-module View.SpiceySystem(loginView,processListView,historyView)
+module View.SpiceySystem
+  ( loginView, processListView, historyView )
  where
+
+import Database.CDBI.Connection
+import Mail
+import Time
 
 import Config.UserProcesses
 import System.Processes
 import System.Spicey
 import System.Authentication
-import System.Transaction
+import System.Helpers
 import MDB
 import Controller.Default ( defaultController )
-import Mail
-import Time
 import ConfigMDB
 import System.SessionInfo
 import System.MultiLang
@@ -72,7 +75,7 @@ loginView controller sinfo =
     nextInProcessOr controller Nothing >>= getForm
 
 --- Gets a user entry with a given login name and (hashed) password:
-queryUserByLoginPass :: String -> String -> Query [User]
+queryUserByLoginPass :: String -> String -> DBAction [User]
 queryUserByLoginPass login pass = seq login $ seq pass $
   queryCondUser (\u -> userLogin u == login && userPassword u == pass)
 

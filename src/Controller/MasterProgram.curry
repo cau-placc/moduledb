@@ -5,7 +5,6 @@ module Controller.MasterProgram (
 import Database.CDBI.ER
 
 import System.Spicey
-import System.Transaction
 import HTML.Base
 import Time
 import ConfigMDB
@@ -189,7 +188,7 @@ showMasterProgramController mprog =
         (\mpinfo -> do
           admin <- isAdmin
           let modinfo = progModsOfMasterProgInfo mpinfo
-          tmodinfo <- runJustT $ mapT getMCodeForInfo modinfo
+          tmodinfo <- runJustT $ mapM getMCodeForInfo modinfo
           mcarea <- runJustT $ getMasterCoreArea
                      (masterProgramMasterCoreAreaAreaProgramsKey mprog)
           responsibleUser <- runJustT (getAdvisingUser mprog)
@@ -208,14 +207,14 @@ showMasterProgramController mprog =
         )
 
 --- Gets the associated MasterCoreArea entity for a given MasterProgram entity.
-getAreaProgramsMasterCoreArea :: MasterProgram -> Transaction MasterCoreArea
+getAreaProgramsMasterCoreArea :: MasterProgram -> DBAction MasterCoreArea
 getAreaProgramsMasterCoreArea mMasterCoreArea =
   getMasterCoreArea
    (masterProgramMasterCoreAreaAreaProgramsKey mMasterCoreArea)
 
 
 --- Get module instances of next n semesters from a given one:
-queryModInstInSemesters :: (String,Int) -> Int -> Query [ModInst]
+queryModInstInSemesters :: (String,Int) -> Int -> DBAction [ModInst]
 queryModInstInSemesters semyear n =
   let nextsems = take n (iterate nextSemester semyear)
    in queryCondModInst (\mi -> (modInstTerm mi,modInstYear mi) `elem` nextsems)
@@ -223,11 +222,11 @@ queryModInstInSemesters semyear n =
 --- Get module instances and their categories
 --- of next n semesters from a given one:
 getModInstCatsInSemesters :: (String,Int) -> Int
-                          -> Transaction [(ModInst,[Category])]
+                          -> DBAction [(ModInst,[Category])]
 getModInstCatsInSemesters semyear n = do
   mis <- queryModInstInSemesters semyear n
   mdkcats <-
-    mapT (\mdk -> getModDataKeyCategories mdk >>= \cats -> return (mdk,cats))
+    mapM (\mdk -> getModDataKeyCategories mdk >>= \cats -> return (mdk,cats))
          (nub (map modInstModDataModuleInstancesKey mis))
   return $
    map (\mi -> (mi,fromJust
@@ -238,7 +237,7 @@ getModInstCatsInSemesters semyear n = do
 --- list of categories (specified by their ShortNames)
 --- of next n semesters from a given one:
 getCategoryModInstInSemesters :: (String,Int) -> Int -> [String]
-                          -> Transaction [(ModInst,[Category])]
+                          -> DBAction [(ModInst,[Category])]
 getCategoryModInstInSemesters semyear n catkeys =
   getModInstCatsInSemesters semyear n |>>=
   returnT .
@@ -247,10 +246,10 @@ getCategoryModInstInSemesters semyear n catkeys =
 --- Get master module instances (and their module data and categories)
 --- of next n semesters from a given one:
 getMasterModInstInSemesters :: (String,Int) -> Int
-                          -> Transaction [(ModInst,ModData,[Category])]
+                          -> DBAction [(ModInst,ModData,[Category])]
 getMasterModInstInSemesters semyear n =
   getCategoryModInstInSemesters semyear n ["IG","TG","IS","MV"] |>>=
-  mapT (\ (mi,cats) -> getModData (modInstModDataModuleInstancesKey mi)
+  mapM (\ (mi,cats) -> getModData (modInstModDataModuleInstancesKey mi)
                        |>>= \md -> returnT (mi,md,cats))
 
 -------------------------------------------------------------------------
@@ -287,7 +286,7 @@ getMasterProgramXML mprog =
   maybe (return Nothing)
     (\mpinfo -> do
       let modinfo = progModsOfMasterProgInfo mpinfo
-      tmodinfo <- runJustT $ mapT getMCodeForInfo modinfo
+      tmodinfo <- runJustT $ mapM getMCodeForInfo modinfo
       responsibleUser <- runJustT (getAdvisingUser mprog)
       return (Just (mprog2xml mprog responsibleUser tmodinfo)))
 

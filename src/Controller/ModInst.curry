@@ -4,7 +4,6 @@ module Controller.ModInst (
  ) where
 
 import System.Spicey
-import System.Transaction
 import HTML.Base
 import Time
 import MDB
@@ -70,7 +69,7 @@ editAllModInstController md cntcontroller = do
                         (queryInstancesOfMod (modDataKey md))
    allmpkeys <- runQ $ getMasterProgramKeysOfModInst allinsts
    allspkeys <- runJustT $
-                 mapT (\mi -> getAdvisorStudyProgramKeysOfModInst mi)
+                 mapM (\mi -> getAdvisorStudyProgramKeysOfModInst mi)
                       allinsts
    allUsers <- runQ (liftM (mergeSortBy leqUser) queryAllUsers)
    -- select instances not used in master programs:
@@ -116,7 +115,7 @@ updateAllModInstController oldinsts cntcontroller True modinsts = do
           spHref ("?ModData/show/" ++ showModDataKey mdata)
                  [htxt "Zurück zum Modul"]]
    else
-    runT (mapT (\ (oi,(ni,del)) ->
+    runT (mapM (\ (oi,(ni,del)) ->
                  if del
                  then inUse oi |>>= \useoi ->
                    if useoi
@@ -192,9 +191,9 @@ listModInstController =
          user     <- runJustT $ getUser (modInstUserLecturerModsKey mi)
          moddata  <- runJustT $ getModData (modInstModDataModuleInstancesKey mi)
          [mpkeys] <- runQ $ getMasterProgramKeysOfModInst [mi]
-         mps      <- runJustT (mapT getMasterProgram mpkeys)
+         mps      <- runJustT (mapM getMasterProgram mpkeys)
          spkeys   <- runQ (getAdvisorStudyProgramKeysOfModInst mi)
-         sprogs   <- runJustT (mapT getAdvisorStudyProgram spkeys)
+         sprogs   <- runJustT (mapM getAdvisorStudyProgram spkeys)
          return (singleModInstView mi moddata user mps sprogs))
        (readModInstKey (head args))
 
@@ -205,16 +204,16 @@ showModInstController mi =
    (do user     <- runJustT $ getUser (modInstUserLecturerModsKey mi)
        moddata  <- runJustT $ getModData (modInstModDataModuleInstancesKey mi)
        [mpkeys] <- runQ $ getMasterProgramKeysOfModInst [mi]
-       mps      <- runJustT (mapT getMasterProgram mpkeys)
+       mps      <- runJustT (mapM getMasterProgram mpkeys)
        spkeys   <- runQ (getAdvisorStudyProgramKeysOfModInst mi)
-       sprogs   <- runJustT (mapT getAdvisorStudyProgram spkeys)
+       sprogs   <- runJustT (mapM getAdvisorStudyProgram spkeys)
        return (singleModInstView mi moddata user mps sprogs))
 
 --- Gets the associated ModData entity for a given ModInst entity.
-getModuleInstancesModData :: ModInst -> Transaction ModData
+getModuleInstancesModData :: ModInst -> DBAction ModData
 getModuleInstancesModData mModData =
   getModData (modInstModDataModuleInstancesKey mModData)
 
 --- Gets the associated User entity for a given ModInst entity.
-getLecturerModsUser :: ModInst -> Transaction User
+getLecturerModsUser :: ModInst -> DBAction User
 getLecturerModsUser mUser = getUser (modInstUserLecturerModsKey mUser)
