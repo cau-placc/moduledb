@@ -13,6 +13,8 @@ import qualified Database.CDBI.Criteria
 import qualified Database.CDBI.Connection
 import qualified Database.CDBI.Description
 
+import ConfigMDB
+
 data Prerequisites = Prerequisites ModDataID ModDataID
  deriving (Eq,Show,Read)
 
@@ -99,8 +101,7 @@ data UnivisInfoID = UnivisInfoID Int
 
 --- The name of the SQLite database file.
 sqliteDBFile :: String
-sqliteDBFile =
-  "/net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.db"
+sqliteDBFile = storageDir ++ "MDB.db"
 
 --- The ER description of the `Prerequisites` entity.
 prerequisites_CDBI_Description
