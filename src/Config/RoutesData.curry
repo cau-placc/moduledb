@@ -56,7 +56,7 @@ getRoutes =
                              MasterProgramController)
       ,("Daten aus UnivIS übernehmen",Prefix "UnivisInfo" "load",
                                       UnivisInfoController)
-      ,("Zeige UnivisInfo-Daten",Prefix "UnivisInfo" "list",
+      ,("Zeige UnivisInfo-Daten (lang!)",Prefix "UnivisInfo" "list",
                                  UnivisInfoController)
       ,("List AdvisorStudyProgram",Prefix "AdvisorStudyProgram" "list"
                                   ,AdvisorStudyProgramController)

@@ -24,10 +24,7 @@ mainPageView sinfo studyPrograms =
    par $ mainExplanation sinfo,
    par $ minorSubjectNote sinfo,
    h2 [htxt $ t "Degree programs"],
-   spTable (map (\sp -> [langSelect sinfo
-                                    (studyProgramToListView sp !! 1)
-                                    (head (studyProgramToListView sp))])
-                (sortBy leqStudyProgram studyPrograms)),
+   studyProgramHtmlTable sinfo studyPrograms,
    h3 [htxt $ t "Further information:"],
    ulist
     [[htxt $ t "Master studies in computer science:", nbsp,

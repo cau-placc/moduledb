@@ -1,18 +1,22 @@
-module View.StudyProgram (
- wStudyProgram, tuple2StudyProgram, studyProgram2Tuple, wStudyProgramType,
- blankStudyProgramView, createStudyProgramView, editStudyProgramView,
- showStudyProgramView, listStudyProgramView, leqStudyProgram
+module View.StudyProgram
+ ( wStudyProgram, tuple2StudyProgram, studyProgram2Tuple, wStudyProgramType,
+   blankStudyProgramView, createStudyProgramView, editStudyProgramView,
+   showStudyProgramView, listStudyProgramView, studyProgramHtmlTable,
+   leqStudyProgram
  ) where
 
-import WUI
-import HTML.Base
-import Time
+import List ( groupBy, maximum, transpose )
 import Sort
-import System.Spicey
+import Time
+
+import HTML.Base
+import WUI
+
 import MDB
-import View.MDBEntitiesToHtml
+import System.Spicey
 import System.SessionInfo
 import System.MultiLang
+import View.MDBEntitiesToHtml
 
 --- The WUI specification for the entity type StudyProgram.
 wStudyProgram :: WuiSpec (String,String,String,String,Int)
@@ -122,21 +126,18 @@ leqStudyProgram x1 x2 =
 --- and the controller functions to show, delete and edit entities.
 listStudyProgramView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
 listStudyProgramView sinfo studyPrograms =
-  if isAdminSession sinfo
-  then [h1 [htxt $ t "Degree programs"],
-        spTable (map (studyProgramLabelList!!) [0,2,3,4] :
-                 map listStudyProgram (sortBy leqStudyProgram studyPrograms))]
-  else [h1 [htxt $ t "Degree programs"],
-        spTable (map (\sp -> [langSelect sinfo
-                                (studyProgramToListView sp !! 1)
-                                (head (studyProgramToListView sp))])
-                     (sortBy leqStudyProgram studyPrograms))]
+  [h1 [htxt $ t "Degree programs"],
+   if isAdminSession sinfo
+     then spTable (map (studyProgramLabelList!!) [0,2,3,4] :
+                   map listStudyProgram (sortBy leqStudyProgram studyPrograms))
+     else studyProgramHtmlTable sinfo studyPrograms
+  ]
  where
   t = translate sinfo
-
+ 
   listStudyProgram :: StudyProgram -> [[HtmlExp]]
   listStudyProgram studyProgram =
-     studyProgramToListView studyProgram ++
+     studyProgramToListView sinfo studyProgram ++
       [[spHref
          ("?StudyProgram/show/" ++ showStudyProgramKey studyProgram)
          [htxt "show"]]
@@ -146,3 +147,23 @@ listStudyProgramView sinfo studyPrograms =
       ,[spHref
          ("?StudyProgram/delete/" ++ showStudyProgramKey studyProgram)
          [htxt "delete"]]]
+
+-- Generates a table of all StudyProgram entities.
+studyProgramHtmlTable :: UserSessionInfo -> [StudyProgram] -> HtmlExp
+studyProgramHtmlTable sinfo studyPrograms =
+  spTable
+    (transposeProgs
+       (map (map (\sp -> head (studyProgramToListView sinfo sp)))
+            (groupStudyPrograms (sortBy leqStudyProgram studyPrograms))))
+ where
+  transposeProgs = map stripEmptySuffix . transpose . makeEqualRows
+   where
+    makeEqualRows xss =
+      let m = maximum (map length xss)
+      in map (\xs -> xs ++ take (m - length xs) (repeat [])) xss
+    stripEmptySuffix = reverse . dropWhile null . reverse
+
+  -- Group StudyProgram according to their positions modulo 10:
+  groupStudyPrograms =
+    groupBy (\sp1 sp2 -> studyProgramPosition sp1 `div` 10 ==
+                         studyProgramPosition sp2 `div` 10)

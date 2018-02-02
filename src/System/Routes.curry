@@ -60,6 +60,7 @@ getRouteMenus = do
                                           ("ModData","list"),
                                           ("ModInst","list"),
                                           ("MasterProgram","list"),
+                                          ("AdvisorStudyProgram","list"),
                                           ("StudyProgram","list"),
                                           ("search","main")]
                        then getLinks restroutes

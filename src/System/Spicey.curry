@@ -269,8 +269,7 @@ getUserMenu login sinfo = do
   let t = translate sinfo
   return $
      ulist $
-      [--[href "?main" [htxt "Hauptseite"]],
-       [href "?StudyProgram/list"
+      [[href "?StudyProgram/list"
              [stprogIcon, nbsp, htxt $ t "Degree programs"]],
        [href "?AdvisorStudyProgram/list"
              [adprogIcon, nbsp, htxt $ t "Master programs"]],
@@ -278,12 +277,8 @@ getUserMenu login sinfo = do
       (if login==Nothing
        then []
        else [[href ("?Category/user")   [htxt $ t "My modules"]]
-            --,[href "?MasterProgram/new" [htxt $ t "New master program"]]
             ,[href "?AdvisorStudyProgram/new" [htxt $ t "New master program"]]
-            ]) ++
-      [--[href "?MasterProgram/list" [htxt $ t "Master programs (until SS15)"]]
-       --[href "?login" [htxt $ t ("Log" ++ maybe "in" (const "out") login)]]
-      ]
+            ])
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String

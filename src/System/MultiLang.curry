@@ -282,7 +282,7 @@ minorSubjectNote sinfo = langSelect sinfo
    htxt "Informatik sowie die dazugehörigen Module findet man ",
    spEHref minorURL [htxt "auf dieser Seite."]]
  where
-  minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf-1-fach/bachelorstudiengang/anwendungsgebiete_nebenfaecher"
+  minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf-1-fach/bachelorstudiengang/nebenfaecher_anwendungsgebiete"
 
 sendPasswordCmt :: UserSessionInfo -> String
 sendPasswordCmt sinfo = langSelect sinfo

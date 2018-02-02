@@ -20,9 +20,9 @@ studyProgramToHRef sinfo sprog =
 
 --- The list view of a StudyProgram entity in HTML format.
 --- This view is used in a row of a table of all entities.
-studyProgramToListView :: StudyProgram -> [[HtmlExp]]
-studyProgramToListView studyProgram =
-  [name2href (studyProgramName studyProgram)
+studyProgramToListView :: UserSessionInfo -> StudyProgram -> [[HtmlExp]]
+studyProgramToListView sinfo studyProgram =
+  [name2href ((langSelect sinfo studyProgramNameE studyProgramName) studyProgram)
   ,[stringToHtml (studyProgramShortName studyProgram)]
   ,[stringToHtml (studyProgramProgKey studyProgram)]
   ,[intToHtml (studyProgramPosition studyProgram)]]

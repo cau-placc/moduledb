@@ -17,7 +17,6 @@ import Read
 import UnivIS
 import System.Authentication
 import Controller.ModData
-import System.Helpers(getCurrentSemester)
 
 --- Choose the controller for a UnivisInfo entity according to the URL parameter.
 mainUnivisInfoController :: Controller
