@@ -151,10 +151,11 @@ listStudyProgramView sinfo studyPrograms =
 -- Generates a table of all StudyProgram entities.
 studyProgramHtmlTable :: UserSessionInfo -> [StudyProgram] -> HtmlExp
 studyProgramHtmlTable sinfo studyPrograms =
-  spTable
+  table
     (transposeProgs
        (map (map (\sp -> head (studyProgramToListView sinfo sp)))
             (groupStudyPrograms (sortBy leqStudyProgram studyPrograms))))
+    `addClass` "table table-condensed"
  where
   transposeProgs = map stripEmptySuffix . transpose . makeEqualRows
    where
