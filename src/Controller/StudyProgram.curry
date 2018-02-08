@@ -5,15 +5,16 @@ module Controller.StudyProgram
 import Directory
 import IO     ( hPutStr, hClose )
 import IOExts ( connectToCommand )
+import List   ( (\\), nub )
 import Maybe
 import System
 import Time
 
 import HTML.Base
-import ShowDotGraph         ( showDotGraph )
+import ShowDotGraph ( showDotGraph )
 
 import MDB
-import SpecialQueries       ( depsToGraph, getStudyProgRequirements )
+import SpecialQueries
 import System.Helpers
 import System.Spicey
 import View.StudyProgram
@@ -135,10 +136,20 @@ showPrereqsStudyProgramController sprog =
     pdfexists <- doesFileExist tmppdf
     if pdfexists then system ("chmod 644 " ++ tmppdf)
                  else return 0
+    mcodes  <- getModuleCodesOfStudyProg sprog
     prereqs <- getStudyProgRequirements sprog
-    let dotgraph = depsToGraph prereqs
+    let prereqmods = nub (concatMap (\ (x,y) -> [x,y]) prereqs)
+    let basemods = filter ((`notElem` prereqmods) . snd) mcodes
+        dotgraph = depsToGraph prereqs
         dotcmd   = "/usr/bin/dot -Tpdf -o" ++ tmppdf
     dotstr <- connectToCommand dotcmd
     hPutStr dotstr (showDotGraph dotgraph)
     hClose dotstr
-    return [bold [href tmppdf [htxt $ t "Module dependencies" ++ " (PDF)"]]]
+    basemoddatas <- runJustT $ mapM getModData (map fst basemods)
+    return [ h1 [ htxt $ t "Module dependencies", htxt ": "
+                , studyProgramToHRef sinfo sprog]
+           , h2 [ href tmppdf [htxt $ t "Module dependencies"]
+                , href tmppdf [imageNB "images/pdf.png" "PDF"]]
+           , h3 [htxt $ t "Modules without prerequisites", htxt ":"]
+           , showModDatasAsLinks sinfo basemoddatas
+            ]

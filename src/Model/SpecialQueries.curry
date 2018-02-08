@@ -23,6 +23,15 @@ printRequirementDescriptions = do
                      (filter (\ (_,r) -> not (null r)) crs)
 
 -----------------------------------------------------------------------
+--- Gets the module keys and codes of all modules in a given study program.
+getModuleCodesOfStudyProg :: StudyProgram -> IO [(ModDataID,String)]
+getModuleCodesOfStudyProg sprog = runQ
+  ``sql* Select Distinct md.Key, md.Code
+         From ModData as md, Category as cat, StudyProgram as sp
+         Where sp.Key = { studyProgramKey sprog } And
+               Satisfies sp withCategory cat And
+               Satisfies md belongsTo cat;''
+
 --- Gets the module codes of all prequesites in a given study program,
 --- i.e., compute (m1,m2) if m1 requires m2.
 --- (A bit more complicated since the Satisfies clause seems buggy.)
