@@ -21,15 +21,15 @@ studyProgramToHRef sinfo sprog =
 --- The list view of a StudyProgram entity in HTML format.
 --- This view is used in a row of a table of all entities.
 studyProgramToListView :: UserSessionInfo -> StudyProgram -> [[HtmlExp]]
-studyProgramToListView sinfo studyProgram =
-  [name2href ((langSelect sinfo studyProgramNameE studyProgramName) studyProgram)
-  ,[stringToHtml (studyProgramShortName studyProgram)]
-  ,[stringToHtml (studyProgramProgKey studyProgram)]
-  ,[intToHtml (studyProgramPosition studyProgram)]]
+studyProgramToListView sinfo sprog =
+  [name2href ((langSelect sinfo studyProgramNameE studyProgramName) sprog)
+  ,[stringToHtml (studyProgramShortName sprog)]
+  ,[stringToHtml (studyProgramProgKey sprog)]
+  ,[intToHtml (studyProgramPosition sprog)]]
  where
   name2href n =
     [hrefStudyProgram
-       ("?Category/studyprogram/"++showStudyProgramKey studyProgram)
+       ("?Category/studyprogram/"++showStudyProgramKey sprog)
        [textstyle "studyprogram" n]]
 
 --- The short view of a StudyProgram entity as a string.
@@ -62,9 +62,9 @@ studyProgramLabelList =
 
 --- The list view of a Category entity in HTML format.
 --- This view is used in a row of a table of all entities.
-categoryToListView :: Category -> [[HtmlExp]]
-categoryToListView category =
-  [name2href (categoryName category)
+categoryToListView :: UserSessionInfo -> Category -> [[HtmlExp]]
+categoryToListView sinfo category =
+  [name2href ((langSelect sinfo categoryNameE categoryName) category)
   ,[stringToHtml (categoryShortName category)]
   ,[intToHtml (categoryPosition category)]]
  where

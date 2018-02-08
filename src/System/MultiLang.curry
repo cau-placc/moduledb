@@ -121,6 +121,7 @@ english2german =
  ,("Module: "           ,"Modul: ")
  ,("Module categories:" ,"Modulkategorien:")
  ,("Module code:"       ,"Modulcode:")
+ ,("Module dependencies","Modulabhängigkeiten")
  ,("Module Information System","Modulinformationssystem Informatik")
  ,("Modules of"         ,"Module von")
  ,("My modules"         ,"Eigene Module")
@@ -168,6 +169,7 @@ english2german =
  ,("show"               ,"anzeigen")
  ,("Show all master programs",
    "Alle (auch ältere) Masterprogramme anzeigen")
+ ,("Show all module dependencies", "Alle Modulabhängigkeiten anzeigen")
  ,("Show all modules in this degree program",
    "Alle Module in diesem Studienprogramm anzeigen")
  ,("Show module selections:","Module anzeigen:")

@@ -241,9 +241,7 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
      else
       concatMap
         (\ (mbcat,mods) ->
-           (either (\c->[style "category"
-                          (langSelect sinfo (listCategory c !! 1)
-                                            (head (listCategory c)))])
+           (either (\c->[style "category" (head (listCategory c))])
                    (\s->[style "category" [htxt s]])
                    mbcat
             : if null mods
@@ -266,8 +264,12 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
     then either
           (\sprog ->
             [par
-              [spHref ("?Category/studyprogramall/"++showStudyProgramKey sprog)
-                      [htxt $ t "Show all modules in this degree program"]]])
+              [ spHref ("?Category/studyprogramall/"++showStudyProgramKey sprog)
+                       [htxt $ t "Show all modules in this degree program"]
+              , nbsp
+              , spHref ("?StudyProgram/prereqs/"++showStudyProgramKey sprog)
+                       [htxt $ t "Show all module dependencies"]
+              ]])
           (const [])
           mbsprog
     else
@@ -361,9 +363,8 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
      (semesterSelection cursem !!start) (semesterSelection cursem !! stop)
         >>= getForm
 
-   listCategory :: Category -> [[HtmlExp]]
    listCategory category =
-      categoryToListView category ++
+      categoryToListView sinfo category ++
       [[spHref ("?Category/show/"++showCategoryKey category) [htxt "Anzeigen"]]
       ,[spHref ("?Category/edit/"++showCategoryKey category) [htxt "Ändern"]]
       ,[spHref ("?Category/delete/"++showCategoryKey category) [htxt "Löschen"]]

@@ -2,17 +2,26 @@ module Controller.StudyProgram
   ( mainStudyProgramController )
  where
 
+import Directory
+import IO     ( hPutStr, hClose )
+import IOExts ( connectToCommand )
+import Maybe
+import System
+import Time
+
+import HTML.Base
+import ShowDotGraph         ( showDotGraph )
+
+import MDB
+import SpecialQueries       ( depsToGraph, getStudyProgRequirements )
 import System.Helpers
 import System.Spicey
-import HTML.Base
-import Time
-import MDB
 import View.StudyProgram
-import Maybe
 import System.Authorization
 import System.AuthorizedActions
 import Config.UserProcesses
 import System.Authentication
+import System.MultiLang
 import System.SessionInfo
 import View.MDBEntitiesToHtml
 
@@ -33,6 +42,9 @@ mainStudyProgramController =
       ["delete" ,s] ->
        applyControllerOn (readStudyProgramKey s) getStudyProgram
         confirmDeleteStudyProgramController
+      ["prereqs" ,s] ->
+       applyControllerOn (readStudyProgramKey s) getStudyProgram
+        showPrereqsStudyProgramController
       _ -> displayError "Illegal URL"
 
 --- Shows a form to create a new StudyProgram entity.
@@ -101,9 +113,8 @@ deleteStudyProgramController studyProgram =
 --- or edit an entity.
 listStudyProgramController :: Controller
 listStudyProgramController =
-  checkAuthorization (studyProgramOperationAllowed ListEntities) $ \_ ->
-   (do sinfo <- getUserSessionInfo
-       studyPrograms <- runQ queryAllStudyPrograms
+  checkAuthorization (studyProgramOperationAllowed ListEntities) $ \sinfo ->
+   (do studyPrograms <- runQ queryAllStudyPrograms
        return (listStudyProgramView sinfo studyPrograms))
 
 --- Shows a StudyProgram entity.
@@ -112,3 +123,22 @@ showStudyProgramController studyProgram =
   checkAuthorization (studyProgramOperationAllowed (ShowEntity studyProgram))
    $ \_ ->
    (do return (showStudyProgramView studyProgram))
+
+--- Shows the prerequisites of the given StudyProgram entity.
+showPrereqsStudyProgramController :: StudyProgram -> Controller
+showPrereqsStudyProgramController sprog =
+  checkAuthorization (studyProgramOperationAllowed (ShowEntity sprog))
+   $ \sinfo -> do
+    let t = translate sinfo
+    pid <- getPID
+    let tmppdf = "tmp_" ++ show pid ++ ".pdf"
+    pdfexists <- doesFileExist tmppdf
+    if pdfexists then system ("chmod 644 " ++ tmppdf)
+                 else return 0
+    prereqs <- getStudyProgRequirements sprog
+    let dotgraph = depsToGraph prereqs
+        dotcmd   = "/usr/bin/dot -Tpdf -o" ++ tmppdf
+    dotstr <- connectToCommand dotcmd
+    hPutStr dotstr (showDotGraph dotgraph)
+    hClose dotstr
+    return [bold [href tmppdf [htxt $ t "Module dependencies" ++ " (PDF)"]]]
