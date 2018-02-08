@@ -4,7 +4,7 @@ module Controller.StudyProgram
 
 import Directory
 import IO     ( hPutStr, hClose )
-import IOExts ( connectToCommand )
+import IOExts ( connectToCommand, evalCmd, readCompleteFile )
 import List   ( (\\), nub )
 import Maybe
 import System
@@ -139,17 +139,19 @@ showPrereqsStudyProgramController sprog =
     mcodes  <- getModuleCodesOfStudyProg sprog
     prereqs <- getStudyProgRequirements sprog
     let prereqmods = nub (concatMap (\ (x,y) -> [x,y]) prereqs)
-    let basemods = filter ((`notElem` prereqmods) . snd) mcodes
-        dotgraph = depsToGraph prereqs
-        dotcmd   = "/usr/bin/dot -Tpdf -o" ++ tmppdf
-    dotstr <- connectToCommand dotcmd
-    hPutStr dotstr (showDotGraph dotgraph)
+    let basemods  = filter ((`notElem` prereqmods) . snd) mcodes
+        dotgraph  = showDotGraph (depsToGraph prereqs)
+        dotpdfcmd = "/usr/bin/dot -Tpdf -o" ++ tmppdf
+    dotstr <- connectToCommand dotpdfcmd
+    hPutStr dotstr dotgraph
     hClose dotstr
+    (_,svgtxt,_) <- evalCmd "/usr/bin/dot" ["-Tsvg"] dotgraph
     basemoddatas <- runJustT $ mapM getModData (map fst basemods)
     return [ h1 [ htxt $ t "Module dependencies", htxt ": "
                 , studyProgramToHRef sinfo sprog]
-           , h2 [ href tmppdf [htxt $ t "Module dependencies"]
+           , h2 [ htxt $ t "Module dependencies", htxt ": "
                 , href tmppdf [imageNB "images/pdf.png" "PDF"]]
+           , block [HtmlText svgtxt]
            , h3 [htxt $ t "Modules without prerequisites", htxt ":"]
            , showModDatasAsLinks sinfo basemoddatas
             ]

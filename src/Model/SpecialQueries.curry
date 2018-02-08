@@ -37,7 +37,7 @@ getModuleCodesOfStudyProg sprog = runQ
 --- (A bit more complicated since the Satisfies clause seems buggy.)
 getStudyProgRequirements :: StudyProgram -> IO [(String,String)]
 getStudyProgRequirements sprog = runQ
-  ``sql* Select md1.Code, md2.Code
+  ``sql* Select Distinct md1.Code, md2.Code
          From Prerequisites as preq, ModData as md1, ModData as md2,
               Category as cat, StudyProgram as sp
          Where sp.Key = { studyProgramKey sprog } And
