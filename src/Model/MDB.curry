@@ -4260,6 +4260,35 @@ deleteUnivisInfo =
 updateUnivisInfo :: UnivisInfo -> Database.CDBI.Connection.DBAction ()
 updateUnivisInfo = Database.CDBI.ER.updateEntry univisInfo_CDBI_Description
 
+--- Generates a new database (name provided as the parameter) and
+--- creates its schema.
+createNewDB :: String -> IO ()
+createNewDB dbfile =
+  do conn <- Database.CDBI.Connection.connectSQLite dbfile
+     Database.CDBI.Connection.writeConnection cstr conn
+     Database.CDBI.Connection.disconnect conn
+  where
+    cstr =
+      unlines
+       ["create table 'Prerequisites'('ModDataPrerequisitesKey1' int REFERENCES 'ModData'(Key) not null ,'ModDataPrerequisitesKey' int REFERENCES 'ModData'(Key) not null, primary key ('ModDataPrerequisitesKey1', 'ModDataPrerequisitesKey'));"
+       ,"create table 'Categorizing'('ModDataCategorizingKey' int REFERENCES 'ModData'(Key) not null ,'CategoryCategorizingKey' int REFERENCES 'Category'(Key) not null, primary key ('ModDataCategorizingKey', 'CategoryCategorizingKey'));"
+       ,"create table 'StudyProgram'('Key' integer primary key ,'Name' string not null ,'NameE' string ,'ShortName' string unique not null ,'ProgKey' string unique not null ,'Position' not null);"
+       ,"create table 'Category'('Key' integer primary key ,'Name' string not null ,'NameE' string ,'ShortName' string not null ,'Comment' string ,'MinECTS' int not null ,'MaxECTS' int not null ,'Position' not null ,'StudyProgramProgramCategoriesKey' int REFERENCES 'StudyProgram'(Key) not null);"
+       ,"create table 'MasterCoreArea'('Key' integer primary key ,'Name' string not null ,'ShortName' string not null ,'Description' string ,'AreaKey' string unique not null ,'Position' int not null);"
+       ,"create table 'User'('Key' integer primary key ,'Login' string unique not null ,'Name' string not null ,'First' string ,'Title' string ,'Email' string ,'Url' string ,'Password' string ,'LastLogin' string not null);"
+       ,"create table 'ModData'('Key' integer primary key ,'Code' string unique not null ,'NameG' string not null ,'NameE' string ,'Cycle' string ,'Presence' string ,'ECTS' int not null ,'Workload' string ,'Length' int not null ,'URL' string ,'Visible' string not null ,'UserResponsibleKey' int REFERENCES 'User'(Key) not null);"
+       ,"create table 'ModDescr'('Key' integer primary key ,'Language' string not null ,'ShortDesc' string ,'Objectives' string ,'Contents' string ,'Prereq' string ,'Exam' string ,'Methods' string ,'Use' string ,'Literature' string ,'Links' string ,'Comments' string ,'ModDataDataDescKey' int REFERENCES 'ModData'(Key) unique not null);"
+       ,"create table 'ModInst'('Key' integer primary key ,'Term' string not null ,'Year' int not null ,'UserLecturerModsKey' int REFERENCES 'User'(Key) not null ,'ModDataModuleInstancesKey' int REFERENCES 'ModData'(Key) not null);"
+       ,"create table 'AdvisorStudyProgram'('Key' integer primary key ,'Name' string not null ,'Term' string not null ,'Year' int not null ,'Desc' string ,'Prereq' string ,'Comments' string ,'Visible' string not null ,'UserStudyAdvisingKey' int REFERENCES 'User'(Key) not null ,'StudyProgramStudyProgramsAdvisedKey' int REFERENCES 'StudyProgram'(Key) not null);"
+       ,"create table 'AdvisorModule'('Key' integer primary key ,'Mandatory' string not null ,'AdvisorStudyProgramAdvisorProgramModulesKey' int REFERENCES 'AdvisorStudyProgram'(Key) not null ,'CategoryAdvisorCategorizingKey' int REFERENCES 'Category'(Key) not null ,'ModInstAdvisedProgramModuleInstancesKey' int REFERENCES 'ModInst'(Key) not null);"
+       ,"create table 'MasterProgram'('Key' integer primary key ,'Name' string not null ,'Term' string not null ,'Year' int not null ,'Desc' string ,'Prereq' string ,'Comments' string ,'Visible' string not null ,'UserAdvisingKey' int REFERENCES 'User'(Key) not null ,'MasterCoreAreaAreaProgramsKey' int REFERENCES 'MasterCoreArea'(Key) not null);"
+       ,"create table 'MasterProgInfo'('Key' integer primary key ,'ProgModules' string not null ,'Praktikum' string ,'Seminar' string ,'Thesis' string ,'AllgGrundlagen' string ,'Anwendungsfach' string ,'MasterProgramProgramInfoKey' int REFERENCES 'MasterProgram'(Key) not null);"
+       ,"create table 'UnivisInfo'('Key' integer primary key ,'Code' string not null ,'Term' string not null ,'Year' not null ,'URL' string not null);"]
+
+--- Saves complete database in storage dir.
+saveDB :: IO ()
+saveDB = saveDBTo storageDir
+
 --- Saves complete database as term files into an existing directory
 --- provided as a parameter.
 saveDBTo :: String -> IO ()
@@ -4286,15 +4315,15 @@ saveDBTo dir =
       dir
      Database.CDBI.ER.saveDBTerms univisInfo_CDBI_Description sqliteDBFile dir
 
+--- Restores complete database from term files in storage dir.
+restoreDB :: IO ()
+restoreDB = restoreDBFrom storageDir
+
 --- Restores complete database from term files which are stored
 --- in a directory provided as a parameter.
 restoreDBFrom :: String -> IO ()
 restoreDBFrom dir =
-  do Database.CDBI.ER.restoreDBTerms prerequisites_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms categorizing_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms studyProgram_CDBI_Description sqliteDBFile
+  do Database.CDBI.ER.restoreDBTerms studyProgram_CDBI_Description sqliteDBFile
       dir
      Database.CDBI.ER.restoreDBTerms category_CDBI_Description sqliteDBFile dir
      Database.CDBI.ER.restoreDBTerms masterCoreArea_CDBI_Description
@@ -4304,6 +4333,8 @@ restoreDBFrom dir =
      Database.CDBI.ER.restoreDBTerms modData_CDBI_Description sqliteDBFile dir
      Database.CDBI.ER.restoreDBTerms modDescr_CDBI_Description sqliteDBFile dir
      Database.CDBI.ER.restoreDBTerms modInst_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.restoreDBTerms categorizing_CDBI_Description sqliteDBFile
+      dir
      Database.CDBI.ER.restoreDBTerms advisorStudyProgram_CDBI_Description
       sqliteDBFile
       dir
@@ -4315,6 +4346,8 @@ restoreDBFrom dir =
       sqliteDBFile
       dir
      Database.CDBI.ER.restoreDBTerms univisInfo_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.restoreDBTerms prerequisites_CDBI_Description sqliteDBFile
       dir
 
 --- Runs a DB action (typically a query).
