@@ -45,13 +45,13 @@ searchController = do
                                     showModSemResponsibleController
                                     showHandbookController
 
---- Controller for searching modules
+--- Controller for searching modules in the module database.
 searchModules :: String -> Controller
 searchModules pat = do
   sinfo <- getUserSessionInfo
   csem  <- getCurrentSemester
   let t = translate sinfo
-  let pattern = "%" ++ filter (`notElem` "%_") pat ++ "%"
+      pattern = "%" ++ filter (`notElem` "%_") pat ++ "%"
   mods <- runQ $
            ``sql* Select *
                   From ModData as md
