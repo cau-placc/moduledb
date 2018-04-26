@@ -32,6 +32,7 @@ data Language = German | English
 data UserSessionInfo = SD (Maybe String) Language
 
 --- The initial (empty) session data
+emptySessionInfo :: UserSessionInfo
 emptySessionInfo = SD Nothing German
 
 --- Extracts the login status from the user session data.

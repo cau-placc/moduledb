@@ -339,24 +339,32 @@ wVisible = wRadioBool [htxt "öffentlich sichtbar", nbsp, nbsp]
                       [htxt "nur zur internen Bearbeitung"]
 
 --- A WUI for a large input text line
+wLargeString :: WuiSpec String
 wLargeString = wString `withRendering` renderWithFormControl
 
 --- A WUI for a large required input text line
+wLargeRequiredString :: WuiSpec String
 wLargeRequiredString = wRequiredString `withRendering` renderWithFormControl
 
 --- A WUI for a medium input text line
+wMediumString :: WuiSpec String
 wMediumString = wStringSize 70 `withRendering` mediumtextinputRendering
 
 --- A WUI for a medium required input text line
+wMediumRequiredString :: WuiSpec String
 wMediumRequiredString = wRequiredStringSize 70
                          `withRendering` mediumtextinputRendering
 
+largetextinputRendering :: [HtmlExp] -> HtmlExp
 largetextinputRendering [s] = inline [s `addClass` "largetextinput"]
 
+mediumtextinputRendering :: [HtmlExp] -> HtmlExp
 mediumtextinputRendering [s] = inline [s `addClass` "mediumtextinput"]
 
+shorttextinputRendering :: [HtmlExp] -> HtmlExp
 shorttextinputRendering [s] = inline [s `addClass` "shorttextinput"]
 
+renderWithFormControl :: [HtmlExp] -> HtmlExp
 renderWithFormControl = inline . map (`addClass` "form-control")
 
 -----------------------------------------------------------------------------

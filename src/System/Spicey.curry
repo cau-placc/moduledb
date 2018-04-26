@@ -27,7 +27,7 @@ module System.Spicey (
   hrefUnivisInfo, hrefUnivisDanger,
   spHref, spHrefBlock, spEHref, hrefPrimButton,
   spButton, spPrimButton, spSmallButton, spSmallPrimaryButton,
-  spTable, spHeadedTable, addTitle,
+  spTable, spHeadedTable, addTitle, textWithInfoIcon,
   spShortSelectionInitial,
   setPageMessage, getPageMessage,
   saveLastUrl, getLastUrl, getLastUrlParameters, getLastUrls,
@@ -391,11 +391,11 @@ stdNavBar routemenu adminmenu login sinfo =
   -- The admin menu as a dropdown menu (represented as a HTML list item).
   -- The first argument is the admin menu (a ulist).
   adminDropDownMenu :: HtmlExp -> HtmlExp
-  adminDropDownMenu adminmenu =
+  adminDropDownMenu admenu =
     HtmlStruct "li" [("class","dropdown")]
        [href "#" [htxt $ "Administrator", bold [htxt " "] `addClass` "caret"]
          `addAttrs` [("class","dropdown-toggle"),("data-toggle","dropdown")],
-        adminmenu `addClass` "dropdown-menu"]
+        admenu `addClass` "dropdown-menu"]
 
   gotoDropDownMenu =
     HtmlStruct "li" [("class","dropdown")]
@@ -657,6 +657,9 @@ addTitle hexp title = hexp `addAttr` ("title",title)
 homeIcon :: HtmlExp
 homeIcon   = glyphicon "home"
 
+infoIcon :: HtmlExp
+infoIcon   = glyphicon "info-sign"
+
 userIcon :: HtmlExp
 userIcon   = glyphicon "user"
 
@@ -680,6 +683,10 @@ adprogIcon = glyphicon "road"
 
 glyphicon :: String -> HtmlExp
 glyphicon n = textstyle ("glyphicon glyphicon-"++n) ""
+
+--- Some additional information under an info icon.
+textWithInfoIcon :: String -> HtmlExp
+textWithInfoIcon s = infoIcon `addTitle` s
 
 --------------------------------------------------------------------------
 -- The page messages are implemented by a session store.

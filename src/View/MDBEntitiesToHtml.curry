@@ -335,6 +335,7 @@ modDescrLabelList =
   ,[textstyle "label label_for_type_relation" "Modul"]]
 
 -- Reference to markdown syntax description:
+markdownRef :: HtmlExp
 markdownRef = ehref "edit_infos.html#markdown" [htxt "(mit Markdown-Syntax)"]
 
 --- The list view of a ModInst entity in HTML format.
@@ -604,9 +605,6 @@ showStudyProgCategoriesAsHtml sinfo sprogs cats =
                      [stringToHtml (showStudyProgCategory sinfo True sprogs c)]
                     `addTitle` (showStudyProgCategory sinfo False sprogs c))
             cats))
- where
-  fullCatInfo sprog cat = categoryName cat ++
-        " (" ++ studyProgramName sprog ++ ")"
 
 showStudyProgCategory :: UserSessionInfo -> Bool -> [StudyProgram] -> Category
                       -> String
@@ -625,7 +623,7 @@ showStudyProgCategory sinfo short sprogs cat =
 -----------------------------------------------------------------------------
 -- Shows a list of modules as HTML links to the module description:
 showModDatasAsLinks :: UserSessionInfo -> [ModData] -> HtmlExp
-showModDatasAsLinks sinfo mods =
+showModDatasAsLinks _ mods =
   inline
     (intersperse nbsp
        (map (\md -> smallHrefModule ("?ModData/show/"++showModDataKey md)

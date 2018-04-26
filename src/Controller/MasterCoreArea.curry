@@ -17,6 +17,7 @@ import System.Authentication
 import View.MDBEntitiesToHtml
 
 --- Choose the controller for a MasterCoreArea entity according to the URL parameter.
+masterCoreAreaController :: Controller
 masterCoreAreaController = do
   args <- getControllerParams
   case args of

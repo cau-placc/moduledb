@@ -11,7 +11,7 @@ module System.MultiLang (
   loginEmailText, loginText, mainTitle, mainExplanation,
   masterStudyNote, masterStudyOldNote, minorSubjectNote,
   sendPasswordCmt, ssComment,
-  timeoutText, unknownUser, useURLText
+  timeoutText, unknownUser, useURLText, prereqExplainText
  ) where
 
 import System.SessionInfo
@@ -321,6 +321,11 @@ useURLText sinfo = langSelect sinfo
   "Please use the following URL to refer to this module from other web pages:"
   "Bitte verwenden Sie die folgende URL, um das Modul aus anderen Webseiten zu referenzieren:"
 
+prereqExplainText :: UserSessionInfo -> String
+prereqExplainText sinfo = langSelect sinfo
+  "The skills of these modules are required."
+  "Die in diesen Modulen vermittelten Kompetenzen werden vorausgesetzt."
+
 --------------------------------------------------------------------------
 -- Auxiliaries:
 
@@ -328,3 +333,5 @@ spEHref :: String -> [HtmlExp] -> HtmlExp
 spEHref ref hexps =
   href ref hexps `addClass` "btn btn-sm btn-default"
                  `addAttr` ("target","_blank")
+
+--------------------------------------------------------------------------
