@@ -73,6 +73,7 @@ main = do
                       (readAdvisorStudyProgramKey (urlencoded2string code))
     ['l','a','n','g',l1,l2] -> setLanguage [l1,l2] >> dispatcher
     "csv"    -> allModuleCSV
+    "csvold" -> allModuleCSV_OLD
     "saveDB" -> storeTermDB >>
                 return (answerEncText "iso-8859-1" "DB saved to term files")
     "ping"   -> pingAnswer -- to check whether the MDB server is alive
@@ -100,6 +101,47 @@ allModuleCSV = do
 -- Generate csv of module infos:
 moduleCSV :: [StudyProgram] -> [ModData] -> IO HtmlForm
 moduleCSV studyprogs mods = do
+  csvfields <- mapIO mod2csv (filter isNotCopy mods)
+  return (answerEncText "iso-8859-1" (showCSV csvfields))
+ where
+  isNotCopy m = take 5 (reverse (modDataCode m)) /= "ypoc-"
+
+  mod2csv m = do
+    modinsts <- runQ $ queryInstancesOfMod (modDataKey m)
+    cats <- runJustT $ getModDataCategories m
+    responsibleUser <- runJustT (getResponsibleUser m)
+    return
+      [modDataCode m,modDataNameG m,modDataNameE m,
+       if null (modDataURL m) then userToShortView responsibleUser else "",
+       showDiv10 (modDataECTS m),
+       concat . intersperse "|" . sortCats . nub . map categoryWithProg $ cats,
+       concat . intersperse "|" . map (showSemester . modInstSemester)
+              $ modinsts]
+
+  -- Format a category in the form "<cat short name>+<prog short name>"
+  -- (as discussed with Corinna Dort)
+  categoryWithProg cat =
+    categoryShortName cat ++ "+" ++
+    let pkey = categoryStudyProgramProgramCategoriesKey cat
+    in maybe "???" -- this case should not occur
+             studyProgramShortName
+             (find (\p -> studyProgramKey p == pkey) studyprogs)
+
+  -- Sorting categories according to a wish of Corinna Ohlsen:
+  sortCats = mergeSortBy leqCat
+    where leqCat c1 c2 = c1=="G" || (c1=="A" && c2/="G") ||
+                         (c1/="G" && c1/="A" && c1 <= c2)
+
+-------------------------------------------------------------------------
+-- Script for generating csv of module infos (old format!)
+allModuleCSV_OLD :: IO HtmlForm
+allModuleCSV_OLD = do
+  studyprogs <- runQ queryAllStudyPrograms
+  runQ queryAllModDatas >>= moduleCSV_OLD studyprogs
+
+-- Generate csv of module infos:
+moduleCSV_OLD :: [StudyProgram] -> [ModData] -> IO HtmlForm
+moduleCSV_OLD studyprogs mods = do
   csvfields <- mapIO mod2csv (filter isNotCopy mods)
   return (answerEncText "iso-8859-1" (showCSV csvfields))
  where
