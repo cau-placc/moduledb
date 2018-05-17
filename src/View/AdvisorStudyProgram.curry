@@ -122,7 +122,7 @@ blankAdvisorStudyProgramView
   -> Controller -> [HtmlExp]
 blankAdvisorStudyProgramView sinfo cursem possibleStudyPrograms user
                              possibleUsers controller cancelcontroller =
-  createAdvisorStudyProgramView sinfo cursem "" "" 2015 "" "" "" False
+  createAdvisorStudyProgramView sinfo cursem "" "" (snd cursem) "" "" "" False
    defaultStudyProgram
    user
    possibleStudyPrograms
