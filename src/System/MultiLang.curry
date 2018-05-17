@@ -10,7 +10,7 @@ module System.MultiLang (
   translate, langSelect,
   loginEmailText, loginText, mainTitle, mainExplanation,
   masterStudyNote, masterStudyOldNote, minorSubjectNote,
-  sendPasswordCmt, ssComment,
+  privacyCookieCmt, sendPasswordCmt, ssComment,
   timeoutText, unknownUser, useURLText, prereqExplainText
  ) where
 
@@ -72,6 +72,7 @@ english2german =
  ,("Delete module"      ,"Modul löschen")
  ,("Delete prerequisites","Voraussetzungen löschen")
  ,("delete as prerequisite","als Voraussetzung löschen")
+ ,("Department of Computer Science","Institut für Informatik")
  ,("Description"        ,"Beschreibung")
  ,("Duration:"          ,"Dauer:")
  ,("External URL for module","Externe URL für das Modul")
@@ -94,8 +95,8 @@ english2german =
  ,("German"             ,"Deutsch")
  ,("Go to"              ,"Gehe zu")
  ,("in the module code or title","im Modulcode oder -titel")
- ,("Department of Computer Science","Institut für Informatik")
  ,("irregular"          ,"unregelmäßig")
+ ,("Information on data privacy", "Information zum Datenschutz")
  ,("LaTeX output"       ,"LaTeX-Ausgaben")
  ,("Logged in as: "     ,"Angemeldet als: ")
  ,("Logged out"         ,"Abgemeldet")
@@ -288,6 +289,16 @@ minorSubjectNote sinfo = langSelect sinfo
  where
   minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf-1-fach/bachelorstudiengang/nebenfaecher_anwendungsgebiete"
 
+privacyCookieCmt :: UserSessionInfo -> String
+privacyCookieCmt sinfo = langSelect sinfo
+  ("This page uses cookies to store navigation information, login data, " ++
+   "and language settings temporarily. By using this web site, you agree " ++
+   "to use these cookies.")
+  ("Diese Seite verwendet Cookies zur temporären Speicherung von " ++
+   "Navigationsinformationen, Anmeldedaten und Sprachwünschen. " ++
+   "Durch die Verwendung dieser Webseite stimmen Sie dieser Nutzung " ++
+   "von Cookies zu.")
+  
 sendPasswordCmt :: UserSessionInfo -> String
 sendPasswordCmt sinfo = langSelect sinfo
   ("You can send a new password to your email address "++
