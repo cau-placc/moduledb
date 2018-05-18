@@ -46,7 +46,7 @@ mainPageView sinfo studyPrograms =
       htxt " | ",
       ehref "?xmlprog=all" [htxt $ t "XML document with all master programs (until SS15)"]]],
    h3 [htxt $ t "Information on data privacy" ++ ":"],
-   par [htxt $ privacyCookieCmt sinfo]
+   par $ privacyCookieCmt sinfo
   ]
  where
   t = translate sinfo

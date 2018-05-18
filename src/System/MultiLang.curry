@@ -1,8 +1,9 @@
 ----------------------------------------------------------------------------
---- This module contains support for multi-language access.
+--- This module contains support for multi-language access
+--- and the translation of texts shown in the application.
 ---
 --- @author Michael Hanus
---- @version January 2014
+--- @version May 2018
 ----------------------------------------------------------------------------
 
 module System.MultiLang (
@@ -14,9 +15,10 @@ module System.MultiLang (
   timeoutText, unknownUser, useURLText, prereqExplainText
  ) where
 
+import System.Helpers     ( ehref, ehrefBlock )
 import System.SessionInfo
 import HTML.Base
-import ConfigMDB(baseURL,studyPlannerURL)
+import ConfigMDB          ( baseURL, studyPlannerURL )
 
 --------------------------------------------------------------------------
 --- Translates a string w.r.t. given user session info.
@@ -250,7 +252,7 @@ mainExplanation sinfo = langSelect sinfo
      "Außerdem befindet sich hier eine Übersicht über alle "++
      "angebotenen Masterprogramme in Informatik und Wirtschaftsinformatik.",
    htxt $ "Aktuelle Informationen zu den Lehrveranstaltungen kann man auch im ",
-   spEHref univisURL [htxt "UnivIS"],
+   ehrefBlock univisURL [htxt "UnivIS"],
    htxt $ " finden."]
  where
   univisURL = "http://univis.uni-kiel.de/"
@@ -259,10 +261,10 @@ masterStudyNote :: UserSessionInfo -> [HtmlExp]
 masterStudyNote sinfo = langSelect sinfo
   [italic [htxt "Important note: "],
    htxt "All master students should plan their individual studies with the ",
-   spEHref studyPlannerURL [bold [htxt "study planner"]], htxt "!"]
+   ehrefBlock studyPlannerURL [bold [htxt "study planner"]], htxt "!"]
   [italic [htxt "Wichtiger Hinweis: "],
    htxt "Alle Masterstudierenden sollten ihre individualle Planung mit dem ",
-   spEHref studyPlannerURL [bold [htxt "Studienplaner"]],
+   ehrefBlock studyPlannerURL [bold [htxt "Studienplaner"]],
    htxt " durchführen! ",
    htxt "Damit wird weitgehend gewährleistet, dass das geplante Studium ",
    htxt "auch wirklich durchführbar ist."]
@@ -270,9 +272,9 @@ masterStudyNote sinfo = langSelect sinfo
 masterStudyOldNote :: UserSessionInfo -> [HtmlExp]
 masterStudyOldNote sinfo = langSelect sinfo
   [htxt "The master programs until SS15 can be found ",
-   spEHref oldMasterProgURL [bold [htxt "here"]], htxt "."]
+   ehrefBlock oldMasterProgURL [bold [htxt "here"]], htxt "."]
   [htxt "Die Masterprogramme bis zum Sommersemester 2015 sind ",
-   spEHref oldMasterProgURL [bold [htxt "hier"]],
+   ehrefBlock oldMasterProgURL [bold [htxt "hier"]],
    htxt " zu finden."]
  where
   oldMasterProgURL = "?MasterProgram/list" 
@@ -281,24 +283,46 @@ minorSubjectNote :: UserSessionInfo -> [HtmlExp]
 minorSubjectNote sinfo = langSelect sinfo
   [italic [htxt "Note: "],
    htxt "The possible minor/application subjects and their modules are listed ",
-   spEHref minorURL [htxt "on this page."]]
+   ehrefBlock minorURL [htxt "on this page."]]
   [italic [htxt "Hinweis: "],
    htxt "Die möglichen Anwendungsgebiete im Bachelor- und Masterstudiengang ",
    htxt "Informatik sowie die dazugehörigen Module findet man ",
-   spEHref minorURL [htxt "auf dieser Seite."]]
+   ehrefBlock minorURL [htxt "auf dieser Seite."]]
  where
   minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf-1-fach/bachelorstudiengang/nebenfaecher_anwendungsgebiete"
 
-privacyCookieCmt :: UserSessionInfo -> String
+privacyCookieCmt :: UserSessionInfo -> [HtmlExp]
 privacyCookieCmt sinfo = langSelect sinfo
-  ("This page uses cookies to store navigation information, login data, " ++
-   "and language settings temporarily. By using this web site, you agree " ++
-   "to use these cookies.")
-  ("Diese Seite verwendet Cookies zur temporären Speicherung von " ++
-   "Navigationsinformationen, Anmeldedaten und Sprachwünschen. " ++
-   "Durch die Verwendung dieser Webseite stimmen Sie dieser Nutzung " ++
-   "von Cookies zu.")
-  
+  [htxt $
+    "This page uses cookies to store navigation information, login data, " ++
+     "and language settings temporarily. By using this web site, you agree " ++
+     "to use these cookies. ",
+   htxt "There is also some ",
+   ehref dataProtectCAU
+         [htxt $ "general information about data protection " ++
+                 "for the web sites of this univerity"],
+   htxt " and ",
+   ehref dataProtectMDB
+         [htxt $ "specific informationen about data protection " ++
+                 "for this web site"],
+   htxt "."]
+  [htxt $
+    "Diese Seite verwendet Cookies zur temporären Speicherung von " ++
+     "Navigationsinformationen, Anmeldedaten und Sprachwünschen. " ++
+     "Durch die Verwendung dieser Webseite stimmen Sie dieser Nutzung " ++
+     "von Cookies zu. ",
+   htxt "Es gibt auch ",
+   ehref dataProtectCAU
+         [htxt $ "generelle Informationen zum Datenschutz für Webseiten " ++
+                 "an dieser Universität"],
+   htxt " und ",
+   ehref dataProtectMDB
+         [htxt "spezielle Informationen zum Datenschutz für diese Webseite"],
+   htxt "."]
+ where
+  dataProtectCAU = "http://www.uni-kiel.de/suchen/impressum.shtml#datenschutz"
+  dataProtectMDB = "datenschutz.html"
+
 sendPasswordCmt :: UserSessionInfo -> String
 sendPasswordCmt sinfo = langSelect sinfo
   ("You can send a new password to your email address "++
@@ -336,13 +360,5 @@ prereqExplainText :: UserSessionInfo -> String
 prereqExplainText sinfo = langSelect sinfo
   "The skills of these modules are required."
   "Die in diesen Modulen vermittelten Kompetenzen werden vorausgesetzt."
-
---------------------------------------------------------------------------
--- Auxiliaries:
-
-spEHref :: String -> [HtmlExp] -> HtmlExp
-spEHref ref hexps =
-  href ref hexps `addClass` "btn btn-sm btn-default"
-                 `addAttr` ("target","_blank")
 
 --------------------------------------------------------------------------

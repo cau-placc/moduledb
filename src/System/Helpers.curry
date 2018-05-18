@@ -9,7 +9,7 @@ module System.Helpers
     masterProgsLatexFile,
     modInfoLatexFile,modTableLatexFile,semTableLatexFile,
     shortModInfoLatexFile,
-    ehref, stripSpaces,
+    ehref, ehrefBlock, stripSpaces,
     showDigit2,showDiv10, formatPresence,
     hrefs2markdown,
     docText2html, docText2latex, escapeLaTeXSpecials,
@@ -123,9 +123,13 @@ semTableLatexFile = "include_semestertable.tex"
 masterProgsLatexFile = "include_mscprograms.tex"
 
 -------------------------------------------------------------------------------
--- an external reference:
+-- An external reference:
 ehref :: String -> [HtmlExp] -> HtmlExp
 ehref ref hexp = href ref hexp `addAttr` ("target","_blank")
+
+-- An external reference rendered as a block button:
+ehrefBlock :: String -> [HtmlExp] -> HtmlExp
+ehrefBlock ref hexps = ehref ref hexps `addClass` "btn btn-sm btn-default"
 
 -------------------------------------------------------------------------------
 -- strip pre- and post spaces in a string:

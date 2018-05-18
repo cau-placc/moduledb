@@ -588,7 +588,7 @@ spHrefInfoBlock :: String -> [HtmlExp] -> HtmlExp
 spHrefInfoBlock ref hexps =
   href ref hexps `addClass` "btn btn-info btn-block"
 
---- Hypertext reference in Spicey (rendered as an info block button):
+--- Hypertext reference in Spicey (rendered as a danger block button):
 spHrefDangerBlock :: String -> [HtmlExp] -> HtmlExp
 spHrefDangerBlock ref hexps =
   href ref hexps `addClass` "btn btn-danger btn-block"
@@ -643,7 +643,7 @@ spHeadedTable :: [[[HtmlExp]]] -> HtmlExp
 spHeadedTable items =
   headedTable items  `addClass` "table table-hover table-condensed"
 
---- Makes a link to an external link.
+--- Makes a link to an external reference.
 withELink :: HtmlExp -> HtmlExp
 withELink hexp = hexp `addAttr` ("target","_blank")
 
