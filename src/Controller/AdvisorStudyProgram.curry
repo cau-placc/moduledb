@@ -41,6 +41,10 @@ mainAdvisorStudyProgramController =
          applyControllerOn (readAdvisorStudyProgramKey s)
           getAdvisorStudyProgram
           editAdvisorStudyProgramController
+       ["visible",s] ->
+         applyControllerOn (readAdvisorStudyProgramKey s)
+          getAdvisorStudyProgram
+          toggleVisibilityASPController
        ["delete",s] ->
          applyControllerOn (readAdvisorStudyProgramKey s)
           getAdvisorStudyProgram
@@ -127,6 +131,20 @@ showASPController aspkey =
 updateAdvisorStudyProgramT :: AdvisorStudyProgram -> DBAction ()
 updateAdvisorStudyProgramT advisorStudyProgram =
   updateAdvisorStudyProgram advisorStudyProgram
+
+--- Toggles the visibility of the given AdvisorStudyProgram entity.
+toggleVisibilityASPController :: AdvisorStudyProgram -> Controller
+toggleVisibilityASPController asp =
+  checkAuthorization (advisorStudyProgramOperationAllowed  (UpdateEntity asp))
+   $ \_ -> do
+     let newasp = setAdvisorStudyProgramVisible asp
+                    (not (advisorStudyProgramVisible asp))
+     tr <- runT $ updateAdvisorStudyProgram newasp
+     either (displayError . showTError)
+            (\ _ -> logEvent (UpdateAdvisorStudyProgram newasp) >>
+                    nextInProcessOr (showAdvisorStudyProgramController newasp)
+                                    Nothing)
+            tr
 
 --- Deletes a given AdvisorStudyProgram entity (after asking for confirmation)
 --- and proceeds with the list controller.

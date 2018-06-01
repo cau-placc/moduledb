@@ -261,7 +261,7 @@ modDataToDetailsView modData relatedUser categorys =
 --- The labels of a ModData entity, as used in HTML tables.
 modDataLabelList :: [[HtmlExp]]
 modDataLabelList =
-  [[textstyle "label label_for_type_string" "Code"]
+  [[textstyle "label label_for_type_string" "Modulcode"]
   ,[textstyle "label label_for_type_string" "Titel"]
   ,[textstyle "label label_for_type_string" "Englischer Titel"]
   ,[textstyle "label label_for_type_string" "Turnus"]

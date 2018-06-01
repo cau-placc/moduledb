@@ -28,15 +28,14 @@ wAdvisorStudyProgram
 wAdvisorStudyProgram curyear isnewprog sinfo studyProgramList userList =
   withRendering
    (w9Tuple wLargeRequiredString wTrm wYr wStr wStr wStr
-     wVisible
-     wStudyProg
-     wAdvisor)
+            wHidden wStudyProg wAdvisor)
    (renderWithLabels advisorStudyProgramLabelList)
  where
-  -- render with labels but put row 7 (StudyProgram) at the top:
+  -- render with labels but put row 7 (StudyProgram) at the top
+  -- and omit Visibility field:
   renderWithLabels labels hexps =
     let rows = map (\(l, h) -> [l, [h]]) (zip labels hexps)
-     in spTable ([rows!!7] ++ take 7 rows ++ drop 8 rows)
+     in spTable ([rows!!7] ++ take 6 rows ++ drop 8 rows)
 
   admin = isAdminSession sinfo
   
@@ -237,13 +236,20 @@ showAdvisorStudyProgramView
   [h3 [htxt $ t "Start: " ++ showSemester (startSem,startYear) ++
               " / Research advisor: ", userToHtmlView advisor]] ++
   [par $ (if admin || editallowed
-          then [spHref ("?AdvisorStudyProgram/edit/" ++
-                        showAdvisorStudyProgramKey asprog)
-                       [htxt "Beschreibung/Sichtbarkeit ändern"]]
-          else []) ++
-         (if admin then [spHref ("?AdvisorStudyProgram/delete/" ++
-                                 showAdvisorStudyProgramKey asprog)
-                                 [htxt "Studienprogramm löschen"]]
+            then [hrefPrimButton ("?AdvisorStudyProgram/edit/" ++
+                                  showAdvisorStudyProgramKey asprog)
+                                 [htxt "Beschreibung ändern"], nbsp]
+            else []) ++
+         (if admin || not (advisorStudyProgramVisible asprog)
+            then [hrefPrimButton ("?AdvisorStudyProgram/visible/" ++
+                                  showAdvisorStudyProgramKey asprog)
+                                 [htxt $ t $ if admin
+                                               then "Change visibility"
+                                               else "Make visible"], nbsp]
+            else []) ++
+         (if admin then [hrefPrimButton ("?AdvisorStudyProgram/delete/" ++
+                                         showAdvisorStudyProgramKey asprog)
+                                        [htxt "Studienprogramm löschen"]]
                    else [])] ++
   [h4 [htxt $ t "Description"++":"],
    par [HtmlText (docText2html (advisorStudyProgramDesc asprog))],

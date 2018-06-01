@@ -46,6 +46,9 @@ mainModDataController =
        applyControllerOn (readModDataKey s) getModData showModDataController
       ["edit" ,s] ->
        applyControllerOn (readModDataKey s) getModData editModDataController
+      ["visible" ,s] ->
+       applyControllerOn (readModDataKey s) getModData
+                         toggleVisibilityModDataController
       ["delete" ,s] ->
        applyControllerOn (readModDataKey s) getModData
         confirmDeleteModDataController
@@ -143,10 +146,25 @@ updateModDataController True (modData,newcats) = do
          addCategorizing (filter (`notElem` oldcats) newcats) modData |>>
          removeCategorizing (filter (`notElem` newcats) oldcats) modData
     else updateModData modData
-  flip either
+  either (displayError . showTError)
          (\ _ -> logEvent (UpdateModData modData) >>
                  nextInProcessOr (showModDataController modData) Nothing)
-         (\ error -> displayError (showTError error)) tr
+         tr
+
+--- Toggles the visibility of the given ModData entity.
+toggleVisibilityModDataController :: ModData -> Controller
+toggleVisibilityModDataController mdata =
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
+  admin <- isAdmin
+  -- Toggle visibility only if admin or not visible:
+  let oldvis   = modDataVisible mdata
+      newvis   = if admin || not oldvis then not oldvis else oldvis
+      newmdata = setModDataVisible mdata newvis
+  tr <- runT $ updateModData newmdata
+  either (displayError . showTError)
+         (\ _ -> logEvent (UpdateModData newmdata) >>
+                 nextInProcessOr (showModDataController newmdata) Nothing)
+         tr
 
 --- Deletes a given ModData entity (after asking for confirmation)
 --- and proceeds with the list controller.

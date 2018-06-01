@@ -73,16 +73,20 @@ wCatList spcats =
 
 --- The WUI specification for the entity type ModData.
 --- It also includes fields for associated entities.
-wModData :: Bool -> Bool -> Bool -> [User] -> [(StudyProgram,[Category])]
+wModData :: Bool -> Bool -> [User] -> [(StudyProgram,[Category])]
          -> WuiSpec (String,String,String,String,String,Int,String,Int,
                      String,Bool,User,[Category])
-wModData admin allowchangemcode allowchangevisibility userList spcats =
+wModData admin allowchangemcode userList spcats =
   withRendering
    (w12Tuple (if allowchangemcode then wLargeRequiredString
                                   else wConstant htxt)
              wLargeRequiredString wLargeString wCycle wPresence wECTS
-             wLargeRequiredString wLength wURL wVis wResp wCats)
-   (renderLabels (if admin then labelList else take 10 labelList))
+             wLargeRequiredString wLength wURL wHidden wResp wCats)
+   -- render such that Visibility field is omitted:
+   (\fields -> if admin
+                 then renderLabels (take 9 labelList ++ drop 10 labelList)
+                                   (take 9 fields ++ drop 10 fields)
+                 else renderLabels (take 9 labelList) fields )
  where
   labelList = if allowchangemcode
               then [textstyle "label label_for_type_string"
@@ -93,11 +97,6 @@ wModData admin allowchangemcode allowchangevisibility userList spcats =
                     else wConstant (htxt . showDiv10))
              `withRendering` numwidthRendering
 
-  wVis  = if allowchangevisibility then wVisible else wConstant showVis
-    where
-      showVis True  = htxt "öffentlich sichtbar"
-      showVis False = htxt "nur zur internen Bearbeitung"
-      
   wLength = wSelect show [1,2,3]
              `withRendering` numwidthRendering
 
@@ -164,8 +163,7 @@ wModDataType :: Bool -> ModData -> User -> [User]
              -> WuiSpec (ModData,[Category])
 wModDataType admin modData user userList spcats =
   transformWSpec (tuple2ModData modData,modData2Tuple user)
-   (wModData admin admin (admin || not (modDataVisible modData))
-             userList spcats)
+   (wModData admin admin userList spcats)
 
 --- Supplies a WUI form to create a new ModData entity.
 --- The fields of the entity have some default values.
@@ -209,7 +207,7 @@ createModDataView admin isimport
                     (controller False initdata)
       
       (hexp ,handler) = wuiWithErrorForm
-                         (wModData admin True True possibleUsers spcats)
+                         (wModData admin True possibleUsers spcats)
                          initdata
                          (nextControllerForData (controller True))
                          (wuiFrameToForm wuiframe)
@@ -340,12 +338,16 @@ singleModDataView sinfo editallowed modData responsibleUser
              [imageNB "images/pdf.png" "Convert to PDF"], nbsp,
        ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
   [par $ (if admin || editallowed
-          then [modDataEditButton "edit" "Change module data", nbsp ] ++
+          then [modDataEditButton "edit" "Change basic data", nbsp ] ++
                (maybe []
                   (\_ ->
-                    [modDataEditButton "editdesc" "Change module description",
-                     nbsp])
+                    [modDataEditButton "editdesc" "Change description", nbsp])
                   maybedesc) ++
+               (if admin || not (modDataVisible modData)
+                  then [modDataEditButton "visible" $
+                          if admin then "Change visibility" else "Make visible",
+                        nbsp]
+                  else []) ++
                [modDataEditButton "addinst" "Add semester", nbsp,
                 modDataEditButton "editinst" "Change semesters", nbsp,
                 modDataEditButton "newpreq" "Add prerequisite", nbsp,
