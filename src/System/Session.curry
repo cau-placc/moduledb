@@ -13,11 +13,14 @@ module System.Session (
   getSessionData, putSessionData, removeSessionData
   ) where
 
-import HTML.Base
-import Time
+import FilePath       ( (</>) )
 import Global
 import List
+import Time
 
+import HTML.Base
+
+import ConfigMDB      ( storageDir )
 import System.Crypto
 
 --- The life span in minutes to store data in sessions.
@@ -32,7 +35,7 @@ sessionCookieName = "spiceySessionId"
 
 --- This global value saves time and last session id.
 lastId :: Global (Int, Int)
-lastId = global (0, 0) (Persistent sessionCookieName)
+lastId = global (0, 0) (Persistent (storageDir </> sessionCookieName))
 
 
 --- The abstract type to represent session identifiers.

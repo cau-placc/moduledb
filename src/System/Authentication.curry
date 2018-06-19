@@ -13,6 +13,7 @@ module System.Authentication (
   isAdmin
  ) where
 
+import ConfigMDB          ( systemHashKey )
 import System.SessionInfo
 import System.Crypto
 
@@ -22,9 +23,8 @@ import System.Crypto
 --- Gets a hash string for a user name and password. The generated
 --- hash string should be stored for the user instead of the password.
 getUserHash :: String -> String -> IO String
-getUserHash username userpassword = do
-  let systemkey = "4caumdb2" -- change this key for every spicey instance
-  getHash (username++userpassword++systemkey)
+getUserHash username userpassword =
+  getHash (username ++ userpassword ++ systemHashKey)
 
 --- Returns a random password (a hexadecimal string) of a particular length.
 --- @param length - length of the desired password

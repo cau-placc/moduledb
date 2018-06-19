@@ -15,8 +15,11 @@ module System.SessionInfo (
   getUserSessionInfo, updateUserSessionInfo
  ) where
 
-import System.Session
+import FilePath       ( (</>) )
 import Global
+
+import ConfigMDB      ( storageDir )
+import System.Session
 
 --------------------------------------------------------------------------
 --- The languages which are currently supported.
@@ -59,7 +62,8 @@ setLanguageOfSession lang (SD login _) = SD login lang
 --------------------------------------------------------------------------
 --- Definition of the session state to store the login name (as a string).
 userSessionInfo :: Global (SessionStore UserSessionInfo)
-userSessionInfo = global emptySessionStore (Persistent "userSessionInfo")
+userSessionInfo =
+  global emptySessionStore (Persistent (storageDir </> "userSessionInfo"))
 
 --- Gets the data of the current user session.
 getUserSessionInfo :: IO UserSessionInfo

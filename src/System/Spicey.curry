@@ -34,6 +34,7 @@ module System.Spicey (
   continueOrError
   ) where
 
+import FilePath       ( (</>) )
 import System
 import HTML.Base
 import ReadNumeric
@@ -52,7 +53,8 @@ import System.SessionInfo
 import List(last)
 
 import Database.CDBI.ER
-import MDB (runT, runJustT)
+import ConfigMDB        ( storageDir )
+import MDB              (runT, runJustT)
 
 ---------------- vvvv -- Framework functions -- vvvv -----------------------
 
@@ -715,7 +717,7 @@ setPageMessage msg = putSessionData msg pageMessage
 
 --- Definition of the session state to store the last URL (as a string).
 lastUrls :: Global (SessionStore [String])
-lastUrls = global emptySessionStore (Persistent "sessionUrls")
+lastUrls = global emptySessionStore (Persistent (storageDir </> "sessionUrls"))
 
 --- Gets the list of URLs of the current session.
 getLastUrls :: IO [String]
