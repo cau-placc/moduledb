@@ -36,8 +36,8 @@ createModDescrController True (language ,shortDesc ,objectives ,contents
 editModDescrController :: Controller -> ModDescr -> Controller
 editModDescrController cntcontroller modDescrToEdit =
   checkAuthorization (modDescrOperationAllowed (UpdateEntity modDescrToEdit))
-   $ \_ -> return (editModDescrView modDescrToEdit
-                              (updateModDescrController cntcontroller))
+   $ \sinfo -> return (editModDescrView sinfo modDescrToEdit
+                         (updateModDescrController cntcontroller))
 
 --- Persists modifications of a given ModDescr entity to the
 --- database depending on the Boolean argument. If the Boolean argument

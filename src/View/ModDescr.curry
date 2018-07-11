@@ -11,17 +11,21 @@ import System.Spicey
 import MDB
 import View.MDBEntitiesToHtml
 import System.Helpers
+import System.SessionInfo
 
-wLanguage :: WuiSpec String
-wLanguage = wSelect id ["Deutsch","Englisch"]
+wLanguage :: UserSessionInfo -> WuiSpec String
+wLanguage sinfo =
+  if isAdminSession sinfo then wSelect id ["Deutsch","Englisch"]
+                          else wConstant htxt
 
 --- The WUI specification for the entity type ModDescr.
 --- It also includes fields for associated entities.
-wModDescr :: WuiSpec (String,String,String,String,String,String,String,
+wModDescr :: UserSessionInfo
+          -> WuiSpec (String,String,String,String,String,String,String,
                       String,String,String,String)
-wModDescr =
+wModDescr sinfo =
   withRendering
-   (w11Tuple wLanguage wPara wPara wPara wPara wPara wPara
+   (w11Tuple (wLanguage sinfo) wPara wPara wPara wPara wPara wPara
              wPara wPara wPara wPara)
    (renderLabels modDescrLabelList)
  where
@@ -74,16 +78,18 @@ modDescr2Tuple modDescr =
   ,modDescrComments modDescr)
 
 --- WUI Type for editing or creating ModDescr entities.
-wModDescrType :: ModDescr -> WuiSpec ModDescr
-wModDescrType modDescr =
+wModDescrType :: UserSessionInfo -> ModDescr -> WuiSpec ModDescr
+wModDescrType sinfo modDescr =
   transformWSpec (tuple2ModDescr modDescr,modDescr2Tuple)
-                 wModDescr
+                 (wModDescr sinfo)
 
 --- Supplies a WUI form to edit the given ModDescr entity.
 --- Takes also associated entities and a list of possible associations
 --- for every associated entity type.
-editModDescrView :: ModDescr -> (Bool -> ModDescr -> Controller) -> [HtmlExp]
-editModDescrView modDescr controller =
+editModDescrView :: UserSessionInfo -> ModDescr
+                 -> (Bool -> ModDescr -> Controller)
+                 -> [HtmlExp]
+editModDescrView sinfo modDescr controller =
   let initdata = modDescr
       
       wuiframe = wuiEditFormWithText
@@ -95,7 +101,7 @@ editModDescrView modDescr controller =
                    (controller False initdata)
       
       (hexp ,handler) = wuiWithErrorForm
-                         (wModDescrType modDescr)
+                         (wModDescrType sinfo modDescr)
                          initdata (nextControllerForData (controller True))
                          (wuiFrameToForm wuiframe)
    in wuiframe hexp handler
