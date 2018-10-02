@@ -50,7 +50,7 @@ import System.Helpers
 import Distribution
 import System.MultiLang
 import System.SessionInfo
-import List(last)
+import List           ( init, last )
 
 import Database.CDBI.ER
 import ConfigMDB        ( storageDir )
@@ -266,8 +266,8 @@ wUncheckMaybe defval wspec =
          defval
 
 --- The standard menu for all users.
-getUserMenu :: Maybe String -> UserSessionInfo -> IO HtmlExp
-getUserMenu login sinfo = do
+getStandardMenu :: Maybe String -> UserSessionInfo -> IO HtmlExp
+getStandardMenu login sinfo = do
   let t = translate sinfo
   return $
      ulist $
@@ -275,12 +275,21 @@ getUserMenu login sinfo = do
              [stprogIcon, nbsp, htxt $ t "Degree programs"]],
        [href "?AdvisorStudyProgram/list"
              [adprogIcon, nbsp, htxt $ t "Master programs"]],
-       [href "?search" [searchIcon, nbsp, htxt $ t "Search modules"]]] ++
-      (if login==Nothing
-       then []
-       else [[href ("?Category/user")   [htxt $ t "My modules"]]
-            ,[href "?AdvisorStudyProgram/new" [htxt $ t "New master program"]]
-            ])
+       [href "?search" [searchIcon, nbsp, htxt $ t "Search modules"]]]
+
+--- The menu for a user if it he is logged in.
+userMenu :: UserSessionInfo -> HtmlExp
+userMenu sinfo =
+  ulist [ [href "?Category/user" [htxt $ t "My modules"]]
+        , [href "?AdvisorStudyProgram/new"
+                [htxt $ t "New master program"]]
+        , [href "?User/passwd"
+                [htxt (t "Change password")]]
+        , [href "?login"
+                [logoutIcon, nbsp, htxt (t "Logout")]]
+        ]
+ where
+  t = translate sinfo
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String
@@ -291,7 +300,7 @@ addLayout :: ViewBlock -> IO ViewBlock
 addLayout viewblock = do
   login      <- getSessionLogin
   sinfo      <- getUserSessionInfo
-  usermenu   <- getUserMenu login sinfo
+  stdmenu    <- getStandardMenu login sinfo
   msg        <- getPageMessage
   admin      <- isAdmin
   (routemenu1,routemenu2) <- getRouteMenus
@@ -304,7 +313,7 @@ addLayout viewblock = do
             (HtmlStruct "h1" [] t : hexps) -> (t,hexps)
             _ -> ([htxt (translate sinfo spiceyTitle)], viewblock)
   return $
-    stdNavBar usermenu (if admin then Just adminmenu else Nothing)
+    stdNavBar stdmenu (if admin then Just adminmenu else Nothing)
               login sinfo ++
     [blockstyle "container-fluid" $
       [HtmlStruct "header" [("class","jumbotron")] [h1 mainTitle],
@@ -342,6 +351,7 @@ mainContentsWithSideMenu menuitems contents =
 -- The first argument is the route menu (a ulist).
 -- The second argument is the possible admin menu (a ulist).
 -- The third argument is the possible login name.
+-- The fourth argument is the user session information.
 stdNavBar :: HtmlExp -> Maybe HtmlExp -> Maybe String -> UserSessionInfo
           -> [HtmlExp]
 stdNavBar routemenu adminmenu login sinfo =
@@ -354,13 +364,7 @@ stdNavBar routemenu adminmenu login sinfo =
           appendDropdownItem
             (ulist
               [maybe [href "?login" [loginIcon, nbsp, htxt (t "Login")]]
-                     (\n -> [style "navbar-text"
-                              [href "?login"
-                                    [logoutIcon, nbsp, htxt (t "Logout")]
-                              ,htxt $ " (", style "text-success" [userIcon]
-                              ,htxt $ " "++n++")"
-                              ]
-                            ])
+                     (const [])
                      login
               ,[if languageOfSession sinfo == English
                   then href "?langDE" [htxt "[Deutsch]"]
@@ -385,19 +389,23 @@ stdNavBar routemenu adminmenu login sinfo =
        
   appendDropdownItem (HtmlStruct tag ats items) =
     HtmlStruct tag ats
-      (take (length items - 1) items ++
-       maybe [] (\m -> [adminDropDownMenu m]) adminmenu ++
+      (init items ++ --take (length items - 1) items ++
+       maybe [] (\n -> [dropDownMenu [style "text-success" [userIcon]
+                                    , htxt $ " " ++ n] (userMenu sinfo)])
+             login ++
+       maybe [] (\m -> [dropDownMenu [htxt $ "Administrator"] m]) adminmenu ++
        [gotoDropDownMenu] ++
        [last items])
 
-  -- The admin menu as a dropdown menu (represented as a HTML list item).
-  -- The first argument is the admin menu (a ulist).
-  adminDropDownMenu :: HtmlExp -> HtmlExp
-  adminDropDownMenu admenu =
+  -- A dropdown menu (represented as a HTML list item).
+  -- The first argument is title (as HTML expressions) and
+  -- the second argument is the actual menu (a ulist).
+  dropDownMenu :: [HtmlExp] -> HtmlExp -> HtmlExp
+  dropDownMenu title ddmenu =
     HtmlStruct "li" [("class","dropdown")]
-       [href "#" [htxt $ "Administrator", bold [htxt " "] `addClass` "caret"]
+       [href "#" (title ++ [bold [htxt " "] `addClass` "caret"])
          `addAttrs` [("class","dropdown-toggle"),("data-toggle","dropdown")],
-        admenu `addClass` "dropdown-menu"]
+        ddmenu `addClass` "dropdown-menu"]
 
   gotoDropDownMenu =
     HtmlStruct "li" [("class","dropdown")]

@@ -9,6 +9,7 @@ import View.User
 import Maybe
 import System.Authorization
 import System.AuthorizedActions
+import System.SessionInfo
 import Config.UserProcesses
 import Controller.Default
 import System.Authentication
@@ -22,6 +23,7 @@ userController = do
   case args of
     ["list"] -> listUserController
     ["new"]  -> newUserController
+    ["passwd"] -> changePasswordController
     ["show",keystr] ->
       applyControllerOn (readUserKey keystr) getUser showUserController
     ["edit",keystr] ->
@@ -98,6 +100,12 @@ loginUserController user =
     loginToSession loginname
     setPageMessage ("Angemeldet als: "++loginname)
     defaultController
+
+--- Login as a given User entity.
+changePasswordController :: Controller
+changePasswordController = do
+  sinfo <- getUserSessionInfo
+  return $ changePasswordView defaultController sinfo
 
 --- Lists all User entities.
 listUserController :: Controller

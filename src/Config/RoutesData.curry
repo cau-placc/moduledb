@@ -42,13 +42,13 @@ getRoutes =
       addIf admin
         [("Neues Modul",Prefix "ModData" "new",ModDataController)
         ,("Neues Importmodul",Prefix "ModData" "newimp",ModDataController)
-        ,("Alle Benutzer",Prefix "User" "list",UserController)
         ,("Neuer Benutzer",Prefix "User" "new",UserController)
         ,("Neuer Studiengang",Prefix "StudyProgram" "new",
                               StudyProgramController)
         ,("Neue Kategorie",Prefix "Category" "new",CategoryController)
         ,("Neuer Masterbereich",Prefix "MCA" "new",MasterCoreAreaController)] ++
       [("Alle Kategorien",Prefix "Category" "list",CategoryController)
+      ,("Alle Benutzer",Prefix "User" "list",UserController)
       ,("Masterbereiche",Prefix "MCA" "list",MasterCoreAreaController)
       ,("List ModData",Prefix "ModData" "list",ModDataController)
       ,("List ModInst",Prefix "ModInst" "list",ModInstController)

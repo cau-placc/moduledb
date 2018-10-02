@@ -1,12 +1,15 @@
 module View.User (
  wUser, tuple2User, user2Tuple, wUserType, blankUserView, createUserView,
- editUserView, showUserView, listUserView, leqUser
+ editUserView, showUserView, listUserView, leqUser, changePasswordView
  ) where
 
 import WUI
 import HTML.Base
 import Time
 import Sort
+import System.Authentication
+import System.MultiLang
+import System.SessionInfo
 import System.Spicey
 import System.Helpers
 import MDB
@@ -137,3 +140,45 @@ listUserView users =
        [spHref ("?User/delete/"++showUserKey user) [htxt "Löschen"]],
        [spHref ("?User/login/"++showUserKey user) [htxt "Anmelden"]],
        [spHref ("?User/modules/"++showUserKey user) [htxt "Module"]]]
+
+-----------------------------------------------------------------------------
+--- View to change the password if a user is logged in.
+changePasswordView :: Controller -> UserSessionInfo -> [HtmlExp]
+changePasswordView controller sinfo =
+  case userLoginOfSession sinfo of
+   Nothing -> [h3 [htxt $ "Operation not allowed!"]]
+   Just ln ->
+    [h1 [htxt $ t "Change password"],
+     spTable [[[htxt $ t "Old password:"],        [password oldpass]],
+              [[htxt $ t "New password:"],        [password newpass1]],
+              [[htxt $ t "Repeat new password:"], [password newpass2]]],
+     hrule,
+     spPrimButton (t "Change password")
+                  (\env -> passwdHandler ln env >>= getForm),
+     nbsp,
+     spButton (t "Cancel")
+              (const (cancelOperation >> controller >>= getForm))]
+ where
+  t = translate sinfo
+
+  oldpass,newpass1,newpass2 free
+  
+  passwdHandler lname env = do
+    hashpass <- getUserHash lname (env oldpass)
+    users <- runQ $ queryUserByLoginPass lname hashpass
+    if null users
+     then displayError $ t "Wrong password!"
+     else do let u = head users
+             newhashpass <- getUserHash lname (env newpass1)
+             if env newpass1 /= env newpass2
+              then displayError $ t "New passwords are different!"
+              else do runT (updateUser (setUserPassword u newhashpass))
+                      setPageMessage $ t "Passwort changed"
+                      controller
+
+--- Gets a user entry with a given login name and (hashed) password:
+queryUserByLoginPass :: String -> String -> DBAction [User]
+queryUserByLoginPass login pass = seq login $ seq pass $
+  queryCondUser (\u -> userLogin u == login && userPassword u == pass)
+
+------------------------------------------------------------------------

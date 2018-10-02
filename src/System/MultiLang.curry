@@ -223,16 +223,15 @@ loginEmailText sinfo loginname passwd = langSelect sinfo
    "\n\nYou can use this data to login into the module database\n\n"++
    baseURL++"\n\n"++
    "and work on your modules and master programs.\n\n"++
-   "You can change your password after the login by selecting 'Logout'\n"++
-   "followed by 'Change password'.")
+   "You can change your password after the login by selecting\n"++
+   "'Change password' in the user menu.")
   ("Ihre Zugangsdaten sind:\n\nLogin-Name: " ++ loginname ++
    "\nNeues Passwort: " ++ passwd ++
    "\n\nMit diesen Daten koennen Sie sich in der Moduldatenbank\n\n"++
    baseURL++"\n\n"++
    "anmelden und Ihre Module und Masterprogramme aendern.\n\n"++
    "Sie koennen das Passwort aendern, indem Sie sich anmelden\n"++
-   "und dann nach Auswahl von 'Abmelden' den Punkt\n"++
-   "'Passwort aendern' waehlen.")
+   "und dann 'Passwort aendern' im Benutzermenu waehlen.")
 
 mainTitle :: UserSessionInfo -> String
 mainTitle sinfo = langSelect sinfo
@@ -309,7 +308,7 @@ privacyCookieCmt sinfo = langSelect sinfo
                  "for this web site"],
    htxt "."]
   [htxt $
-    "Diese Seite verwendet Cookies zur temporären Speicherung von " ++
+     "Diese Seite verwendet Cookies zur temporären Speicherung von " ++
      "Navigationsinformationen, Anmeldedaten und Sprachwünschen. " ++
      "Durch die Verwendung dieser Webseite stimmen Sie dieser Nutzung " ++
      "von Cookies zu. ",
