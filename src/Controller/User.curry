@@ -9,6 +9,7 @@ import View.User
 import Maybe
 import System.Authorization
 import System.AuthorizedActions
+import System.MultiLang
 import System.SessionInfo
 import Config.UserProcesses
 import Controller.Default
@@ -21,8 +22,11 @@ userController :: Controller
 userController = do
   args <- getControllerParams
   case args of
-    ["list"] -> listUserController
-    ["new"]  -> newUserController
+    ["list"]   -> listUserController
+    ["new"]    -> newUserController
+    ["login"]  -> loginController
+    ["logout"] -> logoutController
+    ["sendlogin"] -> sendLoginDataController
     ["passwd"] -> changePasswordController
     ["show",keystr] ->
       applyControllerOn (readUserKey keystr) getUser showUserController
@@ -30,8 +34,8 @@ userController = do
       applyControllerOn (readUserKey keystr) getUser editUserController
     ["delete",keystr] ->
       applyControllerOn (readUserKey keystr) getUser askAndDeleteUserController
-    ["login",keystr] ->
-      applyControllerOn (readUserKey keystr) getUser loginUserController
+    ["loginAs",keystr] ->
+      applyControllerOn (readUserKey keystr) getUser loginAsUserController
     ["modules",keystr] ->
       applyControllerOn (readUserKey keystr) getUser searchUserModules
     _ -> displayError "Illegal URL"
@@ -93,15 +97,40 @@ deleteUserController user =
         (\ error -> displayError (showTError error)) transResult)
 
 --- Login as a given User entity.
-loginUserController :: User -> Controller
-loginUserController user =
+loginAsUserController :: User -> Controller
+loginAsUserController user =
   checkAuthorization checkAdmin $ \_ -> do
     let loginname = userLogin user
     loginToSession loginname
     setPageMessage ("Angemeldet als: "++loginname)
     defaultController
 
---- Login as a given User entity.
+--- Send login data to a user.
+sendLoginDataController :: Controller
+sendLoginDataController = do
+  sinfo <- getUserSessionInfo
+  return $ sendLoginDataView defaultController sinfo
+
+--- Login to the system.
+loginController :: Controller
+loginController = do
+  sinfo <- getUserSessionInfo
+  case userLoginOfSession sinfo of
+    Just _  -> return [h3 [htxt $ "Operation not allowed!"]]
+    Nothing -> return $ loginView defaultController sinfo
+
+--- Logout the current user.
+logoutController :: Controller
+logoutController = do
+  sinfo <- getUserSessionInfo
+  let t = translate sinfo
+  case userLoginOfSession sinfo of
+    Nothing -> return [h3 [htxt $ "Operation not allowed!"]]
+    Just _  -> do logoutFromSession
+                  setPageMessage (t "Logged out")
+                  defaultController
+
+--- Change password of logged in user.
 changePasswordController :: Controller
 changePasswordController = do
   sinfo <- getUserSessionInfo

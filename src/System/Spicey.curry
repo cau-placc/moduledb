@@ -285,7 +285,7 @@ userMenu sinfo =
                 [htxt $ t "New master program"]]
         , [href "?User/passwd"
                 [htxt (t "Change password")]]
-        , [href "?login"
+        , [href "?User/logout"
                 [logoutIcon, nbsp, htxt (t "Logout")]]
         ]
  where
@@ -363,7 +363,7 @@ stdNavBar routemenu adminmenu login sinfo =
          [routemenu `addClass` "nav navbar-nav",
           appendDropdownItem
             (ulist
-              [maybe [href "?login" [loginIcon, nbsp, htxt (t "Login")]]
+              [maybe [href "?User/login" [loginIcon, nbsp, htxt (t "Login")]]
                      (const [])
                      login
               ,[if languageOfSession sinfo == English

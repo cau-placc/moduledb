@@ -1,8 +1,10 @@
 module View.User (
- wUser, tuple2User, user2Tuple, wUserType, blankUserView, createUserView,
- editUserView, showUserView, listUserView, leqUser, changePasswordView
+   wUser, tuple2User, user2Tuple, wUserType, blankUserView, createUserView
+ , editUserView, showUserView, listUserView, leqUser
+ , loginView, sendLoginDataView, changePasswordView
  ) where
 
+import Mail ( sendMail )
 import WUI
 import HTML.Base
 import Time
@@ -13,6 +15,7 @@ import System.SessionInfo
 import System.Spicey
 import System.Helpers
 import MDB
+import ConfigMDB ( adminEmail )
 import View.MDBEntitiesToHtml
 
 --- The WUI specification for the entity type User.
@@ -138,8 +141,78 @@ listUserView users =
       [[spHref ("?User/show/"++showUserKey user) [htxt "Anzeigen"]],
        [spHref ("?User/edit/"++showUserKey user) [htxt "Ändern"]],
        [spHref ("?User/delete/"++showUserKey user) [htxt "Löschen"]],
-       [spHref ("?User/login/"++showUserKey user) [htxt "Anmelden"]],
+       [spHref ("?User/loginAs/"++showUserKey user) [htxt "Anmelden"]],
        [spHref ("?User/modules/"++showUserKey user) [htxt "Module"]]]
+
+-----------------------------------------------------------------------------
+--- View to login.
+loginView :: Controller -> UserSessionInfo -> [HtmlExp]
+loginView controller sinfo =
+  [h3 [htxt $ t "Login to module database"],
+   spTable [[[htxt $ t "Login name:"], [textfield loginfield ""]],
+            [[htxt $ t "Password:"],   [password passfield]]],
+   hrule,
+   par [spPrimButton (t "Login") loginHandler],
+   hrule,
+   par [hrefPrimButton "?User/sendlogin" [htxt $ t "Forgot your login data?"]]
+  ]
+ where
+  loginfield,passfield free
+
+  t = translate sinfo
+
+  loginHandler env = do
+    let loginname = env loginfield
+    hashpass <- getUserHash loginname (env passfield)
+    users <- runQ $ queryUserByLoginPass loginname hashpass
+    if null users
+      then do setPageMessage $ t "Wrong login data!"
+              nextInProcessOr controller Nothing >>= getForm
+      else do loginToSession loginname
+              ctime <- getClockTime
+              runT (updateUser (setUserLastLogin (head users) ctime))
+              setPageMessage (t "Logged in as: " ++ loginname)
+              urls <- getLastUrls
+              getForm $
+               [h1 [htxt $ t "Login successful"],
+                par [htxt $ loginText sinfo loginname],
+                par [htxt $ timeoutText sinfo]] ++
+                if length urls > 1
+                then [] --[par [href ('?':urls!!1) [htxt "Back to last page"]]]
+                else []
+
+------------------------------------------------------------------------
+-- send login data to a new user
+sendLoginDataView :: Controller -> UserSessionInfo -> [HtmlExp]
+sendLoginDataView controller sinfo =
+  [h1 [htxt $ t "Send login data"],
+   par [htxt $ sendPasswordCmt sinfo],
+   par [htxt $ t "Your email address: ", textfield emailref ""],
+   hrule,
+   spPrimButton (t "Send new password") sendHandler,
+   spButton (t "Cancel")
+            (const (cancelOperation >> controller >>= getForm))]
+ where
+  emailref free
+
+  t = translate sinfo
+
+  sendHandler env = do
+    users <- runQ $ queryCondUser (\u -> userEmail u == env emailref)
+    if null users
+     then displayError (unknownUser sinfo) >>= getForm
+     else sendNewEmail (head users)
+
+  sendNewEmail user = do
+    newpass <- randomPassword 10
+    hashpass <- getUserHash (userLogin user) newpass
+    sendMail adminEmail
+             (userEmail user)
+             (t "Login data for module database")
+             (loginEmailText sinfo (userLogin user) newpass)
+    runT $ updateUser (setUserPassword user hashpass)
+    getForm [h1 [htxt $ t "Acknowledgment"],
+             h3 [htxt $ t "Your new password has been sent"]]
 
 -----------------------------------------------------------------------------
 --- View to change the password if a user is logged in.
