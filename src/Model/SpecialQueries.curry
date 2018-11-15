@@ -71,8 +71,8 @@ showPrerequisites prereqs = do
 --- Transform a list of dependencies into a dot graph.
 depsToGraph :: [(String,String)] -> DotGraph
 depsToGraph cpmdeps =
-  Graph "Module prerequisites"
-        (map (\s -> Node s []) (nub (map fst cpmdeps ++ map snd cpmdeps)))
-        (map (\ (s,t) -> Edge s t []) cpmdeps)
+  dgraph "Module prerequisites"
+         (map (\s -> Node s []) (nub (map fst cpmdeps ++ map snd cpmdeps)))
+         (map (\ (s,t) -> Edge s t []) cpmdeps)
 
 -----------------------------------------------------------------------
