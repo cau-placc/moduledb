@@ -7,7 +7,7 @@
     "dependencies": {
         "cdbi"      : ">= 1.0.0",
         "graphviz"  : ">= 2.0.0",
-        "html"      : ">= 1.1.0",
+        "html"      : ">= 2.1.0",
         "mail-utils": ">= 0.0.1",
         "markdown"  : ">= 0.0.1",
         "wui"       : ">= 1.1.0",
