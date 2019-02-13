@@ -2,12 +2,14 @@
 
 module ReadUnivIS(loadLectures) where
 
+import ReadShowTerm
+
+import Control.SetFunctions
+import Debug.Profile
+import URL
 import XML
 import XCuery
-import SetFunctions
-import Profile
-import URL
-import ReadShowTerm
+
 import ConfigMDB(storageDir)
 
 -------------------------------------------------------------------------

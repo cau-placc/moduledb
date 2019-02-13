@@ -19,7 +19,7 @@ import Config.RoutesData
 import System.Session
 
 import ReadShowTerm
-import AllSolutions
+import Control.AllSolutions
 
 --------------------------------------------------------------------------
 -- A operations on the datatype for process systems.
