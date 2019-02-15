@@ -27,20 +27,20 @@ wStudentCourse modInstList studentList =
 --- Transformation from data of a WUI form to entity type StudentCourse.
 tuple2StudentCourse
   :: StudentCourse -> (ClockTime,ModInst,Student) -> StudentCourse
-tuple2StudentCourse studentCourseToUpdate (selectData,modInst,student) =
-  setStudentCourseSelectData
+tuple2StudentCourse studentCourseToUpdate (selectDate,modInst,student) =
+  setStudentCourseSelectDate
    (setStudentCourseStudentStudentCoursesKey
      (setStudentCourseModInstStudentCourseInstancesKey studentCourseToUpdate
        (modInstKey modInst))
      (studentKey student))
-   selectData
+   selectDate
 
 --- Transformation from entity type StudentCourse to a tuple
 --- which can be used in WUI specifications.
 studentCourse2Tuple
   :: ModInst -> Student -> StudentCourse -> (ClockTime,ModInst,Student)
 studentCourse2Tuple modInst student studentCourse =
-  (studentCourseSelectData studentCourse,modInst,student)
+  (studentCourseSelectDate studentCourse,modInst,student)
 
 --- WUI Type for editing or creating StudentCourse entities.
 --- Includes fields for associated entities.
@@ -81,7 +81,7 @@ createStudentCourseView
   -> ((ClockTime,ModInst,Student) -> Controller) -> Controller -> [HtmlExp]
 createStudentCourseView
     _
-    defaultSelectData
+    defaultSelectDate
     defaultModInst
     defaultStudent
     possibleModInsts
@@ -89,7 +89,7 @@ createStudentCourseView
     controller
     cancelcontroller =
   renderWuiForm (wStudentCourse possibleModInsts possibleStudents)
-   (defaultSelectData,defaultModInst,defaultStudent)
+   (defaultSelectDate,defaultModInst,defaultStudent)
    controller
    cancelcontroller
    "Create new StudentCourse"
@@ -134,7 +134,7 @@ showStudentCourseView _ studentCourse relatedModInst relatedStudent =
 --- Compares two StudentCourse entities. This order is used in the list view.
 leqStudentCourse :: StudentCourse -> StudentCourse -> Bool
 leqStudentCourse x1 x2 =
-  studentCourseSelectData x1 <= studentCourseSelectData x2
+  studentCourseSelectDate x1 <= studentCourseSelectDate x2
 
 --- Supplies a list view for a given list of StudentCourse entities.
 --- Shows also show/edit/delete buttons if the user is logged in.

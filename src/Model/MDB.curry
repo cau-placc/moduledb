@@ -4506,27 +4506,27 @@ studentCourse_CDBI_Description =
    ,Database.CDBI.Connection.SQLTypeInt]
    (\(StudentCourse
        (StudentCourseID key)
-       selectData
+       selectDate
        (StudentID studentStudentCoursesKey)
        (ModInstID modInstStudentCourseInstancesKey)) ->
      [Database.CDBI.Connection.SQLInt key
-     ,Database.CDBI.Connection.SQLDate selectData
+     ,Database.CDBI.Connection.SQLDate selectDate
      ,Database.CDBI.Connection.SQLInt studentStudentCoursesKey
      ,Database.CDBI.Connection.SQLInt modInstStudentCourseInstancesKey])
    (\(StudentCourse
        _
-       selectData
+       selectDate
        (StudentID studentStudentCoursesKey)
        (ModInstID modInstStudentCourseInstancesKey)) ->
      [Database.CDBI.Connection.SQLNull
-     ,Database.CDBI.Connection.SQLDate selectData
+     ,Database.CDBI.Connection.SQLDate selectDate
      ,Database.CDBI.Connection.SQLInt studentStudentCoursesKey
      ,Database.CDBI.Connection.SQLInt modInstStudentCourseInstancesKey])
    (\[Database.CDBI.Connection.SQLInt key
-     ,Database.CDBI.Connection.SQLDate selectData
+     ,Database.CDBI.Connection.SQLDate selectDate
      ,Database.CDBI.Connection.SQLInt studentStudentCoursesKey
      ,Database.CDBI.Connection.SQLInt modInstStudentCourseInstancesKey] ->
-     StudentCourse (StudentCourseID key) selectData
+     StudentCourse (StudentCourseID key) selectDate
       (StudentID studentStudentCoursesKey)
       (ModInstID modInstStudentCourseInstancesKey))
 
@@ -4539,11 +4539,11 @@ studentCourseColumnKey :: Database.CDBI.Description.Column StudentCourseID
 studentCourseColumnKey =
   Database.CDBI.Description.Column "\"Key\"" "\"StudentCourse\".\"Key\""
 
---- The database column `SelectData` of the `StudentCourse` entity.
-studentCourseColumnSelectData :: Database.CDBI.Description.Column Time.ClockTime
-studentCourseColumnSelectData =
-  Database.CDBI.Description.Column "\"SelectData\""
-   "\"StudentCourse\".\"SelectData\""
+--- The database column `SelectDate` of the `StudentCourse` entity.
+studentCourseColumnSelectDate :: Database.CDBI.Description.Column Time.ClockTime
+studentCourseColumnSelectDate =
+  Database.CDBI.Description.Column "\"SelectDate\""
+   "\"StudentCourse\".\"SelectDate\""
 
 --- The database column `StudentStudentCoursesKey` of the `StudentCourse` entity.
 studentCourseColumnStudentStudentCoursesKey
@@ -4568,14 +4568,14 @@ studentCourseKeyColDesc =
    (\(StudentCourseID key) -> Database.CDBI.Connection.SQLInt key)
    (\(Database.CDBI.Connection.SQLInt key) -> StudentCourseID key)
 
---- The description of the database column `SelectData` of the `StudentCourse` entity.
-studentCourseSelectDataColDesc
+--- The description of the database column `SelectDate` of the `StudentCourse` entity.
+studentCourseSelectDateColDesc
   :: Database.CDBI.Description.ColumnDescription Time.ClockTime
-studentCourseSelectDataColDesc =
-  Database.CDBI.Description.ColDesc "\"StudentCourse\".\"SelectData\""
+studentCourseSelectDateColDesc =
+  Database.CDBI.Description.ColDesc "\"StudentCourse\".\"SelectDate\""
    Database.CDBI.Connection.SQLTypeDate
-   (\selectData -> Database.CDBI.Connection.SQLDate selectData)
-   (\(Database.CDBI.Connection.SQLDate selectData) -> selectData)
+   (\selectDate -> Database.CDBI.Connection.SQLDate selectDate)
+   (\(Database.CDBI.Connection.SQLDate selectDate) -> selectDate)
 
 --- The description of the database column `StudentStudentCoursesKey` of the `StudentCourse` entity.
 studentCourseStudentStudentCoursesKeyColDesc
@@ -4605,9 +4605,9 @@ studentCourseModInstStudentCourseInstancesKeyColDesc =
 studentCourseKey :: StudentCourse -> StudentCourseID
 studentCourseKey (StudentCourse a _ _ _) = a
 
---- Gets the attribute `SelectData` of the `StudentCourse` entity.
-studentCourseSelectData :: StudentCourse -> Time.ClockTime
-studentCourseSelectData (StudentCourse _ a _ _) = a
+--- Gets the attribute `SelectDate` of the `StudentCourse` entity.
+studentCourseSelectDate :: StudentCourse -> Time.ClockTime
+studentCourseSelectDate (StudentCourse _ a _ _) = a
 
 --- Gets the attribute `StudentStudentCoursesKey` of the `StudentCourse` entity.
 studentCourseStudentStudentCoursesKey :: StudentCourse -> StudentID
@@ -4621,9 +4621,9 @@ studentCourseModInstStudentCourseInstancesKey (StudentCourse _ _ _ a) = a
 setStudentCourseKey :: StudentCourse -> StudentCourseID -> StudentCourse
 setStudentCourseKey (StudentCourse _ b3 b2 b1) a = StudentCourse a b3 b2 b1
 
---- Sets the attribute `SelectData` of the `StudentCourse` entity.
-setStudentCourseSelectData :: StudentCourse -> Time.ClockTime -> StudentCourse
-setStudentCourseSelectData (StudentCourse a2 _ b2 b1) a =
+--- Sets the attribute `SelectDate` of the `StudentCourse` entity.
+setStudentCourseSelectDate :: StudentCourse -> Time.ClockTime -> StudentCourse
+setStudentCourseSelectDate (StudentCourse a2 _ b2 b1) a =
   StudentCourse a2 a b2 b1
 
 --- Sets the attribute `StudentStudentCoursesKey` of the `StudentCourse` entity.
@@ -4687,11 +4687,11 @@ newStudentCourseWithStudentStudentCoursesKeyWithModInstStudentCourseInstancesKey
   :: Time.ClockTime
   -> StudentID -> ModInstID -> Database.CDBI.Connection.DBAction StudentCourse
 newStudentCourseWithStudentStudentCoursesKeyWithModInstStudentCourseInstancesKey
-    selectData_p studentStudentCoursesKey_p modInstStudentCourseInstancesKey_p =
+    selectDate_p studentStudentCoursesKey_p modInstStudentCourseInstancesKey_p =
   Database.CDBI.ER.insertNewEntry studentCourse_CDBI_Description
    setStudentCourseKey
    StudentCourseID
-   (StudentCourse (StudentCourseID 0) selectData_p studentStudentCoursesKey_p
+   (StudentCourse (StudentCourseID 0) selectDate_p studentStudentCoursesKey_p
      modInstStudentCourseInstancesKey_p)
 
 --- Deletes an existing `StudentCourse` entry by its key.
@@ -4731,7 +4731,7 @@ createNewDB dbfile =
        ,"create table 'MasterProgInfo'('Key' integer primary key ,'ProgModules' string not null ,'Praktikum' string ,'Seminar' string ,'Thesis' string ,'AllgGrundlagen' string ,'Anwendungsfach' string ,'MasterProgramProgramInfoKey' int REFERENCES 'MasterProgram'(Key) not null);"
        ,"create table 'UnivisInfo'('Key' integer primary key ,'Code' string not null ,'Term' string not null ,'Year' not null ,'URL' string not null);"
        ,"create table 'Student'('Key' integer primary key ,'Email' string unique not null ,'Name' string not null ,'First' string ,'TAN' string not null ,'LastLogin' string not null);"
-       ,"create table 'StudentCourse'('Key' integer primary key ,'SelectData' string not null ,'StudentStudentCoursesKey' int REFERENCES 'Student'(Key) not null ,'ModInstStudentCourseInstancesKey' int REFERENCES 'ModInst'(Key) not null);"]
+       ,"create table 'StudentCourse'('Key' integer primary key ,'SelectDate' string not null ,'StudentStudentCoursesKey' int REFERENCES 'Student'(Key) not null ,'ModInstStudentCourseInstancesKey' int REFERENCES 'ModInst'(Key) not null);"]
 
 --- Saves complete database in storage dir.
 saveDB :: IO ()

@@ -97,7 +97,7 @@ mdbERD =
            Attribute "TAN"         (StringDom Nothing) NoKey False,
            Attribute "LastLogin"   (DateDom   Nothing) NoKey False],
       Entity "StudentCourse"
-          [Attribute "SelectData"  (DateDom Nothing)   NoKey False]
+          [Attribute "SelectDate"  (DateDom Nothing)   NoKey False]
      ]
      [Relationship "ProgramCategories"
        [REnd "StudyProgram" "ofProgram"    (Exactly 1),

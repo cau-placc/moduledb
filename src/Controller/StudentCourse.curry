@@ -49,9 +49,9 @@ newStudentCourseController =
 
 --- Transaction to persist a new StudentCourse entity to the database.
 createStudentCourseT :: (ClockTime,ModInst,Student) -> DBAction ()
-createStudentCourseT (selectData,modInst,student) =
+createStudentCourseT (selectDate,modInst,student) =
   newStudentCourseWithStudentStudentCoursesKeyWithModInstStudentCourseInstancesKey
-   selectData
+   selectDate
    (studentKey student)
    (modInstKey modInst)
    >+= (\_ -> return ())

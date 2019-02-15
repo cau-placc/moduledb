@@ -1,4 +1,4 @@
-{- ERD specification transformed from /home/mh/home/curry/applications/MDB/NEW_WITH_STUDENTS/MDB.erdterm -}
+{- ERD specification transformed from /net/medoc/home/mh/home/curry/applications/MDB/MDB.erdterm -}
 
  ERD "MDB"
    [Entity "Prerequisites"
@@ -126,7 +126,7 @@
             Attribute "LastLogin" (DateDom Nothing) NoKey False],
     Entity "StudentCourse"
            [Attribute "Key" (IntDom Nothing) PKey False,
-            Attribute "SelectData" (DateDom Nothing) NoKey False,
+            Attribute "SelectDate" (DateDom Nothing) NoKey False,
             Attribute "StudentStudentCoursesKey" (KeyDom "Student") NoKey False,
             Attribute "ModInstStudentCourseInstancesKey" (KeyDom "ModInst") NoKey False]]
    [Relationship "StudentCourseInstances"

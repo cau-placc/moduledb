@@ -673,13 +673,13 @@ studentLabelList =
 --- This view is used in a row of a table of all entities.
 studentCourseToListView :: StudentCourse -> [[HtmlExp]]
 studentCourseToListView studentCourse =
-  [[dateToHtml (studentCourseSelectData studentCourse)]]
+  [[dateToHtml (studentCourseSelectDate studentCourse)]]
 
 --- The short view of a StudentCourse entity as a string.
 --- This view is used in menus and comments to refer to a StudentCourse entity.
 studentCourseToShortView :: StudentCourse -> String
 studentCourseToShortView studentCourse =
-  show (studentCourseSelectData studentCourse)
+  show (studentCourseSelectDate studentCourse)
 
 --- The detailed view of a StudentCourse entity in HTML format.
 --- It also takes associated entities for every associated entity type.
@@ -690,14 +690,14 @@ studentCourseToDetailsView studentCourse relatedModInst relatedStudent =
       (zip studentCourseLabelList detailedView))]
   where
     detailedView =
-      [[dateToHtml (studentCourseSelectData studentCourse)]
+      [[dateToHtml (studentCourseSelectDate studentCourse)]
       ,[htxt (modInstToShortView relatedModInst)]
       ,[htxt (studentToShortView relatedStudent)]]
 
 --- The labels of a StudentCourse entity, as used in HTML tables.
 studentCourseLabelList :: [[HtmlExp]]
 studentCourseLabelList =
-  [[textstyle "spicey_label spicey_label_for_type_date" "SelectData"]
+  [[textstyle "spicey_label spicey_label_for_type_date" "SelectDate"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "ModInst"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "Student"]]
 
