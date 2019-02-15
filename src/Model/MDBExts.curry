@@ -64,19 +64,6 @@ queryAllModDataShortInfo =
          From ModData As md
          Where md.Visible = true;''
 
---- Gets all ModData entities with a given module code.
-queryModDataWithCode :: String -> DBAction [ModData]
-queryModDataWithCode mcode =
-  ``sql* Select *
-         From ModData As md
-         Where md.Code = {mcode};''
-
---- Gets all ModData entities of a user.
-queryModDataOfUser :: UserID -> DBAction [ModData]
-queryModDataOfUser ukey =
-  ``sql* Select * From ModData As mda
-         Where mda.UserResponsibleKey = {ukey};''
-
 --- Gets the ModDescr entity associated to a given ModData key.
 queryDescriptionOfMod :: ModDataID -> DBAction (Maybe ModDescr)
 queryDescriptionOfMod mdk = sqlToMaybe

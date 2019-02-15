@@ -7,6 +7,7 @@ import System.Spicey
 import HTML.Base
 import Time
 import MDB
+import MDB.Queries
 import MDBExts
 import View.Category
 import View.ModData
@@ -32,8 +33,10 @@ categoryController = do
   args <- getControllerParams
   case args of
     ["list"]    -> listAllCategoryController
-    ["user"]    -> listUserModulesController False
-    ["userall"] -> listUserModulesController True
+    ["user"]    -> listUserModulesController False False
+    ["userall"] -> listUserModulesController False True
+    ["lecturer"]    -> listUserModulesController True False
+    ["lecturerall"] -> listUserModulesController True True
     ["new"]     -> newCategoryController
     ["studyprogram",s] ->
        applyControllerOn (readStudyProgramKey s)
@@ -127,21 +130,25 @@ listAllCategoryController =
        return (listCategoryView sinfo csem (Right [htxt $ t "All categories"])
                  (map (\c -> (Left c,[])) (mergeSortBy leqCategory categorys))
                  [] []
-                 showCategoryPlanController formatCatModulesForm
+                 (showCategoryPlanController Nothing) formatCatModulesForm
                  showEmailCorrectionController)
 
 --- Controller to list all modules of the current user.
---- The argument indicates whether all modules should be shown.
+--- If the first argument is true, the modules taught by the user are shown.
+--- The second argument indicates whether all modules should be shown.
 --- If it is false, only the modules without or with most recent instances
 --- are shown.
-listUserModulesController :: Bool -> Controller
-listUserModulesController listall =
+listUserModulesController :: Bool -> Bool -> Controller
+listUserModulesController aslecturer listall =
   checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
     do let lname = maybe "" id (userLoginOfSession sinfo)
-       -- get user entries with a given login name
-       users <- runQ $ queryCondUser (\u -> userLogin u == lname)
-       if null users then (displayError "Illegal URL") else
-        do usermods <- runQ $ queryModDataOfUser (userKey (head users))
+       -- get user entry with a given login name
+       mbuser <- runQ $ queryUserWithLogin lname
+       case mbuser of
+         Nothing   -> displayError "Illegal URL"
+         Just user -> do
+           usermods <- runQ $ (if aslecturer then queryModDataOfLecturer
+                                             else queryModDataOfUser    ) (userKey user)
            csem  <- getCurrentSemester
            showmods <- if listall
                          then return usermods
@@ -149,18 +156,20 @@ listUserModulesController listall =
                               return . map fst . filter (isCurrentModInst csem)
            let t = translate sinfo
            return $ listCategoryView sinfo csem
-                        (Right $ listCatHeader t)
-                        [(Right "",map (\m->(m,[],[])) showmods)]
-                        [] []
-                        showCategoryPlanController
-                        formatCatModulesForm showEmailCorrectionController
+             (Right $ listCatHeader t)
+             [(Right "",map (\m->(m,[],[])) showmods)]
+             [] []
+             (showCategoryPlanController (if aslecturer then Just user else Nothing))
+             formatCatModulesForm showEmailCorrectionController
  where
    listCatHeader t =
      if listall
-       then [htxt $ t "All my modules"]
-       else [htxt $ t "My modules", nbsp, htxt "(",
-             href "?Category/userall" [htxt $ t "All my modules"], htxt ")"]
-             
+       then [htxt $ t alltitle]
+       else [htxt $ t $ (if aslecturer then "Taught" else "My") ++ " modules", nbsp,
+             htxt "(", href ("?Category/" ++ allhref) [htxt $ t alltitle], htxt ")"]
+    where alltitle = "All " ++ (if aslecturer then "taught" else "my") ++ " modules"
+          allhref  = if aslecturer then "lecturerall" else "userall"
+   
    addModInsts md = runJustT $ do
      mis <- queryInstancesOfMod (modDataKey md)
      return (md, mis)
@@ -190,16 +199,17 @@ listStudyProgramCategoryController listall studyprog =
        csem  <- getCurrentSemester
        return (listCategoryView sinfo csem (Left studyprog)
                   catmods [] []
-                  showCategoryPlanController
+                  (showCategoryPlanController Nothing)
                   formatCatModulesForm showEmailCorrectionController)
 
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
 showCategoryPlanController
-  :: Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
+  :: Maybe User -> Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
   -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller
-showCategoryPlanController mbstudyprog catmods startsem stopsem
+showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
                            withunivis withmprogs withstudyplan = do
+  appendFile "TESTLOG" (show mblecturer)
   sinfo <- getUserSessionInfo
   csem  <- getCurrentSemester
   let filterMods ms = maybe (filter modDataVisible ms)
@@ -212,31 +222,34 @@ showCategoryPlanController mbstudyprog catmods startsem stopsem
                        catmods
   return (listCategoryView sinfo csem mbstudyprog
              catmodinsts semPeriod users
-             showCategoryPlanController
+             (showCategoryPlanController mblecturer)
              formatCatModulesForm showEmailCorrectionController)
  where
    getModInsts md =
-    if withstudyplan
-    then do
-     mis <- runJustT (queryInstancesOfMod (modDataKey md))
-     studnums <- getModuleInstancesStudents md mis
-     return (md,map (instOfSem (zip mis studnums)) semPeriod, [])
-    else runJustT $ do
-     mis <- queryInstancesOfMod (modDataKey md)
-     -- compute usages in old master programs (unnecessary in the future):
-     nummps <- if withmprogs
-               then liftM (map length) (getMasterProgramKeysOfModInst mis)
-               else return (repeat 0)
-     -- compute usages in AdvisorStudyPrograms:
-     numaps <- if withmprogs
-               then liftM (map length)
-                          (mapM getAdvisorStudyProgramKeysOfModInst mis)
-               else return (repeat 0)
-     let numbermprogs = map (uncurry (+)) (zip nummps numaps)
-     univs <- if withunivis
-                then mapM (queryHasUnivisEntry (modDataCode md)) semPeriod
-                else return []
-     return (md,map (instOfSem (zip mis numbermprogs)) semPeriod,univs)
+    let queryinsts = maybe (queryInstancesOfMod (modDataKey md))
+                           (\u -> queryLecturedInstancesOfMod (modDataKey md) (userKey u))
+                           mblecturer
+    in if withstudyplan
+         then do
+           mis <- runJustT queryinsts
+           studnums <- getModuleInstancesStudents md mis
+           return (md,map (instOfSem (zip mis studnums)) semPeriod, [])
+         else runJustT $ do
+           mis <- queryinsts
+           -- compute usages in old master programs (unnecessary in the future):
+           nummps <- if withmprogs
+                     then liftM (map length) (getMasterProgramKeysOfModInst mis)
+                     else return (repeat 0)
+           -- compute usages in AdvisorStudyPrograms:
+           numaps <- if withmprogs
+                       then liftM (map length)
+                                  (mapM getAdvisorStudyProgramKeysOfModInst mis)
+                       else return (repeat 0)
+           let numbermprogs = map (uncurry (+)) (zip nummps numaps)
+           univs <- if withunivis
+                      then mapM (queryHasUnivisEntry (modDataCode md)) semPeriod
+                      else return []
+           return (md,map (instOfSem (zip mis numbermprogs)) semPeriod,univs)
 
    instOfSem misnums sem =
      find (\ (mi,_) -> (modInstTerm mi,modInstYear mi) == sem) misnums
@@ -289,7 +302,7 @@ showCategoryController cat =
                                        (const mods)
                                        (userLoginOfSession sinfo)))]
                  [] []
-                 showCategoryPlanController
+                 (showCategoryPlanController Nothing)
                  formatCatModulesForm showEmailCorrectionController))
 
 --- Gets the associated StudyProgram entity for a given Category entity.

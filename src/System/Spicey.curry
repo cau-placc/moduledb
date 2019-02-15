@@ -295,7 +295,8 @@ userMenu sinfo =
                         [logoutIcon, nbsp, htxt (t "...as student")]]
                 ]
 
-  cuserMenu   = [ [href "?Category/user" [htxt $ t "My modules"]]
+  cuserMenu   = [ [href "?Category/user"     [htxt $ t "My modules"]]
+                , [href "?Category/lecturer" [htxt $ t "Taught modules"]]
                 , [href "?AdvisorStudyProgram/new"
                         [htxt $ t "New master program"]]
                 , [href "?User/passwd"

@@ -12,6 +12,7 @@ import System.Spicey
 import System.Authentication
 import MDB
 import MDBExts
+import MDB.Queries
 import Char
 import List
 import Maybe
@@ -64,7 +65,7 @@ searchModules pat = do
             [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat,
               map (\m->(m,[],[])) vismods)]
             [] []
-            showCategoryPlanController formatCatModulesForm
+            (showCategoryPlanController Nothing) formatCatModulesForm
             showEmailCorrectionController)
 
 
@@ -100,7 +101,7 @@ searchUserModules user = do
                (Right [htxt $ t "Modules of" ++ " " ++ userToShortView user])
                [(Right "",map (\m->(m,[],[])) mods)]
                [] []
-               showCategoryPlanController
+               (showCategoryPlanController Nothing)
                formatCatModulesForm showEmailCorrectionController)
 
 
@@ -157,7 +158,7 @@ showModulesController mods = do
               map (\m->(m,[],[])) pmods),
              (Right $ t "Further modules", map (\m->(m,[],[])) wmods)]
             [] []
-            showCategoryPlanController formatCatModulesForm
+            (showCategoryPlanController Nothing) formatCatModulesForm
             showEmailCorrectionController)
  where
 

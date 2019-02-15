@@ -11,6 +11,7 @@ import XML
 import Time
 import MDB
 import MDBExts
+import MDB.Queries
 import View.ModData
 import Controller.ModDescr
 import Controller.ModInst
