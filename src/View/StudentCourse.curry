@@ -1,7 +1,8 @@
 module View.StudentCourse
   ( wStudentCourse, tuple2StudentCourse, studentCourse2Tuple
   , wStudentCourseType, blankStudentCourseView, createStudentCourseView
-  , editStudentCourseView, showStudentCourseView, listStudentCourseView )
+  , editStudentCourseView, showStudentCourseView, listStudentCourseView
+  , semesterConflictView )
 where
 
 import WUI
@@ -9,9 +10,11 @@ import HTML.Base
 import Time
 import Sort
 import HTML.Styles.Bootstrap3
+import System.Helpers
 import System.Spicey
 import System.SessionInfo
 import MDB
+import System.MultiLang
 import View.MDBEntitiesToHtml
 
 --- The WUI specification for the entity type StudentCourse.
@@ -162,3 +165,23 @@ listStudentCourseView sinfo studentCourses =
                       ("?StudentCourse/delete/"
                         ++ showStudentCourseKey studentCourse)
                       [htxt "delete"]]])
+
+-----------------------------------------------------------------------
+--- Supplies a list view for a given list of StudentCourse entities.
+--- Shows also show/edit/delete buttons if the user is logged in.
+--- The arguments are the session info and the list of StudentCourse entities.
+semesterConflictView :: UserSessionInfo -> (String,Int)
+                     -> [(String,String,Int)] -> [HtmlExp]
+semesterConflictView sinfo sem conflicts =
+  [ h2 [htxt $ t "Modulbelegungskonflikte im " ++ showLongSemester sem]
+  , spTable $
+      [[htxt $ t "Modul"], [htxt $ t "Modul"],
+       [htxt $ t "Belegt von...Studierenden"]] :
+      map conflict2row conflicts
+  ]
+ where
+  t = translate sinfo
+
+  conflict2row (m1,m2,n) = [[htxt m1], [htxt m2], [htxt $ show n]]
+
+-----------------------------------------------------------------------

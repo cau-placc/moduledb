@@ -18,6 +18,7 @@ module System.Spicey (
   wuiEditForm, wuiEditFormWithText, wuiFrameToForm,
   renderWuiForm, renderLabels,
   nextInProcessOr,
+  selectSemesterView,
   stringToHtml, maybeStringToHtml,
   intToHtml,maybeIntToHtml, floatToHtml, maybeFloatToHtml,
   boolToHtml, maybeBoolToHtml, dateToHtml, maybeDateToHtml,
@@ -36,6 +37,7 @@ module System.Spicey (
   ) where
 
 import FilePath       ( (</>) )
+import List           ( findIndex, init, last )
 import System
 import HTML.Base
 import ReadNumeric
@@ -51,7 +53,6 @@ import System.Helpers
 import Distribution
 import System.MultiLang
 import System.SessionInfo
-import List           ( init, last )
 
 import Database.CDBI.ER
 import ConfigMDB        ( storageDir )
@@ -325,8 +326,10 @@ addLayout viewblock = do
   msg        <- getPageMessage
   admin      <- isAdmin
   (routemenu1,routemenu2) <- getRouteMenus
+  let uppermenu = routemenu2 ++ [[href ("?StudentCourse/conflicts")
+                                       [htxt "Zeige Studienkonflikte"]]]
   let adminmenu =  HtmlStruct "ul" [] $
-                     map litem routemenu2 ++
+                     map litem uppermenu ++
                      [litem [htxt " "] `addClass` "divider"] ++
                      map litem routemenu1
   let (mainTitle,mainDoc) =
@@ -481,6 +484,26 @@ getForm viewBlock = case viewBlock of
                                   [("rel","shortcut icon"),
                                    ("href","favicon.ico")] [])
 
+--- A view to select a semester with a controller for this semester
+selectSemesterView :: UserSessionInfo -> ((String,Int) -> Controller)
+                   -> (String,Int) -> String -> String -> [HtmlExp]
+selectSemesterView sinfo selcontroller cursem title buttontxt =
+  [h2 [htxt $ t title],
+   par $ [ spShortSelectionInitial insem semSelection
+                                   (findSemesterSelection cursem cursem)
+         , spPrimButton (t buttontxt) selectHandler ]
+  ]
+ where
+  insem free
+
+  t = translate sinfo
+
+  semSelection = map (\(s,i) -> (showSemester s,show i))
+                     (zip (semesterSelection cursem) [0..])
+
+  selectHandler env =
+    let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
+    in selcontroller (semesterSelection cursem !! semi) >>= getForm
 
 -------------------------------------------------------------------------
 -- Action performed when a "cancel" button is pressed.

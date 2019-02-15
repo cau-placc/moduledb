@@ -318,7 +318,7 @@ semesterSelection :: (String,Int) -> [(String,Int)]
 semesterSelection cursem =
   take 14 (iterate nextSemester (iterate prevSemester cursem !! 6))
 
--- find the index of a given semester in the semesterSelection list
+-- Find the index of a given semester in the semesterSelection list
 -- where the current semester is given as the first argument:
 findSemesterSelection :: (String,Int) -> (String,Int) -> Int
 findSemesterSelection cursem sem =

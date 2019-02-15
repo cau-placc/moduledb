@@ -5,7 +5,7 @@ module View.Student
   , showSelectionView, selectSemesterView, selectCoursesView )
 where
 
-import List ( groupBy, findIndex, transpose )
+import List ( groupBy, transpose )
 import Mail ( sendMail )
 import WUI
 import HTML.Base
@@ -251,28 +251,6 @@ showSelectionView sinfo mis =
     [hrefModule ("?ModData/show/"++showModDataID mdkey)
                 [htxt $ langSelect sinfo etitle gtitle,
                  htxt $ " (" ++ code ++ ")"]]
-
---- View to select a semester with a controller for this semester
-selectSemesterView :: ((String,Int) -> Controller)
-                   -> UserSessionInfo -> (String,Int) -> [HtmlExp]
-selectSemesterView selcontroller sinfo cursem =
-  [h2 [htxt $ t "Select semester:"],
-   par $ [ spShortSelectionInitial insem semSelection
-                                   (findSemesterSelection cursem cursem)
-         , spPrimButton (t "select/change modules in semester") selectHandler ]
-  ]
- where
-  insem free
-
-  t = translate sinfo
-
-  semSelection = map (\(s,i) -> (showSemester s,show i))
-                     (zip (semesterSelection cursem) [0..])
-
-  selectHandler env =
-    let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
-    in selcontroller (semesterSelection cursem !! semi) >>= getForm
-
 
 -- view to select modules
 selectCoursesView :: Controller -> ([ModInstID] -> [ModInstID] -> Controller)

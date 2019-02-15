@@ -4,7 +4,7 @@
 
 module SpecialQueries where
 
-import List ( nub )
+import List ( intersect, nub )
 
 import Database.CDBI.ER
 import ShowDotGraph
@@ -145,5 +145,39 @@ queryStudentNumberOfModSemester md (term,year) =
                Satisfies sc withStudent s And
                Satisfies sc withModInst mi And
                Satisfies mi withModule md;''
+
+-----------------------------------------------------------------------
+-- Gets a list of all modules (code/title) for a given semester.
+moduleInstancesInSemester :: (String,Int) -> IO [(String,String)]
+moduleInstancesInSemester (term,year) = runJustT
+  ``sql* Select md.Code, md.NameG
+         From ModInst as mi, ModData as md
+         Where mi.Term = {term} And mi.Year = {year} And
+               Satisfies mi withModule md;''
+
+-- Gets a list of all modules (code/title) and the registered students
+-- for a given semester.
+moduleInstanceNumber :: (String,Int) -> IO [(String,String)]
+moduleInstanceNumber (term,year) = runJustT
+  ``sql* Select md.Code, s.Email
+         From ModInst as mi, Student as s, StudentCourse as sc, ModData as md
+         Where mi.Term = {term} And mi.Year = {year} And
+               Satisfies sc withModInst mi And
+               Satisfies mi withModule md And
+               Satisfies sc withStudent s;''
+
+-- Gets a list of all pairs of modules and the number of students
+-- who want to attend both modules:
+getModuleConflictList :: (String,Int) -> IO [(String,String,Int)]
+getModuleConflictList sem = do
+  mods    <- moduleInstancesInSemester sem >>= return . map fst
+  modnums <- moduleInstanceNumber sem
+  let m = [ (m1, m2, length (attendBoth m1 m2 modnums))
+          | m1 <- mods, m2 <- mods, m1 < m2 ]
+  return $ filter (\ (_,_,n) -> n>0) m
+ where
+  attendBoth m1 m2 xs =
+    intersect (map snd (filter ((==m1) . fst) xs))
+              (map snd (filter ((==m2) . fst) xs))
 
 -----------------------------------------------------------------------

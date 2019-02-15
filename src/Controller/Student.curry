@@ -192,8 +192,10 @@ selectSemesterController = do
   sinfo <- getUserSessionInfo
   case studentLoginOfSession sinfo of
     Nothing -> return [h3 [htxt $ "Operation not allowed!"]]
-    Just _  -> do csem <- getCurrentSemester >>= return . nextSemester
-                  return $ selectSemesterView selectCourseController sinfo csem
+    Just _  -> do
+      csem <- getCurrentSemester >>= return . nextSemester
+      return $ selectSemesterView sinfo selectCourseController csem
+                 "Select semester:" "select/change modules in semester"
 
 --- Select modules for a semester.
 selectCourseController :: (String,Int) -> Controller

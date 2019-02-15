@@ -9,9 +9,12 @@ import Maybe
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
+import System.Helpers
 import Config.UserProcesses
 import View.MDBEntitiesToHtml
 import Database.CDBI.Connection
+
+import SpecialQueries ( getModuleConflictList )
 
 --- Choose the controller for a StudentCourse entity according to the URL parameter.
 mainStudentCourseController :: Controller
@@ -19,6 +22,7 @@ mainStudentCourseController =
   do args <- getControllerParams
      case args of
        [] -> listStudentCourseController
+       ["conflicts"] -> showConflictsController
        ["list"] -> listStudentCourseController
        ["new"] -> newStudentCourseController
        ["show",s] ->
@@ -142,3 +146,27 @@ getStudentCourseInstancesModInst sModInst =
 getStudentCoursesStudent :: StudentCourse -> DBAction Student
 getStudentCoursesStudent sStudent =
   getStudent (studentCourseStudentStudentCoursesKey sStudent)
+
+-----------------------------------------------------------------------
+
+--- A controller to show the conflicts (student selections for two modules)
+--- for a semester.
+showConflictsController :: Controller
+showConflictsController = do
+  sinfo <- getUserSessionInfo
+  if not (isAdminSession sinfo)
+    then return [h3 [htxt $ "Operation not allowed!"]]
+    else do
+      csem <- getCurrentSemester >>= return . nextSemester
+      return $ selectSemesterView sinfo semesterConflictController csem
+                 "Select semester:" "Zeige Modulbelegungskonflikte"
+
+--- A controller to show the conflicts (student selections for two modules)
+--- for a given semester.
+semesterConflictController :: (String,Int) -> Controller
+semesterConflictController sem = do
+  sinfo <- getUserSessionInfo
+  conflicts <- getModuleConflictList sem
+  return $ semesterConflictView sinfo sem conflicts
+
+-----------------------------------------------------------------------
