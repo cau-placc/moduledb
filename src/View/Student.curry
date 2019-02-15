@@ -109,8 +109,8 @@ editStudentView
   -> Student -> (Student -> Controller) -> Controller -> [HtmlExp]
 editStudentView _ student controller cancelcontroller =
   renderWuiForm (wStudentType student) student controller cancelcontroller
-   "Edit Student"
-   "change"
+   "Studierendendaten bearbeiten"
+   "Ändern"
 
 --- Supplies a view to show the details of a Student.
 showStudentView :: UserSessionInfo -> Student -> [HtmlExp]
@@ -131,8 +131,8 @@ listStudentView :: UserSessionInfo -> [Student] -> [HtmlExp]
 listStudentView sinfo students =
   [h1 [htxt "Liste der registrierten Studierenden"]
   ,spTable
-    ([take 5 studentLabelList]
-      ++ map listStudent (mergeSortBy leqStudent students))]
+    ([take 3 studentLabelList] ++
+     map listStudent (mergeSortBy leqStudent students))]
   where
     listStudent student =
       studentToListView student

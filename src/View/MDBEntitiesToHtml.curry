@@ -638,8 +638,9 @@ studentToListView student =
   [[stringToHtml (studentEmail student)]
   ,[stringToHtml (studentName student)]
   ,[stringToHtml (studentFirst student)]
-  ,[stringToHtml (studentTAN student)]
-  ,[dateToHtml (studentLastLogin student)]]
+  --,[stringToHtml (studentTAN student)]
+  --,[dateToHtml (studentLastLogin student)]
+  ]
 
 --- The short view of a Student entity as a string.
 --- This view is used in menus and comments to refer to a Student entity.
