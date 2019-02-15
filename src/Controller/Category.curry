@@ -32,8 +32,8 @@ categoryController = do
   args <- getControllerParams
   case args of
     ["list"]    -> listAllCategoryController
-    ["user"]    -> listCurrentUserCategoryController False
-    ["userall"] -> listCurrentUserCategoryController True
+    ["user"]    -> listUserModulesController False
+    ["userall"] -> listUserModulesController True
     ["new"]     -> newCategoryController
     ["studyprogram",s] ->
        applyControllerOn (readStudyProgramKey s)
@@ -134,8 +134,8 @@ listAllCategoryController =
 --- The argument indicates whether all modules should be shown.
 --- If it is false, only the modules without or with most recent instances
 --- are shown.
-listCurrentUserCategoryController :: Bool -> Controller
-listCurrentUserCategoryController listall =
+listUserModulesController :: Bool -> Controller
+listUserModulesController listall =
   checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
     do let lname = maybe "" id (userLoginOfSession sinfo)
        -- get user entries with a given login name

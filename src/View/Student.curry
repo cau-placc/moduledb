@@ -20,7 +20,7 @@ import System.Spicey
 import System.SessionInfo
 import ConfigMDB ( adminEmail )
 import MDB
-import MDBHelpers ( showModDataID )
+import MDBExts ( showModDataID )
 import View.MDBEntitiesToHtml
 import Database.CDBI.Connection ( DBAction )
 
