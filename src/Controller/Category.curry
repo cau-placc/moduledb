@@ -209,7 +209,6 @@ showCategoryPlanController
   -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller
 showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
                            withunivis withmprogs withstudyplan = do
-  appendFile "TESTLOG" (show mblecturer)
   sinfo <- getUserSessionInfo
   csem  <- getCurrentSemester
   let filterMods ms = maybe (filter modDataVisible ms)
