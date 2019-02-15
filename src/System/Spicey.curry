@@ -307,7 +307,7 @@ userMenu sinfo =
   studentMenu = [ [href "?Student/showcourses"
                         [htxt (t "Show selected modules")]]
                 , [href "?Student/select"
-                        [htxt (t "Select modules")]]
+                        [htxt (t "Select/change modules")]]
                 , [href "?Student/logout"
                         [logoutIcon, nbsp, htxt (t "Logout")]]
                 ]
