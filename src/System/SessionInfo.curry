@@ -9,7 +9,9 @@
 ----------------------------------------------------------------------------
 
 module System.SessionInfo (
-  UserSessionInfo(..), userLoginOfSession, setUserLoginOfSession,
+  UserSessionInfo(..), loginNameOfSession,
+  userLoginOfSession, setUserLoginOfSession,
+  studentLoginOfSession, setStudentLoginOfSession,
   isAdminSession,
   Language(..), languageOfSession, setLanguageOfSession,
   getUserSessionInfo, updateUserSessionInfo
@@ -28,23 +30,37 @@ data Language = German | English
 
 --------------------------------------------------------------------------
 --- The data associated to a user session.
---- It contains formation about the login status of a user
+--- It contains formation about the login status of a user and a student
 --- (this argument of the session data is `Nothing` if the user is not logged
 --- in, or `Maybe ln` where `ln` is the login name of the user)
 --- and the language preferred in this sesion
-data UserSessionInfo = SD (Maybe String) Language
+data UserSessionInfo = SD (Maybe String) (Maybe String) Language
 
 --- The initial (empty) session data
 emptySessionInfo :: UserSessionInfo
-emptySessionInfo = SD Nothing German
+emptySessionInfo = SD Nothing Nothing German
 
 --- Extracts the login status from the user session data.
 userLoginOfSession :: UserSessionInfo -> Maybe String
-userLoginOfSession (SD login _) = login
+userLoginOfSession (SD login _ _) = login
 
 --- Sets the login status of the user session data.
 setUserLoginOfSession :: Maybe String -> UserSessionInfo -> UserSessionInfo
-setUserLoginOfSession login (SD _ lang) = SD login lang
+setUserLoginOfSession login (SD _ _ lang) = SD login Nothing lang
+
+--- Extracts the login status from the student session data.
+studentLoginOfSession :: UserSessionInfo -> Maybe String
+studentLoginOfSession (SD _ slogin _) = slogin
+
+--- Sets the login status of the student session data.
+setStudentLoginOfSession :: Maybe String -> UserSessionInfo -> UserSessionInfo
+setStudentLoginOfSession login (SD _ _ lang) = SD Nothing login lang
+
+loginNameOfSession :: UserSessionInfo -> Maybe String
+loginNameOfSession sinfo =
+  maybe (maybe Nothing Just (userLoginOfSession sinfo))
+        Just
+        (studentLoginOfSession sinfo)
 
 --- Is the current session an administrator session?
 isAdminSession :: UserSessionInfo -> Bool
@@ -53,11 +69,11 @@ isAdminSession sinfo =
 
 --- Extracts the preferred language from the user session data.
 languageOfSession :: UserSessionInfo -> Language
-languageOfSession (SD _ lang) = lang
+languageOfSession (SD _ _ lang) = lang
 
 --- Sets the perferred language of the user session data.
 setLanguageOfSession :: Language -> UserSessionInfo -> UserSessionInfo
-setLanguageOfSession lang (SD login _) = SD login lang
+setLanguageOfSession lang (SD login slogin _) = SD login slogin lang
 
 --------------------------------------------------------------------------
 --- Definition of the session state to store the login name (as a string).

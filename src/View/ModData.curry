@@ -1,7 +1,8 @@
 module View.ModData (
  wModData, tuple2ModData, modData2Tuple, wModDataType, blankModDataView,
  createModDataView, editModDataView, showModDataView, listModDataView,
- singleModDataView, numberModuleView, leqModData, copyModView, improveCycle,
+ singleModDataView, numberModuleView, studentModuleView,
+ leqModData, copyModView, improveCycle,
  selectPreqModuleView, deletePreqModuleView
  ) where
 
@@ -246,12 +247,25 @@ showModDataView modData relatedUser categorys controller =
    [spButton "back to ModData list" (nextController controller)]
 
 --- A view to show the number of students of a module in a semester.
-numberModuleView :: String -> ModData -> Int -> [HtmlExp]
-numberModuleView semcode modData nums =
+numberModuleView :: String -> ModData -> Int -> Int -> [HtmlExp]
+numberModuleView semcode modData spnums mdbnums =
   [h1 [htxt $ "Modul \""++modDataNameG modData++"\""],
    par [htxt "Anzahl der Studierenden, die dieses Modul für das Semester '",
+        htxt semcode, htxt "' in der Moduldatenbank eingeplant haben: ",
+        htxt (show mdbnums)],
+   par [htxt "Anzahl der Studierenden, die dieses Modul für das Semester '",
         htxt semcode, htxt "' im Masterstudienplaner eingeplant haben: ",
-        htxt (if nums<0 then "?" else show nums)]]
+        htxt (if spnums<0 then "?" else show spnums)]]
+
+--- A view to show the students registered for a module in a semester.
+studentModuleView :: String -> ModData -> [(String,String,String)] -> [HtmlExp]
+studentModuleView semcode modData studs =
+  [h1 [htxt $ "Modul \"" ++ modDataNameG modData ++ "\""],
+   par [htxt "Studierende, die dieses Modul für das Semester '",
+        htxt semcode, htxt "' in der Moduldatenbank eingeplant haben: "],
+   spTable (map stud2row studs)]
+ where
+  stud2row (email,name,first) = [[htxt email], [htxt name], [htxt first]]
 
 --- A view for searching modules.
 copyModView :: ModData -> (String -> Controller) -> [HtmlExp]

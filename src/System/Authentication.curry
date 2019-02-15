@@ -9,7 +9,7 @@
 
 module System.Authentication (
   getUserHash, randomPassword,
-  getSessionLogin, loginToSession, logoutFromSession,
+  getSessionLogin, loginToSession, loginToStudentSession, logoutFromSession,
   isAdmin
  ) where
 
@@ -47,9 +47,17 @@ loginToSession :: String -> IO ()
 loginToSession loginname =
   updateUserSessionInfo (setUserLoginOfSession (Just loginname))
 
+--- Stores a login name in the current session.
+--- The authentication has to be done before!
+loginToStudentSession :: String -> IO ()
+loginToStudentSession loginname =
+  updateUserSessionInfo (setStudentLoginOfSession (Just loginname))
+
 --- removes the login name from the current session.
 logoutFromSession :: IO ()
-logoutFromSession = updateUserSessionInfo (setUserLoginOfSession Nothing)
+logoutFromSession = do
+  updateUserSessionInfo (setUserLoginOfSession Nothing)
+  updateUserSessionInfo (setStudentLoginOfSession Nothing)
 
 --------------------------------------------------------------------------
 -- Returns true if admin is logged in

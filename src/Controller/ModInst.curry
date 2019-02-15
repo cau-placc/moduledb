@@ -180,7 +180,7 @@ deleteModInstController modInst True =
 --- or edit an entity.
 listModInstController :: Controller
 listModInstController =
-  checkAuthorization (modInstOperationAllowed ListEntities) $ \_ -> do
+  checkAuthorization (modInstOperationAllowed ListEntities) $ \sinfo -> do
     args <- getControllerParams
     if null args
      then displayError "Illegal URL"
@@ -194,20 +194,20 @@ listModInstController =
          mps      <- runJustT (mapM getMasterProgram mpkeys)
          spkeys   <- runQ (getAdvisorStudyProgramKeysOfModInst mi)
          sprogs   <- runJustT (mapM getAdvisorStudyProgram spkeys)
-         return (singleModInstView mi moddata user mps sprogs))
+         return (singleModInstView sinfo mi moddata user mps sprogs))
        (readModInstKey (head args))
 
 --- Shows a ModInst entity.
 showModInstController :: ModInst -> Controller
 showModInstController mi =
-  checkAuthorization (modInstOperationAllowed (ShowEntity mi)) $ \_ ->
+  checkAuthorization (modInstOperationAllowed (ShowEntity mi)) $ \sinfo ->
    (do user     <- runJustT $ getUser (modInstUserLecturerModsKey mi)
        moddata  <- runJustT $ getModData (modInstModDataModuleInstancesKey mi)
        [mpkeys] <- runQ $ getMasterProgramKeysOfModInst [mi]
        mps      <- runJustT (mapM getMasterProgram mpkeys)
        spkeys   <- runQ (getAdvisorStudyProgramKeysOfModInst mi)
        sprogs   <- runJustT (mapM getAdvisorStudyProgram spkeys)
-       return (singleModInstView mi moddata user mps sprogs))
+       return (singleModInstView sinfo mi moddata user mps sprogs))
 
 --- Gets the associated ModData entity for a given ModInst entity.
 getModuleInstancesModData :: ModInst -> DBAction ModData

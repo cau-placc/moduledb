@@ -631,4 +631,74 @@ showModDatasAsLinks _ mods =
                     `addTitle` (modDataNameG md))
             mods))
 
+--- The list view of a Student entity in HTML format.
+--- This view is used in a row of a table of all entities.
+studentToListView :: Student -> [[HtmlExp]]
+studentToListView student =
+  [[stringToHtml (studentEmail student)]
+  ,[stringToHtml (studentName student)]
+  ,[stringToHtml (studentFirst student)]
+  ,[stringToHtml (studentTAN student)]
+  ,[dateToHtml (studentLastLogin student)]]
+
+--- The short view of a Student entity as a string.
+--- This view is used in menus and comments to refer to a Student entity.
+studentToShortView :: Student -> String
+studentToShortView student = studentEmail student
+
+--- The detailed view of a Student entity in HTML format.
+studentToDetailsView :: Student -> [HtmlExp]
+studentToDetailsView student =
+  [spTable
+    (map (\(label,value) -> [label,value])
+      (zip studentLabelList detailedView))]
+  where
+    detailedView =
+      [[stringToHtml (studentEmail student)]
+      ,[stringToHtml (studentName student)]
+      ,[stringToHtml (studentFirst student)]
+      ,[stringToHtml (studentTAN student)]
+      ,[dateToHtml (studentLastLogin student)]]
+
+--- The labels of a Student entity, as used in HTML tables.
+studentLabelList :: [[HtmlExp]]
+studentLabelList =
+  [[textstyle "spicey_label spicey_label_for_type_string" "Email"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Name"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "First"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "TAN"]
+  ,[textstyle "spicey_label spicey_label_for_type_date" "LastLogin"]]
+
+--- The list view of a StudentCourse entity in HTML format.
+--- This view is used in a row of a table of all entities.
+studentCourseToListView :: StudentCourse -> [[HtmlExp]]
+studentCourseToListView studentCourse =
+  [[dateToHtml (studentCourseSelectData studentCourse)]]
+
+--- The short view of a StudentCourse entity as a string.
+--- This view is used in menus and comments to refer to a StudentCourse entity.
+studentCourseToShortView :: StudentCourse -> String
+studentCourseToShortView studentCourse =
+  show (studentCourseSelectData studentCourse)
+
+--- The detailed view of a StudentCourse entity in HTML format.
+--- It also takes associated entities for every associated entity type.
+studentCourseToDetailsView :: StudentCourse -> ModInst -> Student -> [HtmlExp]
+studentCourseToDetailsView studentCourse relatedModInst relatedStudent =
+  [spTable
+    (map (\(label,value) -> [label,value])
+      (zip studentCourseLabelList detailedView))]
+  where
+    detailedView =
+      [[dateToHtml (studentCourseSelectData studentCourse)]
+      ,[htxt (modInstToShortView relatedModInst)]
+      ,[htxt (studentToShortView relatedStudent)]]
+
+--- The labels of a StudentCourse entity, as used in HTML tables.
+studentCourseLabelList :: [[HtmlExp]]
+studentCourseLabelList =
+  [[textstyle "spicey_label spicey_label_for_type_date" "SelectData"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "ModInst"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Student"]]
+
 -----------------------------------------------------------------------------

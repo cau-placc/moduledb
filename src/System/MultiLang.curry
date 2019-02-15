@@ -3,7 +3,7 @@
 --- and the translation of texts shown in the application.
 ---
 --- @author Michael Hanus
---- @version May 2018
+--- @version February 2019
 ----------------------------------------------------------------------------
 
 module System.MultiLang (
@@ -11,7 +11,8 @@ module System.MultiLang (
   translate, langSelect,
   loginEmailText, loginText, mainTitle, mainExplanation,
   masterStudyNote, masterStudyOldNote, minorSubjectNote,
-  privacyCookieCmt, sendPasswordCmt, ssComment,
+  privacyCookieCmt, sendCodeCmt, sendPasswordCmt, ssComment,
+  studentExplanation, studentLoginEmailText,studentLoginExplanation,
   timeoutText, unknownUser, useURLText, prereqExplainText
  ) where
 
@@ -44,7 +45,9 @@ toEnglish s = maybe s id (lookup s (map (\ (x,y) -> (y,x)) english2german))
 
 english2german :: [(String, String)]
 english2german =
- [("Acknowledgment"     ,"Bestätigung")
+ [("...as lecturer"     ,"...als Modulverwalter")
+ ,("...as student"      ,"...als Studierender")
+ ,("Acknowledgment"     ,"Bestätigung")
  ,("Add"                ,"Hinzufügen")
  ,("Add semester"       ,"Semester hinzufügen")
  ,("Add prerequisite"   ,"Voraussetzung hinzufügen")
@@ -78,9 +81,10 @@ english2german =
  ,("Department of Computer Science","Institut für Informatik")
  ,("Description"        ,"Beschreibung")
  ,("Duration:"          ,"Dauer:")
+ ,("Email address:"     ,"Email-Adresse:")
+ ,("Email address already registered!","Email-Adresse im System schon registriert!")
+ ,("Email address not allowed!","Unzulaessige Email-Adresse!")
  ,("External URL for module","Externe URL für das Modul")
- ,("Formatted module description","Formatierte Modulbeschreibung")
- ,("Formatted module descriptions","Formatierte Modulbeschreibungen")
  ,("English"            ,"Englisch")
  ,("every year"         ,"jedes Jahr")
  ,("every year in summer term","jedes Jahr im SS")
@@ -90,6 +94,8 @@ english2german =
  ,("For persons in charge for modules: ","Für Modulverantwortliche: ")
  ,("Forgot your login data?","Login-Daten vergessen?")
  ,("format modules (PDF)","Module formatieren (PDF)")
+ ,("Formatted module description","Formatierte Modulbeschreibung")
+ ,("Formatted module descriptions","Formatierte Modulbeschreibungen")
  ,("Found modules"      ,"Gefundene Module")
  ,(" from "             ," von ")
  ,("Further information:","Weitere Informationen:")
@@ -104,10 +110,13 @@ english2german =
  ,("Logged in as: "     ,"Angemeldet als: ")
  ,("Logged out"         ,"Abgemeldet")
  ,("Login"              ,"Anmelden")
+ ,("Login as student"   ,"Anmeldung als Studierender")
+ ,("Login code:"        ,"Zugangscode:")
  ,("Login name:"        ,"Benutzername:")
  ,("Login successful"   ,"Anmeldung erfolgreich")
- ,("Login to module database","Anmeldung zur Moduldatenbank")
+ ,("Login..."           ,"Anmeldung...")
  ,("Login data for module database","Moduldatenbankzugangsdaten")
+ ,("Login or register as student"   ,"Anmeldung oder Registrierung als Studierender")
  ,("Logout"             ,"Abmelden")
  ,("Main page of the module information system","Hauptseite der Moduldatenbank")
  ,("Make visible"       ,"Sichtbar machen")
@@ -142,6 +151,7 @@ english2german =
  ,("notes on module descriptions and their preparation",
    "Hinweise zu Modulbeschreibungen und deren Bearbeitung")
  ,("one"                ,"ein")
+ ,("only"               ,"nur")
  ,("only for internal use","nur zur internen Bearbeitung")
  ,("Old password:"      ,"Altes Passwort:")
  ,("Overview on the "   ,"Übersicht über die ")
@@ -158,8 +168,10 @@ english2german =
  ,("Program overview by terms:","Programmübersicht nach Semestern:")
  ,("programming language","Programmiersprache")
  ,("public"             ,"öffentlich")
- ,("recommended"        ,"empfohlen")
  ,("Really logout?"     ,"Wirklich abmelden?")
+ ,("Register as new student","Registrierung als neuer Studierender")
+ ,("Register"           ,"Registrieren")
+ ,("recommended"        ,"empfohlen")
  ,("Repeat new password:","Neues Passwort wiederholen:")
  ,("search"             ,"suchen")
  ,("Search!"            ,"Suchen!")
@@ -167,9 +179,15 @@ english2german =
  ,("Search all modules containing","Alle Module mit Zeichenfolge")
  ,("Search for individual modules:","Einzelne Module suchen:")
  ,("Select a module:"   ,"Modul auswählen")
+ ,("select/change modules in semester","Module im Semester auswählen/ändern")
+ ,("Select/change modules","Module auswählen/ändern")
+ ,("Select the modules you like to attend in ",
+   "Modulauswahl für das Semester ")
  ,("Select person:"     ,"Person auswählen")
+ ,("Select semester:"   ,"Semester auswählen")
  ,("semester"           ,"Semester")
  ,("Send login data"    ,"Login-Daten zusenden")
+ ,("Send new login code","Neuen Zugangscode senden")
  ,("Send new password"  ,"Neues Passwort senden")
  ,("Semester planning"  ,"Semesterplanung")
  ,("Show"               ,"Anzeigen")
@@ -182,6 +200,7 @@ english2german =
  ,("Show module selections:","Module anzeigen:")
  ,("show examination requirements","Prüfungsanforderungen anzeigen")
  ,("show modules"       ,"Module anzeigen")
+ ,("Show selected modules","Ausgewählte Module anzeigen")
  ,("Show semester modules:","Module eines Semesters anzeigen:")
  ,("Show modules of a person","Module einer Person anzeigen")
  ,("Start: "            ,"Beginn: ")
@@ -205,8 +224,12 @@ english2german =
  ,("XML document with all master programs (until SS15)"
   ,"XML-Dokument aller Masterprogramme (bis SS15)")
  ,("You can also "      ,"Sie können auch nur Ihr ")
- ,("Your email address: ","Ihre Email-Adresse: ")
+ ,("Your email address used for registration: "
+  ,"Ihre registrierte Email-Adresse: ")
+ ,("Your new login code has been sent to:"
+  ,"Ihr neuer Zugangscode wurde gesendet an:")
  ,("Your new password has been sent","Ihr neues Passwort wurde Ihnen zugesandt")
+ ,("Your selected modules:","Ihre ausgewählten Module:")
  ]
 
 loginText :: UserSessionInfo -> String -> String
@@ -232,6 +255,19 @@ loginEmailText sinfo loginname passwd = langSelect sinfo
    "anmelden und Ihre Module und Masterprogramme aendern.\n\n"++
    "Sie koennen das Passwort aendern, indem Sie sich anmelden\n"++
    "und dann 'Passwort aendern' im Benutzermenu waehlen.")
+
+studentLoginEmailText :: UserSessionInfo -> String -> String -> String
+studentLoginEmailText sinfo email code = langSelect sinfo
+  ("Your login data:\n\nEmail address: " ++ email ++
+   "\nNew code: " ++ code ++
+   "\n\nYou can use this data to login as a student into the module database\n\n"++
+   baseURL++"\n\n"++
+   "and select a plan for your modules.\n\n")
+  ("Ihre Zugangsdaten sind:\n\nEmail-Adresse: " ++ email ++
+   "\nNeuer Zugangscode: " ++ code ++
+   "\n\nMit diesen Daten koennen Sie sich als Studierende(r) in der Moduldatenbank\n\n"++
+   baseURL++"\n\n"++
+   "anmelden und Ihre Module planen.\n\n")
 
 mainTitle :: UserSessionInfo -> String
 mainTitle sinfo = langSelect sinfo
@@ -324,6 +360,13 @@ privacyCookieCmt sinfo = langSelect sinfo
   dataProtectCAU = "http://www.uni-kiel.de/suchen/impressum.shtml#datenschutz"
   dataProtectMDB = "datenschutz.html"
 
+sendCodeCmt :: UserSessionInfo -> String
+sendCodeCmt sinfo = langSelect sinfo
+  ("You can send a new access code to your email address "++
+   "if you are registered in the system as a student.")
+  ("Sie können sich einen neuen Zugangscode an Ihre Email-Adresse " ++
+   "zusenden lassen, sofern Sie im System als Studierende(r) registriert sind.")
+  
 sendPasswordCmt :: UserSessionInfo -> String
 sendPasswordCmt sinfo = langSelect sinfo
   ("You can send a new password to your email address "++
@@ -339,6 +382,33 @@ ssComment sinfo = langSelect sinfo
   ("Bei Beginn im Sommersemester können auch Programme der "++
    "benachbarten Wintersemester gewählt werden. "++
    "Bei der Anpassung berät Sie der Academic Advisor.")
+
+studentExplanation :: UserSessionInfo -> [HtmlExp]
+studentExplanation sinfo = langSelect sinfo
+  [htxt $
+    "You can select modules which you want to take in the next " ++
+    "semesters. " ++
+    "This selection is not a formal commitment but it helps " ++
+    "the Department of Computer Science to plan the modules in " ++
+    "each semester so that possible scheduling conflicts are reduced. "]
+  [htxt $
+    "Sie können in der Moduldatenbank " ++
+    "Module auswählen, die Sie in den nächsten Semestern hören wollen. " ++
+    "Diese Auswahl ist nicht verbindlich, sondern hilft dem Institut, " ++
+    "das Modulangebot so zu planen, dass es möglichst wenig " ++
+    "Terminüberschneidungen gibt. "]
+
+studentLoginExplanation :: UserSessionInfo -> [HtmlExp]
+studentLoginExplanation sinfo = studentExplanation sinfo ++ langSelect sinfo
+  [htxt $
+    "In order to store and change your selection, you have to register " ++
+    "to the module database with your 'stu...@mail.uni-kiel.de' account " ++
+    "and login with the generated access code."]
+  [htxt $
+    "Um diese Auswahl zu speichern und auch zu ändern, müssen Sie " ++
+    "sich in der Moduldatenbank mit Ihrem 'stu...@mail.uni-kiel.de' " ++
+    "Account einmal registrieren und danach mit dem generierten " ++
+    "Zugangscode anmelden."]
 
 timeoutText :: UserSessionInfo -> String
 timeoutText sinfo = langSelect sinfo

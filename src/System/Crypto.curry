@@ -6,9 +6,9 @@
 --- @author Michael Hanus
 ----------------------------------------------------------------------------
 
-module System.Crypto (
-  getHash, randomString
- ) where
+module System.Crypto
+  ( getHash, randomString )
+ where
 
 import IO
 import IOExts

@@ -57,7 +57,7 @@ newAdvisorStudyProgramController =
   checkAuthorization (advisorStudyProgramOperationAllowed NewEntity) $ \sinfo ->
    do allStudyPrograms <- runQ queryAllStudyPrograms
       allUsers <- runQ queryAllUsers
-      csem  <- getCurrentSemester
+      csem  <- getCurrentSemester >>= return . nextSemester
       return $ maybe
        [h1 [htxt "Illegal operation"]]
        (\user ->

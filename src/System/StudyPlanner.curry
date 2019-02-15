@@ -6,14 +6,16 @@
 
 module System.StudyPlanner where
 
-import MDB
-import MDBExts(modInstSemester)
 import URL(getContentsOfUrl)
 import ReadNumeric(readInt)
 import System.Helpers(showSemesterCode)
 import System.Spicey(spEHref)
 import HTML.Base
+
 import ConfigMDB(studyPlannerURL)
+import MDB
+import MDBExts(modInstSemester)
+import SpecialQueries ( queryStudentNumberOfModSemester )
 
 --- Retrieve the number of students of a module in a given semester
 --- (represented by the semester code string).
@@ -28,16 +30,19 @@ getModuleInstancesStudents :: ModData -> [ModInst] -> IO [Int]
 getModuleInstancesStudents mdata minsts = do
   mapIO getModInstStudents minsts
  where
-  getModInstStudents mi =
-   getModuleStudents mdata (showSemesterCode (modInstSemester mi))
+  getModInstStudents mi = do
+    spnum  <- getModuleStudents mdata (showSemesterCode (modInstSemester mi))
+    mdbnum <- runQ $ queryStudentNumberOfModSemester mdata (modInstSemester mi)
+    return (spnum + mdbnum)
 
-
---- Retrieve module instances that are already planned by some students:
+--- Retrieve module instances that are already planned by some students
+--- either in the study planner or in the module database.
 getTakenModuleInstances :: [ModInst] -> IO [ModInst]
 getTakenModuleInstances modinsts = do
   mapIO getTakenModuleInstance modinsts >>= return . concat
  where
   getTakenModuleInstance mi = do
     mdata <- runJustT (getModData (modInstModDataModuleInstancesKey mi))
-    num <- getModuleStudents mdata (showSemesterCode (modInstSemester mi))
-    return (if num>0 then [mi] else [])
+    spnum <- getModuleStudents mdata (showSemesterCode (modInstSemester mi))
+    mdbnum <- runQ $ queryStudentNumberOfModSemester mdata (modInstSemester mi)
+    return (if spnum > 0 || mdbnum > 0 then [mi] else [])

@@ -76,3 +76,74 @@ depsToGraph cpmdeps =
          (map (\ (s,t) -> Edge s t []) cpmdeps)
 
 -----------------------------------------------------------------------
+--- Queries all students with a given email.
+queryStudentByEmail :: String -> DBAction [Student]
+queryStudentByEmail email = 
+  ``sql* Select * From Student as s Where s.Email = {email};''
+
+-----------------------------------------------------------------------
+--- Queries all module instances of a given semester.
+queryModInstsOfSemester :: (String,Int)
+                        -> DBAction [(ModInstID,ModDataID,String,String,String)]
+queryModInstsOfSemester (term,year) =
+  ``sql* Select mi.Key, md.Key, md.Code, md.NameG, md.NameE
+         From ModInst as mi, ModData as md
+         Where mi.Term = {term} And mi.Year = {year} And
+               Satisfies mi withModule md;''
+
+--- Queries all module instances taken by a student (identified by email)
+--- in a given semester.
+queryModInstsOfStudentInSem :: String -> (String,Int) -> DBAction [ModInstID]
+queryModInstsOfStudentInSem email (term,year) =
+  ``sql* Select mi.Key
+         From ModInst as mi, Student as s, StudentCourse as sc
+         Where s.Email = {email} And mi.Term = {term} And mi.Year = {year} And
+               Satisfies sc withStudent s And
+               Satisfies sc withModInst mi;''
+
+--- Queries all module instances taken by a student (email).
+queryStudentCoursesOfStudent :: String -> DBAction [StudentCourseID]
+queryStudentCoursesOfStudent email =
+  ``sql* Select sc.Key
+         From Student as s, StudentCourse as sc
+         Where s.Email = {email} And
+               Satisfies sc withStudent s;''
+
+--- Queries information about all courses selected by a student (email).
+queryCoursesOfStudent :: String
+                      -> DBAction [(ModDataID,String,String,String,String,Int)]
+queryCoursesOfStudent email =
+  ``sql* Select md.Key, md.Code, md.NameG, md.NameE, mi.Term, mi.Year
+         From ModInst as mi, Student as s, StudentCourse as sc, ModData as md
+         Where s.Email = {email} And
+               Satisfies sc withStudent s And
+               Satisfies sc withModInst mi And
+               Satisfies mi withModule md;''
+
+--- Queries all students registered for a module in a given given semester.
+queryStudentsOfModSemester :: ModData -> (String,Int)
+                           -> DBAction [(String,String,String)]
+queryStudentsOfModSemester md (term,year) =
+  ``sql* Select s.Email, s.Name, s.First
+         From ModData as md, ModInst as mi, Student as s, StudentCourse as sc
+         Where md.Code = {modDataCode md} And
+               mi.Term = {term} And mi.Year = {year} And
+               Satisfies sc withStudent s And
+               Satisfies sc withModInst mi And
+               Satisfies mi withModule md;''
+
+--- Queries the number of all students registered for a module
+--- in a given given semester.
+queryStudentNumberOfModSemester :: ModData -> (String,Int)
+                                -> DBAction Int
+queryStudentNumberOfModSemester md (term,year) =
+  liftM (\xs -> if null xs then 0 else head xs)
+  ``sql* Select Count(s.Email)
+         From ModData as md, ModInst as mi, Student as s, StudentCourse as sc
+         Where md.Code = {modDataCode md} And
+               mi.Term = {term} And mi.Year = {year} And
+               Satisfies sc withStudent s And
+               Satisfies sc withModInst mi And
+               Satisfies mi withModule md;''
+
+-----------------------------------------------------------------------

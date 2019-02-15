@@ -16,6 +16,8 @@ import Controller.AdvisorModule
 import Controller.MasterProgram
 import Controller.MasterProgInfo
 import Controller.UnivisInfo
+import Controller.Student
+import Controller.StudentCourse
 import Controller.Main
 import Controller.Search
 
@@ -38,4 +40,6 @@ getController fktref =
     AdvisorModuleController -> mainAdvisorModuleController
     MasterProgramController -> mainMasterProgramController
     UnivisInfoController -> mainUnivisInfoController
+    StudentController -> mainStudentController
+    StudentCourseController -> mainStudentCourseController
     _ -> displayError "getController: no mapping found"

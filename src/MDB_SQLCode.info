@@ -1,7 +1,15 @@
 SQLParserInfoType.PInfo
  "/net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.db"
  "MDB"
- [(("MasterProgInfo","programInfoOf","MasterProgram")
+ [(("StudentCourse","withModInst","ModInst")
+  ,SQLParserInfoType.NtoOne "StudentCourseInstances")
+ ,(("ModInst","instOfModule","StudentCourse")
+  ,SQLParserInfoType.OnetoN "StudentCourseInstances")
+ ,(("StudentCourse","withStudent","Student")
+  ,SQLParserInfoType.NtoOne "StudentCourses")
+ ,(("Student","coursesOfStudent","StudentCourse")
+  ,SQLParserInfoType.OnetoN "StudentCourses")
+ ,(("MasterProgInfo","programInfoOf","MasterProgram")
   ,SQLParserInfoType.NtoOne "ProgramInfo")
  ,(("MasterProgram","withProgInfo","MasterProgInfo")
   ,SQLParserInfoType.OnetoN "ProgramInfo")
@@ -154,7 +162,17 @@ SQLParserInfoType.PInfo
  ,("univisInfoCode",False)
  ,("univisInfoTerm",False)
  ,("univisInfoYear",False)
- ,("univisInfoURL",False)]
+ ,("univisInfoURL",False)
+ ,("studentKey",False)
+ ,("studentEmail",False)
+ ,("studentName",False)
+ ,("studentFirst",True)
+ ,("studentTAN",False)
+ ,("studentLastLogin",False)
+ ,("studentCourseKey",False)
+ ,("studentCourseSelectData",False)
+ ,("studentCourseStudentStudentCoursesKey",False)
+ ,("studentCourseModInstStudentCourseInstancesKey",False)]
  [("prerequisites"
   ,("Prerequisites",["ModDataPrerequisitesKey1","ModDataPrerequisitesKey"]))
  ,("categorizing"
@@ -259,7 +277,14 @@ SQLParserInfoType.PInfo
     ,"AllgGrundlagen"
     ,"Anwendungsfach"
     ,"MasterProgramProgramInfoKey"]))
- ,("univisinfo",("UnivisInfo",["Key","Code","Term","Year","URL"]))]
+ ,("univisinfo",("UnivisInfo",["Key","Code","Term","Year","URL"]))
+ ,("student",("Student",["Key","Email","Name","First","TAN","LastLogin"]))
+ ,("studentcourse"
+  ,("StudentCourse"
+   ,["Key"
+    ,"SelectData"
+    ,"StudentStudentCoursesKey"
+    ,"ModInstStudentCourseInstancesKey"]))]
  [("prerequisitesModDataPrerequisitesKey1","ModData")
  ,("prerequisitesModDataPrerequisitesKey","ModData")
  ,("categorizingModDataCategorizingKey","ModData")
@@ -362,4 +387,14 @@ SQLParserInfoType.PInfo
  ,("univisInfoCode","string")
  ,("univisInfoTerm","string")
  ,("univisInfoYear","int")
- ,("univisInfoURL","string")]
+ ,("univisInfoURL","string")
+ ,("studentKey","Student")
+ ,("studentEmail","string")
+ ,("studentName","string")
+ ,("studentFirst","string")
+ ,("studentTAN","string")
+ ,("studentLastLogin","date")
+ ,("studentCourseKey","StudentCourse")
+ ,("studentCourseSelectData","date")
+ ,("studentCourseStudentStudentCoursesKey","Student")
+ ,("studentCourseModInstStudentCourseInstancesKey","ModInst")]

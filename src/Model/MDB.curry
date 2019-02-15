@@ -99,6 +99,18 @@ data UnivisInfo = UnivisInfo UnivisInfoID String String Int String
 data UnivisInfoID = UnivisInfoID Int
  deriving (Eq,Show,Read)
 
+data Student = Student StudentID String String String String Time.ClockTime
+ deriving (Eq,Show,Read)
+
+data StudentID = StudentID Int
+ deriving (Eq,Show,Read)
+
+data StudentCourse = StudentCourse StudentCourseID Time.ClockTime StudentID ModInstID
+ deriving (Eq,Show,Read)
+
+data StudentCourseID = StudentCourseID Int
+ deriving (Eq,Show,Read)
+
 --- The name of the SQLite database file.
 sqliteDBFile :: String
 sqliteDBFile = storageDir ++ "MDB.db"
@@ -2591,7 +2603,7 @@ newModInstWithUserLecturerModsKeyWithModDataModuleInstancesKey
     term_p year_p userLecturerModsKey_p modDataModuleInstancesKey_p =
   Database.CDBI.ER.insertNewEntry modInst_CDBI_Description setModInstKey
    ModInstID
-   (ModInst (ModInstID 0) term_p (maybe 2011 id year_p) userLecturerModsKey_p
+   (ModInst (ModInstID 0) term_p (maybe 2019 id year_p) userLecturerModsKey_p
      modDataModuleInstancesKey_p)
 
 --- Deletes an existing `ModInst` entry by its key.
@@ -3023,7 +3035,7 @@ newAdvisorStudyProgramWithUserStudyAdvisingKeyWithStudyProgramStudyProgramsAdvis
    setAdvisorStudyProgramKey
    AdvisorStudyProgramID
    (AdvisorStudyProgram (AdvisorStudyProgramID 0) name_p term_p
-     (maybe 2015 id year_p)
+     (maybe 2019 id year_p)
      desc_p
      prereq_p
      comments_p
@@ -3697,7 +3709,7 @@ newMasterProgramWithUserAdvisingKeyWithMasterCoreAreaAreaProgramsKey
   Database.CDBI.ER.insertNewEntry masterProgram_CDBI_Description
    setMasterProgramKey
    MasterProgramID
-   (MasterProgram (MasterProgramID 0) name_p term_p (maybe 2011 id year_p)
+   (MasterProgram (MasterProgramID 0) name_p term_p (maybe 2019 id year_p)
      desc_p
      prereq_p
      comments_p
@@ -4260,6 +4272,440 @@ deleteUnivisInfo =
 updateUnivisInfo :: UnivisInfo -> Database.CDBI.Connection.DBAction ()
 updateUnivisInfo = Database.CDBI.ER.updateEntry univisInfo_CDBI_Description
 
+--- The ER description of the `Student` entity.
+student_CDBI_Description :: Database.CDBI.Description.EntityDescription Student
+student_CDBI_Description =
+  Database.CDBI.Description.ED "Student"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeString
+   ,Database.CDBI.Connection.SQLTypeDate]
+   (\(Student (StudentID key) email name first tAN lastLogin) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString email
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Description.sqlString first
+     ,Database.CDBI.Connection.SQLString tAN
+     ,Database.CDBI.Connection.SQLDate lastLogin])
+   (\(Student _ email name first tAN lastLogin) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLString email
+     ,Database.CDBI.Connection.SQLString name
+     ,Database.CDBI.Description.sqlString first
+     ,Database.CDBI.Connection.SQLString tAN
+     ,Database.CDBI.Connection.SQLDate lastLogin])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLString email
+     ,Database.CDBI.Connection.SQLString name
+     ,first
+     ,Database.CDBI.Connection.SQLString tAN
+     ,Database.CDBI.Connection.SQLDate lastLogin] ->
+     Student (StudentID key) email name
+      (Database.CDBI.Description.fromStringOrNull first)
+      tAN
+      lastLogin)
+
+--- The database table of the `Student` entity.
+studentTable :: Database.CDBI.Description.Table
+studentTable = "Student"
+
+--- The database column `Key` of the `Student` entity.
+studentColumnKey :: Database.CDBI.Description.Column StudentID
+studentColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"Student\".\"Key\""
+
+--- The database column `Email` of the `Student` entity.
+studentColumnEmail :: Database.CDBI.Description.Column String
+studentColumnEmail =
+  Database.CDBI.Description.Column "\"Email\"" "\"Student\".\"Email\""
+
+--- The database column `Name` of the `Student` entity.
+studentColumnName :: Database.CDBI.Description.Column String
+studentColumnName =
+  Database.CDBI.Description.Column "\"Name\"" "\"Student\".\"Name\""
+
+--- The database column `First` of the `Student` entity.
+studentColumnFirst :: Database.CDBI.Description.Column String
+studentColumnFirst =
+  Database.CDBI.Description.Column "\"First\"" "\"Student\".\"First\""
+
+--- The database column `TAN` of the `Student` entity.
+studentColumnTAN :: Database.CDBI.Description.Column String
+studentColumnTAN =
+  Database.CDBI.Description.Column "\"TAN\"" "\"Student\".\"TAN\""
+
+--- The database column `LastLogin` of the `Student` entity.
+studentColumnLastLogin :: Database.CDBI.Description.Column Time.ClockTime
+studentColumnLastLogin =
+  Database.CDBI.Description.Column "\"LastLogin\"" "\"Student\".\"LastLogin\""
+
+--- The description of the database column `Key` of the `Student` entity.
+studentKeyColDesc :: Database.CDBI.Description.ColumnDescription StudentID
+studentKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"Student\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(StudentID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> StudentID key)
+
+--- The description of the database column `Email` of the `Student` entity.
+studentEmailColDesc :: Database.CDBI.Description.ColumnDescription String
+studentEmailColDesc =
+  Database.CDBI.Description.ColDesc "\"Student\".\"Email\""
+   Database.CDBI.Connection.SQLTypeString
+   (\email -> Database.CDBI.Connection.SQLString email)
+   (\(Database.CDBI.Connection.SQLString email) -> email)
+
+--- The description of the database column `Name` of the `Student` entity.
+studentNameColDesc :: Database.CDBI.Description.ColumnDescription String
+studentNameColDesc =
+  Database.CDBI.Description.ColDesc "\"Student\".\"Name\""
+   Database.CDBI.Connection.SQLTypeString
+   (\name -> Database.CDBI.Connection.SQLString name)
+   (\(Database.CDBI.Connection.SQLString name) -> name)
+
+--- The description of the database column `First` of the `Student` entity.
+studentFirstColDesc :: Database.CDBI.Description.ColumnDescription String
+studentFirstColDesc =
+  Database.CDBI.Description.ColDesc "\"Student\".\"First\""
+   Database.CDBI.Connection.SQLTypeString
+   (\first -> Database.CDBI.Description.sqlString first)
+   (\first -> Database.CDBI.Description.fromStringOrNull first)
+
+--- The description of the database column `TAN` of the `Student` entity.
+studentTANColDesc :: Database.CDBI.Description.ColumnDescription String
+studentTANColDesc =
+  Database.CDBI.Description.ColDesc "\"Student\".\"TAN\""
+   Database.CDBI.Connection.SQLTypeString
+   (\tAN -> Database.CDBI.Connection.SQLString tAN)
+   (\(Database.CDBI.Connection.SQLString tAN) -> tAN)
+
+--- The description of the database column `LastLogin` of the `Student` entity.
+studentLastLoginColDesc
+  :: Database.CDBI.Description.ColumnDescription Time.ClockTime
+studentLastLoginColDesc =
+  Database.CDBI.Description.ColDesc "\"Student\".\"LastLogin\""
+   Database.CDBI.Connection.SQLTypeDate
+   (\lastLogin -> Database.CDBI.Connection.SQLDate lastLogin)
+   (\(Database.CDBI.Connection.SQLDate lastLogin) -> lastLogin)
+
+--- Gets the attribute `Key` of the `Student` entity.
+studentKey :: Student -> StudentID
+studentKey (Student a _ _ _ _ _) = a
+
+--- Gets the attribute `Email` of the `Student` entity.
+studentEmail :: Student -> String
+studentEmail (Student _ a _ _ _ _) = a
+
+--- Gets the attribute `Name` of the `Student` entity.
+studentName :: Student -> String
+studentName (Student _ _ a _ _ _) = a
+
+--- Gets the attribute `First` of the `Student` entity.
+studentFirst :: Student -> String
+studentFirst (Student _ _ _ a _ _) = a
+
+--- Gets the attribute `TAN` of the `Student` entity.
+studentTAN :: Student -> String
+studentTAN (Student _ _ _ _ a _) = a
+
+--- Gets the attribute `LastLogin` of the `Student` entity.
+studentLastLogin :: Student -> Time.ClockTime
+studentLastLogin (Student _ _ _ _ _ a) = a
+
+--- Sets the attribute `Key` of the `Student` entity.
+setStudentKey :: Student -> StudentID -> Student
+setStudentKey (Student _ b5 b4 b3 b2 b1) a = Student a b5 b4 b3 b2 b1
+
+--- Sets the attribute `Email` of the `Student` entity.
+setStudentEmail :: Student -> String -> Student
+setStudentEmail (Student a2 _ b4 b3 b2 b1) a = Student a2 a b4 b3 b2 b1
+
+--- Sets the attribute `Name` of the `Student` entity.
+setStudentName :: Student -> String -> Student
+setStudentName (Student a3 a2 _ b3 b2 b1) a = Student a3 a2 a b3 b2 b1
+
+--- Sets the attribute `First` of the `Student` entity.
+setStudentFirst :: Student -> String -> Student
+setStudentFirst (Student a4 a3 a2 _ b2 b1) a = Student a4 a3 a2 a b2 b1
+
+--- Sets the attribute `TAN` of the `Student` entity.
+setStudentTAN :: Student -> String -> Student
+setStudentTAN (Student a5 a4 a3 a2 _ b1) a = Student a5 a4 a3 a2 a b1
+
+--- Sets the attribute `LastLogin` of the `Student` entity.
+setStudentLastLogin :: Student -> Time.ClockTime -> Student
+setStudentLastLogin (Student a6 a5 a4 a3 a2 _) a = Student a6 a5 a4 a3 a2 a
+
+--- id-to-value function for entity `Student`.
+studentID :: StudentID -> Database.CDBI.Criteria.Value StudentID
+studentID (StudentID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `Student`.
+studentKeyToInt :: StudentID -> Int
+studentKeyToInt (StudentID key) = key
+
+--- Shows the key of a `Student` entity as a string.
+--- This is useful if a textual representation of the key is necessary
+--- (e.g., as URL parameters in web pages), but it should no be used
+--- to store keys in other attributes!
+showStudentKey :: Student -> String
+showStudentKey entry =
+  Database.CDBI.ER.showDatabaseKey "Student" studentKeyToInt (studentKey entry)
+
+--- Transforms a string into a key of a `Student` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readStudentKey :: String -> Maybe StudentID
+readStudentKey = Database.CDBI.ER.readDatabaseKey "Student" StudentID
+
+--- Gets all `Student` entities.
+queryAllStudents :: Database.CDBI.Connection.DBAction [Student]
+queryAllStudents = Database.CDBI.ER.getAllEntries student_CDBI_Description
+
+--- Gets all `Student` entities satisfying a given predicate.
+queryCondStudent
+  :: (Student -> Bool) -> Database.CDBI.Connection.DBAction [Student]
+queryCondStudent = Database.CDBI.ER.getCondEntries student_CDBI_Description
+
+--- Gets a `Student` entry by a given key.
+getStudent :: StudentID -> Database.CDBI.Connection.DBAction Student
+getStudent =
+  Database.CDBI.ER.getEntryWithKey student_CDBI_Description studentColumnKey
+   studentID
+
+--- Inserts a new `Student` entity.
+newStudent
+  :: String
+  -> String
+  -> String
+  -> String -> Time.ClockTime -> Database.CDBI.Connection.DBAction Student
+newStudent email_p name_p first_p tAN_p lastLogin_p =
+  Database.CDBI.ER.insertNewEntry student_CDBI_Description setStudentKey
+   StudentID
+   (Student (StudentID 0) email_p name_p first_p tAN_p lastLogin_p)
+
+--- Deletes an existing `Student` entry by its key.
+deleteStudent :: Student -> Database.CDBI.Connection.DBAction ()
+deleteStudent =
+  Database.CDBI.ER.deleteEntry student_CDBI_Description studentColumnKey
+   (studentID . studentKey)
+
+--- Updates an existing `Student` entry by its key.
+updateStudent :: Student -> Database.CDBI.Connection.DBAction ()
+updateStudent = Database.CDBI.ER.updateEntry student_CDBI_Description
+
+--- The ER description of the `StudentCourse` entity.
+studentCourse_CDBI_Description
+  :: Database.CDBI.Description.EntityDescription StudentCourse
+studentCourse_CDBI_Description =
+  Database.CDBI.Description.ED "StudentCourse"
+   [Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeDate
+   ,Database.CDBI.Connection.SQLTypeInt
+   ,Database.CDBI.Connection.SQLTypeInt]
+   (\(StudentCourse
+       (StudentCourseID key)
+       selectData
+       (StudentID studentStudentCoursesKey)
+       (ModInstID modInstStudentCourseInstancesKey)) ->
+     [Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLDate selectData
+     ,Database.CDBI.Connection.SQLInt studentStudentCoursesKey
+     ,Database.CDBI.Connection.SQLInt modInstStudentCourseInstancesKey])
+   (\(StudentCourse
+       _
+       selectData
+       (StudentID studentStudentCoursesKey)
+       (ModInstID modInstStudentCourseInstancesKey)) ->
+     [Database.CDBI.Connection.SQLNull
+     ,Database.CDBI.Connection.SQLDate selectData
+     ,Database.CDBI.Connection.SQLInt studentStudentCoursesKey
+     ,Database.CDBI.Connection.SQLInt modInstStudentCourseInstancesKey])
+   (\[Database.CDBI.Connection.SQLInt key
+     ,Database.CDBI.Connection.SQLDate selectData
+     ,Database.CDBI.Connection.SQLInt studentStudentCoursesKey
+     ,Database.CDBI.Connection.SQLInt modInstStudentCourseInstancesKey] ->
+     StudentCourse (StudentCourseID key) selectData
+      (StudentID studentStudentCoursesKey)
+      (ModInstID modInstStudentCourseInstancesKey))
+
+--- The database table of the `StudentCourse` entity.
+studentCourseTable :: Database.CDBI.Description.Table
+studentCourseTable = "StudentCourse"
+
+--- The database column `Key` of the `StudentCourse` entity.
+studentCourseColumnKey :: Database.CDBI.Description.Column StudentCourseID
+studentCourseColumnKey =
+  Database.CDBI.Description.Column "\"Key\"" "\"StudentCourse\".\"Key\""
+
+--- The database column `SelectData` of the `StudentCourse` entity.
+studentCourseColumnSelectData :: Database.CDBI.Description.Column Time.ClockTime
+studentCourseColumnSelectData =
+  Database.CDBI.Description.Column "\"SelectData\""
+   "\"StudentCourse\".\"SelectData\""
+
+--- The database column `StudentStudentCoursesKey` of the `StudentCourse` entity.
+studentCourseColumnStudentStudentCoursesKey
+  :: Database.CDBI.Description.Column StudentID
+studentCourseColumnStudentStudentCoursesKey =
+  Database.CDBI.Description.Column "\"StudentStudentCoursesKey\""
+   "\"StudentCourse\".\"StudentStudentCoursesKey\""
+
+--- The database column `ModInstStudentCourseInstancesKey` of the `StudentCourse` entity.
+studentCourseColumnModInstStudentCourseInstancesKey
+  :: Database.CDBI.Description.Column ModInstID
+studentCourseColumnModInstStudentCourseInstancesKey =
+  Database.CDBI.Description.Column "\"ModInstStudentCourseInstancesKey\""
+   "\"StudentCourse\".\"ModInstStudentCourseInstancesKey\""
+
+--- The description of the database column `Key` of the `StudentCourse` entity.
+studentCourseKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription StudentCourseID
+studentCourseKeyColDesc =
+  Database.CDBI.Description.ColDesc "\"StudentCourse\".\"Key\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(StudentCourseID key) -> Database.CDBI.Connection.SQLInt key)
+   (\(Database.CDBI.Connection.SQLInt key) -> StudentCourseID key)
+
+--- The description of the database column `SelectData` of the `StudentCourse` entity.
+studentCourseSelectDataColDesc
+  :: Database.CDBI.Description.ColumnDescription Time.ClockTime
+studentCourseSelectDataColDesc =
+  Database.CDBI.Description.ColDesc "\"StudentCourse\".\"SelectData\""
+   Database.CDBI.Connection.SQLTypeDate
+   (\selectData -> Database.CDBI.Connection.SQLDate selectData)
+   (\(Database.CDBI.Connection.SQLDate selectData) -> selectData)
+
+--- The description of the database column `StudentStudentCoursesKey` of the `StudentCourse` entity.
+studentCourseStudentStudentCoursesKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription StudentID
+studentCourseStudentStudentCoursesKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"StudentCourse\".\"StudentStudentCoursesKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(StudentID studentStudentCoursesKey) ->
+     Database.CDBI.Connection.SQLInt studentStudentCoursesKey)
+   (\(Database.CDBI.Connection.SQLInt studentStudentCoursesKey) ->
+     StudentID studentStudentCoursesKey)
+
+--- The description of the database column `ModInstStudentCourseInstancesKey` of the `StudentCourse` entity.
+studentCourseModInstStudentCourseInstancesKeyColDesc
+  :: Database.CDBI.Description.ColumnDescription ModInstID
+studentCourseModInstStudentCourseInstancesKeyColDesc =
+  Database.CDBI.Description.ColDesc
+   "\"StudentCourse\".\"ModInstStudentCourseInstancesKey\""
+   Database.CDBI.Connection.SQLTypeInt
+   (\(ModInstID modInstStudentCourseInstancesKey) ->
+     Database.CDBI.Connection.SQLInt modInstStudentCourseInstancesKey)
+   (\(Database.CDBI.Connection.SQLInt modInstStudentCourseInstancesKey) ->
+     ModInstID modInstStudentCourseInstancesKey)
+
+--- Gets the attribute `Key` of the `StudentCourse` entity.
+studentCourseKey :: StudentCourse -> StudentCourseID
+studentCourseKey (StudentCourse a _ _ _) = a
+
+--- Gets the attribute `SelectData` of the `StudentCourse` entity.
+studentCourseSelectData :: StudentCourse -> Time.ClockTime
+studentCourseSelectData (StudentCourse _ a _ _) = a
+
+--- Gets the attribute `StudentStudentCoursesKey` of the `StudentCourse` entity.
+studentCourseStudentStudentCoursesKey :: StudentCourse -> StudentID
+studentCourseStudentStudentCoursesKey (StudentCourse _ _ a _) = a
+
+--- Gets the attribute `ModInstStudentCourseInstancesKey` of the `StudentCourse` entity.
+studentCourseModInstStudentCourseInstancesKey :: StudentCourse -> ModInstID
+studentCourseModInstStudentCourseInstancesKey (StudentCourse _ _ _ a) = a
+
+--- Sets the attribute `Key` of the `StudentCourse` entity.
+setStudentCourseKey :: StudentCourse -> StudentCourseID -> StudentCourse
+setStudentCourseKey (StudentCourse _ b3 b2 b1) a = StudentCourse a b3 b2 b1
+
+--- Sets the attribute `SelectData` of the `StudentCourse` entity.
+setStudentCourseSelectData :: StudentCourse -> Time.ClockTime -> StudentCourse
+setStudentCourseSelectData (StudentCourse a2 _ b2 b1) a =
+  StudentCourse a2 a b2 b1
+
+--- Sets the attribute `StudentStudentCoursesKey` of the `StudentCourse` entity.
+setStudentCourseStudentStudentCoursesKey
+  :: StudentCourse -> StudentID -> StudentCourse
+setStudentCourseStudentStudentCoursesKey (StudentCourse a3 a2 _ b1) a =
+  StudentCourse a3 a2 a b1
+
+--- Sets the attribute `ModInstStudentCourseInstancesKey` of the `StudentCourse` entity.
+setStudentCourseModInstStudentCourseInstancesKey
+  :: StudentCourse -> ModInstID -> StudentCourse
+setStudentCourseModInstStudentCourseInstancesKey (StudentCourse a4 a3 a2 _) a =
+  StudentCourse a4 a3 a2 a
+
+--- id-to-value function for entity `StudentCourse`.
+studentCourseID
+  :: StudentCourseID -> Database.CDBI.Criteria.Value StudentCourseID
+studentCourseID (StudentCourseID key) = Database.CDBI.Criteria.idVal key
+
+--- id-to-int function for entity `StudentCourse`.
+studentCourseKeyToInt :: StudentCourseID -> Int
+studentCourseKeyToInt (StudentCourseID key) = key
+
+--- Shows the key of a `StudentCourse` entity as a string.
+--- This is useful if a textual representation of the key is necessary
+--- (e.g., as URL parameters in web pages), but it should no be used
+--- to store keys in other attributes!
+showStudentCourseKey :: StudentCourse -> String
+showStudentCourseKey entry =
+  Database.CDBI.ER.showDatabaseKey "StudentCourse" studentCourseKeyToInt
+   (studentCourseKey entry)
+
+--- Transforms a string into a key of a `StudentCourse` entity.
+--- Nothing is returned if the string does not represent a meaningful key.
+readStudentCourseKey :: String -> Maybe StudentCourseID
+readStudentCourseKey =
+  Database.CDBI.ER.readDatabaseKey "StudentCourse" StudentCourseID
+
+--- Gets all `StudentCourse` entities.
+queryAllStudentCourses :: Database.CDBI.Connection.DBAction [StudentCourse]
+queryAllStudentCourses =
+  Database.CDBI.ER.getAllEntries studentCourse_CDBI_Description
+
+--- Gets all `StudentCourse` entities satisfying a given predicate.
+queryCondStudentCourse
+  :: (StudentCourse -> Bool)
+  -> Database.CDBI.Connection.DBAction [StudentCourse]
+queryCondStudentCourse =
+  Database.CDBI.ER.getCondEntries studentCourse_CDBI_Description
+
+--- Gets a `StudentCourse` entry by a given key.
+getStudentCourse
+  :: StudentCourseID -> Database.CDBI.Connection.DBAction StudentCourse
+getStudentCourse =
+  Database.CDBI.ER.getEntryWithKey studentCourse_CDBI_Description
+   studentCourseColumnKey
+   studentCourseID
+
+--- Inserts a new `StudentCourse` entity.
+newStudentCourseWithStudentStudentCoursesKeyWithModInstStudentCourseInstancesKey
+  :: Time.ClockTime
+  -> StudentID -> ModInstID -> Database.CDBI.Connection.DBAction StudentCourse
+newStudentCourseWithStudentStudentCoursesKeyWithModInstStudentCourseInstancesKey
+    selectData_p studentStudentCoursesKey_p modInstStudentCourseInstancesKey_p =
+  Database.CDBI.ER.insertNewEntry studentCourse_CDBI_Description
+   setStudentCourseKey
+   StudentCourseID
+   (StudentCourse (StudentCourseID 0) selectData_p studentStudentCoursesKey_p
+     modInstStudentCourseInstancesKey_p)
+
+--- Deletes an existing `StudentCourse` entry by its key.
+deleteStudentCourse :: StudentCourse -> Database.CDBI.Connection.DBAction ()
+deleteStudentCourse =
+  Database.CDBI.ER.deleteEntry studentCourse_CDBI_Description
+   studentCourseColumnKey
+   (studentCourseID . studentCourseKey)
+
+--- Updates an existing `StudentCourse` entry by its key.
+updateStudentCourse :: StudentCourse -> Database.CDBI.Connection.DBAction ()
+updateStudentCourse =
+  Database.CDBI.ER.updateEntry studentCourse_CDBI_Description
+
 --- Generates a new database (name provided as the parameter) and
 --- creates its schema.
 createNewDB :: String -> IO ()
@@ -4283,7 +4729,9 @@ createNewDB dbfile =
        ,"create table 'AdvisorModule'('Key' integer primary key ,'Mandatory' string not null ,'AdvisorStudyProgramAdvisorProgramModulesKey' int REFERENCES 'AdvisorStudyProgram'(Key) not null ,'CategoryAdvisorCategorizingKey' int REFERENCES 'Category'(Key) not null ,'ModInstAdvisedProgramModuleInstancesKey' int REFERENCES 'ModInst'(Key) not null);"
        ,"create table 'MasterProgram'('Key' integer primary key ,'Name' string not null ,'Term' string not null ,'Year' int not null ,'Desc' string ,'Prereq' string ,'Comments' string ,'Visible' string not null ,'UserAdvisingKey' int REFERENCES 'User'(Key) not null ,'MasterCoreAreaAreaProgramsKey' int REFERENCES 'MasterCoreArea'(Key) not null);"
        ,"create table 'MasterProgInfo'('Key' integer primary key ,'ProgModules' string not null ,'Praktikum' string ,'Seminar' string ,'Thesis' string ,'AllgGrundlagen' string ,'Anwendungsfach' string ,'MasterProgramProgramInfoKey' int REFERENCES 'MasterProgram'(Key) not null);"
-       ,"create table 'UnivisInfo'('Key' integer primary key ,'Code' string not null ,'Term' string not null ,'Year' not null ,'URL' string not null);"]
+       ,"create table 'UnivisInfo'('Key' integer primary key ,'Code' string not null ,'Term' string not null ,'Year' not null ,'URL' string not null);"
+       ,"create table 'Student'('Key' integer primary key ,'Email' string unique not null ,'Name' string not null ,'First' string ,'TAN' string not null ,'LastLogin' string not null);"
+       ,"create table 'StudentCourse'('Key' integer primary key ,'SelectData' string not null ,'StudentStudentCoursesKey' int REFERENCES 'Student'(Key) not null ,'ModInstStudentCourseInstancesKey' int REFERENCES 'ModInst'(Key) not null);"]
 
 --- Saves complete database in storage dir.
 saveDB :: IO ()
@@ -4314,6 +4762,9 @@ saveDBTo dir =
      Database.CDBI.ER.saveDBTerms masterProgInfo_CDBI_Description sqliteDBFile
       dir
      Database.CDBI.ER.saveDBTerms univisInfo_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.saveDBTerms student_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.saveDBTerms studentCourse_CDBI_Description sqliteDBFile
+      dir
 
 --- Restores complete database from term files in storage dir.
 restoreDB :: IO ()
@@ -4348,6 +4799,9 @@ restoreDBFrom dir =
      Database.CDBI.ER.restoreDBTerms univisInfo_CDBI_Description sqliteDBFile
       dir
      Database.CDBI.ER.restoreDBTerms prerequisites_CDBI_Description sqliteDBFile
+      dir
+     Database.CDBI.ER.restoreDBTerms student_CDBI_Description sqliteDBFile dir
+     Database.CDBI.ER.restoreDBTerms studentCourse_CDBI_Description sqliteDBFile
       dir
 
 --- Runs a DB action (typically a query).

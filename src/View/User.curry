@@ -148,10 +148,9 @@ listUserView users =
 --- View to login.
 loginView :: Controller -> UserSessionInfo -> [HtmlExp]
 loginView controller sinfo =
-  [h3 [htxt $ t "Login to module database"],
+  [h3 [htxt $ t "Login as lecturer"],
    spTable [[[htxt $ t "Login name:"], [textfield loginfield ""]],
             [[htxt $ t "Password:"],   [password passfield]]],
-   hrule,
    par [spPrimButton (t "Login") loginHandler],
    hrule,
    par [hrefPrimButton "?User/sendlogin" [htxt $ t "Forgot your login data?"]]

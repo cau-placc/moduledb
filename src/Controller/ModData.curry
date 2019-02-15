@@ -33,6 +33,9 @@ import System.SessionInfo
 import System.MultiLang
 import System.StudyPlanner
 
+import SpecialQueries ( queryStudentsOfModSemester
+                      , queryStudentNumberOfModSemester )
+
 --- Choose the controller for a ModData entity according to the URL parameter.
 mainModDataController :: Controller
 mainModDataController =
@@ -60,9 +63,12 @@ mainModDataController =
        applyControllerOn (readModDataKey s) getModData emailModuleController
       ["copy" ,s] ->
        applyControllerOn (readModDataKey s) getModData copyModuleController
-      ["number" ,s,sem] ->
+      ["number",s,sem] ->
        applyControllerOn (readModDataKey s) getModData
                          (numberModuleController sem)
+      ["studs",s,sem] ->
+       applyControllerOn (readModDataKey s) getModData
+                         (studentModuleController sem)
       ["addinst",  s] -> applyControllerOn (readModDataKey s) getModData
                                            addInstToModDataController
       ["editinst", s] -> applyControllerOn (readModDataKey s) getModData
@@ -199,13 +205,20 @@ deleteModDataController modData =
           categorys
 
 
-
---- Controller for showing the number of students of a module in a semester:
+--- Controller to show the number of students of a module in a semester:
 numberModuleController :: String -> ModData -> Controller
 numberModuleController sem mdata =
  checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ \_ -> do
-  nums <- getModuleStudents mdata sem
-  return (numberModuleView sem mdata nums)
+  spnum  <- getModuleStudents mdata sem
+  mdbnum <- runQ $ queryStudentNumberOfModSemester mdata (readSemesterCode sem)
+  return $ numberModuleView sem mdata spnum mdbnum
+
+--- Controller to show the students of a module registered in MDB in a semester:
+studentModuleController :: String -> ModData -> Controller
+studentModuleController sem mdata =
+ checkAuthorization checkAdmin $ \_ -> do
+   studs <- runQ $ queryStudentsOfModSemester mdata (readSemesterCode sem)
+   return $ studentModuleView sem mdata studs
 
 --- Controller for copying a module with a new code:
 copyModuleController :: ModData -> Controller

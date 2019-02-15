@@ -148,11 +148,27 @@ masterProgInfoOperationAllowed at sinfo =
   case at of
    ListEntities -> return AccessGranted
    NewEntity -> isLoggedIn
-   (ShowEntity _) -> return AccessGranted
-   (DeleteEntity _) -> checkAdmin sinfo
-   (UpdateEntity _) -> return AccessGranted
+   ShowEntity   _ -> return AccessGranted
+   DeleteEntity _ -> checkAdmin sinfo
+   UpdateEntity _ -> return AccessGranted
 
 --- Checks whether the application of an operation to a UnivisInfo
 --- entity is allowed.
 univisInfoOperationAllowed :: AccessType UnivisInfo -> UserSessionInfo -> IO AccessResult
 univisInfoOperationAllowed _ = checkAdmin
+
+--- Checks whether the application of an operation to a Student
+--- entity is allowed.
+studentOperationAllowed
+  :: AccessType Student -> UserSessionInfo -> IO AccessResult
+studentOperationAllowed at sinfo =
+  case at of
+    NewEntity -> return AccessGranted
+    _ -> checkAdmin sinfo
+
+--- Checks whether the application of an operation to a StudentCourse
+--- entity is allowed.
+studentCourseOperationAllowed
+  :: AccessType StudentCourse -> UserSessionInfo -> IO AccessResult
+studentCourseOperationAllowed _ = checkAdmin
+

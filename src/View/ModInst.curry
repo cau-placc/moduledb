@@ -9,6 +9,7 @@ import WUI
 import HTML.Base
 import Time
 import Sort
+import System.SessionInfo
 import System.Spicey
 import MDB
 import View.MDBEntitiesToHtml
@@ -167,9 +168,9 @@ listModInstView modInsts showModInstController editModInstController
 --- Supplies a view for a single ModInst entity.
 --- Shows also the master programs and AdvisorStudyPrograms
 --- where this instance is used.
-singleModInstView :: ModInst -> ModData -> User -> [MasterProgram]
-                  -> [AdvisorStudyProgram] -> [HtmlExp]
-singleModInstView modinst moddata user mprogs sprogs =
+singleModInstView :: UserSessionInfo -> ModInst -> ModData -> User
+                  -> [MasterProgram] -> [AdvisorStudyProgram] -> [HtmlExp]
+singleModInstView sinfo modinst moddata user mprogs sprogs =
   [h1 [htxt $ "Modul \""++ modDataNameG moddata ++ "\" im " ++
               showSemester modinstsem],
    h3 [htxt "Dozent: ", userToHtmlView user]] ++
@@ -197,7 +198,12 @@ singleModInstView modinst moddata user mprogs sprogs =
                  sprogs)]) ++
    [spEHref ("?ModData/number/"++showModDataKey moddata++
              "/"++showSemesterCode modinstsem)
-            [htxt $ "Anzahl der Masterstudierenden"]]
+            [htxt $ "Anzahl der Studierenden"], nbsp] ++
+   (if isAdminSession sinfo
+      then [spEHref ("?ModData/studs/" ++ showModDataKey moddata ++
+                     "/" ++ showSemesterCode modinstsem)
+                    [htxt $ "Registrierte Studierende"]]
+      else [])
  where
   modinstsem = (modInstTerm modinst,modInstYear modinst)
 

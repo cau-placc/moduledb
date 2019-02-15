@@ -62,6 +62,7 @@ getRouteMenus = do
                                           ("MasterProgram","list"),
                                           ("AdvisorStudyProgram","list"),
                                           ("StudyProgram","list"),
+                                          ("StudentCourse","list"),
                                           ("search","main")]
                        then getLinks restroutes
                        else let url = s1++"/"++s2

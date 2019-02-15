@@ -15,7 +15,7 @@ module System.Helpers
     docText2html, docText2latex, escapeLaTeXSpecials,
     quoteUnknownLatexCmd,
     getCurrentSemester,
-    showSemester, showLongSemester, showSemesterCode,
+    showSemester, showLongSemester, showSemesterCode, readSemesterCode,
     nextSemester, prevSemester, leqSemester,
     semesterSelection, findSemesterSelection,
     imageNB, wTerm, wCurrentYear, wYear, wVisible,
@@ -29,6 +29,7 @@ import Char
 import IO
 import IOExts
 import List
+import ReadNumeric ( readNat )
 import ReadShowTerm
 import System(getEnviron,getHostname)
 import Time
@@ -286,9 +287,18 @@ showLongSemester (sem,year) =
                    else "Wintersemester 20"++showDigit2 yr2++"/20"++showDigit2 (yr2+1)
 
 -- show a semester as a short code, i.e., in the form "ss13" or "ws14":
+showSemesterCode :: (String,Int) -> String
 showSemesterCode (sem,year) =
   let yr2 = year `mod` 100
    in (if sem=="SS" then "ss" else "ws") ++ showDigit2 yr2
+
+-- read a string produced by 'showSemesterCode'.
+readSemesterCode :: String -> (String,Int)
+readSemesterCode s =
+  let sem  = if take 2 s == "ss" then "SS" else "WS"
+      year = case readNat (drop 2 s) of Just (n,"") -> n
+                                        _           -> 0
+  in (sem,2000+year)
 
 -- compute following semester:
 nextSemester :: (String,Int) -> (String,Int)

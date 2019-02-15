@@ -25,6 +25,7 @@ module System.Spicey (
   hrefStudyProgram, hrefCategory, smallHrefCategory,
   hrefModule, smallHrefModule, hrefExtModule, hrefModInst,
   hrefUnivisInfo, hrefUnivisDanger,
+  withELink,
   spHref, spHrefBlock, spEHref, hrefPrimButton,
   spButton, spPrimButton, spSmallButton, spSmallPrimaryButton,
   spTable, spHeadedTable, addTitle, textWithInfoIcon,
@@ -266,8 +267,8 @@ wUncheckMaybe defval wspec =
          defval
 
 --- The standard menu for all users.
-getStandardMenu :: Maybe String -> UserSessionInfo -> IO HtmlExp
-getStandardMenu login sinfo = do
+getStandardMenu :: UserSessionInfo -> IO HtmlExp
+getStandardMenu sinfo = do
   let t = translate sinfo
   return $
      ulist $
@@ -280,16 +281,36 @@ getStandardMenu login sinfo = do
 --- The menu for a user if it he is logged in.
 userMenu :: UserSessionInfo -> HtmlExp
 userMenu sinfo =
-  ulist [ [href "?Category/user" [htxt $ t "My modules"]]
-        , [href "?AdvisorStudyProgram/new"
-                [htxt $ t "New master program"]]
-        , [href "?User/passwd"
-                [htxt (t "Change password")]]
-        , [href "?User/logout"
-                [logoutIcon, nbsp, htxt (t "Logout")]]
-        ]
+  ulist (maybe (maybe loginMenu
+                      (const studentMenu)
+                      (studentLoginOfSession sinfo))
+               (const cuserMenu)
+               (userLoginOfSession sinfo))
  where
   t = translate sinfo
+
+  loginMenu   = [ [href "?User/login"
+                        [logoutIcon, nbsp, htxt (t "...as lecturer")]]
+                , [href "?Student/login"
+                        [logoutIcon, nbsp, htxt (t "...as student")]]
+                ]
+
+  cuserMenu   = [ [href "?Category/user" [htxt $ t "My modules"]]
+                , [href "?AdvisorStudyProgram/new"
+                        [htxt $ t "New master program"]]
+                , [href "?User/passwd"
+                        [htxt (t "Change password")]]
+                , [href "?User/logout"
+                        [logoutIcon, nbsp, htxt (t "Logout")]]
+                ] 
+
+  studentMenu = [ [href "?Student/showcourses"
+                        [htxt (t "Show selected modules")]]
+                , [href "?Student/select"
+                        [htxt (t "Select modules")]]
+                , [href "?Student/logout"
+                        [logoutIcon, nbsp, htxt (t "Logout")]]
+                ]
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String
@@ -298,9 +319,8 @@ spiceyTitle = "Module Information System"
 --- Adds the basic page layout to a view.
 addLayout :: ViewBlock -> IO ViewBlock
 addLayout viewblock = do
-  login      <- getSessionLogin
   sinfo      <- getUserSessionInfo
-  stdmenu    <- getStandardMenu login sinfo
+  stdmenu    <- getStandardMenu sinfo
   msg        <- getPageMessage
   admin      <- isAdmin
   (routemenu1,routemenu2) <- getRouteMenus
@@ -313,8 +333,7 @@ addLayout viewblock = do
             (HtmlStruct "h1" [] t : hexps) -> (t,hexps)
             _ -> ([htxt (translate sinfo spiceyTitle)], viewblock)
   return $
-    stdNavBar stdmenu (if admin then Just adminmenu else Nothing)
-              login sinfo ++
+    stdNavBar stdmenu (if admin then Just adminmenu else Nothing) sinfo ++
     [blockstyle "container-fluid" $
       [HtmlStruct "header" [("class","jumbotron")] [h1 mainTitle],
        if null msg
@@ -352,9 +371,9 @@ mainContentsWithSideMenu menuitems contents =
 -- The second argument is the possible admin menu (a ulist).
 -- The third argument is the possible login name.
 -- The fourth argument is the user session information.
-stdNavBar :: HtmlExp -> Maybe HtmlExp -> Maybe String -> UserSessionInfo
+stdNavBar :: HtmlExp -> Maybe HtmlExp -> UserSessionInfo
           -> [HtmlExp]
-stdNavBar routemenu adminmenu login sinfo =
+stdNavBar routemenu adminmenu sinfo =
   [blockstyle "navbar navbar-inverse navbar-fixed-top"
     [blockstyle "container-fluid"
       [navBarHeaderItem,
@@ -363,10 +382,7 @@ stdNavBar routemenu adminmenu login sinfo =
          [routemenu `addClass` "nav navbar-nav",
           appendDropdownItem
             (ulist
-              [maybe [href "?User/login" [loginIcon, nbsp, htxt (t "Login")]]
-                     (const [])
-                     login
-              ,[if languageOfSession sinfo == English
+              [[if languageOfSession sinfo == English
                   then href "?langDE" [htxt "[Deutsch]"]
                   else href "?langEN" [htxt "[English]"]]]
              `addClass` "nav navbar-nav navbar-right")]]
@@ -389,10 +405,13 @@ stdNavBar routemenu adminmenu login sinfo =
        
   appendDropdownItem (HtmlStruct tag ats items) =
     HtmlStruct tag ats
-      (init items ++ --take (length items - 1) items ++
-       maybe [] (\n -> [dropDownMenu [style "text-success" [userIcon]
-                                    , htxt $ " " ++ n] (userMenu sinfo)])
-             login ++
+     (init items ++ --take (length items - 1) items ++
+      [dropDownMenu
+         (maybe [loginIcon, htxt $ " " ++ t "Login..."]
+                (\n -> [style "text-success" [userIcon]
+                       , htxt $ " " ++ n])
+                (loginNameOfSession sinfo))
+         (userMenu sinfo)] ++
        maybe [] (\m -> [dropDownMenu [htxt $ "Administrator"] m]) adminmenu ++
        [gotoDropDownMenu] ++
        [last items])

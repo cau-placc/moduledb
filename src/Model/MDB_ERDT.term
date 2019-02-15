@@ -1,4 +1,4 @@
-{- ERD specification transformed from /net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.erdterm -}
+{- ERD specification transformed from /home/mh/home/curry/applications/MDB/NEW_WITH_STUDENTS/MDB.erdterm -}
 
  ERD "MDB"
    [Entity "Prerequisites"
@@ -71,14 +71,14 @@
     Entity "ModInst"
            [Attribute "Key" (IntDom Nothing) PKey False,
             Attribute "Term" (StringDom Nothing) NoKey False,
-            Attribute "Year" (IntDom (Just 2011)) NoKey False,
+            Attribute "Year" (IntDom (Just 2019)) NoKey False,
             Attribute "UserLecturerModsKey" (KeyDom "User") NoKey False,
             Attribute "ModDataModuleInstancesKey" (KeyDom "ModData") NoKey False],
     Entity "AdvisorStudyProgram"
            [Attribute "Key" (IntDom Nothing) PKey False,
             Attribute "Name" (StringDom Nothing) NoKey False,
             Attribute "Term" (StringDom Nothing) NoKey False,
-            Attribute "Year" (IntDom (Just 2015)) NoKey False,
+            Attribute "Year" (IntDom (Just 2019)) NoKey False,
             Attribute "Desc" (StringDom Nothing) NoKey True,
             Attribute "Prereq" (StringDom Nothing) NoKey True,
             Attribute "Comments" (StringDom Nothing) NoKey True,
@@ -95,7 +95,7 @@
            [Attribute "Key" (IntDom Nothing) PKey False,
             Attribute "Name" (StringDom Nothing) NoKey False,
             Attribute "Term" (StringDom Nothing) NoKey False,
-            Attribute "Year" (IntDom (Just 2011)) NoKey False,
+            Attribute "Year" (IntDom (Just 2019)) NoKey False,
             Attribute "Desc" (StringDom Nothing) NoKey True,
             Attribute "Prereq" (StringDom Nothing) NoKey True,
             Attribute "Comments" (StringDom Nothing) NoKey True,
@@ -116,8 +116,26 @@
             Attribute "Code" (StringDom Nothing) NoKey False,
             Attribute "Term" (StringDom Nothing) NoKey False,
             Attribute "Year" (IntDom Nothing) NoKey False,
-            Attribute "URL" (StringDom Nothing) NoKey False]]
-   [Relationship "ProgramInfo"
+            Attribute "URL" (StringDom Nothing) NoKey False],
+    Entity "Student"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "Email" (StringDom Nothing) Unique False,
+            Attribute "Name" (StringDom Nothing) NoKey False,
+            Attribute "First" (StringDom Nothing) NoKey True,
+            Attribute "TAN" (StringDom Nothing) NoKey False,
+            Attribute "LastLogin" (DateDom Nothing) NoKey False],
+    Entity "StudentCourse"
+           [Attribute "Key" (IntDom Nothing) PKey False,
+            Attribute "SelectData" (DateDom Nothing) NoKey False,
+            Attribute "StudentStudentCoursesKey" (KeyDom "Student") NoKey False,
+            Attribute "ModInstStudentCourseInstancesKey" (KeyDom "ModInst") NoKey False]]
+   [Relationship "StudentCourseInstances"
+                 [REnd "ModInst" "withModInst" (Exactly 1),
+                  REnd "StudentCourse" "instOfModule" (Between 0 Infinite)],
+    Relationship "StudentCourses"
+                 [REnd "Student" "withStudent" (Exactly 1),
+                  REnd "StudentCourse" "coursesOfStudent" (Between 0 Infinite)],
+    Relationship "ProgramInfo"
                  [REnd "MasterProgram" "programInfoOf" (Exactly 1),
                   REnd "MasterProgInfo" "withProgInfo" (Between 0 Infinite)],
     Relationship "AreaPrograms"

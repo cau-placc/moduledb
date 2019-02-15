@@ -59,11 +59,11 @@ mdbERD =
            Attribute "Comments"    (StringDom Nothing) NoKey True],
       Entity "ModInst"
           [Attribute "Term"        (StringDom Nothing)  NoKey False, 
-           Attribute "Year"        (IntDom (Just 2011)) NoKey False],
+           Attribute "Year"        (IntDom (Just 2019)) NoKey False],
       Entity "AdvisorStudyProgram"
           [Attribute "Name"        (StringDom Nothing)  NoKey False, 
            Attribute "Term"        (StringDom Nothing)  NoKey False, 
-           Attribute "Year"        (IntDom (Just 2015)) NoKey False,
+           Attribute "Year"        (IntDom (Just 2019)) NoKey False,
            Attribute "Desc"        (StringDom Nothing)  NoKey True, 
            Attribute "Prereq"      (StringDom Nothing)  NoKey True, 
            Attribute "Comments"    (StringDom Nothing)  NoKey True,
@@ -73,7 +73,7 @@ mdbERD =
       Entity "MasterProgram"
           [Attribute "Name"        (StringDom Nothing)  NoKey False, 
            Attribute "Term"        (StringDom Nothing)  NoKey False, 
-           Attribute "Year"        (IntDom (Just 2011)) NoKey False,
+           Attribute "Year"        (IntDom (Just 2019)) NoKey False,
            Attribute "Desc"        (StringDom Nothing)  NoKey True, 
            Attribute "Prereq"      (StringDom Nothing)  NoKey True, 
            Attribute "Comments"    (StringDom Nothing)  NoKey True,
@@ -89,7 +89,15 @@ mdbERD =
           [Attribute "Code"        (StringDom Nothing) NoKey False, 
            Attribute "Term"        (StringDom Nothing) NoKey False, 
            Attribute "Year"        (IntDom    Nothing) NoKey False,
-           Attribute "URL"         (StringDom Nothing) NoKey False]
+           Attribute "URL"         (StringDom Nothing) NoKey False],
+      Entity "Student"
+          [Attribute "Email"       (StringDom Nothing) PKey  False, 
+           Attribute "Name"        (StringDom Nothing) NoKey False, 
+     	   Attribute "First"       (StringDom Nothing) NoKey True,
+           Attribute "TAN"         (StringDom Nothing) NoKey False,
+           Attribute "LastLogin"   (DateDom   Nothing) NoKey False],
+      Entity "StudentCourse"
+          [Attribute "SelectData"  (DateDom Nothing)   NoKey False]
      ]
      [Relationship "ProgramCategories"
        [REnd "StudyProgram" "ofProgram"    (Exactly 1),
@@ -135,6 +143,12 @@ mdbERD =
         REnd "MasterProgram"  "withProgram" (Between 0 Infinite)],
       Relationship "ProgramInfo"
        [REnd "MasterProgram"   "programInfoOf" (Exactly 1),
-        REnd "MasterProgInfo"  "withProgInfo"  (Between 0 Infinite)]
-      ]
+        REnd "MasterProgInfo"  "withProgInfo"  (Between 0 Infinite)],
+      Relationship "StudentCourses"
+       [REnd "Student"        "withStudent"      (Exactly 1),
+        REnd "StudentCourse"  "coursesOfStudent" (Between 0 Infinite)],
+      Relationship "StudentCourseInstances"
+       [REnd "ModInst"        "withModInst"  (Exactly 1),
+        REnd "StudentCourse"  "instOfModule" (Between 0 Infinite)]
+     ]
  )

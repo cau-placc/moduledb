@@ -18,6 +18,8 @@ data ControllerReference = MainPageController
                          | MasterProgramController
                          | MasterProgInfoController
                          | UnivisInfoController
+                         | StudentController
+                         | StudentCourseController
 
 data UrlMatch = Exact String
               | Prefix String String
@@ -49,6 +51,7 @@ getRoutes =
         ,("Neuer Masterbereich",Prefix "MCA" "new",MasterCoreAreaController)] ++
       [("Alle Kategorien",Prefix "Category" "list",CategoryController)
       ,("Alle Benutzer",Prefix "User" "list",UserController)
+      ,("Alle Studierenden",Prefix "Student" "list",StudentController)
       ,("Masterbereiche",Prefix "MCA" "list",MasterCoreAreaController)
       ,("List ModData",Prefix "ModData" "list",ModDataController)
       ,("List ModInst",Prefix "ModInst" "list",ModInstController)
@@ -60,6 +63,11 @@ getRoutes =
                                  UnivisInfoController)
       ,("List AdvisorStudyProgram",Prefix "AdvisorStudyProgram" "list"
                                   ,AdvisorStudyProgramController)
+      --,("New Student",Prefix "Student" "new",StudentController)
+      ,("List StudentCourse",Prefix "StudentCourse" "list"
+       ,StudentCourseController)
+      --,("New StudentCourse",Prefix "StudentCourse" "new"
+      -- ,StudentCourseController)
       ,(maybe "An" (const "Ab") login ++ "melden",Exact "login",LoginController)
       ,("default",Always,MainPageController)]
  where
