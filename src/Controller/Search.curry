@@ -167,15 +167,13 @@ isMandatoryModule md = modDataCode md `elem` mandatoryModulCodes
 
 mandatoryModulCodes :: [String]
 mandatoryModulCodes =
-  ["Inf-ADS","Inf-BS","Inf-DigiSys","Inf-EinfPP","Inf-FortProg","Inf-HWP",
-   "Inf-IS",
-   "Inf-Ing","Inf-KomSys","Inf-LogInf","Inf-Math-A","Inf-Math-B","Inf-Math-C",
-   "Inf-OAR","Inf-PP","Inf-Prog","Inf-SP","Inf-SWT","Inf-TGI",
-   "WInf-WInf1","WInf-WInf2","WInf-WInf3","WInf-BetrStan","WInf-ModIS",
+  ["Inf-ADS","Inf-BSKS","Inf-CompSys","Inf-EinfFP","Inf-FortProgP","Inf-IS",
+   "Inf-ITSec5","Inf-LogInf","Inf-Math-A","Inf-Math-B","Inf-Math-C",
+   "Inf-ProgOO","Inf-SP","Inf-ST","Inf-TGI",
+   "WInf-EinfWInf","WInf-BetrStan","WInf-EinfOR",
    "Inf-InfRecht","Inf-DatSchutz",
-   "Math-Num","Inf-IngNum","Inf-NumMeth1","Inf-NumMeth2",
-   "Inf-SecCom", -- for Digital Communications
-   "Inf-InfNat","NF-Inf-1","NF-Inf-1v","NF-Inf-2"]
+   "Inf-FD-DiProg", "Inf-I1-2FNF", "Inf-I2-2F", "Inf-SP-2F",
+   "infADS2F-01a", "Inf-FPKonz", "Inf-ProgTech" ]
 
 
 --- Controller to show all modules in the given semester.
