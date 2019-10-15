@@ -51,7 +51,8 @@ addUnivisOfSemester sem = do
   uisdata <- processUnivisFile sem
   runJustT $ do deleteUnivisOfSemester sem
                 mapM_  (\ (c,t,y,u) -> newUnivisInfo c t y u) uisdata
-  return $ "Univis infos for semester " ++ showSemester sem ++ " added."
+  return $ "UnivIS infos for semester " ++ showSemester sem ++ " loaded: " ++
+           show (length uisdata) ++ " UnivIS infos added."
 
 
 ----------------------------------------------------------------

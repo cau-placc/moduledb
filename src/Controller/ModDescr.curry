@@ -1,5 +1,5 @@
 module Controller.ModDescr (
- editModDescrController, deleteModDescrController,
+ updateModDescrController, deleteModDescrController,
  listModDescrController
  ) where
 
@@ -32,12 +32,14 @@ createModDescrController True (language ,shortDesc ,objectives ,contents
             (\ _ -> nextInProcessOr listModDescrController Nothing)
             transResult
  
+{-
 --- Shows a form to edit the given ModDescr entity.
 editModDescrController :: Controller -> ModDescr -> Controller
 editModDescrController cntcontroller modDescrToEdit =
   checkAuthorization (modDescrOperationAllowed (UpdateEntity modDescrToEdit))
    $ \sinfo -> return (editModDescrView sinfo modDescrToEdit
                          (updateModDescrController cntcontroller))
+-}
 
 --- Persists modifications of a given ModDescr entity to the
 --- database depending on the Boolean argument. If the Boolean argument
@@ -45,6 +47,7 @@ editModDescrController cntcontroller modDescrToEdit =
 updateModDescrController :: Controller -> Bool -> ModDescr -> Controller
 updateModDescrController cntcontroller False _ = cntcontroller
 updateModDescrController cntcontroller True modDescr =
+ checkAuthorization (modDescrOperationAllowed (UpdateEntity modDescr)) $ \_ ->
   runT (updateModDescr modDescr) >>=
   either (\ error -> displayError (showTError error))
          (\ _ -> logEvent (UpdateModDescr modDescr) >>
@@ -67,10 +70,7 @@ listModDescrController :: Controller
 listModDescrController =
   checkAuthorization (modDescrOperationAllowed ListEntities) $ \_ ->
    (do modDescrs <- runQ queryAllModDescrs
-       return
-        (listModDescrView modDescrs showModDescrController
-          (editModDescrController listModDescrController)
-          deleteModDescrController))
+       return (listModDescrView modDescrs))
 
 --- Shows a ModDescr entity.
 showModDescrController :: ModDescr -> Controller

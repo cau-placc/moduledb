@@ -1,6 +1,5 @@
 module View.StudyProgram
  ( wStudyProgram, tuple2StudyProgram, studyProgram2Tuple, wStudyProgramType,
-   blankStudyProgramView, createStudyProgramView, editStudyProgramView,
    showStudyProgramView, listStudyProgramView, studyProgramHtmlTable,
    leqStudyProgram
  ) where
@@ -10,7 +9,7 @@ import Sort
 import Time
 
 import HTML.Base
-import WUI
+import HTML.WUI
 
 import MDB
 import System.Spicey
@@ -57,58 +56,7 @@ wStudyProgramType studyProgram =
   transformWSpec (tuple2StudyProgram studyProgram,studyProgram2Tuple)
    wStudyProgram
 
---- Supplies a WUI form to create a new StudyProgram entity.
---- The fields of the entity have some default values.
-blankStudyProgramView
-  :: UserSessionInfo
-  -> ((String,String,String,String,Int) -> Controller)
-  -> Controller -> [HtmlExp]
-blankStudyProgramView sinfo controller cancelcontroller =
-  createStudyProgramView sinfo "" "" "" "" 0 controller cancelcontroller
-
---- Supplies a WUI form to create a new StudyProgram entity.
---- Takes default values to be prefilled in the form fields.
-createStudyProgramView
-  :: UserSessionInfo
-  -> String
-  -> String
-  -> String
-  -> String
-  -> Int
-  -> ((String,String,String,String,Int) -> Controller)
-  -> Controller -> [HtmlExp]
-createStudyProgramView
-    _
-    defaultName
-    defaultNameE
-    defaultShortName
-    defaultProgKey
-    defaultPosition
-    controller
-    cancelcontroller =
-  renderWuiForm wStudyProgram
-   (defaultName,defaultNameE,defaultShortName,defaultProgKey,defaultPosition)
-   controller
-   cancelcontroller
-   "Create new StudyProgram"
-   "create"
-
---- Supplies a WUI form to edit the given StudyProgram entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editStudyProgramView
- :: StudyProgram -> (Bool -> StudyProgram -> Controller) -> [HtmlExp]
-editStudyProgramView studyProgram controller =
-  let initdata = studyProgram
-      
-      wuiframe = wuiEditForm "edit StudyProgram" "change"
-                  (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm (wStudyProgramType studyProgram)
-                         initdata (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
-
+------------------------------------------------------------------------------
 --- Supplies a view to show the details of a StudyProgram.
 showStudyProgramView :: StudyProgram -> [HtmlExp]
 showStudyProgramView studyProgram =

@@ -4,7 +4,8 @@
 {-# OPTIONS_CYMAKE -F --pgmF=currypp --optF=foreigncode #-}
 
 module Controller.Search
-  ( searchController, searchUserModules )
+  ( searchController, searchModuleForm, showSemModsForm, searchUserModules
+  , selectUserModulesForm )
  where
 
 import Sort (mergeSortBy)
@@ -40,17 +41,31 @@ searchController = do
     ["usermods"] -> selectUserModulesController
     ["english"]  -> showAllEnglishModulesController
     _ -> do sinfo <- getUserSessionInfo
-            csem  <- getCurrentSemester
-            return $ searchPageView sinfo csem searchModules
-                                    showSemModsController showExamController
-                                    showModSemResponsibleController
-                                    showHandbookController
+            return $ searchPageView sinfo (formExp searchModuleForm)
+                                          (formExp showSemModsForm)
+                                    
+--- A form with a field to search modules containing a string.
+searchModuleForm :: HtmlFormDef UserSessionInfo
+searchModuleForm =
+  HtmlFormDef "Controller.Search.searchModuleForm" getUserSessionInfo
+              (searchModulesView searchModules)
+
+--- A form with a semester selection to show the modules of a semester.
+showSemModsForm :: HtmlFormDef (UserSessionInfo, (String,Int))
+showSemModsForm =
+  HtmlFormDef "Controller.Search.showSemModsForm" readData
+              (showSemModsView showSemModsController showExamController
+                 showModSemResponsibleController showHandbookController)
+ where
+  readData = do
+    sinfo <- getUserSessionInfo
+    csem  <- getCurrentSemester
+    return (sinfo,csem)
 
 --- Controller for searching modules in the module database.
 searchModules :: String -> Controller
 searchModules pat = do
   sinfo <- getUserSessionInfo
-  csem  <- getCurrentSemester
   let t = translate sinfo
       pattern = "%" ++ filter (`notElem` "%_") pat ++ "%"
   mods <- runQ $
@@ -60,14 +75,9 @@ searchModules pat = do
                                                Or md.NameE like {pattern};''
   let vismods = maybe (filter modDataVisible mods) (const mods)
                       (userLoginOfSession sinfo)
-  return (listCategoryView sinfo csem
-            (Right [htxt $ t "Found modules"])
-            [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat,
-              map (\m->(m,[],[])) vismods)]
-            [] []
-            (showCategoryPlanController Nothing) formatCatModulesForm
-            showEmailCorrectionController)
-
+  listCategoryController sinfo
+    (Right [htxt $ t "Found modules"])
+    [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat, vismods)]
 
 -- simple generic string pattern matcher:
 match :: Eq a => [a] -> [a] -> Bool
@@ -86,24 +96,26 @@ match pattern string = loop pattern string pattern string
 selectUserModulesController :: Controller
 selectUserModulesController = do
   sinfo <- getUserSessionInfo
-  allUsers <- runQ queryAllUsers
-  return (selectUserView sinfo (mergeSortBy leqUser allUsers) searchUserModules)
+  return $ selectUserView sinfo (formExp selectUserModulesForm)
 
+selectUserModulesForm :: HtmlFormDef (UserSessionInfo, [User])
+selectUserModulesForm = HtmlFormDef "Controller.Search.selectUserModulesForm"
+  readData (selectUserFormView searchUserModules)
+ where
+  readData = do
+    sinfo <- getUserSessionInfo
+    allUsers <- runQ queryAllUsers
+    return (sinfo, mergeSortBy leqUser allUsers)
 
 --- Controller to list all modules of a user.
 searchUserModules :: User -> Controller
 searchUserModules user = do
   sinfo <- getUserSessionInfo
-  csem  <- getCurrentSemester
   let t = translate sinfo
   mods <- runQ $ queryModDataOfUser (userKey user)
-  return (listCategoryView sinfo csem
-               (Right [htxt $ t "Modules of" ++ " " ++ userToShortView user])
-               [(Right "",map (\m->(m,[],[])) mods)]
-               [] []
-               (showCategoryPlanController Nothing)
-               formatCatModulesForm showEmailCorrectionController)
-
+  listCategoryController sinfo
+    (Right [htxt $ t "Modules of" ++ " " ++ userToShortView user])
+    [(Right "", mods)]
 
 --- Controller to list all (visible) modules.
 showAllModulesController :: Controller
@@ -148,18 +160,13 @@ showAllEnglishModulesController = do
 showModulesController :: [ModData] -> Controller
 showModulesController mods = do
   sinfo <- getUserSessionInfo
-  csem  <- getCurrentSemester
   let t = translate sinfo
       (pmods,wmods) = partition isMandatoryModule mods
-  return (listCategoryView sinfo csem
-            (Right [htxt $ t "All modules"])
-            [(Right (t "Mandatary modules" ++
-                     " (Informatik, Wirtschaftsinformatik, Nebenfach)"),
-              map (\m->(m,[],[])) pmods),
-             (Right $ t "Further modules", map (\m->(m,[],[])) wmods)]
-            [] []
-            (showCategoryPlanController Nothing) formatCatModulesForm
-            showEmailCorrectionController)
+  listCategoryController sinfo
+    (Right [htxt $ t "All modules"])
+    [(Right (t "Mandatary modules" ++
+             " (Informatik, Wirtschaftsinformatik, Nebenfach)"), pmods),
+     (Right $ t "Further modules", wmods)]
  where
 
 isMandatoryModule :: ModData -> Bool

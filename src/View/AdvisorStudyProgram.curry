@@ -1,12 +1,12 @@
 module View.AdvisorStudyProgram
   ( wAdvisorStudyProgram, tuple2AdvisorStudyProgram, advisorStudyProgram2Tuple
-  , wAdvisorStudyProgramType, blankAdvisorStudyProgramView
-  , createAdvisorStudyProgramView, editAdvisorStudyProgramView
+  , wAdvisorStudyProgramType
   , showAdvisorStudyProgramView, listAdvisorStudyProgramView ) where
 
-import WUI
+import HTML.WUI
 import System.Helpers
 import HTML.Base
+import HTML.Styles.Bootstrap3
 import List
 import Time
 import Sort
@@ -110,122 +110,18 @@ wAdvisorStudyProgramType sinfo curyear
    ,advisorStudyProgram2Tuple studyProgram user)
    (wAdvisorStudyProgram curyear False sinfo studyProgramList userList)
 
---- Supplies a WUI form to create a new AdvisorStudyProgram entity.
---- The fields of the entity have some default values.
-blankAdvisorStudyProgramView
-  :: UserSessionInfo -> (String,Int)
-  -> [StudyProgram]
-  -> User -> [User]
-  -> ((String,String,Int,String,String,String,Bool,StudyProgram,User)
-  -> Controller)
-  -> Controller -> [HtmlExp]
-blankAdvisorStudyProgramView sinfo cursem possibleStudyPrograms user
-                             possibleUsers controller cancelcontroller =
-  createAdvisorStudyProgramView sinfo cursem "" "" (snd cursem) "" "" "" False
-   defaultStudyProgram
-   user
-   possibleStudyPrograms
-   possibleUsers
-   controller
-   cancelcontroller
- where
-  defaultStudyProgram =
-    maybe (head possibleStudyPrograms)
-          id
-          -- Select MSc Inf study program as the default program:
-          (find (\sp -> studyProgramProgKey sp == "MScI15") possibleStudyPrograms)
-          
---- Supplies a WUI form to create a new AdvisorStudyProgram entity.
---- Takes default values to be prefilled in the form fields.
-createAdvisorStudyProgramView
-  :: UserSessionInfo -> (String,Int)
-  -> String
-  -> String
-  -> Int
-  -> String
-  -> String
-  -> String
-  -> Bool
-  -> StudyProgram
-  -> User
-  -> [StudyProgram]
-  -> [User]
-  -> ((String,String,Int,String,String,String,Bool,StudyProgram,User)
-  -> Controller)
-  -> Controller -> [HtmlExp]
-createAdvisorStudyProgramView
-    sinfo (_,curyear)
-    defaultName
-    defaultTerm
-    defaultYear
-    defaultDesc
-    defaultPrereq
-    defaultComments
-    defaultVisible
-    defaultStudyProgram
-    defaultUser
-    possibleStudyPrograms
-    possibleUsers
-    controller
-    cancelcontroller =
-  renderWuiForm
-   (wAdvisorStudyProgram curyear True sinfo possibleStudyPrograms possibleUsers)
-   (defaultName
-   ,defaultTerm
-   ,defaultYear
-   ,defaultDesc
-   ,defaultPrereq
-   ,defaultComments
-   ,defaultVisible
-   ,defaultStudyProgram
-   ,defaultUser)
-   controller
-   cancelcontroller
-   "Neues Studienprogramm"
-   "Studienprogramm anlegen"
-
---- Supplies a WUI form to edit the given AdvisorStudyProgram entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editAdvisorStudyProgramView
-  :: UserSessionInfo -> (String,Int)
-  -> AdvisorStudyProgram
-  -> StudyProgram
-  -> User
-  -> [StudyProgram]
-  -> [User] -> (AdvisorStudyProgram -> Controller) -> Controller -> [HtmlExp]
-editAdvisorStudyProgramView
-    sinfo (_,curyear)
-    advisorStudyProgram
-    relatedStudyProgram
-    relatedUser
-    possibleStudyPrograms
-    possibleUsers
-    controller
-    cancelcontroller =
-  renderWuiForm
-   (wAdvisorStudyProgramType sinfo curyear advisorStudyProgram
-                             relatedStudyProgram
-     relatedUser
-     possibleStudyPrograms
-     possibleUsers)
-   advisorStudyProgram
-   controller
-   cancelcontroller
-   "Studienprogramm ändern"
-   "Ändern"
-
+       
 --- Supplies a view to show the details of a AdvisorStudyProgram.
 showAdvisorStudyProgramView
   :: UserSessionInfo -> Bool -> Bool
-  -> (Category -> Controller)
-  -> (AdvisorModule -> Controller)
+  -> (Category -> HtmlExp)
+  -> (AdvisorModule -> HtmlExp)
   -> AdvisorStudyProgram -> String -> StudyProgram
   -> [(AdvisorModule,ModInst,ModData)] -> [Category] -> User
   -> [HtmlExp]
 showAdvisorStudyProgramView
     sinfo admin editallowed
-    addcatmodcontroller delmodcontroller
+    addcatmodrefbutton delmodrefbutton
     asprog xmlurl relatedsprog amdatas cats advisor =
   [h1 [htxt (advisorStudyProgramName asprog)
       ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
@@ -268,8 +164,7 @@ showAdvisorStudyProgramView
      concatMap
        (\c -> [[[catRef c],
                 (if admin || editallowed
-                  then [spSmallButton "Modulempfehlung hinzufügen"
-                                      (nextController (addcatmodcontroller c))]
+                  then [addcatmodrefbutton c]
                   else [])],
                [showCategoryInfo sinfo c]] ++
             let camods = filter (isAdvisorModuleOfCat c) amdatas
@@ -305,8 +200,7 @@ showAdvisorStudyProgramView
                  (if mandatory then t "mandatory" else t "recommended")
                  ++ ")"],
      if admin || editallowed
-       then [spSmallButton "Modulempfehlung löschen"
-                           (nextController (delmodcontroller am))]
+       then [delmodrefbutton am]
        else []]
     where
       mandatory = advisorModuleMandatory am

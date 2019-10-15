@@ -28,9 +28,9 @@ mainPageView sinfo studyPrograms =
    h3 [htxt $ t "Further information:"],
    ulist
     [[htxt $ t "Master studies in computer science:", nbsp,
-      spHref "?MCA/list" [htxt $ t "Core areas"], nbsp,
-      spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
-              [htxt $ t "Study planner"]
+      spHref "?MCA/list" [htxt $ t "Core areas"], nbsp
+      --spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
+      --        [htxt $ t "Study planner"]
      ],
      [htxt $ t "Overview on the ",
       ehref "lehrplanung.html"

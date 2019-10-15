@@ -1,17 +1,23 @@
 module Controller.MasterCoreArea (
- masterCoreAreaController, editMasterCoreAreaController,
- deleteMasterCoreAreaController, listMasterCoreAreaController
+ masterCoreAreaController, newMasterCoreAreaForm, editMasterCoreAreaForm,
+ listMasterCoreAreaController
  ) where
 
+import Global
+
+import Config.Storage
 import System.Helpers
 import System.Spicey
 import HTML.Base
+import HTML.Session
+import HTML.WUI
 import Time
 import MDB
 import View.MasterCoreArea
 import Maybe
 import System.Authorization
 import System.AuthorizedActions
+import System.SessionInfo
 import Config.UserProcesses
 import System.Authentication
 import View.MDBEntitiesToHtml
@@ -23,67 +29,109 @@ masterCoreAreaController = do
   case args of
     ["list"] -> listMasterCoreAreaController
     ["new"]  -> newMasterCoreAreaController
-    ["show",s] -> applyControllerOn (readMasterCoreAreaKey s)
-                    getMasterCoreArea showMasterCoreAreaController
-    ["edit",s] -> applyControllerOn (readMasterCoreAreaKey s)
-                    getMasterCoreArea editMasterCoreAreaController
-    ["delete",s] -> applyControllerOn (readMasterCoreAreaKey s)
-                      getMasterCoreArea askAndDeleteMasterCoreAreaController
+    ["show",s] -> controllerOnKey s showMasterCoreAreaController
+    ["edit",s] -> controllerOnKey s editMasterCoreAreaController
+    ["delete",s] -> controllerOnKey s deleteMasterCoreAreaController
+    ["destroy",s] -> controllerOnKey s destroyMasterCoreAreaController
     _ -> displayError "Illegal URL for MasterCoreArea"
 
+instance EntityController MasterCoreArea where
+  controllerOnKey s controller =
+    applyControllerOn (readMasterCoreAreaKey s) getMasterCoreArea controller
 
+-----------------------------------------------------------------------
 --- Shows a form to create a new MasterCoreArea entity.
 newMasterCoreAreaController :: Controller
 newMasterCoreAreaController =
-  checkAuthorization (masterCoreAreaOperationAllowed NewEntity) $ \_ ->
-   (do return (blankMasterCoreAreaView createMasterCoreAreaController))
+  checkAuthorization (masterCoreAreaOperationAllowed NewEntity) $ \sinfo -> do
+    setParWuiStore newMasterCoreAreaStore sinfo ("", "", "", "", 1)
+    return [formExp newMasterCoreAreaForm]
+
+type NewMasterCoreArea = (String,String,String,String,Int)
+
+--- The form definition to create a new MasterCoreArea entity
+--- containing the controller to insert a new MasterCoreArea entity.
+newMasterCoreAreaForm ::
+  HtmlFormDef (UserSessionInfo, WuiStore NewMasterCoreArea)
+newMasterCoreAreaForm =
+  pwui2FormDef "Controller.MasterCoreArea.newMasterCoreAreaForm"
+    newMasterCoreAreaStore
+    (\_ -> wMasterCoreArea)
+    (\_ entity ->
+       checkAuthorization (masterCoreAreaOperationAllowed NewEntity) $ \_ ->
+         createMasterCoreAreaController entity)
+    (\sinfo -> renderWUI sinfo "New MasterCoreArea" "Create"
+                         listMasterCoreAreaController ())
+
+---- The data stored for executing the WUI form.
+newMasterCoreAreaStore ::
+  Global (SessionStore (UserSessionInfo, WuiStore NewMasterCoreArea))
+newMasterCoreAreaStore =
+  global emptySessionStore (Persistent (inDataDir "newMasterCoreAreaStore"))
 
 --- Persists a new MasterCoreArea entity to the database.
-createMasterCoreAreaController
- :: Bool -> (String,String,String,String,Int) -> Controller
-createMasterCoreAreaController False _ = listMasterCoreAreaController
-createMasterCoreAreaController True (name ,shortName ,description ,areaKey
-                                     ,position) =
+createMasterCoreAreaController :: NewMasterCoreArea -> Controller
+createMasterCoreAreaController (name ,shortName ,description ,areaKey
+                               ,position) =
   do transResult <- runT
                      (newMasterCoreArea name shortName description areaKey
                        (Just position))
      flip either (\ _ -> nextInProcessOr listMasterCoreAreaController Nothing)
       (\ error -> displayError (showTError error)) transResult
 
+-----------------------------------------------------------------------
 --- Shows a form to edit the given MasterCoreArea entity.
 editMasterCoreAreaController :: MasterCoreArea -> Controller
-editMasterCoreAreaController masterCoreAreaToEdit =
+editMasterCoreAreaController mca =
   checkAuthorization
-   (masterCoreAreaOperationAllowed (UpdateEntity masterCoreAreaToEdit)) $ \_ ->
-   (do return
-        (editMasterCoreAreaView masterCoreAreaToEdit
-          updateMasterCoreAreaController))
+   (masterCoreAreaOperationAllowed (UpdateEntity mca)) $ \sinfo -> do
+     setParWuiStore editMasterCoreAreaWuiStore (sinfo,mca) mca
+     return [formExp editMasterCoreAreaForm]
 
---- Persists modifications of a given MasterCoreArea entity to the
---- database depending on the Boolean argument. If the Boolean argument
---- is False, nothing is changed.
-updateMasterCoreAreaController :: Bool -> MasterCoreArea -> Controller
-updateMasterCoreAreaController False mca = showMasterCoreAreaController mca
-updateMasterCoreAreaController True mca =
-  do transResult <- runT (updateMasterCoreArea mca)
-     flip either (\ _ -> nextInProcessOr (showMasterCoreAreaController mca) Nothing)
-      (\ error -> displayError (showTError error)) transResult
+--- A WUI form to edit MasterCoreArea entity.
+--- The default values for the fields are stored in the
+--- `editMasterCoreAreaWuiStore`.
+editMasterCoreAreaForm ::
+  HtmlFormDef ((UserSessionInfo,MasterCoreArea), WuiStore MasterCoreArea)
+editMasterCoreAreaForm =
+  pwui2FormDef "Controller.MasterCoreArea.editMasterCoreAreaForm"
+    editMasterCoreAreaWuiStore
+    (\ (_,masterCoreArea) -> wMasterCoreAreaType masterCoreArea)
+    (\_ masterCoreArea ->
+       checkAuthorization
+         (masterCoreAreaOperationAllowed (UpdateEntity masterCoreArea)) $ \_ ->
+           updateMasterCoreAreaController masterCoreArea)
+    (\ (sinfo,masterCoreArea) ->
+          renderWUI sinfo "Studierendendaten bearbeiten" "Change"
+                    (showMasterCoreAreaController masterCoreArea) ())
+
+---- The data stored for executing the WUI form.
+editMasterCoreAreaWuiStore ::
+  Global (SessionStore ((UserSessionInfo,MasterCoreArea),
+          WuiStore MasterCoreArea))
+editMasterCoreAreaWuiStore =
+  global emptySessionStore (Persistent (inDataDir "editMasterCoreAreaWuiStore"))
+
+--- Persists modifications of a given MasterCoreArea entity.
+updateMasterCoreAreaController :: MasterCoreArea -> Controller
+updateMasterCoreAreaController mca =
+  runT (updateMasterCoreArea mca) >>=
+  either (\ error -> displayError (showTError error))
+         (\ _ -> nextInProcessOr (showMasterCoreAreaController mca) Nothing)
 
 --- Deletes a given MasterCoreArea entity (after asking for acknowledgment)
 --- and proceeds with the show controller.
-askAndDeleteMasterCoreAreaController :: MasterCoreArea -> Controller
-askAndDeleteMasterCoreAreaController mca =
-  confirmControllerOLD
-    (h3 [htxt (concat ["Really delete entity \""
-                      ,masterCoreAreaToShortView mca,"\"?"])])
-    (\ack -> if ack
-             then deleteMasterCoreAreaController mca
-             else showMasterCoreAreaController mca)
+deleteMasterCoreAreaController :: MasterCoreArea -> Controller
+deleteMasterCoreAreaController mca =
+  checkAuthorization
+   (masterCoreAreaOperationAllowed (DeleteEntity mca)) $ \si ->
+     confirmDeletionPage si $ concat
+       ["Really delete entity \"", masterCoreAreaToShortView mca, "\"?"]
 
 --- Deletes a given MasterCoreArea entity (depending on the Boolean
 --- argument) and proceeds with the list controller.
-deleteMasterCoreAreaController :: MasterCoreArea -> Controller
-deleteMasterCoreAreaController masterCoreArea =
+destroyMasterCoreAreaController :: MasterCoreArea -> Controller
+destroyMasterCoreAreaController masterCoreArea =
   checkAuthorization
    (masterCoreAreaOperationAllowed (DeleteEntity masterCoreArea)) $ \_ ->
    (do transResult <- runT (deleteMasterCoreArea masterCoreArea)

@@ -6,16 +6,15 @@
     "category": [ "Web" ],
     "dependencies": {
         "cdbi"        : ">= 1.0.0",
+        "cryptohash"  : ">= 0.0.1",
         "graphviz"    : ">= 2.0.0",
-        "html"        : ">= 2.1.0",
+        "html2"       : ">= 0.0.1",
         "mail-utils"  : ">= 0.0.1",
-        "markdown"    : ">= 2.0.0, < 3.0.0",
         "profiling"   : ">= 0.0.1",
-        "random"      : ">= 0.0.1",
         "searchtree"  : ">= 1.0.0",
         "setfunctions": ">= 0.0.1",
         "url"         : ">= 0.0.1",
-        "wui"         : ">= 1.1.0",
+        "wui2"        : ">= 0.0.1",
         "xml"         : ">= 0.0.1"
     },
     "compilerCompatibility": {

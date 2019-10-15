@@ -6,7 +6,7 @@ module Main where
 
 import Config.ControllerMapping
 import System.Spicey
-import WUI
+import HTML.WUI
 import HTML.Base
 import System.Routes
 import Config.RoutesData
@@ -15,6 +15,7 @@ import Controller.ModData
 import Controller.AdvisorStudyProgram ( showXmlAdvisorStudyProgram
                                       , showAllXmlAdvisorStudyPrograms)
 import Controller.MasterProgram (showXmlMasterProgram,showAllXmlMasterPrograms)
+import ConfigMDB ( baseLoginURL )
 import MDB
 import MDBExts
 import View.MDBEntitiesToHtml
@@ -26,7 +27,7 @@ import System.SessionInfo
 
 import Text.CSV
 
-dispatcher :: IO HtmlForm
+dispatcher :: IO HtmlPage
 dispatcher = do
   -- get url
   (url0,ctrlparams) <- getControllerURL
@@ -41,34 +42,46 @@ dispatcher = do
                       getController
 
   saveLastUrl (url ++ concatMap ("/"++) ctrlparams)
-  form <- getForm controller
+  form <- getPage controller
   return form
 
 --- Main function: check for old form of URL parameters or call the dispatcher
-main :: IO HtmlForm
+main :: IO HtmlPage
 main = do
+  --sinfo <- getUserSessionInfo
+  if True --userLoginOfSession sinfo == Nothing
+    then noLoginMain
+    else return $ HtmlPage "forward to login session"
+           [pageMetaInfo [("http-equiv","refresh"),
+                          ("content","1; url=" ++ baseLoginURL)]]
+           [par [htxt $ "Since you are logged in, " ++
+                        "you will be forwarded to the correct URL..."]]
+
+--- Main function: check for old form of URL parameters or call the dispatcher
+noLoginMain :: IO HtmlPage
+noLoginMain = do
   params <- getUrlParameter
   case params of
     ('M':s1:s2:code) -> if [s1,s2] `elem`
                             ["BS","BW","B2","MS","MW","ME","M2","NF","EX","OI"]
                         -- for compatibility with old URLs...
                         then showModDataWithCode (urlencoded2string code)
-                                                                 >>= getForm
+                                                                 >>= getPage
                         else dispatcher
     ('m':'o':'d':'=':code) -> showModDataWithCode (urlencoded2string code)
-                                                                 >>= getForm
+                                                                 >>= getPage
     ('x':'m':'l':'=':code) -> showXmlModule (urlencoded2string code)
     "xml"                  -> showXmlIndex
     ('x':'m':'l':'p':'r':'o':'g':'=':code)
         -> if code=="all"
            then showAllXmlMasterPrograms
-           else maybe (displayError "Illegal URL" >>= getForm)
+           else maybe (displayError "Illegal URL" >>= getPage)
                       showXmlMasterProgram
                       (readMasterProgramKey (urlencoded2string code))
     ('x':'m':'l':'a':'p':'r':'o':'g':'=':code)
         -> if code=="all"
            then showAllXmlAdvisorStudyPrograms
-           else maybe (displayError "Illegal URL" >>= getForm)
+           else maybe (displayError "Illegal URL" >>= getPage)
                       showXmlAdvisorStudyProgram
                       (readAdvisorStudyProgramKey (urlencoded2string code))
     ['l','a','n','g',l1,l2] -> setLanguage [l1,l2] >> dispatcher
@@ -88,18 +101,18 @@ setLanguage langcode = do
   getLastUrl >>= setEnviron "QUERY_STRING"
 
 -- Send an alive answer (to check whether the MDB server is alive)
-pingAnswer :: IO HtmlForm
+pingAnswer :: IO HtmlPage
 pingAnswer = return (answerEncText "iso-8859-1" "ALIVE")
 
 -------------------------------------------------------------------------
 -- Script for generating csv of module infos:
-allModuleCSV :: IO HtmlForm
+allModuleCSV :: IO HtmlPage
 allModuleCSV = do
   studyprogs <- runQ queryAllStudyPrograms
   runQ queryAllModDatas >>= moduleCSV studyprogs
 
 -- Generate csv of module infos:
-moduleCSV :: [StudyProgram] -> [ModData] -> IO HtmlForm
+moduleCSV :: [StudyProgram] -> [ModData] -> IO HtmlPage
 moduleCSV studyprogs mods = do
   csvfields <- mapIO mod2csv (filter isNotCopy mods)
   return (answerEncText "iso-8859-1" (showCSV csvfields))
@@ -134,13 +147,13 @@ moduleCSV studyprogs mods = do
 
 -------------------------------------------------------------------------
 -- Script for generating csv of module infos (old format!)
-allModuleCSV_OLD :: IO HtmlForm
+allModuleCSV_OLD :: IO HtmlPage
 allModuleCSV_OLD = do
   studyprogs <- runQ queryAllStudyPrograms
   runQ queryAllModDatas >>= moduleCSV_OLD studyprogs
 
 -- Generate csv of module infos:
-moduleCSV_OLD :: [StudyProgram] -> [ModData] -> IO HtmlForm
+moduleCSV_OLD :: [StudyProgram] -> [ModData] -> IO HtmlPage
 moduleCSV_OLD studyprogs mods = do
   csvfields <- mapIO mod2csv (filter isNotCopy mods)
   return (answerEncText "iso-8859-1" (showCSV csvfields))

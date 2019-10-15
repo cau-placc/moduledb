@@ -20,8 +20,8 @@ module System.SessionInfo (
 import FilePath       ( (</>) )
 import Global
 
-import ConfigMDB      ( storageDir )
-import System.Session
+import Config.Storage ( inDataDir )
+import HTML.Session
 
 --------------------------------------------------------------------------
 --- The languages which are currently supported.
@@ -79,17 +79,17 @@ setLanguageOfSession lang (SD login slogin _) = SD login slogin lang
 --- Definition of the session state to store the login name (as a string).
 userSessionInfo :: Global (SessionStore UserSessionInfo)
 userSessionInfo =
-  global emptySessionStore (Persistent (storageDir </> "userSessionInfo"))
+  global emptySessionStore (Persistent (inDataDir "userSessionInfo"))
 
 --- Gets the data of the current user session.
 getUserSessionInfo :: IO UserSessionInfo
 getUserSessionInfo =
-  getSessionData userSessionInfo >>= return . maybe emptySessionInfo id
+  getSessionData userSessionInfo emptySessionInfo
 
 --- Updates the data of the current user session.
 updateUserSessionInfo :: (UserSessionInfo -> UserSessionInfo) -> IO ()
 updateUserSessionInfo upd = do
   sd <- getUserSessionInfo
-  putSessionData (upd sd) userSessionInfo
+  putSessionData userSessionInfo (upd sd)
 
 --------------------------------------------------------------------------

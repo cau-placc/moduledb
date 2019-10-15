@@ -1,12 +1,13 @@
-module View.Category (
- wCategory, tuple2Category, category2Tuple, wCategoryType, blankCategoryView,
- createCategoryView, editCategoryView, showCategoryView, listCategoryView,
- leqCategory, showCategoryInfo, listEmailCorrectionView
+module View.Category
+ ( wCategory, tuple2Category, category2Tuple, wCategoryType
+ , showCategoryView, listCategoryView
+ , selSemesterPlanningView
+ , leqCategory, showCategoryInfo, listEmailCorrectionView
  ) where
 
 import Either
 import Maybe ( isJust )
-import WUI
+import HTML.WUI
 import HTML.Base
 import Time
 import Sort
@@ -94,81 +95,7 @@ wCategoryType category studyProgram studyProgramList =
   transformWSpec (tuple2Category category,category2Tuple studyProgram)
    (wCategory studyProgramList)
 
---- Supplies a WUI form to create a new Category entity.
---- The fields of the entity have some default values.
-blankCategoryView
-  :: UserSessionInfo
-  -> [StudyProgram]
-  -> ((String,String,String,String,Int,Int,Int,StudyProgram) -> Controller)
-  -> Controller -> [HtmlExp]
-blankCategoryView sinfo possibleStudyPrograms controller cancelcontroller =
-  createCategoryView sinfo "" "" "" "" 0 180 0 (head possibleStudyPrograms)
-   possibleStudyPrograms
-   controller
-   cancelcontroller
-
---- Supplies a WUI form to create a new Category entity.
---- Takes default values to be prefilled in the form fields.
-createCategoryView
-  :: UserSessionInfo
-  -> String
-  -> String
-  -> String
-  -> String
-  -> Int
-  -> Int
-  -> Int
-  -> StudyProgram
-  -> [StudyProgram]
-  -> ((String,String,String,String,Int,Int,Int,StudyProgram) -> Controller)
-  -> Controller -> [HtmlExp]
-createCategoryView
-    _
-    defaultName
-    defaultNameE
-    defaultShortName
-    defaultComment
-    defaultMinECTS
-    defaultMaxECTS
-    defaultPosition
-    defaultStudyProgram
-    possibleStudyPrograms
-    controller
-    cancelcontroller =
-  renderWuiForm (wCategory possibleStudyPrograms)
-   (defaultName
-   ,defaultNameE
-   ,defaultShortName
-   ,defaultComment
-   ,defaultMinECTS
-   ,defaultMaxECTS
-   ,defaultPosition
-   ,defaultStudyProgram)
-   controller
-   cancelcontroller
-   "Neue Kategorie"
-   "Anlegen"
-
---- Supplies a WUI form to edit the given Category entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editCategoryView
- :: Category -> StudyProgram -> [StudyProgram]
-  -> (Bool -> Category -> Controller) -> [HtmlExp]
-editCategoryView category relatedStudyProgram possibleStudyPrograms
-                 controller =
-  let initdata = category
-      
-      wuiframe = wuiEditForm "Kategorie ändern" "Ändern"
-                  (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm
-                         (wCategoryType category relatedStudyProgram
-                           possibleStudyPrograms)
-                         initdata (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
-
+------------------------------------------------------------------------------
 --- Supplies a view to show the details of a Category.
 showCategoryView :: Category -> StudyProgram -> [HtmlExp]
 showCategoryView category relatedStudyProgram =
@@ -198,35 +125,27 @@ showCategoryInfo sinfo cat =
   
 --- Supplies a list view for a given list of Category entities.
 --- Shows also buttons to show, delete, or edit entries.
---- Various controller functions to show, delete, edit, and format entities
---- as well as sending emails to request corrections are passed as arguments.
 --- The second argument is the current study program or a header expression.
---- The third argument is the real data to be shown:
+--- The third argument contains the real data to be shown:
 --- a list of category information where each info contains
 --- a category (or a header string) together with a list of triples containing
 --- the modules in this category. Each triple contains:
 --- * the module data
 --- * a list of possible module instances for the semester period
---    (passed as the fifth argument)
+--    (passed as the fourth argument)
 --- * a list of Booleans indicating whether the corresponding module instance
 ---   has a UnivIS entry (if this list is empty, UnivIS entries should not
----   be shown)
+---   be shown).
+--- The further arguments are the semesters in the selected period,
+--- the list of all users (to show them in the module instances), and
+--- the HTML expression of the form to select a semester period to show
+--- the module instances in this period.
 listCategoryView
-  :: UserSessionInfo
-  -> (String,Int)
-  -> Either StudyProgram [HtmlExp]
+  :: UserSessionInfo -> Either StudyProgram [HtmlExp]
   -> [(Either Category String, [(ModData,[Maybe (ModInst,Int)],[Bool])])]
-  -> [(String,Int)]
-  -> [User]
-  -> (Either StudyProgram [HtmlExp] -> [(Either Category String, [ModData])]
-        -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller)
-  -> ([(String,[ModData])] -> Controller)
-  -> (Either StudyProgram [HtmlExp] -> [(Either Category String, [ModData])]
-        -> (String,Int) -> (String,Int) -> Controller)
+  -> [(String,Int)] -> [User] -> HtmlExp
   -> [HtmlExp]
-listCategoryView sinfo cursem mbsprog catmods semperiod users
-                 showCategoryPlanController formatCatModsController
-                 showEmailCorrectionController =
+listCategoryView sinfo mbsprog catmods semperiod users semselectform =
   [h1 $ either (\sp -> [studyProgramToHRef sinfo sp]) id mbsprog] ++
   (if length catmods == 1 && isLeft (fst (head catmods))
    then let cat = fromLeft (fst (head catmods))
@@ -272,51 +191,8 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
               ]])
           (const [])
           mbsprog
-    else
-     [par ([bold [htxt $ t "Semester planning"], htxt $ t " from ",
-            spShortSelectionInitial fromsem semSelection
-              (findSemesterSelection cursem
-                 (if null semperiod then cursem else (head semperiod))),
-            htxt $ t " to ",
-            spShortSelectionInitial tosem semSelection
-              (if null semperiod
-                 then findSemesterSelection cursem cursem + 3
-                 else findSemesterSelection cursem (last semperiod)),
-            htxt ": ",
-            spSmallPrimaryButton (t "Show")
-                                 (showPlan False False False mbsprog)] ++
-           (maybe []
-                  (\_ -> [spSmallButton (t "with UnivIS comparison")
-                                        (showPlan True False False mbsprog),
-                          spSmallButton (t "with master program usage")
-                                        (showPlan False True False mbsprog)])
-                  (userLoginOfSession sinfo)) ++
-           (if isAdminSession sinfo
-            then [spSmallButton (t "with student numbers")
-                                   (showPlan False False True mbsprog),
-                  spSmallButton "UnivIS-Abgleich Emails senden"
-                                (showCorrectionEmails mbsprog)]
-            else []))]) ++
-   (if isAdminSession sinfo
-    then [par [spSmallButton "Alle Module formatieren"
-                      (nextController
-                         (formatCatModsController
-                            (map (\ (cat,mods) -> 
-                                      (either categoryName id cat,
-                                       map (\ (md,_,_)->md) mods))
-                                 catmods))),
-               spSmallButton "Alle sichtbaren Module formatieren"
-                      (nextController
-                         (formatCatModsController
-                            (map (\ (cat,mods) -> 
-                                      (either categoryName id cat,
-                                       filter modDataVisible
-                                              (map (\ (md,_,_)->md) mods)))
-                                 catmods)))]]
-    else [])
+    else [par [semselectform]])
   where
-   fromsem,tosem free
-
    t = translate sinfo
 
    -- show UnivIS instance of a semester
@@ -331,8 +207,8 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
      = [hrefUnivisDanger univisUrl [htxt "???"]
           `addTitle` (t "Missing UnivIS entry!")]
      | otherwise                = [nbsp]
-    where univisUrl = "?UnivisInfo/showmod/"++showModDataKey md++"/"
-                                            ++term++"/"++show year
+    where univisUrl = "?UnivisInfo/showmod/" ++ showModDataKey md ++ "/"
+                                             ++ term ++ "/" ++ show year
 
    showModInst (mi,num) =
      let miuserkey = modInstUserLecturerModsKey mi
@@ -344,32 +220,91 @@ listCategoryView sinfo cursem mbsprog catmods semperiod users
                                (find (\u -> userKey u == miuserkey) users)),
                    htxt (if num==0 then "" else '(':show num++")")]]]
 
-   semSelection = map (\(s,i) -> (showSemester s,show i))
-                      (zip (semesterSelection cursem) [0..])
-
-   showPlan withunivis withmprogs withstudyplan sprog env = do
-    let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
-        stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
-    showCategoryPlanController sprog
-     (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
-     (semesterSelection cursem !! start) (semesterSelection cursem !! stop)
-     withunivis withmprogs withstudyplan >>= getForm
-
-   showCorrectionEmails sprog env = do
-    let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
-        stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
-    showEmailCorrectionController sprog
-     (map (\ (c,cmods) -> (c,map (\ (m,_,_)->m) cmods)) catmods)
-     (semesterSelection cursem !!start) (semesterSelection cursem !! stop)
-        >>= getForm
-
    listCategory category =
-      categoryToListView sinfo category ++
-      [[spHref ("?Category/show/"++showCategoryKey category) [htxt "Anzeigen"]]
-      ,[spHref ("?Category/edit/"++showCategoryKey category) [htxt "Ändern"]]
-      ,[spHref ("?Category/delete/"++showCategoryKey category) [htxt "Löschen"]]
-      ]
+     categoryToListView sinfo category ++
+     [[spHref ("?Category/show/"  ++ showCategoryKey category) [htxt "Anzeigen"]]
+     ,[spHref ("?Category/edit/"  ++ showCategoryKey category) [htxt "Ändern"]]
+     ,[spHref ("?Category/delete/"++ showCategoryKey category) [htxt "Löschen"]]
+     ]
 
+--- A view for a form to select a semester period to show the module instances
+--- in this period.
+--- Various controller functions to show plans, format entities
+--- as well as sending emails to request corrections are passed as arguments.
+selSemesterPlanningView ::
+     (Maybe User -> Either StudyProgram [HtmlExp]
+      -> [(Either Category String, [ModData])]
+      -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller)
+  -> (Either StudyProgram [HtmlExp] -> [(Either Category String, [ModData])]
+        -> (String,Int) -> (String,Int) -> Controller)
+  -> ([(String,[ModData])] -> Controller)
+  -> ( UserSessionInfo
+     , Maybe User
+     , Either StudyProgram [HtmlExp]
+     , [(Either Category String, [ModData])]
+     , (String,Int)
+     , [(String,Int)])
+  -> [HtmlExp]
+selSemesterPlanningView showCategoryPlanController showEmailCorrectionController
+  formatCatModsController (sinfo, mbuser, mbsprog, catmods, cursem, semperiod) =
+  [par ([bold [htxt $ t "Semester planning"], htxt $ t " from ",
+               spShortSelectionInitial fromsem semSelection
+                 (findSemesterSelection cursem
+                    (if null semperiod then cursem else (head semperiod))),
+               htxt $ t " to ",
+               spShortSelectionInitial tosem semSelection
+                 (if null semperiod
+                    then findSemesterSelection cursem cursem + 3
+                    else findSemesterSelection cursem (last semperiod)),
+               htxt ": ",
+               spSmallPrimaryButton (t "Show")
+                                    (showPlan False False False mbsprog)] ++
+     (maybe []
+            (\_ -> [spSmallButton (t "with UnivIS comparison")
+                                  (showPlan True False False mbsprog),
+                    spSmallButton (t "with master program usage")
+                                  (showPlan False True False mbsprog)])
+             (userLoginOfSession sinfo)) ++
+     (if isAdminSession sinfo
+        then [spSmallButton (t "with student numbers")
+                            (showPlan False False True mbsprog),
+              spSmallButton "UnivIS-Abgleich Emails senden"
+                            (showCorrectionEmails mbsprog)]
+        else []))] ++
+  (if isAdminSession sinfo
+     then [par [spSmallButton "Alle Module formatieren"
+                  (nextController
+                     (formatCatModsController
+                        (map (\(cat,mods) -> (either categoryName id cat, mods))
+                             catmods))),
+                spSmallButton "Alle sichtbaren Module formatieren"
+                  (nextController
+                     (formatCatModsController
+                        (map (\ (cat,mods) -> (either categoryName id cat,
+                                               filter modDataVisible mods))
+                             catmods)))]]
+     else [])
+ where
+  fromsem,tosem free
+
+  t = translate sinfo
+
+  semSelection = map (\ (s,i) -> (showSemester s,show i))
+                     (zip (semesterSelection cursem) [0..])
+
+  showPlan withunivis withmprogs withstudyplan sprog env = do
+    let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
+        stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
+    showCategoryPlanController mbuser sprog catmods
+     (semesterSelection cursem !! start) (semesterSelection cursem !! stop)
+     withunivis withmprogs withstudyplan >>= getPage
+
+  showCorrectionEmails sprog env = do
+    let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
+        stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
+    showEmailCorrectionController sprog catmods
+     (semesterSelection cursem !!start) (semesterSelection cursem !! stop)
+        >>= getPage
 
 --- Supplies a list view for a given list of Category entities.
 --- Shows also buttons to show, delete, or edit entries.
@@ -395,7 +330,7 @@ listEmailCorrectionView mbsprog modinsts semperiod users =
 
    sendMails _ = do
      mailresults <- mapIO sendSingleMail problemmods
-     getForm ([h1 [htxt "Mails gesendet!"]] ++
+     getPage ([h1 [htxt "Mails gesendet!"]] ++
               map (\t -> par [verbatim t]) mailresults)
 
    sendSingleMail (md,sem,reason) = do

@@ -1,5 +1,4 @@
 module Controller.MasterProgInfo (
- editMasterProgInfoController,
  deleteMasterProgInfoController, listMasterProgInfoController,
  progModsOfMasterProgInfo, reasonableMasterProgInfo
  ) where
@@ -18,16 +17,16 @@ import System.Helpers
 import List
 import ReadShowTerm
 
---- Shows a form to edit the given MasterProgInfo entity.
-editMasterProgInfoController :: (String,Int) -> Controller
-   -> MasterProgInfo -> Controller
-editMasterProgInfoController semyear cntcontroller masterProgInfoToEdit =
-  checkAuthorization
-   (masterProgInfoOperationAllowed (UpdateEntity masterProgInfoToEdit)) $ \_ -> do
-    csem  <- getCurrentSemester
-    modinsts <- runJustT (getMasterModInstInSemesters semyear 3)
-    return (editMasterProgInfoView masterProgInfoToEdit csem modinsts
-                             (updateMasterProgInfoController cntcontroller))
+-- --- Shows a form to edit the given MasterProgInfo entity.
+-- editMasterProgInfoController :: (String,Int) -> Controller
+--    -> MasterProgInfo -> Controller
+-- editMasterProgInfoController semyear cntcontroller masterProgInfoToEdit =
+--   checkAuthorization
+--    (masterProgInfoOperationAllowed (UpdateEntity masterProgInfoToEdit)) $ \_ -> do
+--     csem  <- getCurrentSemester
+--     modinsts <- runJustT (getMasterModInstInSemesters semyear 3)
+--     return (editMasterProgInfoView masterProgInfoToEdit csem modinsts
+--                              (updateMasterProgInfoController cntcontroller))
 
 --- Persists modifications of a given MasterProgInfo entity to the
 --- database depending on the Boolean argument. If the Boolean argument
@@ -82,10 +81,7 @@ listMasterProgInfoController :: Controller
 listMasterProgInfoController =
   checkAuthorization (masterProgInfoOperationAllowed ListEntities) $ \_ ->
    (do masterProgInfos <- runQ queryAllMasterProgInfos
-       return
-        (listMasterProgInfoView masterProgInfos showMasterProgInfoController
-          (editMasterProgInfoController ("",0) listMasterProgInfoController)
-          deleteMasterProgInfoController))
+       return (listMasterProgInfoView masterProgInfos))
 
 --- Shows a MasterProgInfo entity.
 showMasterProgInfoController :: MasterProgInfo -> Controller

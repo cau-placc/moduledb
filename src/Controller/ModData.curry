@@ -1,14 +1,23 @@
-module Controller.ModData (
- mainModDataController, showModDataWithCode,
- showXmlIndex, showXmlModule,
- formatCatModulesForm, emailModuleMessageController
- ) where
+module Controller.ModData
+  ( mainModDataController, newModDataWuiForm
+  , showModDataWithCode, showXmlIndex, showXmlModule
+  , formatCatModulesForm
+  , emailModuleMessageForm, emailModuleStore
+  , copyModuleForm
+  , addModInstForm, editModInstForm, editModDataForm, editModDescrForm
+  , newPreqModDataForm, deletePreqModDataForm
+  ) where
 
+import Global
+import Time
+
+import Config.Storage
 import ConfigMDB
 import System.Spicey
 import HTML.Base
+import HTML.Session
+import HTML.WUI
 import XML
-import Time
 import MDB
 import MDBExts
 import MDB.Queries
@@ -26,8 +35,10 @@ import View.StudyProgram
 import Controller.Default
 import System.Helpers
 import View.MDBEntitiesToHtml
+import View.ModDescr ( wModDescrType )
 import View.ModInst
-import FileGoodies(baseName)
+import View.User    ( leqUser )
+import FileGoodies  ( baseName )
 import Mail
 import Directory
 import System.SessionInfo
@@ -44,74 +55,96 @@ mainModDataController =
      case args of
       [] -> listAllModDataController
       ["list"]   -> listAllModDataController
-      ["new"]    -> newModDataController
-      ["newimp"] -> newImportModDataController
-      ["show" ,s] ->
-       applyControllerOn (readModDataKey s) getModData showModDataController
-      ["edit" ,s] ->
-       applyControllerOn (readModDataKey s) getModData editModDataController
-      ["visible" ,s] ->
-       applyControllerOn (readModDataKey s) getModData
-                         toggleVisibilityModDataController
-      ["delete" ,s] ->
-       applyControllerOn (readModDataKey s) getModData
-        confirmDeleteModDataController
-      ["url" ,s] ->
-       applyControllerOn (readModDataKey s) getModData moduleUrlForm
-      ["pdf" ,s] ->
-       applyControllerOn (readModDataKey s) getModData pdfModDataController
-      ["email" ,s] ->
-       applyControllerOn (readModDataKey s) getModData emailModuleController
-      ["copy" ,s] ->
-       applyControllerOn (readModDataKey s) getModData copyModuleController
-      ["number",s,sem] ->
-       applyControllerOn (readModDataKey s) getModData
-                         (numberModuleController sem)
-      ["studs",s,sem] ->
-       applyControllerOn (readModDataKey s) getModData
-                         (studentModuleController sem)
-      ["addinst",  s] -> applyControllerOn (readModDataKey s) getModData
-                                           addInstToModDataController
-      ["editinst", s] -> applyControllerOn (readModDataKey s) getModData
-                                           editInstOfModDataController
-      ["editdesc", s] -> applyControllerOn (readModDataKey s) getModData
-                                           editDescrOfModDataController
-      ["newpreq",  s] -> applyControllerOn (readModDataKey s) getModData
-                                           newPreqModDataController
-      ["editpreq", s] -> applyControllerOn (readModDataKey s) getModData
-                                           editPreqModDataController
+      ["new"]    -> newModuleController False
+      ["newimp"] -> newModuleController True
+      ["show" ,s] -> controllerOnKey s showModDataController
+      ["edit" ,s] -> controllerOnKey s editModDataController
+      ["visible" ,s] -> controllerOnKey s toggleVisibilityModDataController
+      ["delete" ,s] -> controllerOnKey s confirmDeleteModDataController
+      ["destroy",s] -> controllerOnKey s destroyModDataController
+      ["url" ,s] -> controllerOnKey s moduleUrlForm
+      ["pdf" ,s] -> controllerOnKey s pdfModDataController
+      ["email" ,s] -> controllerOnKey s emailModuleController
+      ["copy" ,s] -> controllerOnKey s copyModuleController
+      ["number",s,sem] -> controllerOnKey s (numberModuleController sem)
+      ["studs",s,sem] -> controllerOnKey s (studentModuleController sem)
+      ["addinst",  s] -> controllerOnKey s addInstToModDataController
+      ["editinst", s] -> controllerOnKey s editInstOfModDataController
+      ["editdesc", s] -> controllerOnKey s editDescrOfModDataController
+      ["newpreq",  s] -> controllerOnKey s newPreqModDataController
+      ["editpreq", s] -> controllerOnKey s editPreqModDataController
       _ -> displayError "Illegal URL"
 
---- Shows a form to create a new ModData entity.
-newModDataController :: Controller
-newModDataController = newModuleController False
+instance EntityController ModData where
+  controllerOnKey s controller =
+    applyControllerOn (readModDataKey s) getModData controller
 
---- Shows a form to create a new ModData entity.
-newImportModDataController :: Controller
-newImportModDataController = newModuleController True
+--- Returns the ModData entity specified by the second URL parameter.
+getModDataFromURL :: IO ModData
+getModDataFromURL = do
+  args <- getControllerParams
+  case args of
+    (_:s:_) -> maybe (error "Illegal URL")
+                     (\key -> runJustT (getModData key))
+                     (readModDataKey s)
+    _       -> error "Illegal URL"
 
+-------------------------------------------------------------------------
 --- Shows a form to create a new ModData entity.
 --- The first argument is true if it should be an import module
 --- (without a description)
 newModuleController :: Bool -> Controller
 newModuleController isimport =
-  checkAuthorization (modDataOperationAllowed NewEntity) $ \_ ->
-   (do admin <- isAdmin
-       spcats <- getStudyProgramsWithCats
-       allUsers <- runQ queryAllUsers
-       return (blankModDataView admin isimport allUsers spcats
-                                (createModDataController isimport)))
+  checkAuthorization (modDataOperationAllowed NewEntity) $ \sinfo -> do
+    admin <- isAdmin
+    spcats <- getStudyProgramsWithCats
+    allUsers <- runQ queryAllUsers
+    setParWuiStore wuiNewModDataWuiStore
+      (sinfo,admin,isimport,allUsers,spcats)
+      ("", "", "", "", "", 80, wload, 1, "", False, head allUsers, [])
+    return [formExp newModDataWuiForm]
+ where
+  wload = "60 Std. Vorlesung, 30 Std. Präsenzübung, 150 Std. Selbststudium"
+
+
+type NewModData =
+ (String,String,String,String,String,Int,String,Int,String,Bool,User,[Category])
+
+--- A WUI form to create a new ModData entity.
+--- The default values for the fields are stored in the
+--- `wuiNewModDataWuiStore`.
+newModDataWuiForm :: HtmlFormDef
+   ((UserSessionInfo, Bool, Bool, [User], [(StudyProgram,[Category])]),
+    WuiStore NewModData)
+newModDataWuiForm =
+  pwui2FormDef "Controller.ModData.newModDataWuiForm"
+    wuiNewModDataWuiStore
+    (\ (_,admin,_,allusers,spcats) -> wModData admin True allusers spcats)
+    (\ (_,_,isimport,_,_) entity ->
+         checkAuthorization (modDataOperationAllowed NewEntity) $ \_ ->
+           createModDataController isimport entity)
+    (\ (sinfo,_,isimport,_,_) ->
+        renderWUI sinfo ("Neues "++if isimport then "Importmodul" else "Modul")
+                  "Anlegen" defaultController ())
+
+---- The data stored for executing the WUI form.
+wuiNewModDataWuiStore ::
+  Global (SessionStore
+            ((UserSessionInfo, Bool, Bool, [User], [(StudyProgram,[Category])]),
+             WuiStore NewModData))
+wuiNewModDataWuiStore =
+  global emptySessionStore (Persistent (inDataDir "wuiNewModDataWuiStore"))
+
 
 --- Persists a new ModData entity to the database.
 --- The first argument is true if it should be an import module
 --- (without a description)
 createModDataController
- :: Bool -> Bool
+  :: Bool
   -> (String,String,String,String,String,Int,String,Int,String,Bool,User
      ,[Category])
   -> Controller
-createModDataController _ False _ = defaultController
-createModDataController isimport True
+createModDataController isimport
      (code ,nameG ,nameE ,cycle ,presence ,eCTS
      ,workload ,len ,uRL ,visible ,user ,categorys) =
   runT (newModDataWithUserResponsibleKey code nameG nameE cycle presence
@@ -121,30 +154,60 @@ createModDataController isimport True
          else newModDescrWithModDataDataDescKey "Deutsch" "" "" "" "" "" ""
                        "" "" "" "" (modDataKey md) |>>= \mi ->
               returnT (md,Just mi)) >>=
-  flip either (\ (md,mi) -> logEvent (NewModData md) >>
+  either (\ error -> displayError (showTError error))
+         (\ (md,mi) -> logEvent (NewModData md) >>
                        maybe done (logEvent . NewModDescr) mi >>
                        nextInProcessOr defaultController Nothing)
-         (\ error -> displayError (showTError error))
 
+
+-------------------------------------------------------------------------
 --- Shows a form to edit the given ModData entity.
 editModDataController :: ModData -> Controller
-editModDataController modDataToEdit =
-  checkAuthorization (modDataOperationAllowed (UpdateEntity modDataToEdit)) $     \_ ->
-   (do admin <- isAdmin
-       spcats <- if admin then getStudyProgramsWithCats else return []
-       allUsers <- runQ queryAllUsers
-       responsibleUser <- runJustT (getResponsibleUser modDataToEdit)
-       categorizingCategorys <- runJustT (getModDataCategories modDataToEdit)
-       return
-        (editModDataView admin (modDataToEdit,categorizingCategorys)
-          responsibleUser allUsers spcats updateModDataController))
+editModDataController mdata =
+  checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $
+   \sinfo -> do
+    admin <- isAdmin
+    spcats <- if admin then getStudyProgramsWithCats else return []
+    allUsers <- runQ queryAllUsers
+    responsibleUser <- runJustT (getResponsibleUser mdata)
+    categorizingCategorys <- runJustT (getModDataCategories mdata)
+    setParWuiStore wuiEditModDataStore
+      (sinfo,admin,mdata,responsibleUser,allUsers,spcats)
+      (mdata, categorizingCategorys)
+    return [formExp editModDataForm]
 
---- Persists modifications of a given ModData entity to the
---- database depending on the Boolean argument. If the Boolean argument
---- is False, nothing is changed.
-updateModDataController :: Bool -> (ModData,[Category]) -> Controller
-updateModDataController False (modData,_) = showModDataController modData
-updateModDataController True (modData,newcats) = do
+--- A WUI form to edit the given ModData entity.
+editModDataForm ::
+  HtmlFormDef
+   ((UserSessionInfo,Bool,ModData,User,[User],[(StudyProgram,[Category])]),
+    WuiStore (ModData,[Category]))
+editModDataForm =
+  pwui2FormDef "Controller.ModData.editModDataForm"
+    wuiEditModDataStore
+    (\ (_,admin,mdata,relatedUser,allusers,spcats) ->
+        wModDataType admin mdata relatedUser allusers spcats)
+    (\_ -> updateModDataController)
+    (\ (sinfo,_,mdata,_,_,_) ->
+         renderWUIWithText sinfo "Moduldaten ändern" "Änderungen speichern"
+                           [par cmts] (showModDataController mdata) ())
+ where
+  cmts = [htxt "Bitte auch die allgemeinen ",
+          ehref "edit_infos.html" [htxt "Hinweise zu Modulbeschreibungen"],
+          htxt " beachten!"]
+
+--- The data stored for executing the WUI form.
+wuiEditModDataStore ::
+  Global (SessionStore
+     ((UserSessionInfo,Bool,ModData,User,[User],[(StudyProgram,[Category])]),
+      WuiStore (ModData,[Category])))
+wuiEditModDataStore =
+  global emptySessionStore (Persistent (inDataDir "wuiEditModDataStore"))
+
+
+--- Persists modifications of a given ModData entity.
+updateModDataController :: (ModData,[Category]) -> Controller
+updateModDataController (modData,newcats) =
+ checkAuthorization (modDataOperationAllowed (UpdateEntity modData)) $ \_ -> do
   admin <- isAdmin
   tr <- runT $
     if admin
@@ -177,18 +240,14 @@ toggleVisibilityModDataController mdata =
 --- and proceeds with the list controller.
 confirmDeleteModDataController :: ModData -> Controller
 confirmDeleteModDataController modData =
-  confirmControllerOLD
-   (h3
-     [htxt
-       (concat ["Really delete entity \"",modDataToShortView modData,"\"?"])])
-   (\ ack -> if ack
-              then deleteModDataController modData
-              else showModDataController modData)
+  checkAuthorization checkAdmin $ \si->
+    confirmDeletionPage si $ concat
+      ["Really delete entity \"",modDataToShortView modData,"\"?"]
 
 --- Deletes a given ModData entity (depending on the Boolean
 --- argument) and proceeds with the list controller.
-deleteModDataController :: ModData -> Controller
-deleteModDataController modData =
+destroyModDataController :: ModData -> Controller
+destroyModDataController modData =
   checkAuthorization checkAdmin $ \_->
     runT (getModDataCategories modData |>>= \oldCategorizingCategorys ->
           killCategorizing oldCategorizingCategorys |>>
@@ -210,9 +269,9 @@ deleteModDataController modData =
 numberModuleController :: String -> ModData -> Controller
 numberModuleController sem mdata =
  checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ \_ -> do
-  spnum  <- getModuleStudents mdata sem
+  --spnum  <- getModuleStudents mdata sem
   mdbnum <- runQ $ queryStudentNumberOfModSemester mdata (readSemesterCode sem)
-  return $ numberModuleView sem mdata spnum mdbnum
+  return $ numberModuleView sem mdata mdbnum
 
 --- Controller to show the students of a module registered in MDB in a semester:
 studentModuleController :: String -> ModData -> Controller
@@ -221,15 +280,31 @@ studentModuleController sem mdata =
    studs <- runQ $ queryStudentsOfModSemester mdata (readSemesterCode sem)
    return $ studentModuleView sem mdata studs
 
+-------------------------------------------------------------------------
 --- Controller for copying a module with a new code:
 copyModuleController :: ModData -> Controller
 copyModuleController mdata =
  checkAuthorization checkAdmin $ \_ -> do
-  maybemdesc <- runQ $ queryDescriptionOfMod (modDataKey mdata)
-  maybe (displayError "Illegal URL: cannot copy external module")
-        (\mdesc ->
-           return (copyModView mdata (storeCopiedModController mdata mdesc)))
-        maybemdesc
+  putSessionData copyModuleStore mdata
+  return [formExp copyModuleForm]
+
+copyModuleForm :: HtmlFormDef (ModData,ModDescr)
+copyModuleForm =
+  HtmlFormDef "Controller.ModData.copyModuleForm" readData
+    (\ (mdata,mdesc) -> copyModView mdata
+                          (storeCopiedModController mdata mdesc))
+ where
+  readData = do
+    mdata <- getSessionData copyModuleStore failed
+    maybemdesc <- runQ $ queryDescriptionOfMod (modDataKey mdata)
+    maybe (error "Illegal URL: cannot copy external module")
+          (\mdesc -> return (mdata, mdesc))
+          maybemdesc
+
+---- The data stored for executing the WUI form.
+copyModuleStore :: Global (SessionStore ModData)
+copyModuleStore =
+  global emptySessionStore (Persistent (inDataDir "copyModuleStore"))
 
 --- Controller for copying a module with a new code:
 storeCopiedModController :: ModData -> ModDescr -> String -> Controller
@@ -267,6 +342,7 @@ storeCopiedModController mdata mdesc newcode = do
                (\ error -> displayError (showTError error))
 
 
+-------------------------------------------------------------------------
 --- Lists all ModData entities with buttons to show, delete,
 --- or edit an entity.
 listAllModDataController :: Controller
@@ -359,41 +435,58 @@ getStudyProgramsWithCats = runQ $ do
 emailModuleController :: ModData -> Controller
 emailModuleController mdata =
  checkAuthorization checkAdmin $ \_ -> do
-  user <- runJustT (getResponsibleUser mdata)
-  emailModuleMessageController (showModDataController mdata) mdata user
-    "Lieber Modulverantwortlicher,\n\n\nViele Gruesse\n\n"
+  putSessionData emailModuleStore
+    (mdata,"Lieber Modulverantwortlicher,\n\n\nViele Gruesse\n\n")
+  return [formExp emailModuleMessageForm]
 
-emailModuleMessageController :: Controller -> ModData -> User -> String
-                             -> IO [HtmlExp]
-emailModuleMessageController cntcontroller mdata user msg = return
-   [h1 [htxt "Email an Modulverantwortlichen"],
-    spTable
-     [[[bold [htxt "Empfänger: "]],
-       [longTextField mto (userEmail user)]],
-      [[bold [htxt "Kopie an: "]],
-       [longTextField mcc adminEmail]],
-      [[bold [htxt "Betreff:"]],
-       [longTextField msub
-                     ("Modul "++modDataCode mdata++": "++modDataNameG mdata)]],
-      [[bold [htxt "Inhalt:"]],
-       [textarea mcnt (10,70) msg `addClass` "input-xxlarge"]]],
-    par [spPrimButton "Absenden" sendTo,
-         spButton "Abbrechen" (const (cancelOperation >>
-                                      cntcontroller >>= getForm))]]
+--- A form to send an email to the person responsible for the module
+--- stored in `emailModuleStore` (which also contains the initial message).
+emailModuleMessageForm :: HtmlFormDef (ModData,User,String)
+emailModuleMessageForm =
+  HtmlFormDef "Controller.ModData.emailModuleMessageForm" readData formView
  where
-  mto,mcc,msub,mcnt free
+  readData = do
+    (mdata,msg) <- getSessionData emailModuleStore (failed,"")
+    user <- runJustT (getResponsibleUser mdata)
+    return (mdata,user,msg)
 
-  longTextField ref txt = textfield ref txt `addAttr` ("size","40")
-                                            `addClass` "input-xxlarge"
+  formView (mdata,user,msg) =
+    [h1 [htxt "Email an Modulverantwortlichen"],
+     spTable
+      [[[bold [htxt "Empfänger: "]],
+        [longTextField mto (userEmail user)]],
+       [[bold [htxt "Kopie an: "]],
+        [longTextField mcc adminEmail]],
+       [[bold [htxt "Betreff:"]],
+        [longTextField msub
+                      ("Modul "++modDataCode mdata++": "++modDataNameG mdata)]],
+       [[bold [htxt "Inhalt:"]],
+        [textArea mcnt (10,70) msg `addClass` "input-xxlarge"]]],
+     par [spPrimButton "Absenden" sendTo,
+          spButton "Abbrechen" (const (cancelOperation >>
+                                       cntcontroller >>= getPage))]]
+   where
+    mto,mcc,msub,mcnt free
+  
+    longTextField ref txt = textField ref txt `addAttr` ("size","40")
+                                              `addClass` "input-xxlarge"
+  
+    sendTo env = do
+      let cc = env mcc
+      sendMailWithOptions adminEmail
+                          (env msub)
+                          (TO (env mto) : if null cc then [] else [CC cc])
+                          (env mcnt)
+      setPageMessage "Mail gesendet!"
+      cntcontroller >>= getPage
 
-  sendTo env = do
-    let cc = env mcc
-    sendMailWithOptions adminEmail
-                        (env msub)
-                        (TO (env mto) : if null cc then [] else [CC cc])
-                        (env mcnt)
-    setPageMessage "Mail gesendet!"
-    cntcontroller >>= getForm
+    cntcontroller = showModDataController mdata
+
+---- The data stored for executing the WUI form.
+emailModuleStore :: Global (SessionStore (ModData,String))
+emailModuleStore =
+  global emptySessionStore (Persistent (inDataDir "emailModuleStore"))
+
 
 ----------------------------------------------------------------------
 -- Show the permanent URL of a module
@@ -534,7 +627,7 @@ xmlURL :: ModData -> String
 xmlURL md = baseURL++"?xml="++string2urlencoded (modDataCode md)
 
 -- Shows XML index of all modules (also invisible ones).
-showXmlIndex :: IO HtmlForm
+showXmlIndex :: IO HtmlPage
 showXmlIndex = do
   allmods <- runQ queryAllModDatas
   return (HtmlAnswer "text/xml"
@@ -547,10 +640,10 @@ showXmlIndex = do
     xml "modul" [xml "code" [xtxt c],
                  xml "url"  [xtxt (xmlURL m)]]
 
-showXmlModule :: String -> IO HtmlForm
+showXmlModule :: String -> IO HtmlPage
 showXmlModule mcode = do
    modDatas <- runQ $ queryModDataWithCode mcode
-   if null modDatas then displayError "Illegal URL" >>= getForm else do
+   if null modDatas then displayError "Illegal URL" >>= getPage else do
     let md = head modDatas
     responsibleUser <- runJustT (getResponsibleUser md)
     categories <- runJustT (getModDataCategories md)
@@ -637,67 +730,229 @@ mod2xml md _ _ _ _ _  Nothing =
 -- A controller to add module instance to the given module.
 addInstToModDataController :: ModData -> Controller
 addInstToModDataController mdata =
- checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \sinfo-> do
    responsibleUser <- runJustT (getResponsibleUser mdata)
-   addModInstController mdata responsibleUser (showModDataController mdata)
+   allUsers <- runQ (liftM (mergeSortBy leqUser) queryAllUsers)
+   (curterm,curyear) <- getCurrentSemester
+   setParWuiStore wuiAddModInstStore
+                  (sinfo,curyear,allUsers,mdata)
+                  (curterm,curyear+1,responsibleUser)
+   return [formExp addModInstForm]
 
+--- A WUI form to create a new ModInst entity.
+addModInstForm :: HtmlFormDef ((UserSessionInfo, Int, [User], ModData),
+                               WuiStore (String,Int,User))
+addModInstForm =
+  pwui2FormDef "Controller.ModData.addModInstForm"
+    wuiAddModInstStore
+    (\ (_,curyear,allusers,_) -> wModInst (curyear+1) allusers)
+    (\ (_,_,_,mdata) -> createModInstController mdata
+                          (showModDataController mdata))
+    (\ (sinfo,_,_,mdata) ->
+         renderWUI sinfo "Neues Semester hinzufügen" "Hinzufügen"
+                   (showModDataController mdata) ())
+
+--- The data stored for executing the WUI form.
+wuiAddModInstStore ::
+  Global (SessionStore ((UserSessionInfo, Int, [User], ModData),
+                        WuiStore (String,Int,User)))
+wuiAddModInstStore =
+  global emptySessionStore (Persistent (inDataDir "wuiAddModInstStore"))
+
+-----------------------------------------------------------------------------
 -- A controller to edit all module instances of the given module.
 editInstOfModDataController :: ModData -> Controller
 editInstOfModDataController mdata =
- checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
-   editAllModInstController mdata (showModDataController mdata)
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \sinfo-> do
+   admin <- isAdmin
+   cursem   <- getCurrentSemester
+   allinsts <- runQ $ liftM
+                        (mergeSortBy leqModInst . filterModInsts admin cursem)
+                        (queryInstancesOfMod (modDataKey mdata))
+   allmpkeys <- runQ $ getMasterProgramKeysOfModInst allinsts
+   allspkeys <- runJustT $
+                 mapM (\mi -> getAdvisorStudyProgramKeysOfModInst mi)
+                      allinsts
+   allUsers <- runQ (liftM (mergeSortBy leqUser) queryAllUsers)
+   -- select instances not used in master programs:
+   let editinsts = concatMap
+                       (\ (mi,mks,sks) -> if (null mks && null sks) || admin
+                                            then [(null mks && null sks, mi)]
+                                            else [])
+                       (zip3 allinsts allmpkeys allspkeys)
+   setParWuiStore wuiEditModInstStore
+                  (sinfo, snd cursem, admin, editinsts, allUsers, mdata)
+                  (map (\ (b,i) -> if b then Left (i,False) else Right i)
+                       editinsts)
+   return [formExp editModInstForm]
+ where
+  filterModInsts admin cursem =
+   -- the next semester in the future where we changes are allowed:
+   -- if we are in semester n, it is not allowed to change instances
+   -- in semester n, n+1, and n+2.
+   let futuresem = nextSemester (nextSemester (nextSemester cursem))
+   in if admin
+        then id
+        else filter (\mi -> leqSemester futuresem
+                                        (modInstTerm mi,modInstYear mi))
+ 
 
+--- A WUI form to edit the ModInst entities provided in the store
+--- `wuiEditModInstStore`. If the flag for a ModInst entity is true,
+--- one can complete change the entity, otherwise one can only
+--- change the lecturer of this entity.
+editModInstForm ::
+  HtmlFormDef ((UserSessionInfo, Int, Bool, [(Bool,ModInst)],[User], ModData),
+               WuiStore [Either (ModInst,Bool) ModInst])
+editModInstForm = 
+  pwui2FormDef "Controller.ModData.editModInstForm"
+    wuiEditModInstStore
+    (\ (_,curyear,admin,binsts,allusers,_) -> 
+                    wModInstsType curyear admin (map snd binsts) allusers)
+    (\ (_,_,_,binsts,_,mdata) ->
+        updateAllModInstController mdata (map snd binsts)
+                                   (showModDataController mdata)
+          . map (either id (\i -> (i,False))))
+    (\ (sinfo,_,_,_,_,mdata) ->
+         renderWUIWithText sinfo "Semesterangaben ändern" "Änderungen speichern"
+                           [par [htxt modinstcomment]]
+                           (showModDataController mdata) ())
+ where
+  modinstcomment =
+    "Anmerkung: Veranstaltungen innerhalb des Planungszeitraumes " ++
+    "(bis zu den beiden nächsten Semestern) und Veranstaltungen, "++
+    "die schon in Masterprogrammen eingeplant sind, können nicht "++
+    "verändert werden! In Ausnahmefällen kontaktieren Sie die " ++
+    "Studiengangskoordinatoren."
+
+--- The data stored for executing the WUI form.
+wuiEditModInstStore ::
+  Global (SessionStore
+            ((UserSessionInfo, Int, Bool, [(Bool,ModInst)],[User], ModData),
+             WuiStore [Either (ModInst,Bool) ModInst]))
+wuiEditModInstStore =
+  global emptySessionStore (Persistent (inDataDir "wuiEditModInstStore"))
+
+
+-----------------------------------------------------------------------------
 -- A controller to edit the description of the given module.
 editDescrOfModDataController :: ModData -> Controller
 editDescrOfModDataController mdata =
- checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \sinfo-> do
    moddesc <- runQ $ queryDescriptionOfMod (modDataKey mdata)
    maybe (displayError "Illegal URL")
-         (editModDescrController (showModDataController mdata))
+         (\md -> do setParWuiStore wuiEditModDescrStore (sinfo,mdata,md) md
+                    return [formExp editModDescrForm])
          moddesc
+
+--- A WUI form to edit the given ModDescr entity.
+--- Takes also associated entities and a list of possible associations
+--- for every associated entity type.
+editModDescrForm ::
+  HtmlFormDef ((UserSessionInfo,ModData,ModDescr), WuiStore ModDescr)
+editModDescrForm =
+  pwui2FormDef "Controller.ModData.editModDescrForm"
+    wuiEditModDescrStore
+    (\ (sinfo,_,moddescr) -> wModDescrType sinfo moddescr)
+    (\ (_,mdata,_) -> updateModDescrController (showModDataController mdata) True)
+    (\ (sinfo,mdata,_) ->
+         renderWUIWithText sinfo "Modulbeschreibung ändern"
+           "Änderungen speichern"  [par cmts] (showModDataController mdata) ())
+ where
+  cmts = [htxt "Bitte auch die allgemeinen ",
+          ehref "edit_infos.html" [htxt "Hinweise zu Modulbeschreibungen"],
+          htxt " beachten!"]
+
+--- The data stored for executing the WUI form.
+wuiEditModDescrStore ::
+  Global (SessionStore ((UserSessionInfo,ModData,ModDescr), WuiStore ModDescr))
+wuiEditModDescrStore =
+  global emptySessionStore (Persistent (inDataDir "wuiEditModDescrStore"))
+
 
 -----------------------------------------------------------------------------
 -- A controller to add a new prerequisite to module.
 newPreqModDataController :: ModData -> Controller
 newPreqModDataController mdata =
  checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
-  allmods <- runJustT queryAllModDataShortInfo
-  let selmods = mergeSortBy (\m1 m2 -> snd m1 <= snd m2)
-                            (map mod2KeyShortView allmods)
-  sinfo <- getUserSessionInfo
-  return $ selectPreqModuleView sinfo selmods (addPreqModDataController mdata)
+  return [formExp newPreqModDataForm]
+
+-- A form to add a new prerequisite to module.
+newPreqModDataForm :: HtmlFormDef
+  (UserSessionInfo , [(ModDataID,String)], Maybe ModDataID -> Controller)
+newPreqModDataForm =
+  HtmlFormDef "Controller.ModData.newPreqModDataForm" readData
+    selectPreqModuleFormView
  where
-  mod2KeyShortView (key,code,name) = (key, code ++ ": " ++ name)
+  readData = do
+    mdata <- getModDataFromURL
+    allmods <- runJustT queryAllModDataShortInfo
+    let selmods = mergeSortBy (\m1 m2 -> snd m1 <= snd m2)
+                              (map mod2KeyShortView allmods)
+    sinfo <- getUserSessionInfo
+    return (sinfo, selmods, addPreqModDataController mdata)
+   where
+    mod2KeyShortView (key,code,name) = (key, code ++ ": " ++ name)
 
 addPreqModDataController :: ModData -> Maybe ModDataID -> Controller
 addPreqModDataController mdata Nothing =
   nextInProcessOr (showModDataController mdata) Nothing
-addPreqModDataController mdata (Just preqmodkey) = do
-  tr <- runT $ do
-          prerequisites <- getModDataModDatas mdata
-          if preqmodkey `elem` map modDataKey prerequisites
-            then return ()
-            else newPrerequisites (modDataKey mdata) preqmodkey
-  either (\ error -> displayError (showTError error))
-         (\ _ -> do logEvent (NewPrerequisite mdata preqmodkey)
-                    setPageMessage "Neue Voraussetzung hinzugefügt"
-                    nextInProcessOr (showModDataController mdata) Nothing
-         )
-         tr
+addPreqModDataController mdata (Just preqmodkey) =
+  checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
+    tr <- runT $ do
+            prerequisites <- getModDataModDatas mdata
+            if preqmodkey `elem` map modDataKey prerequisites
+              then return ()
+              else newPrerequisites (modDataKey mdata) preqmodkey
+    either (\ error -> displayError (showTError error))
+           (\ _ -> do logEvent (NewPrerequisite mdata preqmodkey)
+                      setPageMessage "Neue Voraussetzung hinzugefügt"
+                      nextInProcessOr (showModDataController mdata) Nothing
+           )
+           tr
 
 -- A controller to delete prerequisites of a module.
 editPreqModDataController :: ModData -> Controller
 editPreqModDataController mdata =
- checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
-  prerequisites <- runQ $ getModDataModDatas mdata
-  let preqmods = mergeSortBy (\m1 m2 -> snd m1 <= snd m2)
-                             (map mod2KeyShortView prerequisites)
-  sinfo <- getUserSessionInfo
-  return $ deletePreqModuleView sinfo preqmods
-             (deletePreqModDataController mdata)
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $
+  \sinfo -> do
+    prerequisites <- runQ $ getModDataModDatas mdata
+    let preqmods = mergeSortBy (\m1 m2 -> snd m1 <= snd m2)
+                               (map mod2KeyShortView prerequisites)
+    setParWuiStore wuiDeletePreqModulStore
+                   (sinfo,mdata)
+                   (map (\ (k,s) -> (k,s,False)) preqmods)
+    return [formExp deletePreqModDataForm]
  where
   mod2KeyShortView md =
     (modDataKey md, modDataCode md ++ ": " ++ modDataNameG md)
+
+-- A form to delete prerequisites of a module.
+deletePreqModDataForm ::
+  HtmlFormDef ((UserSessionInfo, ModData), WuiStore [(ModDataID,String,Bool)])
+deletePreqModDataForm =
+  pwui2FormDef "Controller.ModData.deletePreqModDataForm"
+    wuiDeletePreqModulStore
+    (\ (sinfo,_) -> wListDelete sinfo)
+    (\ (_,mdata) -> deletePreqModDataController mdata)
+    (\ (sinfo,mdata) ->
+         renderWUI sinfo "Prerequisite selection" "Store"
+                   (showModDataController mdata) ())
+ where
+  --- A WUI specification for a list of strings with a deletion option.
+  wListDelete :: UserSessionInfo -> WuiSpec [(ModDataID,String,Bool)]
+  wListDelete sinfo =
+    wList (wTriple (wConstant (\_ -> bold [htxt $ t "Module: "]))
+                   (wConstant htxt)
+                   (wCheckBool [htxt $ t "delete as prerequisite"]))
+   where t = translate sinfo
+
+---- The data stored for executing the WUI form.
+wuiDeletePreqModulStore ::
+  Global (SessionStore ((UserSessionInfo, ModData),
+                        WuiStore [(ModDataID,String,Bool)]))
+wuiDeletePreqModulStore =
+  global emptySessionStore (Persistent (inDataDir "wuiDeletePreqModulStore"))
 
 deletePreqModDataController :: ModData -> [(ModDataID,String,Bool)]
                             -> Controller

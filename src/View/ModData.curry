@@ -1,15 +1,18 @@
-module View.ModData (
- wModData, tuple2ModData, modData2Tuple, wModDataType, blankModDataView,
- createModDataView, editModDataView, showModDataView, listModDataView,
- singleModDataView, numberModuleView, studentModuleView,
- leqModData, copyModView, improveCycle,
- selectPreqModuleView, deletePreqModuleView
+module View.ModData
+  ( wModData, tuple2ModData, modData2Tuple, wModDataType
+  , showModDataView, listModDataView
+  , singleModDataView, numberModuleView, studentModuleView
+  , leqModData, copyModView, improveCycle
+  , selectPreqModuleFormView
  ) where
 
-import WUI
-import HTML.Base
 import Time
 import Sort
+
+import HTML.WUI
+import HTML.Base
+import HTML.Styles.Bootstrap3
+
 import System.Spicey
 import MDB
 import View.MDBEntitiesToHtml
@@ -166,96 +169,22 @@ wModDataType admin modData user userList spcats =
   transformWSpec (tuple2ModData modData,modData2Tuple user)
    (wModData admin admin userList spcats)
 
---- Supplies a WUI form to create a new ModData entity.
---- The fields of the entity have some default values.
-blankModDataView
- :: Bool -> Bool -> [User] -> [(StudyProgram,[Category])]
-  -> (Bool
-       -> (String,String,String,String,String,Int,String,Int,String,Bool,User
-          ,[Category])
-       -> Controller)
-  -> [HtmlExp]
-blankModDataView admin isimport possibleUsers spcats controller =
-  createModDataView admin isimport [] [] [] [] [] 80 wload 1 [] False
-                    (head possibleUsers) [] possibleUsers spcats controller
- where
-  wload = "60 Std. Vorlesung, 30 Std. Präsenzübung, 150 Std. Selbststudium"
 
---- Supplies a WUI form to create a new ModData entity.
---- Takes default values to be prefilled in the form fields.
-createModDataView
- :: Bool -> Bool
-  -> String -> String -> String -> String -> String -> Int -> String -> Int
-  -> String -> Bool -> User -> [Category] -> [User]
-  -> [(StudyProgram,[Category])]
-  -> (Bool
-       -> (String,String,String,String,String,Int,String,Int,String,Bool,User
-          ,[Category])
-       -> Controller)
-  -> [HtmlExp]
-createModDataView admin isimport
-                  defaultCode defaultNameG defaultNameE defaultCycle
-                  defaultPresence defaultECTS defaultWorkload defaultLength
-                  defaultURL defaultVisible defaultUser defaultCategorys
-                  possibleUsers spcats controller =
-  let initdata = (defaultCode,defaultNameG,defaultNameE,defaultCycle
-                 ,defaultPresence,defaultECTS,defaultWorkload,defaultLength
-                 ,defaultURL,defaultVisible,defaultUser,defaultCategorys)
-      
-      wuiframe = wuiEditForm
-                    ("Neues "++if isimport then "Importmodul" else "Modul")
-                    "Anlegen"
-                    (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm
-                         (wModData admin True possibleUsers spcats)
-                         initdata
-                         (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
-
---- Supplies a WUI form to edit the given ModData entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editModDataView
- :: Bool -> (ModData,[Category]) -> User -> [User]
-  -> [(StudyProgram,[Category])]
-  -> (Bool -> (ModData,[Category]) -> Controller) -> [HtmlExp]
-editModDataView admin (modData ,categorys) relatedUser possibleUsers
-                spcats controller =
-  let initdata = (modData,categorys)
-      
-      wuiframe = wuiEditFormWithText
-                   "Moduldaten ändern" "Änderungen speichern"
-                   [par [htxt "Bitte auch die allgemeinen ",
-                         ehref "edit_infos.html"
-                               [htxt "Hinweise zu Modulbeschreibungen"],
-                         htxt " beachten!"]]
-                   (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm
-                         (wModDataType admin modData relatedUser possibleUsers
-                                       spcats)
-                         initdata (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
-
+-----------------------------------------------------------------------------
 --- Supplies a view to show the details of a ModData.
 showModDataView :: ModData -> User -> [Category] -> Controller -> [HtmlExp]
 showModDataView modData relatedUser categorys controller =
   modDataToDetailsView modData relatedUser categorys ++
    [spButton "back to ModData list" (nextController controller)]
 
+
 --- A view to show the number of students of a module in a semester.
-numberModuleView :: String -> ModData -> Int -> Int -> [HtmlExp]
-numberModuleView semcode modData spnums mdbnums =
+numberModuleView :: String -> ModData -> Int -> [HtmlExp]
+numberModuleView semcode modData mdbnums =
   [h1 [htxt $ "Modul \""++modDataNameG modData++"\""],
    par [htxt "Anzahl der Studierenden, die dieses Modul für das Semester '",
         htxt semcode, htxt "' in der Moduldatenbank eingeplant haben: ",
-        htxt (show mdbnums)],
-   par [htxt "Anzahl der Studierenden, die dieses Modul für das Semester '",
-        htxt semcode, htxt "' im Masterstudienplaner eingeplant haben: ",
-        htxt (if spnums<0 then "?" else show spnums)]]
+        htxt (show mdbnums)]]
 
 --- A view to show the students registered for a module in a semester.
 studentModuleView :: String -> ModData -> [(String,String,String)] -> [HtmlExp]
@@ -276,7 +205,7 @@ copyModView oldmod controller =
                "Die Semesterinstanzen des alten Moduls werden dabei nicht "++
                "kopiert!"],
    par [htxt "Neuer Modulcode für das kopierte Modul: ",
-        textfield newcode "" `addAttr` ("size","20"),
+        textField newcode "" `addAttr` ("size","20"),
         spPrimButton "Modul kopieren" copyHandler]]
  where
   newcode free
@@ -284,8 +213,8 @@ copyModView oldmod controller =
   copyHandler env =
     let ncode = env newcode
      in if null ncode
-        then displayError "Fehler: ungueltiger Modulcode" >>= getForm
-        else controller ncode >>= getForm
+        then displayError "Fehler: ungueltiger Modulcode" >>= getPage
+        else controller ncode >>= getPage
 
 
 --- Compares two ModData entities. This order is used in the list view.
@@ -467,15 +396,16 @@ showSemsOfModInstances mis =
           [htxt $ showSemester (modInstTerm mi,modInstYear mi)]
 
 -----------------------------------------------------------------------------
---- A view to select a module and to add it as a prerequisite.
-selectPreqModuleView :: UserSessionInfo -> [(ModDataID,String)]
-                     -> (Maybe ModDataID -> Controller) -> [HtmlExp]
-selectPreqModuleView sinfo mods addpreqcontroller =
+--- A form view to select a module and to add it as a prerequisite.
+selectPreqModuleFormView ::
+  (UserSessionInfo , [(ModDataID,String)], Maybe ModDataID -> Controller)
+  -> [HtmlExp]
+selectPreqModuleFormView (sinfo, mods, addpreqcontroller) =
   [h1 [htxt $ t "Prerequisite selection"],
    htxt $ t "Select a module:",
    selection selmod modSelection,
    spPrimButton (t "Add") selectModule,
-   spButton (t "Cancel") (\_ -> addpreqcontroller Nothing >>= getForm)
+   spButton (t "Cancel") (\_ -> addpreqcontroller Nothing >>= getPage)
   ]
  where
   selmod free
@@ -489,30 +419,6 @@ selectPreqModuleView sinfo mods addpreqcontroller =
     let msel = maybe Nothing
                      (\i -> Just (fst (mods!!i)))
                      (findIndex (\ (_,i) -> i == env selmod) modSelection)
-    in addpreqcontroller msel >>= getForm
-
---- A view to select prerequisites for deletion.
-deletePreqModuleView :: UserSessionInfo -> [(ModDataID,String)]
-                     -> ([(ModDataID,String,Bool)] -> Controller) -> [HtmlExp]
-deletePreqModuleView sinfo mods delpreqcontroller =
-  let wuiframe = wuiEditForm (t "Prerequisite selection")
-                             (t "Store")
-                             (delpreqcontroller [])
-      
-      (hexp ,handler) = wuiWithErrorForm
-                         wListDelete
-                         (map (\ (k,s) -> (k,s,False)) mods)
-                         (nextControllerForData delpreqcontroller)
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
- where
-  t = translate sinfo
-
-  --- A WUI specification for a list of strings with a deletion option.
-  wListDelete :: WuiSpec [(ModDataID,String,Bool)]
-  wListDelete =
-    wList (wTriple (wConstant (\_ -> bold [htxt $ t "Module: "]))
-                   (wConstant htxt)
-                   (wCheckBool [htxt $ t "delete as prerequisite"]))
+    in addpreqcontroller msel >>= getPage
 
 -----------------------------------------------------------------------------

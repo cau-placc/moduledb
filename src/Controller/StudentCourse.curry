@@ -1,4 +1,6 @@
-module Controller.StudentCourse ( mainStudentCourseController ) where
+module Controller.StudentCourse
+  ( mainStudentCourseController, selectSemesterConflictForm )
+ where
 
 import System.Spicey
 import HTML.Base
@@ -10,6 +12,7 @@ import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
 import System.Helpers
+import System.MultiLang
 import Config.UserProcesses
 import View.MDBEntitiesToHtml
 import Database.CDBI.Connection
@@ -24,18 +27,19 @@ mainStudentCourseController =
        [] -> listStudentCourseController
        ["conflicts"] -> showConflictsController
        ["list"] -> listStudentCourseController
-       ["new"] -> newStudentCourseController
-       ["show",s] ->
-         applyControllerOn (readStudentCourseKey s)
-          getStudentCourse showStudentCourseController
-       ["edit",s] ->
-         applyControllerOn (readStudentCourseKey s)
-          getStudentCourse editStudentCourseController
-       ["delete",s] ->
-         applyControllerOn (readStudentCourseKey s)
-          getStudentCourse deleteStudentCourseController
+       --["new"] -> newStudentCourseController
+       ["show",s] -> controllerOnKey s showStudentCourseController
+       --["edit",s] -> controllerOnKey s editStudentCourseController
+       ["delete",s] -> controllerOnKey s deleteStudentCourseController
+       ["destroy",s] -> controllerOnKey s destroyStudentCourseController
        _ -> displayError "Illegal URL"
 
+instance EntityController StudentCourse where
+  controllerOnKey s controller =
+    applyControllerOn (readStudentCourseKey s) getStudentCourse controller
+
+-----------------------------------------------------------------------
+{-
 --- Shows a form to create a new StudentCourse entity.
 newStudentCourseController :: Controller
 newStudentCourseController =
@@ -89,24 +93,27 @@ editStudentCourseController studentCourseToEdit =
 --- to the database.
 updateStudentCourseT :: StudentCourse -> DBAction ()
 updateStudentCourseT studentCourse = updateStudentCourse studentCourse
+-}
 
 --- Deletes a given StudentCourse entity (after asking for confirmation)
 --- and proceeds with the list controller.
 deleteStudentCourseController :: StudentCourse -> Controller
 deleteStudentCourseController studentCourse =
   checkAuthorization
-   (studentCourseOperationAllowed (DeleteEntity studentCourse))
-   $ (\_ ->
-     confirmController
-      [h3
-        [htxt
-          (concat
-            ["Really delete entity \""
-            ,studentCourseToShortView studentCourse
-            ,"\"?"])]]
-      (transactionController (deleteStudentCourseT studentCourse)
-        listStudentCourseController)
-      (showStudentCourseController studentCourse))
+   (studentCourseOperationAllowed (DeleteEntity studentCourse)) $ \si ->
+     confirmDeletionPage si $ concat
+       ["Really delete entity \""
+       ,studentCourseToShortView studentCourse
+       ,"\"?"]
+
+--- Deletes a given StudentCourse entity
+--- and proceeds with the list controller.
+destroyStudentCourseController :: StudentCourse -> Controller
+destroyStudentCourseController studentCourse =
+  checkAuthorization
+   (studentCourseOperationAllowed (DeleteEntity studentCourse)) $ \_ ->
+      transactionController (deleteStudentCourseT studentCourse)
+        listStudentCourseController
 
 --- Transaction to delete a given StudentCourse entity.
 deleteStudentCourseT :: StudentCourse -> DBAction ()
@@ -154,12 +161,24 @@ getStudentCoursesStudent sStudent =
 showConflictsController :: Controller
 showConflictsController = do
   sinfo <- getUserSessionInfo
+  let t = translate sinfo
   if not (isAdminSession sinfo)
     then return [h3 [htxt $ "Operation not allowed!"]]
-    else do
-      csem <- getCurrentSemester >>= return . nextSemester
-      return $ selectSemesterView sinfo semesterConflictController csem
-                 "Select semester:" "Zeige Modulbelegungskonflikte"
+    else
+      return [h2 [htxt $ t "Select semester:"],
+              par [formExp selectSemesterConflictForm]]
+
+--- A form to select modules for a semester.
+selectSemesterConflictForm :: HtmlFormDef (UserSessionInfo, (String,Int))
+selectSemesterConflictForm =
+  HtmlFormDef "Controller.StudentCourse.selectSemesterConflictForm" readData
+   (selectSemesterFormView semesterConflictController
+      "Zeige Modulbelegungskonflikte")
+ where
+  readData = do
+    sinfo <- getUserSessionInfo
+    csem <- getCurrentSemester >>= return . nextSemester
+    return (sinfo,csem)
 
 --- A controller to show the conflicts (student selections for two modules)
 --- for a given semester.

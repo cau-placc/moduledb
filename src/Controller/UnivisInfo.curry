@@ -1,22 +1,28 @@
 module Controller.UnivisInfo (
- mainUnivisInfoController
+ mainUnivisInfoController, loadUnivisDataForm
  ) where
 
+import Global
+import Read
+import Maybe
+import Time
+
+import Config.Storage
+import Controller.ModData
 import System.Helpers
 import System.Spicey
 import HTML.Base
-import Time
+import HTML.Session
+import HTML.WUI
 import MDB
 import MDBExts
 import View.UnivisInfo
-import Maybe
 import System.Authorization
 import System.AuthorizedActions
+import System.SessionInfo
 import Config.UserProcesses
-import Read
 import UnivIS
 import System.Authentication
-import Controller.ModData
 
 --- Choose the controller for a UnivisInfo entity according to the URL parameter.
 mainUnivisInfoController :: Controller
@@ -25,42 +31,90 @@ mainUnivisInfoController =
      case args of
       ["list"] -> listUnivisInfoController
       ["load"] -> loadUnivisController
-      ["showmod",s,ts,ys] -> applyControllerOn (readModDataKey s) getModData
-                               (showModDataUnivisInfoController ts ys)
+      ["showmod",s,ts,ys] ->
+          controllerOnKey s (showModDataUnivisInfoController ts ys)
+      ["email",s,ts,ys] ->
+          controllerOnKey s (emailModDataUnivisInfoController ts ys)
       _ -> displayError "Illegal URL"
 
+------------------------------------------------------------------------
 --- Shows a form to create a new UnivisInfo entity.
 newUnivisInfoController :: Controller
 newUnivisInfoController =
-  checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ ->
-   (do return (blankUnivisInfoView createUnivisInfoController))
+  checkAuthorization (univisInfoOperationAllowed NewEntity) $ \sinfo -> do
+    setParWuiStore newUnivisInfoStore sinfo ("", "", 0, "")
+    return [formExp newUnivisInfoForm]
+
+type NewUnivisInfo = (String,String,Int,String)
+
+--- The form definition to create a new UnivisInfo entity
+--- containing the controller to insert a new UnivisInfo entity.
+newUnivisInfoForm :: HtmlFormDef (UserSessionInfo, WuiStore NewUnivisInfo)
+newUnivisInfoForm =
+  pwui2FormDef "Controller.UnivisInfo.newUnivisInfoForm"
+    newUnivisInfoStore
+    (\_ -> wUnivisInfo)
+    (\_ entity ->
+      checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ ->
+      createUnivisInfoController entity)
+    (\sinfo -> renderWUI sinfo "New UnivisInfo" "Create"
+                         listUnivisInfoController ())
+
+---- The data stored for executing the WUI form.
+newUnivisInfoStore ::
+  Global (SessionStore (UserSessionInfo, WuiStore NewUnivisInfo))
+newUnivisInfoStore =
+  global emptySessionStore (Persistent (inDataDir "newUnivisInfoStore"))
 
 --- Persists a new UnivisInfo entity to the database.
-createUnivisInfoController :: Bool -> (String,String,Int,String) -> Controller
-createUnivisInfoController False _ = listUnivisInfoController
-createUnivisInfoController True (code ,term ,year ,uRL) =
-  do transResult <- runT (newUnivisInfo code term year uRL)
-     flip either (\ _ -> nextInProcessOr listUnivisInfoController Nothing)
-      (\ error -> displayError (showTError error)) transResult
+createUnivisInfoController :: NewUnivisInfo -> Controller
+createUnivisInfoController (code ,term ,year ,uRL) =
+  runT (newUnivisInfo code term year uRL) >>=
+  either (\ error -> displayError (showTError error))
+         (\ _ -> nextInProcessOr listUnivisInfoController Nothing)
 
+------------------------------------------------------------------------
 --- Shows a form to edit the given UnivisInfo entity.
 editUnivisInfoController :: UnivisInfo -> Controller
-editUnivisInfoController univisInfoToEdit =
+editUnivisInfoController univisInfo =
   checkAuthorization
-   (univisInfoOperationAllowed (UpdateEntity univisInfoToEdit)) $ \_ ->
-   (do return
-        (editUnivisInfoView univisInfoToEdit updateUnivisInfoController))
+   (univisInfoOperationAllowed (UpdateEntity univisInfo)) $ \sinfo -> do
+     setParWuiStore editUnivisInfoWuiStore (sinfo,univisInfo) univisInfo
+     return [formExp editUnivisInfoWuiForm]
+
+--- A WUI form to edit UnivisInfo entity.
+--- The default values for the fields are stored in the
+--- `editUnivisInfoWuiStore`.
+editUnivisInfoWuiForm ::
+  HtmlFormDef ((UserSessionInfo,UnivisInfo), WuiStore UnivisInfo)
+editUnivisInfoWuiForm =
+  pwui2FormDef "Controller.UnivisInfo.editUnivisInfoWuiForm"
+    editUnivisInfoWuiStore
+    (\ (_,univisInfo) -> wUnivisInfoType univisInfo)
+    (\_ univisInfo ->
+       checkAuthorization
+         (univisInfoOperationAllowed (UpdateEntity univisInfo)) $ \_ ->
+           updateUnivisInfoController univisInfo)
+    (\ (sinfo,_) ->
+          renderWUI sinfo "Edit UnivisInfo" "Change"
+                    listUnivisInfoController ())
+
+---- The data stored for executing the WUI form.
+editUnivisInfoWuiStore ::
+  Global (SessionStore ((UserSessionInfo,UnivisInfo), WuiStore UnivisInfo))
+editUnivisInfoWuiStore =
+  global emptySessionStore (Persistent (inDataDir "editUnivisInfoWuiStore"))
+
 
 --- Persists modifications of a given UnivisInfo entity to the
---- database depending on the Boolean argument. If the Boolean argument
---- is False, nothing is changed.
-updateUnivisInfoController :: Bool -> UnivisInfo -> Controller
-updateUnivisInfoController False _ = listUnivisInfoController
-updateUnivisInfoController True univisInfo =
-  do transResult <- runT (updateUnivisInfo univisInfo)
-     flip either (\ _ -> nextInProcessOr listUnivisInfoController Nothing)
-      (\ error -> displayError (showTError error)) transResult
+--- database.
+updateUnivisInfoController :: UnivisInfo -> Controller
+updateUnivisInfoController univisInfo =
+  runT (updateUnivisInfo univisInfo) >>=
+  either (\ error -> displayError (showTError error))
+         (\ _ -> nextInProcessOr listUnivisInfoController Nothing)
 
+------------------------------------------------------------------------
 --- Deletes a given UnivisInfo entity (depending on the Boolean
 --- argument) and proceeds with the list controller.
 deleteUnivisInfoController :: UnivisInfo -> Bool -> Controller
@@ -77,15 +131,13 @@ listUnivisInfoController :: Controller
 listUnivisInfoController =
   checkAuthorization (univisInfoOperationAllowed ListEntities) $ \_ -> do
     univisInfos <- runQ queryAllUnivisInfos
-    return (listUnivisInfoView univisInfos showUnivisInfoController
-                       editUnivisInfoController deleteUnivisInfoController)
+    return (listUnivisInfoView univisInfos)
 
 --- Lists all UnivisInfo entities for a module in a given term.
 showModDataUnivisInfoController :: String -> String -> ModData -> Controller
 showModDataUnivisInfoController terms years mdata =
   checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ \_ -> do
     admin <- isAdmin
-    responsible <- runJustT (getResponsibleUser mdata)
     let sem = (terms, Read.readNat years)
     urls <- runQ $ queryUnivisURL (modDataCode mdata) sem
     mis <- runQ $ queryInstancesOfMod (modDataKey mdata)
@@ -94,25 +146,42 @@ showModDataUnivisInfoController terms years mdata =
     lecturer <- if null semmis then return Nothing else
       runT (getUser (modInstUserLecturerModsKey (head semmis)))
            >>= return . flip either Just (const Nothing)
-    return (showUnivisLinks mdata sem lecturer urls admin
-               (emailModuleMessageController listUnivisInfoController
-                                             mdata responsible))
+    return (showUnivisLinks mdata sem lecturer urls admin)
+
+--- Shows a form to send an email about UnivisInfo entities for a module
+--- in a given term.
+emailModDataUnivisInfoController :: String -> String -> ModData -> Controller
+emailModDataUnivisInfoController terms years mdata =
+  checkAuthorization checkAdmin $ \_ -> do
+    let sem = (terms, Read.readNat years)
+    urls <- runQ $ queryUnivisURL (modDataCode mdata) sem
+    let msg = if null urls
+                then missingUnivISMessage mdata sem
+                else missingMDBMessage mdata sem
+    putSessionData emailModuleStore (mdata, msg)
+    return [formExp emailModuleMessageForm]
 
 --- Shows a UnivisInfo entity.
 showUnivisInfoController :: UnivisInfo -> Controller
 showUnivisInfoController univisInfo =
-  checkAuthorization (univisInfoOperationAllowed (ShowEntity univisInfo)) $ \_ ->
-   (do return (showUnivisInfoView univisInfo listUnivisInfoController))
+ checkAuthorization (univisInfoOperationAllowed (ShowEntity univisInfo)) $ \_ ->
+   (return (showUnivisInfoView univisInfo listUnivisInfoController))
 
---- Shows a form to load data from UnivisInfo for selectable term.
+------------------------------------------------------------------------
+--- Shows a form to load data from UnivisInfo for a selectable term.
 loadUnivisController :: Controller
 loadUnivisController =
-  checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ -> do
-    csem  <- getCurrentSemester
-    return (loadUnivisView csem loadUnivisDataController)
+  checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ ->
+    return [formExp loadUnivisDataForm]
+
+--- A form to load data from UnivisInfo for a selectable term.
+loadUnivisDataForm :: HtmlFormDef (String,Int)
+loadUnivisDataForm = HtmlFormDef "Controller.UnivisInfo.loadUnivisDataForm"
+  getCurrentSemester (loadUnivisView loadUnivisDataController)
 
 loadUnivisDataController :: (String,Int) -> Controller
 loadUnivisDataController sem =
-  readAndStoreUnivisOfSemester sem >>= \s -> return [h1 [htxt s]]
+  checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ ->
+    readAndStoreUnivisOfSemester sem >>= \s -> return [h1 [htxt s]]
 
-
+------------------------------------------------------------------------

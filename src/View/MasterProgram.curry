@@ -1,10 +1,9 @@
 module View.MasterProgram (
  wMasterProgram, tuple2MasterProgram, masterProgram2Tuple, wMasterProgramType,
- blankMasterProgramView, editMasterProgramView,
  showMasterProgramView, listMasterProgramView, singleMasterProgramView
  ) where
 
-import WUI
+import HTML.WUI
 import HTML.Base
 import Time
 import Sort
@@ -91,34 +90,6 @@ wMasterProgramType admin masterProgram masterCoreArea user masterCoreAreaList
    (tuple2MasterProgram masterProgram,masterProgram2Tuple masterCoreArea user)
    (wMasterProgram admin masterCoreAreaList userList)
 
---- Supplies a WUI form to create a new MasterProgram entity.
-blankMasterProgramView
- :: User -> (String,Int) -> [MasterProgram] -> [MasterCoreArea]
-  -> (Bool -> (String,Maybe MasterProgram,String,Int,String,String,
-               String,Bool,MasterCoreArea,User)
-      -> Controller)
-  -> [HtmlExp]
-blankMasterProgramView user (curterm,curyear) mprogs
-                       possibleMasterCoreAreas controller =
-  let initdata = ("",Nothing,curterm,curyear,head possibleMasterCoreAreas)
-      
-      storeTitleController ::
-         Bool -> (String,Maybe MasterProgram,String,Int,MasterCoreArea)
-              -> Controller
-      storeTitleController store (title,mprog,term,year,mcarea) =
-         controller store (title,mprog,term,year,"","","",False,mcarea,user)
-
-      wuiframe = wuiEditForm "Neues Masterprogramm" "Masterprogram anlegen"
-                             (storeTitleController False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm
-                         (wMasterProgramTitle curyear mprogs
-                                              possibleMasterCoreAreas)
-                         initdata (nextControllerForData
-                                  (storeTitleController True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
-
 wMasterProgramTitle :: Int -> [MasterProgram] -> [MasterCoreArea]
            -> WuiSpec (String,Maybe MasterProgram,String,Int,MasterCoreArea)
 wMasterProgramTitle curyear mprogs possibleMasterCoreAreas =
@@ -137,32 +108,6 @@ wMasterProgramTitle curyear mprogs possibleMasterCoreAreas =
      ,[textstyle "label label_for_type_int" "Beginn im Jahr"]
      ,[textstyle "label label_for_type_relation" "Masterbereich"]]
 
---- Supplies a WUI form to edit the given MasterProgram entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editMasterProgramView
- :: Bool -> MasterProgram -> MasterCoreArea -> User -> [MasterCoreArea]
-  -> [User] -> (Bool -> MasterProgram -> Controller)
-  -> [HtmlExp]
-editMasterProgramView admin masterProgram relatedMasterCoreArea relatedUser
-                possibleMasterCoreAreas possibleUsers controller =
-  let initdata = masterProgram
-      
-      wuiframe = wuiEditFormWithText
-                   "Masterprogrammbeschreibung" "Änderungen speichern"
-                   [par [htxt "Bitte auch die ",
-                         ehref "editprog_infos.html"
-                               [htxt "Hinweise zu Masterprogrammen"],
-                         htxt " beachten!"]]
-                   (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm
-                         (wMasterProgramType admin masterProgram
-                           relatedMasterCoreArea relatedUser
-                           possibleMasterCoreAreas possibleUsers)
-                         initdata (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
 
 --- Supplies a view to show the details of a MasterProgram.
 showMasterProgramView
@@ -243,8 +188,7 @@ singleMasterProgramView
   -> (MasterProgInfo -> Controller) -> [HtmlExp]
 singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
    xmlurl _
-   editMasterProgramController deleteMasterProgramController
-   editMasterProgInfoController =
+   editMasterProgramController _ editMasterProgInfoController =
   [h1 [htxt (masterProgramName mprog)
   ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]
   ]] ++
@@ -256,14 +200,6 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
    par $ (if admin || editallowed
           then [spButton "Beschreibung/Sichtbarkeit ändern"
                        (nextController (editMasterProgramController mprog))]
-          else []) ++
-         (if admin
-          then [spButton "Masterprogramm löschen"
-                 (confirmNextController
-                    (h3 [htxt (concat
-                         ["Masterprogramm \"",
-                          masterProgramToShortView mprog,"\" löschen?"])])
-                    (deleteMasterProgramController mprog))]
           else [])] ++
   [h4 [htxt "Beschreibung:"],
    par [HtmlText (docText2html (masterProgramDesc mprog))],

@@ -1,9 +1,9 @@
 module View.ModDescr (
  wModDescr, tuple2ModDescr, modDescr2Tuple, wModDescrType,
- editModDescrView, showModDescrView, listModDescrView
+ showModDescrView, listModDescrView
  ) where
 
-import WUI
+import HTML.WUI
 import HTML.Base
 import Time
 import Sort
@@ -83,28 +83,28 @@ wModDescrType sinfo modDescr =
   transformWSpec (tuple2ModDescr modDescr,modDescr2Tuple)
                  (wModDescr sinfo)
 
---- Supplies a WUI form to edit the given ModDescr entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editModDescrView :: UserSessionInfo -> ModDescr
-                 -> (Bool -> ModDescr -> Controller)
-                 -> [HtmlExp]
-editModDescrView sinfo modDescr controller =
-  let initdata = modDescr
-      
-      wuiframe = wuiEditFormWithText
-                   "Modulbeschreibung ändern" "Änderungen speichern"
-                   [par [htxt "Bitte auch die allgemeinen ",
-                         ehref "edit_infos.html"
-                               [htxt "Hinweise zu Modulbeschreibungen"],
-                         htxt " beachten!"]]
-                   (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm
-                         (wModDescrType sinfo modDescr)
-                         initdata (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
+-- --- Supplies a WUI form to edit the given ModDescr entity.
+-- --- Takes also associated entities and a list of possible associations
+-- --- for every associated entity type.
+-- editModDescrView :: UserSessionInfo -> ModDescr
+--                  -> (Bool -> ModDescr -> Controller)
+--                  -> [HtmlExp]
+-- editModDescrView sinfo modDescr controller =
+--   let initdata = modDescr
+--       
+--       wuiframe = wuiEditFormWithText
+--                    "Modulbeschreibung ändern" "Änderungen speichern"
+--                    [par [htxt "Bitte auch die allgemeinen ",
+--                          ehref "edit_infos.html"
+--                                [htxt "Hinweise zu Modulbeschreibungen"],
+--                          htxt " beachten!"]]
+--                    (controller False initdata)
+--       
+--       (hexp ,handler) = wuiWithErrorForm
+--                          (wModDescrType sinfo modDescr)
+--                          initdata (nextControllerForData (controller True))
+--                          (wuiFrameToForm wuiframe)
+--    in wuiframe hexp handler
 
 --- Supplies a view to show the details of a ModDescr.
 showModDescrView :: ModDescr -> ModData -> Controller -> [HtmlExp]
@@ -123,27 +123,11 @@ leqModDescr x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of ModDescr entities
 --- and the controller functions to show, delete and edit entities.
-listModDescrView
- :: [ModDescr] -> (ModDescr -> Controller) -> (ModDescr -> Controller)
-  -> (ModDescr -> Bool -> Controller) -> [HtmlExp]
-listModDescrView modDescrs showModDescrController editModDescrController
-                 deleteModDescrController =
+listModDescrView :: [ModDescr] -> [HtmlExp]
+listModDescrView modDescrs =
   [h1 [htxt "ModDescr list"]
   ,spTable
     ([take 11 modDescrLabelList] ++
      map listModDescr (sortBy leqModDescr modDescrs))]
   where listModDescr :: ModDescr -> [[HtmlExp]]
-        listModDescr modDescr =
-          modDescrToListView modDescr ++
-           [[spSmallButton "show"
-              (nextController (showModDescrController modDescr))
-            ,spSmallButton "edit"
-              (nextController (editModDescrController modDescr))
-            ,spSmallButton "delete"
-              (confirmNextController
-                (h3
-                  [htxt
-                    (concat
-                      ["Really delete entity \"",modDescrToShortView modDescr
-                      ,"\"?"])])
-                (deleteModDescrController modDescr))]]
+        listModDescr modDescr = modDescrToListView modDescr

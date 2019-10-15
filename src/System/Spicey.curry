@@ -7,18 +7,17 @@ module System.Spicey (
   module System, 
   module HTML.Base, 
   module ReadNumeric, 
-  Controller, applyControllerOn,
-  nextController, nextControllerForData, confirmNextController,
-  confirmControllerOLD, confirmController, transactionController,
-  transactionBindController,
+  Controller, EntityController(..), applyControllerOn,
+  nextController, nextControllerForData,
+  confirmDeletionPage, confirmDeletionPageWithRefs,
+  transactionController, transactionBindController,
   getControllerURL,getControllerParams, showControllerURL,
-  getForm, wDateType, wBoolean, wUncheckMaybe,
+  getPage, wDateType, wBoolean, wUncheckMaybe,
   mainContentsWithSideMenu,
-  displayError, displayHtmlError, cancelOperation,
-  wuiEditForm, wuiEditFormWithText, wuiFrameToForm,
-  renderWuiForm, renderLabels,
+  displayError, displayUrlError, displayHtmlError, cancelOperation,
+  renderWUI, renderWUIWithText, renderLabels,
   nextInProcessOr,
-  selectSemesterView,
+  selectSemesterFormView,
   stringToHtml, maybeStringToHtml,
   intToHtml,maybeIntToHtml, floatToHtml, maybeFloatToHtml,
   boolToHtml, maybeBoolToHtml, dateToHtml, maybeDateToHtml,
@@ -27,7 +26,7 @@ module System.Spicey (
   hrefModule, smallHrefModule, hrefExtModule, hrefModInst,
   hrefUnivisInfo, hrefUnivisDanger,
   withELink,
-  spHref, spHrefBlock, spEHref, hrefPrimButton,
+  spHref, spHrefBlock, spEHref,
   spButton, spPrimButton, spSmallButton, spSmallPrimaryButton,
   spTable, spHeadedTable, addTitle, textWithInfoIcon,
   spShortSelectionInitial,
@@ -38,27 +37,30 @@ module System.Spicey (
 
 import FilePath       ( (</>) )
 import List           ( findIndex, init, last )
-import System
-import HTML.Base
 import ReadNumeric
-import WUI
+import System
 import Time
-import System.Routes
-import System.Processes
+
+import Config.Storage   ( inDataDir )
+import ConfigMDB        ( baseLoginURL )
 import Config.UserProcesses
-import System.Session
+import HTML.Base
+import HTML.WUI
+import HTML.Session
+import HTML.Styles.Bootstrap3
 import Global
 import System.Authentication
 import System.Helpers
 import Distribution
 import System.MultiLang
 import System.SessionInfo
+import System.Routes
+import System.Processes
 
 import Database.CDBI.ER
-import ConfigMDB        ( storageDir )
-import MDB              (runT, runJustT)
+import MDB              ( runT, runJustT )
 
----------------- vvvv -- Framework functions -- vvvv -----------------------
+--------------------------------------------------------------------------
 
 -- a viewable can be turned into a representation which can be displayed
 -- as interface
@@ -74,6 +76,12 @@ type ViewBlock = [HtmlExp]
 --- Spicey.getControllerParams inside the controller.
 type Controller = IO ViewBlock
 
+--- The type class `EntityController` provides the application
+--- of a controller to some entity identified by a key string.
+class EntityController a where
+  controllerOnKey :: String -> (a -> Controller) -> Controller
+
+
 --- Reads an entity for a given key and applies a controller to it.
 applyControllerOn :: Maybe enkey -> (enkey -> DBAction en)
                   -> (en -> Controller) -> Controller
@@ -81,43 +89,49 @@ applyControllerOn Nothing _ _ = displayError "Illegal URL"
 applyControllerOn (Just userkey) getuser usercontroller =
   runJustT (getuser userkey) >>= usercontroller
 
-nextController :: Controller -> _ -> IO HtmlForm
+nextController :: Controller -> _ -> IO HtmlPage
 nextController controller _ = do
   view <- controller
-  getForm view
+  getPage view
 
 -- for WUIs
-nextControllerForData :: (a -> Controller) -> a -> IO HtmlForm
+nextControllerForData :: (a -> Controller) -> a -> IO HtmlPage
 nextControllerForData controller param = do
   view <- controller param
-  getForm view
+  getPage view
 
---- Call the next controller after a user confirmation.
---- The Boolean user answer is passed as an argument to the controller.
-confirmNextController :: HtmlExp -> (Bool -> Controller) -> _ -> IO HtmlForm
-confirmNextController question controller _ = do
-  getForm [question,
-           par [spButton "Ja"   (nextController (controller True)),
-                spButton "Nein" (nextController (controller False))]]
-
---- Call the next controller after a user confirmation.
---- The Boolean user answer is passed as an argument to the controller.
-confirmControllerOLD :: HtmlExp -> (Bool -> Controller) -> Controller
-confirmControllerOLD question controller = do
-  return [question,
-           par [spButton "Ja"   (nextController (controller True)),
-                spButton "Nein" (nextController (controller False))]]
-
---- Ask the user for a confirmation and call the corresponding controller.
+------------------------------------------------------------------------------
+--- Generates a page to ask the user for a confirmation to delete an entity
+--- specified in the controller URL (of the form "entity/delete/key/...").
+--- The yes/no answers are references derived from the controller URL
+--- where the second argument is replaced by "destroy"/"show".
+--- @param sinfo    - the current info about the user session
 --- @param question - a question asked
---- @param yescontroller - the controller used if the answer is "yes"
---- @param nocontroller  - the controller used if the answer is "no"
-confirmController :: [HtmlExp] -> Controller -> Controller -> Controller
-confirmController question yescontroller nocontroller = do
-  return $ question ++
-           [par [spButton "Ja"   (nextController yescontroller),
-                 spButton "Nein" (nextController nocontroller )]]
+confirmDeletionPage :: UserSessionInfo -> String -> Controller
+confirmDeletionPage sinfo question = do
+  (entity,ctrlargs) <- getControllerURL
+  case ctrlargs of
+    (_:args) -> confirmDeletionPageWithRefs sinfo question
+                  (showControllerURL entity ("destroy":args))
+                  (showControllerURL entity ("show" : args))
+    _ -> displayUrlError
 
+--- Generates a page to ask the user for a confirmation to delete an entity.
+--- The yes/no are href buttons where the URLs are provided as arguments.
+--- @param sinfo    - the current info about the user session
+--- @param question - a question asked
+--- @param yesref   - the reference used in the "yes" button
+--- @param noref    - the reference used in the "no" button
+confirmDeletionPageWithRefs :: UserSessionInfo -> String -> String -> String
+                            -> Controller
+confirmDeletionPageWithRefs sinfo question yesref noref = return $
+  [h3 [htxt question],
+   par [hrefButton yesref [htxt $ t "Yes"], nbsp,
+        hrefButton noref  [htxt $ t "No"]]]
+ where
+  t = translate sinfo
+
+------------------------------------------------------------------------------
 --- A controller to execute a transaction and proceed with a given
 --- controller if the transaction succeeds. Otherwise, the
 --- transaction error is shown.
@@ -189,53 +203,45 @@ showControllerURL :: String -> [String] -> String
 showControllerURL ctrlurl params = '?' : ctrlurl ++ concatMap ('/':) params
 
 --------------------------------------------------------------------------
--- A standard HTML frame for editing data with WUIs.
-wuiEditForm :: String -> String -> Controller
-           -> HtmlExp -> WuiHandler -> [HtmlExp]
-wuiEditForm title buttontag controller hexp handler =
-  [h1 [htxt title],
-   blockstyle "editform" [hexp],
-   wuiHandler2button buttontag handler `addClass` "btn btn-primary",
-   spButton "Abbrechen" (nextController (cancelOperation >> controller))]
-
--- A standard HTML frame for editing data with WUIs where some
--- additional text explanations are included at the top.
-wuiEditFormWithText :: String -> String -> [HtmlExp] -> Controller
-           -> HtmlExp -> WuiHandler -> [HtmlExp]
-wuiEditFormWithText title buttontag cmts controller hexp handler =
-  [h1 [htxt title]] ++ cmts ++
-  [blockstyle "editform" [hexp],
-   par [wuiHandler2button buttontag handler `addClass` "btn btn-primary",
-        spButton "Abbrechen" (nextController (cancelOperation >> controller))]]
-
---- Transforms a WUI frame into a standard form.
-wuiFrameToForm :: (HtmlExp -> WuiHandler -> [HtmlExp])
-               -> HtmlExp -> WuiHandler -> IO HtmlForm
-wuiFrameToForm wframe hexp wuihandler = getForm (wframe hexp wuihandler)
-
 --- Standard rendering for WUI forms to edit data.
---- @param wuispec    - the associated WUI specification
---- @param initdata   - initial data to be prefilled in the form
---- @param ctrl       - the controller that handles the submission of the data
---- @param cancelctrl - the controller called if submission is cancelled
+--- @param sinfo      - the UserSessionInfo to select the language
 --- @param title      - the title of the WUI form
 --- @param buttontag  - the text on the submit button
-renderWuiForm :: WuiSpec a -> a -> (a -> Controller) -> Controller
-              -> String -> String -> [HtmlExp]
-renderWuiForm wuispec initdata controller cancelcontroller title buttontag =
-  wuiframe hexp handler
- where
-  wuiframe wuihexp hdlr =
-    [h1 [htxt title],
-     blockstyle "editform" [wuihexp],
-     wuiHandler2button buttontag hdlr `addClass` "btn btn-primary",
-     spButton "Abbrechen" (nextController (cancelOperation >> cancelcontroller))]
-      
-  (hexp,handler) = wuiWithErrorForm wuispec
-                     initdata
-                     (nextControllerForData controller)
-                     (\he whdlr -> getForm (wuiframe he whdlr))
+--- @param cancelctrl - the controller called if submission is cancelled
+--- @param envpar     - environment parameters (e.g., user session data)
+--- @param hexp       - the HTML expression representing the WUI form
+--- @param handler    - the handler for submitting data
+renderWUI :: UserSessionInfo -> String -> String -> Controller
+          -> a -> HtmlExp -> (CgiEnv -> Controller) -> [HtmlExp]
+renderWUI sinfo title buttontag cancelctrl _ hexp handler =
+  [h1 [htxt $ t title],
+   blockstyle "editform" [hexp],
+   breakline,
+   primButton (t buttontag) (\env -> handler env >>= getPage),
+   defaultButton (t "Cancel") (nextController (cancelOperation >> cancelctrl))]
+ where t = translate sinfo
 
+--- Standard rendering for WUI forms to edit data where some
+-- additional text explanations are included at the top.
+--- @param sinfo      - the UserSessionInfo to select the language
+--- @param title      - the title of the WUI form
+--- @param buttontag  - the text on the submit button
+--- @param cmts       - the explanations to be included at the top
+--- @param cancelctrl - the controller called if submission is cancelled
+--- @param envpar     - environment parameters (e.g., user session data)
+--- @param hexp       - the HTML expression representing the WUI form
+--- @param handler    - the handler for submitting data
+renderWUIWithText :: UserSessionInfo -> String -> String -> [HtmlExp]
+  -> Controller -> a -> HtmlExp -> (CgiEnv -> Controller) -> [HtmlExp]
+renderWUIWithText sinfo title buttontag cmts cancelctrl _ hexp handler =
+  [h1 [htxt $ t title]] ++ cmts ++
+  [blockstyle "editform" [hexp],
+   breakline,
+   primButton (t buttontag) (\env -> handler env >>= getPage),
+   defaultButton (t "Cancel") (nextController (cancelOperation >> cancelctrl))]
+ where t = translate sinfo
+
+--------------------------------------------------------------------------
 --- A WUI for manipulating CalendarTime entities.
 --- It is based on a WUI for dates, i.e., the time is ignored.
 wDateType :: WuiSpec ClockTime
@@ -277,7 +283,28 @@ getStandardMenu sinfo = do
              [stprogIcon, nbsp, htxt $ t "Degree programs"]],
        [href "?AdvisorStudyProgram/list"
              [adprogIcon, nbsp, htxt $ t "Master programs"]],
-       [href "?search" [searchIcon, nbsp, htxt $ t "Search modules"]]]
+       [rawSearchForm sinfo],
+       [href "?search" [searchIcon, nbsp, htxt $ t "Search modules"]]
+      ]
+
+-- This is the translation of the search form produced by
+-- `Controller.Search.searchModuleForm`. To avoid cyclic module
+-- dependencies, we have to include the generated form here.
+-- Be careful with changes in the original form!
+rawSearchForm :: UserSessionInfo -> HtmlExp
+rawSearchForm sinfo = 
+  HtmlStruct "form" [("method","post"), ("action","?search"),
+                     ("class","navbar-form navbar-left"),
+                     ("title", searchToolTip sinfo)]
+    [HtmlStruct "input" [("type","hidden"), ("name","FORMID"),
+                         ("value","Controller.Search.searchModuleForm")] [],
+     HtmlStruct "input" [("type","text"), ("class","form-control input-sm"),
+                         ("placeholder", t "Quick search"),
+                         ("name","FIELD_0")] [],
+     HtmlStruct "input" [("type","submit"), ("class","btn btn-success btn-sm"),
+                         ("name","FIELD_1"), ("value", t "Search!")] []
+    ]
+ where t = translate sinfo
 
 --- The menu for a user if it he is logged in.
 userMenu :: UserSessionInfo -> HtmlExp
@@ -447,8 +474,8 @@ stdNavBar routemenu adminmenu sinfo =
    ,toEHref "http://univis.uni-kiel.de/" "UnivIS"
    ,litem [htxt " "] `addClass` "divider"
    ,litem [htxt $ t "Supported by:"] `addClass` "dropdown-header"
-   ,toEHref "http://www.curry-language.org"
-            ("Curry ("++t "programming language"++")")
+   ,toEHref "http://www.curry-lang.org"
+            ("Curry (" ++ t "programming language" ++ ")")
    ,toEHref "http://www.informatik.uni-kiel.de/~pakcs/spicey"
             "Spicey (Web Framework)"
    ,toEHref "http://getbootstrap.com/"
@@ -458,41 +485,38 @@ stdNavBar routemenu adminmenu sinfo =
   toEHref url s = litem [ehref url [arrowIcon, nbsp, htxt s]]
 
 
-getForm :: ViewBlock -> IO HtmlForm
-getForm viewBlock = case viewBlock of
+getPage :: ViewBlock -> IO HtmlPage
+getPage viewBlock = case viewBlock of
   [HtmlText ""] ->
-       return $ HtmlForm "forward to Spicey"
-                  [formMetaInfo [("http-equiv","refresh"),
+       return $ HtmlPage "forward to Spicey"
+                  [pageMetaInfo [("http-equiv","refresh"),
                                  ("content","1; url=show.cgi")]]
                   [par [htxt "You will be forwarded..."]]
   _ -> do
-    cookie  <- sessionCookie
     body    <- addLayout viewBlock
-    return $ HtmlForm spiceyTitle
-                ([responsiveView, cookie, icon, MultipleHandlers] ++
-                 map (\f -> FormCSS $ "css/"++f++".css")
+    withSessionCookieInfo $ HtmlPage spiceyTitle
+                ([pageEnc "utf-8", responsiveView, icon] ++
+                 map (\f -> PageCSS $ "css/"++f++".css")
                      ["bootstrap.min","spicey"])
                 (body ++
                  map (\f -> HtmlStruct "script" [("src","js/"++f++".js")] [])
                      ["jquery.min","bootstrap.min"])
  where
    responsiveView =
-     formMetaInfo [("name","viewport"),
+     pageMetaInfo [("name","viewport"),
                    ("content","width=device-width, initial-scale=1.0")]
 
-   icon = HeadInclude (HtmlStruct "link"
-                                  [("rel","shortcut icon"),
-                                   ("href","favicon.ico")] [])
+   icon = PageHeadInclude $
+            HtmlStruct "link" [("rel","shortcut icon"),
+                               ("href","favicon.ico")] []
 
---- A view to select a semester with a controller for this semester
-selectSemesterView :: UserSessionInfo -> ((String,Int) -> Controller)
-                   -> (String,Int) -> String -> String -> [HtmlExp]
-selectSemesterView sinfo selcontroller cursem title buttontxt =
-  [h2 [htxt $ t title],
-   par $ [ spShortSelectionInitial insem semSelection
-                                   (findSemesterSelection cursem cursem)
-         , spPrimButton (t buttontxt) selectHandler ]
-  ]
+--- A form view to select a semester with a controller for this semester
+selectSemesterFormView :: ((String,Int) -> Controller) -> String
+                       -> (UserSessionInfo, (String,Int)) -> [HtmlExp]
+selectSemesterFormView selcontroller buttontxt (sinfo,cursem) =
+  [ spShortSelectionInitial insem semSelection
+                            (findSemesterSelection cursem cursem)
+  , spPrimButton (t buttontxt) selectHandler ]
  where
   insem free
 
@@ -503,7 +527,7 @@ selectSemesterView sinfo selcontroller cursem title buttontxt =
 
   selectHandler env =
     let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
-    in selcontroller (semesterSelection cursem !! semi) >>= getForm
+    in selcontroller (semesterSelection cursem !! semi) >>= getPage
 
 -------------------------------------------------------------------------
 -- Action performed when a "cancel" button is pressed.
@@ -513,6 +537,10 @@ cancelOperation = do
   inproc <- isInProcess
   if inproc then removeCurrentProcess else done
   setPageMessage $ (if inproc then "Process" else "Operation") ++ " cancelled"
+
+-- A controller to display an URL error.
+displayUrlError :: Controller
+displayUrlError = displayError "Illegal URL"
 
 -- dummy-controller to display an error string
 displayError :: String -> Controller
@@ -626,11 +654,6 @@ spHref :: String -> [HtmlExp] -> HtmlExp
 spHref ref hexps =
   href ref hexps `addClass` "btn btn-sm btn-default"
 
---- Hypertext reference in Spicey (rendered as a primary button):
-hrefPrimButton :: String -> [HtmlExp] -> HtmlExp
-hrefPrimButton ref hexps =
-  href ref hexps `addClass` "btn btn-sm btn-primary"
-
 --- Hypertext reference in Spicey (rendered as a block button):
 spHrefBlock :: String -> [HtmlExp] -> HtmlExp
 spHrefBlock ref hexps =
@@ -664,18 +687,15 @@ spEHrefDangerBlock ref hexps = withELink $ spHrefDangerBlock ref hexps
 
 --- Input button in Spicey (rendered as a default button):
 spButton :: String -> HtmlHandler -> HtmlExp
-spButton label handler =
-  button label handler `addClass` "btn btn-default"
+spButton = defaultButton
 
 --- Primary input button in Spicey (rendered as a default primary button):
 spPrimButton :: String -> HtmlHandler -> HtmlExp
-spPrimButton label handler =
-  button label handler `addClass` "btn btn-primary"
+spPrimButton = primButton
 
 --- Small input button in Spicey (rendered as a small button):
 spSmallButton :: String -> HtmlHandler -> HtmlExp
-spSmallButton label handler =
-  button label handler `addClass` "btn btn-sm btn-default"
+spSmallButton = smallButton
 
 --- Small input button in Spicey (rendered as a small primary button):
 spSmallPrimaryButton :: String -> HtmlHandler -> HtmlExp
@@ -753,13 +773,13 @@ pageMessage = global emptySessionStore Temporary
 --- Gets the page message and delete it.
 getPageMessage :: IO String
 getPageMessage = do
-  msg <- getSessionData pageMessage
+  msg <- getSessionData pageMessage ""
   removeSessionData pageMessage
-  return (maybe "" id msg)
+  return msg
 
 --- Set the page message of the current session.
 setPageMessage :: String -> IO ()
-setPageMessage msg = putSessionData msg pageMessage
+setPageMessage msg = putSessionData pageMessage msg
 
 --------------------------------------------------------------------------
 -- Another example for using sessions.
@@ -768,11 +788,11 @@ setPageMessage msg = putSessionData msg pageMessage
 
 --- Definition of the session state to store the last URL (as a string).
 lastUrls :: Global (SessionStore [String])
-lastUrls = global emptySessionStore (Persistent (storageDir </> "sessionUrls"))
+lastUrls = global emptySessionStore (Persistent (inDataDir "sessionUrls"))
 
 --- Gets the list of URLs of the current session.
 getLastUrls :: IO [String]
-getLastUrls = getSessionData lastUrls >>= return . maybe [] id
+getLastUrls = getSessionData lastUrls []
 
 --- Gets the last URL of the current session (or "?").
 getLastUrl :: IO String
@@ -784,14 +804,14 @@ getLastUrlParameters :: IO (String,[String])
 getLastUrlParameters = do
   urls <- getLastUrls
   return $ if null urls
-           then ("",[])
-           else parseUrl (head urls)
+             then ("",[])
+             else parseUrl (head urls)
 
 --- Saves the last URL of the current session.
 saveLastUrl :: String -> IO ()
 saveLastUrl url = do
   urls <- getLastUrls
-  putSessionData (url : take 2 urls) lastUrls
+  putSessionData lastUrls (url : take 2 urls)
 
 --------------------------------------------------------------------------
 --- If the SQLResult is an error, display it, otherwise apply the

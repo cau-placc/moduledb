@@ -34,7 +34,7 @@ import ReadShowTerm
 import System(getEnviron,getHostname)
 import Time
 import Unsafe(unsafePerformIO)
-import WUI
+import HTML.WUI
 
 import Database.CDBI.Connection
 import HTML.Base

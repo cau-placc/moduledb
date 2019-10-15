@@ -1,18 +1,27 @@
 module Controller.AdvisorStudyProgram
-        ( mainAdvisorStudyProgramController
-        , showAllXmlAdvisorStudyPrograms, showXmlAdvisorStudyProgram
-        )
+  ( mainAdvisorStudyProgramController, createAdvisorStudyProgramWuiForm
+  , editAdvisorStudyProgramWuiForm, addCatModForm
+  , showAllXmlAdvisorStudyPrograms, showXmlAdvisorStudyProgram
+  )
 where
 
-import System.Helpers
-import System.Spicey
-import HTML.Base
+import Global
 import List(find)
 import Time
-import ConfigMDB(baseURL)
+
+import HTML.Base
+import HTML.Session
+import HTML.WUI
+
+import ConfigMDB ( baseURL )
+import Config.Storage
+import Controller.AdvisorModule
+import Controller.Default
+import System.Helpers
+import System.Spicey
 import MDB
 import MDBExts
-import Controller.AdvisorModule
+import View.AdvisorModule
 import View.AdvisorStudyProgram
 import View.StudyProgram
 import Maybe
@@ -20,6 +29,7 @@ import System.SessionInfo
 import Sort(sortBy)
 import System.Authorization
 import System.AuthorizedActions
+import System.MultiLang
 import View.Category(leqCategory)
 import Config.UserProcesses
 import View.MDBEntitiesToHtml
@@ -33,24 +43,23 @@ mainAdvisorStudyProgramController =
        [] -> listAdvisorStudyProgramController
        ["list"] -> listAdvisorStudyProgramController
        ["new"] -> newAdvisorStudyProgramController
-       ["show",s] ->
-         applyControllerOn (readAdvisorStudyProgramKey s)
-          getAdvisorStudyProgram
-          showAdvisorStudyProgramController
-       ["edit",s] ->
-         applyControllerOn (readAdvisorStudyProgramKey s)
-          getAdvisorStudyProgram
-          editAdvisorStudyProgramController
-       ["visible",s] ->
-         applyControllerOn (readAdvisorStudyProgramKey s)
-          getAdvisorStudyProgram
-          toggleVisibilityASPController
-       ["delete",s] ->
-         applyControllerOn (readAdvisorStudyProgramKey s)
-          getAdvisorStudyProgram
-          deleteAdvisorStudyProgramController
-       _ -> displayError "Illegal URL"
+       ["show",s] -> controllerOnKey s showAdvisorStudyProgramController
+       ["edit",s] -> controllerOnKey s editAdvisorStudyProgramController
+       ["visible",s] -> controllerOnKey s toggleVisibilityASPController
+       ["delete",s] -> controllerOnKey s deleteAdvisorStudyProgramController
+       ["destroy",s] -> controllerOnKey s destroyAdvisorStudyProgramController
+       ["addcatmod",s,c] -> controllerOnKey s (addCatModKeyController c)
+       ["deladvmod",s,am] -> controllerOnKey s (deleteAdvModKeyController am)
+       ["destroyadvmod",s,am] ->
+          controllerOnKey s (destroyAdvModKeyController am)
+       _ -> displayUrlError
 
+instance EntityController AdvisorStudyProgram where
+  controllerOnKey s controller =
+    applyControllerOn (readAdvisorStudyProgramKey s) getAdvisorStudyProgram
+                      controller
+
+-------------------------------------------------------------------------
 --- Shows a form to create a new AdvisorStudyProgram entity.
 newAdvisorStudyProgramController :: Controller
 newAdvisorStudyProgramController =
@@ -58,26 +67,59 @@ newAdvisorStudyProgramController =
    do allStudyPrograms <- runQ queryAllStudyPrograms
       allUsers <- runQ queryAllUsers
       csem  <- getCurrentSemester >>= return . nextSemester
-      return $ maybe
-       [h1 [htxt "Illegal operation"]]
-       (\user ->
-         blankAdvisorStudyProgramView sinfo csem
-           (sortBy leqStudyProgram allStudyPrograms)
-           user allUsers
-           (\entity ->
-             transactionBindController
-               (createAdvisorStudyProgramT entity)
-               (\asp -> logEvent (NewAdvisorStudyProgram asp) >>
-                        showAdvisorStudyProgramController asp))
-           listAdvisorStudyProgramController)
+      maybe
+       (return [h1 [htxt "Illegal operation"]])
+       (\user -> do
+         setParWuiStore wuiCreateAdvisorStudyProgramStore
+           (sinfo, snd csem, sortBy leqStudyProgram allStudyPrograms, allUsers)
+           ("", "", snd csem, "", "", "", False,
+            defaultStudyProgram allStudyPrograms, user)
+         return [formExp createAdvisorStudyProgramWuiForm])
        (maybe Nothing
               (\ln -> find (\u -> userLogin u == ln) allUsers)
               (userLoginOfSession sinfo))
+ where
+  defaultStudyProgram allstudyprograms =
+    maybe (head allstudyprograms)
+          id
+          -- Select MSc Inf study program as the default program:
+          (find (\sp -> studyProgramProgKey sp == "MScI15") allstudyprograms)
+
+type NewAdvisorStudyProgram =
+       (String,String,Int,String,String,String,Bool,StudyProgram,User)
+
+--- A WUI form to create a new AdvisorStudyProgram entity.
+--- The default values for the fields are stored in the
+--- `wuiCreateAdvisorStudyProgramStore`.
+createAdvisorStudyProgramWuiForm ::
+  HtmlFormDef ((UserSessionInfo,Int,[StudyProgram],[User]),
+               WuiStore NewAdvisorStudyProgram)
+createAdvisorStudyProgramWuiForm =
+  pwui2FormDef
+    "Controller.AdvisorStudyProgram.createAdvisorStudyProgramWuiForm"
+    wuiCreateAdvisorStudyProgramStore
+    (\ (sinfo,curyear,allstudyprograms,allusers) ->
+         wAdvisorStudyProgram curyear True sinfo allstudyprograms allusers)
+    (\_ entity -> checkAuthorization (advisorStudyProgramOperationAllowed NewEntity) $ \_ ->
+                  transactionBindController
+                    (createAdvisorStudyProgramT entity)
+                    (\asp -> logEvent (NewAdvisorStudyProgram asp) >>
+                             showAdvisorStudyProgramController asp))
+    (\ (sinfo,_,_,_) ->
+         renderWUI sinfo "Neues Studienprogramm" "Studienprogramm anlegen"
+                   defaultController ())
+
+---- The data stored for executing the WUI form.
+wuiCreateAdvisorStudyProgramStore ::
+  Global (SessionStore ((UserSessionInfo,Int,[StudyProgram],[User]),
+                        WuiStore NewAdvisorStudyProgram))
+wuiCreateAdvisorStudyProgramStore =
+  global emptySessionStore
+         (Persistent (inDataDir "wuiCreateAdvisorStudyProgramStore"))
 
 --- Transaction to persist a new AdvisorStudyProgram entity to the database.
-createAdvisorStudyProgramT
-  :: (String,String,Int,String,String,String,Bool,StudyProgram,User)
-  -> DBAction AdvisorStudyProgram
+createAdvisorStudyProgramT ::
+  NewAdvisorStudyProgram -> DBAction AdvisorStudyProgram
 createAdvisorStudyProgramT
     (name,term,year,desc,prereq,comments,visible,studyProgram,user) =
   newAdvisorStudyProgramWithUserStudyAdvisingKeyWithStudyProgramStudyProgramsAdvisedKey
@@ -91,13 +133,13 @@ createAdvisorStudyProgramT
    (userKey user)
    (studyProgramKey studyProgram)
 
+-------------------------------------------------------------------------
 --- Shows a form to edit the given AdvisorStudyProgram entity.
 editAdvisorStudyProgramController :: AdvisorStudyProgram -> Controller
 editAdvisorStudyProgramController advisorStudyProgramToEdit =
   checkAuthorization
    (advisorStudyProgramOperationAllowed
-     (UpdateEntity advisorStudyProgramToEdit))
-   $ (\sinfo ->
+     (UpdateEntity advisorStudyProgramToEdit)) $ \sinfo ->
      do allStudyPrograms <- runQ queryAllStudyPrograms
         allUsers <- runQ queryAllUsers
         studyProgramsAdvisedStudyProgram <- runJustT
@@ -105,20 +147,47 @@ editAdvisorStudyProgramController advisorStudyProgramToEdit =
                                                advisorStudyProgramToEdit)
         studyAdvisingUser <- runJustT
                               (getStudyAdvisingUser advisorStudyProgramToEdit)
-        let aspkey = advisorStudyProgramKey advisorStudyProgramToEdit
-            showctrl = showASPController aspkey
         csem <- getCurrentSemester
-        return
-         (editAdvisorStudyProgramView sinfo csem advisorStudyProgramToEdit
-           studyProgramsAdvisedStudyProgram
-           studyAdvisingUser
-           allStudyPrograms
-           allUsers
-           (\entity ->
-             transactionController
-               (updateAdvisorStudyProgramT entity)
-               (logEvent (UpdateAdvisorStudyProgram entity) >> showctrl))
-           showctrl))
+        setParWuiStore wuiEditAdvisorStudyProgramStore
+           (sinfo, snd csem, advisorStudyProgramToEdit,
+            studyProgramsAdvisedStudyProgram,
+            sortBy leqStudyProgram allStudyPrograms,
+            studyAdvisingUser, allUsers)
+           advisorStudyProgramToEdit
+        return [formExp editAdvisorStudyProgramWuiForm]
+
+--- A WUI form to edit a given AdvisorStudyProgram entity.
+editAdvisorStudyProgramWuiForm ::
+  HtmlFormDef ((UserSessionInfo,Int,AdvisorStudyProgram,
+                StudyProgram,[StudyProgram],User,[User]),
+               WuiStore AdvisorStudyProgram)
+editAdvisorStudyProgramWuiForm =
+  pwui2FormDef
+    "Controller.AdvisorStudyProgram.editAdvisorStudyProgramWuiForm"
+    wuiEditAdvisorStudyProgramStore
+    (\ (sinfo,curyear,advisorStudyProgram,studyprogram,allstudyprograms,
+        user,allusers) ->
+         wAdvisorStudyProgramType sinfo curyear advisorStudyProgram
+                                  studyprogram user allstudyprograms allusers)
+    (\_ entity -> checkAuthorization (advisorStudyProgramOperationAllowed
+                                        (UpdateEntity entity)) $ \_ ->
+                  transactionController
+                    (updateAdvisorStudyProgramT entity)
+                    (logEvent (UpdateAdvisorStudyProgram entity) >>
+                     showAdvisorStudyProgramController entity))
+    (\ (sinfo,_,asp,_,_,_,_) ->
+         renderWUI sinfo "Studienprogramm ändern" "Change"
+                   (showAdvisorStudyProgramController asp) ())
+
+---- The data stored for executing the WUI form.
+wuiEditAdvisorStudyProgramStore ::
+  Global (SessionStore ((UserSessionInfo,Int,AdvisorStudyProgram,
+                         StudyProgram,[StudyProgram],User,[User]),
+                        WuiStore AdvisorStudyProgram))
+wuiEditAdvisorStudyProgramStore =
+  global emptySessionStore
+         (Persistent (inDataDir "wuiEditAdvisorStudyProgramStore"))
+
 
 --- A show controller for a given AdvisorStudyProgram key:
 showASPController :: AdvisorStudyProgramID -> Controller
@@ -146,31 +215,35 @@ toggleVisibilityASPController asp =
                                     Nothing)
             tr
 
+------------------------------------------------------------------------------
 --- Deletes a given AdvisorStudyProgram entity (after asking for confirmation)
 --- and proceeds with the list controller.
 deleteAdvisorStudyProgramController :: AdvisorStudyProgram -> Controller
 deleteAdvisorStudyProgramController asprog =
   checkAuthorization
-   (advisorStudyProgramOperationAllowed (DeleteEntity asprog))
-   $ (\_ ->
-     confirmController
-      [h3
-        [htxt
-          (concat
-            ["Studienprogramm \""
-            ,advisorStudyProgramToShortView asprog
-            ,"\" wirklich löschen?"])]]
-      (transactionController
+   (advisorStudyProgramOperationAllowed (DeleteEntity asprog)) $ \si ->
+     confirmDeletionPage si $ concat
+       [ "Studienprogramm \""
+       , advisorStudyProgramToShortView asprog
+       , "\" wirklich löschen?" ]
+
+--- Deletes a given AdvisorStudyProgram entity
+--- and proceeds with the list controller.
+destroyAdvisorStudyProgramController :: AdvisorStudyProgram -> Controller
+destroyAdvisorStudyProgramController asprog =
+  checkAuthorization
+   (advisorStudyProgramOperationAllowed (DeleteEntity asprog)) $ \_ ->
+     (transactionController
         (deleteAdvisorStudyProgramT asprog)
         (logEvent (DeleteAdvisorStudyProgram asprog) >>
          listAdvisorStudyProgramController))
-      (showAdvisorStudyProgramController asprog))
 
 --- Transaction to delete a given AdvisorStudyProgram entity.
 deleteAdvisorStudyProgramT :: AdvisorStudyProgram -> DBAction ()
 deleteAdvisorStudyProgramT advisorStudyProgram =
   deleteAdvisorStudyProgram advisorStudyProgram
 
+------------------------------------------------------------------------------
 --- Lists all AdvisorStudyProgram entities with buttons to show, delete,
 --- or edit an entity.
 listAdvisorStudyProgramController :: Controller
@@ -184,16 +257,85 @@ listAdvisorStudyProgramController =
        sprogs <- runJustT (mapM getStudyProgramsAdvisedStudyProgram asprogs)
        return (listAdvisorStudyProgramView sinfo (zip asprogs sprogs))
 
---- Shows a AdvisorStudyProgram entity.
-addCatModController :: AdvisorStudyProgram -> Controller
-                    -> Category -> Controller
-addCatModController asprog nextctrl cat = do
-  modinstdatas <- runJustT (getCatModInstsInSemesters cat startsem 3)
-  selectAdvisorModuleController asprog cat modinstdatas nextctrl
+-------------------------------------------------------------------------
+--- Shows a form to add a module to a AdvisorStudyProgram entity.
+addCatModKeyController :: String -> AdvisorStudyProgram -> Controller
+addCatModKeyController catkey asprog =
+  maybe displayUrlError
+        (\catid -> runJustT (getCategory catid) >>= addCatModController asprog)
+        (readCategoryKey catkey)
+
+--- Shows a form to add a module to a AdvisorStudyProgram entity.
+addCatModController :: AdvisorStudyProgram -> Category -> Controller
+addCatModController asprog cat =
+  checkAuthorization
+    (advisorStudyProgramOperationAllowed (UpdateEntity asprog)) $ \sinfo -> do
+    modinstdatas <- runJustT (getCatModInstsInSemesters cat startsem 3)
+    setParWuiStore wuiAddCatModFormStore
+                   (sinfo, asprog,modinstdatas)
+                   (False, head modinstdatas, cat)
+    return [formExp addCatModForm]
  where
   startsem = (advisorStudyProgramTerm asprog,
               advisorStudyProgramYear asprog)
 
+--- A WUI form to edit a given AdvisorStudyProgram entity.
+addCatModForm ::
+  HtmlFormDef ((UserSessionInfo,AdvisorStudyProgram,[(ModInst,ModData)]),
+               WuiStore (Bool,(ModInst,ModData),Category))
+addCatModForm =
+  pwui2FormDef
+    "Controller.AdvisorStudyProgram.addCatModForm"
+    wuiAddCatModFormStore
+    (\ (_,_,possibleModInsts) -> wSelectAdvisorModule possibleModInsts)
+    (\ (_,asp,_) entity ->
+        transactionController
+          (let (c1,(c2,_),c3) = entity
+           in createAdvisorModuleT (c1,c2,c3,asp))
+          (showASPController (advisorStudyProgramKey asp)))
+    (\ (sinfo,asp,_) ->
+         renderWUI sinfo "Neues Modul im Studienprogramm" "Hinzufügen"
+                   (showAdvisorStudyProgramController asp) ())
+
+---- The data stored for executing the WUI form.
+wuiAddCatModFormStore ::
+  Global (SessionStore
+            ((UserSessionInfo,AdvisorStudyProgram,[(ModInst,ModData)]),
+             WuiStore (Bool,(ModInst,ModData),Category)))
+wuiAddCatModFormStore =
+  global emptySessionStore (Persistent (inDataDir "wuiAddCatModFormStore"))
+
+-------------------------------------------------------------------------
+--- Deletes an advisor module from a given AdvisorStudyProgram entity
+--- (after asking for confirmation)
+--- and proceeds with the show AdvisorStudyProgram controller.
+deleteAdvModKeyController :: String -> AdvisorStudyProgram -> Controller
+deleteAdvModKeyController _ asprog =
+  checkAuthorization
+    (advisorStudyProgramOperationAllowed (UpdateEntity asprog)) $ \sinfo -> do
+      (entity,ctrlargs) <- getControllerURL
+      case ctrlargs of
+        [_,s,am] -> confirmDeletionPageWithRefs sinfo
+          ("Modulempfehlung im Program \"" ++ advisorStudyProgramName asprog ++
+           "\" wirklich löschen?")
+          (showControllerURL entity ["destroyadvmod",s,am])
+          (showControllerURL entity ["show",s])
+        _ -> displayUrlError
+
+--- Deletes an advisor module from a given AdvisorStudyProgram entity
+--- and proceeds with the show AdvisorStudyProgram controller.
+destroyAdvModKeyController :: String -> AdvisorStudyProgram -> Controller
+destroyAdvModKeyController amkeys asprog =
+  checkAuthorization
+    (advisorStudyProgramOperationAllowed (UpdateEntity asprog)) $ \_ ->
+       maybe displayUrlError
+             (\amkey -> transactionController (getAdvisorModule amkey >>=
+                                               deleteAdvisorModuleT)
+                          (showAdvisorStudyProgramController asprog))
+             (readAdvisorModuleKey amkeys)
+
+
+-------------------------------------------------------------------------
 --- Shows a AdvisorStudyProgram entity.
 showAdvisorStudyProgramController :: AdvisorStudyProgram -> Controller
 showAdvisorStudyProgramController asprog =
@@ -208,20 +350,28 @@ showAdvisorStudyProgramController asprog =
                                               == advisorStudyProgramKey asprog)
         amdatas <- runJustT (getAdvisorModuleData amods)
         advisor <- runJustT (getStudyAdvisingUser asprog)
-        let showcontroller =
-              showASPController (advisorStudyProgramKey asprog)
         return
          (showAdvisorStudyProgramView
            sinfo
            (isAdminSession sinfo)
            (Just (userLogin advisor) == userLoginOfSession sinfo)
-           (addCatModController asprog showcontroller)
-           (deleteAdvisorModuleController showcontroller)
+           addCatModRef
+           delAdvModRef
            asprog (xmlURL asprog)
            studyprog
            amdatas
            categories
            advisor))
+ where
+  addCatModRef cat = spHref ("?AdvisorStudyProgram/addcatmod/" ++
+                             showAdvisorStudyProgramKey asprog ++ "/" ++
+                             showCategoryKey cat)
+                            [htxt "Modulempfehlung hinzufügen"]
+
+  delAdvModRef am  = spHref ("?AdvisorStudyProgram/deladvmod/" ++
+                             showAdvisorStudyProgramKey asprog ++ "/" ++
+                             showAdvisorModuleKey am)
+                            [htxt "Modulempfehlung löschen"]
 
 --- Gets the associated StudyProgram entity for a given AdvisorStudyProgram entity.
 getStudyProgramsAdvisedStudyProgram
@@ -248,7 +398,7 @@ advisorProgURL asp =
   baseURL++"?AdvisorStudyProgram/show/"++string2urlencoded (showAdvisorStudyProgramKey asp)
 
 -- Show XML document containing all visible master programs
-showAllXmlAdvisorStudyPrograms :: IO HtmlForm
+showAllXmlAdvisorStudyPrograms :: IO HtmlPage
 showAllXmlAdvisorStudyPrograms = do
   allasprogs <- runQ $ liftM (filter advisorStudyProgramVisible)
                              queryAllAdvisorStudyPrograms
@@ -256,7 +406,7 @@ showAllXmlAdvisorStudyPrograms = do
   return (HtmlAnswer "text/xml"
                      (showXmlDoc (xml "studyprograms" aspxmls)))
 
-showXmlAdvisorStudyProgram :: AdvisorStudyProgramID -> IO HtmlForm
+showXmlAdvisorStudyProgram :: AdvisorStudyProgramID -> IO HtmlPage
 showXmlAdvisorStudyProgram aspkey = do
   asprog <- runJustT $ getAdvisorStudyProgram aspkey
   xmldoc <- getAdvisorStudyProgramAsXML asprog

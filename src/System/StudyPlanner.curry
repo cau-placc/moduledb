@@ -4,18 +4,21 @@
 --- (running at http://www-ps.informatik.uni-kiel.de/studienplaner/)
 ---------------------------------------------------------------------------
 
-module System.StudyPlanner where
+module System.StudyPlanner
+  ( getModuleInstancesStudents, getTakenModuleInstances
+  ) where
 
-import URL(getContentsOfUrl)
-import ReadNumeric(readInt)
-import System.Helpers(showSemesterCode)
-import System.Spicey(spEHref)
+import ReadNumeric    ( readInt )
+
 import HTML.Base
+import URL            ( getContentsOfUrl )
 
-import ConfigMDB(studyPlannerURL)
+import ConfigMDB      ( studyPlannerURL )
 import MDB
-import MDBExts(modInstSemester)
+import MDBExts        ( modInstSemester )
 import SpecialQueries ( queryStudentNumberOfModSemester )
+import System.Helpers ( showSemesterCode )
+import System.Spicey  ( spEHref )
 
 --- Retrieve the number of students of a module in a given semester
 --- (represented by the semester code string).
@@ -31,9 +34,9 @@ getModuleInstancesStudents mdata minsts = do
   mapIO getModInstStudents minsts
  where
   getModInstStudents mi = do
-    spnum  <- getModuleStudents mdata (showSemesterCode (modInstSemester mi))
+    --spnum  <- getModuleStudents mdata (showSemesterCode (modInstSemester mi))
     mdbnum <- runQ $ queryStudentNumberOfModSemester mdata (modInstSemester mi)
-    return (spnum + mdbnum)
+    return $ mdbnum -- + spnum
 
 --- Retrieve module instances that are already planned by some students
 --- either in the study planner or in the module database.
@@ -43,6 +46,7 @@ getTakenModuleInstances modinsts = do
  where
   getTakenModuleInstance mi = do
     mdata <- runJustT (getModData (modInstModDataModuleInstancesKey mi))
-    spnum <- getModuleStudents mdata (showSemesterCode (modInstSemester mi))
+    --spnum <- getModuleStudents mdata (showSemesterCode (modInstSemester mi))
     mdbnum <- runQ $ queryStudentNumberOfModSemester mdata (modInstSemester mi)
-    return (if spnum > 0 || mdbnum > 0 then [mi] else [])
+    --return (if spnum > 0 || mdbnum > 0 then [mi] else [])
+    return (if mdbnum > 0 then [mi] else [])

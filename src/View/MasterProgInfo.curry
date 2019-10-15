@@ -1,10 +1,10 @@
 module View.MasterProgInfo (
  wMasterProgInfo, tuple2MasterProgInfo, masterProgInfo2Tuple,
  wMasterProgInfoType,
- editMasterProgInfoView, showMasterProgInfoView, listMasterProgInfoView
+ showMasterProgInfoView, listMasterProgInfoView
  ) where
 
-import WUI
+import HTML.WUI
 import HTML.Base
 import Time
 import Sort
@@ -145,28 +145,28 @@ wMasterProgInfoType cursem masterProgInfo modinsts =
    (tuple2MasterProgInfo masterProgInfo,masterProgInfo2Tuple)
    (wMasterProgInfo cursem modinsts)
 
---- Supplies a WUI form to edit the given MasterProgInfo entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editMasterProgInfoView
- :: MasterProgInfo -> (String,Int) -> [(ModInst,ModData,[Category])]
- -> (Bool -> MasterProgInfo -> Controller) -> [HtmlExp]
-editMasterProgInfoView masterProgInfo cursem modinsts controller =
-  let initdata = masterProgInfo
-      
-      wuiframe = wuiEditFormWithText
-                   "Modulempfehlungen" "Ändern"
-                   [par [htxt "Bitte auch die ",
-                         ehref "editprog_infos.html"
-                               [htxt "Hinweise zu Masterprogrammen"],
-                         htxt " beachten!"]]
-                   (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm
-                         (wMasterProgInfoType cursem masterProgInfo modinsts)
-                         initdata (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
+-- --- Supplies a WUI form to edit the given MasterProgInfo entity.
+-- --- Takes also associated entities and a list of possible associations
+-- --- for every associated entity type.
+-- editMasterProgInfoView
+--  :: MasterProgInfo -> (String,Int) -> [(ModInst,ModData,[Category])]
+--  -> (Bool -> MasterProgInfo -> Controller) -> [HtmlExp]
+-- editMasterProgInfoView masterProgInfo cursem modinsts controller =
+--   let initdata = masterProgInfo
+--       
+--       wuiframe = wuiEditFormWithText
+--                    "Modulempfehlungen" "Ändern"
+--                    [par [htxt "Bitte auch die ",
+--                          ehref "editprog_infos.html"
+--                                [htxt "Hinweise zu Masterprogrammen"],
+--                          htxt " beachten!"]]
+--                    (controller False initdata)
+--       
+--       (hexp ,handler) = wuiWithErrorForm
+--                          (wMasterProgInfoType cursem masterProgInfo modinsts)
+--                          initdata (nextControllerForData (controller True))
+--                          (wuiFrameToForm wuiframe)
+--    in wuiframe hexp handler
 
 --- Supplies a view to show the details of a MasterProgInfo.
 showMasterProgInfoView
@@ -187,30 +187,12 @@ leqMasterProgInfo x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of MasterProgInfo entities
 --- and the controller functions to show, delete and edit entities.
-listMasterProgInfoView
- :: [MasterProgInfo] -> (MasterProgInfo -> Controller)
-  -> (MasterProgInfo -> Controller) -> (MasterProgInfo -> Bool -> Controller)
-  -> [HtmlExp]
-listMasterProgInfoView masterProgInfos showMasterProgInfoController
-                       editMasterProgInfoController
-                       deleteMasterProgInfoController =
+listMasterProgInfoView :: [MasterProgInfo] -> [HtmlExp]
+listMasterProgInfoView masterProgInfos =
   [h1 [htxt "MasterProgInfo list"]
   ,spTable
     ([take 6 masterProgInfoLabelList] ++
      map listMasterProgInfo (mergeSortBy leqMasterProgInfo masterProgInfos))]
   where listMasterProgInfo :: MasterProgInfo -> [[HtmlExp]]
         listMasterProgInfo masterProgInfo =
-          masterProgInfoToListView masterProgInfo ++
-           [[spSmallButton "show"
-              (nextController (showMasterProgInfoController masterProgInfo))
-            ,spSmallButton "edit"
-              (nextController (editMasterProgInfoController masterProgInfo))
-            
-            ,spSmallButton "delete"
-              (confirmNextController
-                (h3
-                  [htxt
-                    (concat
-                      ["Really delete entity \""
-                      ,masterProgInfoToShortView masterProgInfo,"\"?"])])
-                (deleteMasterProgInfoController masterProgInfo))]]
+          masterProgInfoToListView masterProgInfo

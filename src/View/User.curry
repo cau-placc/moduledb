@@ -1,12 +1,15 @@
 module View.User (
-   wUser, tuple2User, user2Tuple, wUserType, blankUserView, createUserView
- , editUserView, showUserView, listUserView, leqUser
- , loginView, sendLoginDataView, changePasswordView
+   wUser, tuple2User, user2Tuple, wUserType
+ , showUserView, listUserView, leqUser
+ , loginView, loginFormView
+ , sendLoginDataView, sendLoginDataFormView
+ , changePasswordFormView
  ) where
 
 import Mail ( sendMail )
-import WUI
+import HTML.WUI
 import HTML.Base
+import HTML.Styles.Bootstrap3
 import Time
 import Sort
 import System.Authentication
@@ -62,52 +65,7 @@ user2Tuple user =
 wUserType :: User -> WuiSpec User
 wUserType user = transformWSpec (tuple2User user,user2Tuple) wUser
 
---- Supplies a WUI form to create a new User entity.
---- The fields of the entity have some default values.
-blankUserView
- :: ClockTime
-  -> (Bool -> (String,String,String,String,String,String,String,ClockTime)
-       -> Controller)
-  -> [HtmlExp]
-blankUserView ctime controller =
-  createUserView [] [] [] [] [] [] [] ctime controller
-
---- Supplies a WUI form to create a new User entity.
---- Takes default values to be prefilled in the form fields.
-createUserView
- :: String -> String -> String -> String -> String -> String -> String
-  -> ClockTime
-  -> (Bool -> (String,String,String,String,String,String,String,ClockTime)
-       -> Controller)
-  -> [HtmlExp]
-createUserView defaultLogin defaultName defaultFirst defaultTitle defaultEmail
-               defaultUrl defaultPassword defaultLastLogin controller =
-  let initdata = (defaultLogin,defaultName,defaultFirst,defaultTitle
-                 ,defaultEmail,defaultUrl,defaultPassword,defaultLastLogin)
-      
-      wuiframe = wuiEditForm "Neuen Benutzer anlegen" "Anlegen"
-                             (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm wUser initdata
-                         (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
-
---- Supplies a WUI form to edit the given User entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editUserView :: User -> (Bool -> User -> Controller) -> [HtmlExp]
-editUserView user controller =
-  let initdata = user
-      
-      wuiframe = wuiEditForm "Benutzerdaten ändern"
-                             "Speichern" (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm (wUserType user) initdata
-                         (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
-
+-----------------------------------------------------------------------------
 --- Supplies a view to show the details of a User.
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of User entities
@@ -118,7 +76,7 @@ showUserView user =
   userToDetailsView user ++
   [par [spHref ("?User/edit/"++showUserKey user) [htxt "Ändern"], nbsp
        ,spHref ("?User/delete/"++showUserKey user) [htxt "Löschen"], nbsp
-       ,spHref ("?User/login/"++showUserKey user) [htxt "Anmelden"], nbsp
+       ,spHref ("?User/loginAs/"++showUserKey user) [htxt "Anmelden"], nbsp
        ,spHref ("?User/modules/"++showUserKey user) [htxt "Module"]]
   ]
 
@@ -138,22 +96,30 @@ listUserView users =
    listUser :: User -> [[HtmlExp]]
    listUser user =
       userToListView user ++
-      [[spHref ("?User/show/"++showUserKey user) [htxt "Anzeigen"]],
-       [spHref ("?User/edit/"++showUserKey user) [htxt "Ändern"]],
-       [spHref ("?User/delete/"++showUserKey user) [htxt "Löschen"]],
-       [spHref ("?User/loginAs/"++showUserKey user) [htxt "Anmelden"]],
-       [spHref ("?User/modules/"++showUserKey user) [htxt "Module"]]]
+      [[spHref ("?User/show/" ++ showUserKey user) [htxt "Anzeigen"]],
+       [spHref ("?User/edit/" ++ showUserKey user) [htxt "Ändern"]],
+       [spHref ("?User/delete/" ++ showUserKey user) [htxt "Löschen"]],
+       [spHref ("?User/loginAs/" ++ showUserKey user) [htxt "Anmelden"]],
+       [spHref ("?User/modules/" ++ showUserKey user) [htxt "Module"]]]
 
 -----------------------------------------------------------------------------
 --- View to login.
-loginView :: Controller -> UserSessionInfo -> [HtmlExp]
-loginView controller sinfo =
+loginView :: UserSessionInfo -> HtmlExp -> [HtmlExp]
+loginView sinfo loginform =
   [h3 [htxt $ t "Login as lecturer"],
-   spTable [[[htxt $ t "Login name:"], [textfield loginfield ""]],
-            [[htxt $ t "Password:"],   [password passfield]]],
-   par [spPrimButton (t "Login") loginHandler],
+   loginform,
    hrule,
    par [hrefPrimButton "?User/sendlogin" [htxt $ t "Forgot your login data?"]]
+  ]
+ where
+  t = translate sinfo
+
+--- View to login.
+loginFormView :: Controller -> UserSessionInfo -> [HtmlExp]
+loginFormView controller sinfo =
+  [spTable [[[htxt $ t "Login name:"], [textField loginfield ""]],
+            [[htxt $ t "Password:"],   [password passfield]]],
+   par [spPrimButton (t "Login") loginHandler]
   ]
  where
   loginfield,passfield free
@@ -166,13 +132,13 @@ loginView controller sinfo =
     users <- runQ $ queryUserByLoginPass loginname hashpass
     if null users
       then do setPageMessage $ t "Wrong login data!"
-              nextInProcessOr controller Nothing >>= getForm
+              nextInProcessOr controller Nothing >>= getPage
       else do loginToSession loginname
               ctime <- getClockTime
               runT (updateUser (setUserLastLogin (head users) ctime))
               setPageMessage (t "Logged in as: " ++ loginname)
               urls <- getLastUrls
-              getForm $
+              getPage $
                [h1 [htxt $ t "Login successful"],
                 par [htxt $ loginText sinfo loginname],
                 par [htxt $ timeoutText sinfo]] ++
@@ -181,16 +147,23 @@ loginView controller sinfo =
                 else []
 
 ------------------------------------------------------------------------
--- send login data to a new user
-sendLoginDataView :: Controller -> UserSessionInfo -> [HtmlExp]
-sendLoginDataView controller sinfo =
+-- A view to send login data to a new user.
+sendLoginDataView :: UserSessionInfo -> HtmlExp -> [HtmlExp]
+sendLoginDataView sinfo sendlogindataform =
   [h1 [htxt $ t "Send login data"],
-   par [htxt $ sendPasswordCmt sinfo],
-   par [htxt $ t "Your email address: ", textfield emailref ""],
+   sendlogindataform]
+ where
+  t = translate sinfo
+
+-- A form view to send login data to a new user.
+sendLoginDataFormView :: Controller -> UserSessionInfo -> [HtmlExp]
+sendLoginDataFormView controller sinfo =
+  [par [htxt $ sendPasswordCmt sinfo],
+   par [htxt $ t "Your email address: ", textField emailref ""],
    hrule,
    spPrimButton (t "Send new password") sendHandler,
    spButton (t "Cancel")
-            (const (cancelOperation >> controller >>= getForm))]
+            (const (cancelOperation >> controller >>= getPage))]
  where
   emailref free
 
@@ -199,24 +172,26 @@ sendLoginDataView controller sinfo =
   sendHandler env = do
     users <- runQ $ queryCondUser (\u -> userEmail u == env emailref)
     if null users
-     then displayError (unknownUser sinfo) >>= getForm
-     else sendNewEmail (head users)
+     then displayError (unknownUser sinfo) >>= getPage
+     else sendNewEmail (head users)        >>= getPage
 
   sendNewEmail user = do
     newpass <- randomPassword 10
     hashpass <- getUserHash (userLogin user) newpass
-    sendMail adminEmail
-             (userEmail user)
-             (t "Login data for module database")
-             (loginEmailText sinfo (userLogin user) newpass)
-    runT $ updateUser (setUserPassword user hashpass)
-    getForm [h1 [htxt $ t "Acknowledgment"],
-             h3 [htxt $ t "Your new password has been sent"]]
+    runT (updateUser (setUserPassword user hashpass)) >>=
+      either (\error -> displayError (show error))
+        (\_ -> do
+          sendMail adminEmail
+                   (userEmail user)
+                   (t "Login data for module database")
+                   (loginEmailText sinfo (userLogin user) newpass)
+          return [h1 [htxt $ t "Acknowledgment"],
+                  h3 [htxt $ t "Your new password has been sent"]])
 
 -----------------------------------------------------------------------------
---- View to change the password if a user is logged in.
-changePasswordView :: Controller -> UserSessionInfo -> [HtmlExp]
-changePasswordView controller sinfo =
+--- A form view to change the password if a user is logged in.
+changePasswordFormView :: Controller -> UserSessionInfo -> [HtmlExp]
+changePasswordFormView controller sinfo =
   case userLoginOfSession sinfo of
    Nothing -> [h3 [htxt $ "Operation not allowed!"]]
    Just ln ->
@@ -226,10 +201,10 @@ changePasswordView controller sinfo =
               [[htxt $ t "Repeat new password:"], [password newpass2]]],
      hrule,
      spPrimButton (t "Change password")
-                  (\env -> passwdHandler ln env >>= getForm),
+                  (\env -> passwdHandler ln env >>= getPage),
      nbsp,
      spButton (t "Cancel")
-              (const (cancelOperation >> controller >>= getForm))]
+              (const (cancelOperation >> controller >>= getPage))]
  where
   t = translate sinfo
 

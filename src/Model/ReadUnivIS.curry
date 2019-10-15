@@ -15,6 +15,7 @@ import ConfigMDB(storageDir)
 -------------------------------------------------------------------------
 -- Benchmark definitions:
 
+getRunTime :: IO Int
 getRunTime = getProcessInfos >>= \i -> return (maybe 0 id (lookup RunTime i))
 
 runBench :: String -> (XmlExp -> IO _) -> IO ()
@@ -41,6 +42,7 @@ runBenchComp xmlfile xmlcomp = do
 
 -------------------------------------------------------------------------
 -- Matching in UnivIS person structure (just for testing):
+findPerson :: String -> XmlExp -> (String,String,String)
 findPerson name
   (deepXml' "Person"
      (with [xml "firstname" f, xml "lastname" n,
@@ -48,14 +50,17 @@ findPerson name
   | textOf n == name
   = (textOf f, textOf n, textOf e)
 
+testPerson :: String -> IO ()
 testPerson name = do
   xexp <- readXmlFile "univis_persons.xml"
   printValues (set2 findPerson name xexp)
 
+testPersonBench :: String -> IO [(String,String,String)]
 testPersonBench name =
   runBenchComp "univis_persons.xml" (sortValues . set2 findPerson name)
 
 -- find the IDs of each lecture in a given semester:
+findLectureURL :: String -> XmlExp -> (String,String)
 findLectureURL univissem
  (xml' "UnivIS"
   (with [xml' "Lecture"
@@ -96,6 +101,7 @@ loadLecturesBench sem =
 showSemUnivis :: (String,Int) -> String
 showSemUnivis (term,year) = show year ++ if term=="SS" then "s" else "w"
 
+main :: IO ()
 main = do
   loadLectures ("WS",2009) >>= either putStrLn error
   loadLectures ("SS",2010) >>= either putStrLn error

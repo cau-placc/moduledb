@@ -1,7 +1,7 @@
-module Controller.ModInst (
- mainModInstController,
- addModInstController, editAllModInstController
- ) where
+module Controller.ModInst
+  ( mainModInstController
+  , updateAllModInstController, createModInstController
+  ) where
 
 import System.Spicey
 import HTML.Base
@@ -32,78 +32,37 @@ mainModInstController =
        applyControllerOn (readModInstKey s) getModInst showModInstController
       _ -> displayError "Illegal URL"
 
---- Shows a form to add a new ModInst entity for a module.
-addModInstController :: ModData -> User -> Controller -> Controller
-addModInstController md user cntcontroller =
-  checkAuthorization (modInstOperationAllowed NewEntity) $ \_ -> do
-    allUsers <- runQ (liftM (mergeSortBy leqUser) queryAllUsers)
-    csem  <- getCurrentSemester
-    return (addModInstView user allUsers csem
-                           (createModInstController md cntcontroller))
 
+-------------------------------------------------------------------------
 --- Persists a new ModInst entity to the database.
-createModInstController :: ModData -> Controller -> Bool
+createModInstController :: ModData -> Controller
                         -> (String,Int,User) -> Controller
-createModInstController _ cntcontroller False _ = cntcontroller
-createModInstController moddata cntcontroller True (term,year,user) = do
-  modinsts <- runQ $ queryInstancesOfMod (modDataKey moddata)
+createModInstController mdata cntcontroller (term,year,user) =
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
+  modinsts <- runQ $ queryInstancesOfMod (modDataKey mdata)
   let mb = find (\mi -> modInstTerm mi == term && modInstYear mi == year)
                 modinsts
   if mb==Nothing
    then runT (newModInstWithUserLecturerModsKeyWithModDataModuleInstancesKey
-                    term (Just year) (userKey user) (modDataKey moddata)) >>=
+                    term (Just year) (userKey user) (modDataKey mdata)) >>=
         flip either (\ mi -> logEvent (NewModInst mi) >>
                         setPageMessage "Semester hinzugefügt" >>
                         nextInProcessOr cntcontroller Nothing)
                (\ error -> displayError (showTError error))
    else setPageMessage "Semester schon vorhanden!" >> cntcontroller
 
---- Shows a form to edit the list of ModInst entities for a given module.
-editAllModInstController :: ModData -> Controller -> Controller
-editAllModInstController md cntcontroller = do
-   --checkAuthorization (modInstOperationAllowed (UpdateEntity md)) $ do
-   admin <- isAdmin
-   cursem   <- getCurrentSemester
-   allinsts <- runQ $ liftM
-                        (mergeSortBy leqModInst . filterModInsts admin cursem)
-                        (queryInstancesOfMod (modDataKey md))
-   allmpkeys <- runQ $ getMasterProgramKeysOfModInst allinsts
-   allspkeys <- runJustT $
-                 mapM (\mi -> getAdvisorStudyProgramKeysOfModInst mi)
-                      allinsts
-   allUsers <- runQ (liftM (mergeSortBy leqUser) queryAllUsers)
-   -- select instances not used in master programs:
-   let editinsts = concatMap
-                       (\ (mi,mks,sks) -> if (null mks && null sks) || admin
-                                            then [(null mks && null sks, mi)]
-                                            else [])
-                       (zip3 allinsts allmpkeys allspkeys)
-   return (editModInstView admin cursem editinsts
-             allUsers
-             (updateAllModInstController (map snd editinsts) cntcontroller))
- where
-  filterModInsts admin cursem =
-   -- the next semester in the future where we changes are allowed:
-   -- if we are in semester n, it is not allowed to change instances
-   -- in semester n, n+1, and n+2.
-   let futuresem = nextSemester (nextSemester (nextSemester cursem))
-   in if admin
-        then id
-        else filter (\mi -> leqSemester futuresem
-                                        (modInstTerm mi,modInstYear mi))
- 
---- Persists modifications of given ModInst entities to the
---- database depending on the Boolean argument. If the Boolean argument
---- is False, nothing is changed.
-updateAllModInstController :: [ModInst] -> Controller
-                           -> Bool -> [(ModInst,Bool)] -> Controller
-updateAllModInstController _ cntcontroller False _ = cntcontroller
-updateAllModInstController oldinsts cntcontroller True modinsts = do
+
+-------------------------------------------------------------------------
+--- Persists modifications of given ModInst entities.
+updateAllModInstController :: ModData -> [ModInst] -> Controller
+                           -> [(ModInst,Bool)] -> Controller
+updateAllModInstController mdata oldinsts cntcontroller modinsts =
+ checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
   takenmodinsts <- getTakenModuleInstances removedModInsts
   if not (null takenmodinsts)
    then -- some module instances to be deleted already taken in study planner:
-    do mdata <- runJustT
-                 (getModData (modInstModDataModuleInstancesKey (head oldinsts)))
+    do md <- runJustT
+               (getModData (modInstModDataModuleInstancesKey (head oldinsts)))
        displayHtmlError
          [h1 [htxt "Fehler: Einige Instanzen nicht veränderbar!"],
           par [htxt "Die folgenden Instanzen können nicht geändert werden, ",
@@ -112,7 +71,7 @@ updateAllModInstController oldinsts cntcontroller True modinsts = do
                htxt "):"],
           par [htxt (unwords
                       (map (showSemester . modInstSemester) takenmodinsts))],
-          spHref ("?ModData/show/" ++ showModDataKey mdata)
+          spHref ("?ModData/show/" ++ showModDataKey md)
                  [htxt "Zurück zum Modul"]]
    else
     runT (mapM (\ (oi,(ni,del)) ->

@@ -1,12 +1,11 @@
 module View.AdvisorModule
   ( wAdvisorModule, tuple2AdvisorModule, advisorModule2Tuple
-  , wAdvisorModuleType, blankAdvisorModuleView, selectAdvisorModuleView
-  , createAdvisorModuleView
-  , editAdvisorModuleView, showAdvisorModuleView, listAdvisorModuleView )
+  , wAdvisorModuleType, wSelectAdvisorModule
+  , showAdvisorModuleView, listAdvisorModuleView )
 where
 
 import System.Helpers
-import WUI
+import HTML.WUI
 import HTML.Base
 import Time
 import Sort
@@ -98,6 +97,7 @@ wAdvisorModuleType
    ,advisorModule2Tuple modInst category advisorStudyProgram)
    (wAdvisorModule modInstList categoryList advisorStudyProgramList)
 
+{-
 --- Supplies a WUI form to create a new AdvisorModule entity.
 --- The fields of the entity have some default values.
 blankAdvisorModuleView
@@ -233,6 +233,7 @@ editAdvisorModuleView
    cancelcontroller
    "Edit AdvisorModule"
    "change"
+-}
 
 --- Supplies a view to show the details of a AdvisorModule.
 showAdvisorModuleView

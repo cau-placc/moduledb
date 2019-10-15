@@ -1,12 +1,20 @@
-module Controller.User (userController) where
+module Controller.User
+  ( userController, newUserWuiForm, editUserWuiForm
+  , loginForm, sendLoginDataForm, changePasswordForm )
+ where
 
+import Global
+import Maybe
+import Time
+
+import Config.Storage
 import System.Helpers
 import System.Spicey
 import HTML.Base
-import Time
+import HTML.Session
+import HTML.WUI
 import MDB
 import View.User
-import Maybe
 import System.Authorization
 import System.AuthorizedActions
 import System.MultiLang
@@ -28,74 +36,119 @@ userController = do
     ["logout"] -> logoutController
     ["sendlogin"] -> sendLoginDataController
     ["passwd"] -> changePasswordController
-    ["show",keystr] ->
-      applyControllerOn (readUserKey keystr) getUser showUserController
-    ["edit",keystr] ->
-      applyControllerOn (readUserKey keystr) getUser editUserController
-    ["delete",keystr] ->
-      applyControllerOn (readUserKey keystr) getUser askAndDeleteUserController
-    ["loginAs",keystr] ->
-      applyControllerOn (readUserKey keystr) getUser loginAsUserController
-    ["modules",keystr] ->
-      applyControllerOn (readUserKey keystr) getUser searchUserModules
-    _ -> displayError "Illegal URL"
+    ["show",keystr] -> controllerOnKey keystr showUserController
+    ["edit",keystr] -> controllerOnKey keystr editUserController
+    ["delete",keystr] -> controllerOnKey keystr askAndDeleteUserController
+    ["destroy",keystr] -> controllerOnKey keystr destroyUserController
+    ["loginAs",keystr] -> controllerOnKey keystr loginAsUserController
+    ["modules",keystr] -> controllerOnKey keystr searchUserModules
+    _ -> displayUrlError
 
+instance EntityController User where
+  controllerOnKey s controller =
+    applyControllerOn (readUserKey s) getUser controller
 
+-----------------------------------------------------------------------
 --- Shows a form to create a new User entity.
 newUserController :: Controller
 newUserController =
-  checkAuthorization (userOperationAllowed NewEntity) $ \_ ->
-   (do ctime <- getClockTime
-       return (blankUserView ctime createUserController))
+  checkAuthorization (userOperationAllowed NewEntity) $ \sinfo -> do
+    ctime <- getClockTime
+    setParWuiStore wuiNewUserWuiStore sinfo ("","","","","","","",ctime)
+    return [formExp newUserWuiForm]
+
+type NewUser = (String,String,String,String,String,String,String,ClockTime)
+
+--- A WUI form to create a new User entity.
+--- The default values for the fields are stored in the
+--- `wuiNewUserWuiStore`.
+newUserWuiForm :: HtmlFormDef (UserSessionInfo, WuiStore NewUser)
+newUserWuiForm =
+  pwui2FormDef "Controller.User.newUserWuiForm"
+    wuiNewUserWuiStore
+    (\_ -> wUser)
+    (\_ entity -> checkAuthorization (userOperationAllowed NewEntity) $ \_ ->
+                  createUserController entity)
+    (\sinfo -> renderWUI sinfo "Neuen Benutzer anlegen" "Anlegen"
+                         defaultController ())
+
+---- The data stored for executing the WUI form.
+wuiNewUserWuiStore ::
+  Global (SessionStore (UserSessionInfo, WuiStore NewUser))
+wuiNewUserWuiStore =
+  global emptySessionStore (Persistent (inDataDir "wuiNewUserWuiStore"))
+
 
 --- Persists a new User entity to the database.
 createUserController
- :: Bool -> (String,String,String,String,String,String,String,ClockTime)
+ :: (String,String,String,String,String,String,String,ClockTime)
   -> Controller
-createUserController False _ = listUserController
-createUserController True (login ,name ,first ,title ,email ,url ,password
-                           ,lastLogin) =
-  do transResult <- runT
-                     (newUser login name first title email url password
-                       lastLogin)
-     flip either (\ _ -> nextInProcessOr listUserController Nothing)
-      (\ error -> displayError (showTError error)) transResult
+createUserController
+  (login ,name ,first ,title ,email ,url ,password, lastLogin) = do
+  transResult <- runT (newUser login name first title email url password
+                               lastLogin)
+  either (\ error -> displayError (showTError error))
+         (\ _ -> nextInProcessOr listUserController Nothing)
+         transResult
 
+-----------------------------------------------------------------------
 --- Shows a form to edit the given User entity.
 editUserController :: User -> Controller
-editUserController userToEdit =
-  checkAuthorization (userOperationAllowed (UpdateEntity userToEdit)) $ \_ ->
-   (do return (editUserView userToEdit updateUserController))
+editUserController user =
+  checkAuthorization (userOperationAllowed (UpdateEntity user)) $ \sinfo -> do
+    setParWuiStore wuiEditUserWuiStore (sinfo,user) user
+    return [formExp editUserWuiForm]
+
+--- A WUI form to create a edit User entity.
+--- The default values for the fields are stored in the
+--- `wuiEditUserWuiStore`.
+editUserWuiForm :: HtmlFormDef ((UserSessionInfo,User), WuiStore User)
+editUserWuiForm =
+  pwui2FormDef "Controller.User.editUserWuiForm"
+    wuiEditUserWuiStore
+    (\ (_,user) -> wUserType user)
+    (\_ user ->
+       checkAuthorization (userOperationAllowed (UpdateEntity user)) $ \_ ->
+         updateUserController user)
+    (\ (sinfo,user) ->
+          renderWUI sinfo "Benutzerdaten ändern" "Store"
+                    (showUserController user) ())
+
+---- The data stored for executing the WUI form.
+wuiEditUserWuiStore ::
+  Global (SessionStore ((UserSessionInfo,User), WuiStore User))
+wuiEditUserWuiStore =
+  global emptySessionStore (Persistent (inDataDir "wuiEditUserWuiStore"))
+
 
 --- Persists modifications of a given User entity to the
 --- database depending on the Boolean argument. If the Boolean argument
 --- is False, nothing is changed.
-updateUserController :: Bool -> User -> Controller
-updateUserController False user = showUserController user
-updateUserController True user =
-  do transResult <- runT (updateUser user)
-     flip either (\ _ -> nextInProcessOr (showUserController user) Nothing)
-      (\ error -> displayError (showTError error)) transResult
+updateUserController :: User -> Controller
+updateUserController user = do
+  transResult <- runT (updateUser user)
+  either (\ error -> displayError (showTError error))
+         (\ _ -> nextInProcessOr (showUserController user) Nothing)
+         transResult
 
+-----------------------------------------------------------------------
 --- Deletes a given User entity (after asking for acknowledgment)
 --- and proceeds with the show controller.
 askAndDeleteUserController :: User -> Controller
 askAndDeleteUserController user =
-  confirmControllerOLD
-    (h3 [htxt (concat ["Benutzer \"",userToShortView user
-                      ,"\" wirklich löschen?"])])
-    (\ack -> if ack
-             then deleteUserController user
-             else showUserController user)
+  checkAuthorization (userOperationAllowed (DeleteEntity user)) $ \si ->
+  confirmDeletionPage si $ concat
+    ["Benutzer \"", userToShortView user, "\" wirklich löschen?"]
 
 --- Deletes a given User entity and proceeds with the list controller.
-deleteUserController :: User -> Controller
-deleteUserController user =
+destroyUserController :: User -> Controller
+destroyUserController user =
   checkAuthorization (userOperationAllowed (DeleteEntity user)) $ \_ ->
-   (do transResult <- runT (deleteUser user)
-       flip either (\ _ -> listUserController)
-        (\ error -> displayError (showTError error)) transResult)
+   (runT (deleteUser user) >>=
+    either (\ error -> displayError (showTError error))
+           (\ _ -> listUserController))
 
+-----------------------------------------------------------------------
 --- Login as a given User entity.
 loginAsUserController :: User -> Controller
 loginAsUserController user =
@@ -109,7 +162,13 @@ loginAsUserController user =
 sendLoginDataController :: Controller
 sendLoginDataController = do
   sinfo <- getUserSessionInfo
-  return $ sendLoginDataView defaultController sinfo
+  return $ sendLoginDataView sinfo (formExp sendLoginDataForm)
+
+--- A form to login to the system.
+sendLoginDataForm :: HtmlFormDef UserSessionInfo
+sendLoginDataForm =
+  formDefWithID "Controller.User.sendLoginDataForm" getUserSessionInfo
+    (sendLoginDataFormView defaultController)
 
 --- Login to the system.
 loginController :: Controller
@@ -117,7 +176,13 @@ loginController = do
   sinfo <- getUserSessionInfo
   case userLoginOfSession sinfo of
     Just _  -> return [h3 [htxt $ "Operation not allowed!"]]
-    Nothing -> return $ loginView defaultController sinfo
+    Nothing -> return $ loginView sinfo (formExp loginForm)
+
+--- A form to login to the system.
+loginForm :: HtmlFormDef UserSessionInfo
+loginForm =
+  formDefWithID "Controller.User.loginForm" getUserSessionInfo
+    (loginFormView defaultController)
 
 --- Logout the current user.
 logoutController :: Controller
@@ -132,9 +197,14 @@ logoutController = do
 
 --- Change password of logged in user.
 changePasswordController :: Controller
-changePasswordController = do
-  sinfo <- getUserSessionInfo
-  return $ changePasswordView defaultController sinfo
+changePasswordController =
+  return [formExp changePasswordForm]
+
+--- A form to change the password of a logged in user.
+changePasswordForm :: HtmlFormDef UserSessionInfo
+changePasswordForm =
+  formDefWithID "Controller.User.changePasswordForm" getUserSessionInfo
+    (changePasswordFormView defaultController)
 
 --- Lists all User entities.
 listUserController :: Controller

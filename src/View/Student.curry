@@ -1,19 +1,23 @@
 module View.Student
-  ( wStudent, tuple2Student, student2Tuple, wStudentType, blankStudentView
-  , createStudentView, editStudentView, showStudentView, listStudentView
-  , sendLoginCodeView, studentLoginView, sendNewTAN
-  , showSelectionView, selectSemesterView, selectCoursesView )
-where
+  ( wStudent, tuple2Student, student2Tuple, wStudentType
+  , showStudentView, listStudentView
+  , sendLoginCodeView, sendLoginCodeFormView
+  , studentLoginView, studentLoginFormView, sendNewTAN
+  , showSelectionView, selectCoursesView )
+ where
 
 import List ( groupBy, transpose )
-import Mail ( sendMail )
-import WUI
-import HTML.Base
-import Time
 import Sort
+import Time
+
+import Mail ( sendMail )
+import HTML.WUI
+import HTML.Base
 import HTML.Styles.Bootstrap3
+
+import Config.Storage
 import System.Authentication
-import System.Crypto ( randomString )
+import Crypto.Hash ( randomString )
 import System.Helpers
 import System.MultiLang
 import System.Spicey
@@ -27,13 +31,14 @@ import Database.CDBI.Connection ( DBAction )
 import SpecialQueries ( queryStudentByEmail )
 
 --- The WUI specification for the entity type Student.
-wStudent :: Bool -> WuiSpec (String,String,String,String,ClockTime)
-wStudent editall =
+wStudent :: UserSessionInfo -> Bool
+         -> WuiSpec (String,String,String,String,ClockTime)
+wStudent sinfo editall =
   withRendering
    (w5Tuple wRequiredString wRequiredString wString
             (wConstant htxt)
             (wConstant (htxt . calendarTimeToString . toUTCTime)))
-   (renderLabels ((if editall then id else take 3)studentLabelList))
+   (renderLabels ((if editall then id else take 3) (studentLabelList sinfo)))
 
 --- Transformation from data of a WUI form to entity type Student.
 tuple2Student :: Student -> (String,String,String,String,ClockTime) -> Student
@@ -58,64 +63,15 @@ student2Tuple student =
 
 --- WUI Type for editing or creating Student entities.
 --- Includes fields for associated entities.
-wStudentType :: Student -> WuiSpec Student
-wStudentType student =
-  transformWSpec (tuple2Student student,student2Tuple) (wStudent True)
+wStudentType :: UserSessionInfo -> Student -> WuiSpec Student
+wStudentType sinfo student =
+  transformWSpec (tuple2Student student,student2Tuple) (wStudent sinfo True)
 
---- Supplies a WUI form to create a new Student entity.
---- The fields of the entity have some default values.
-blankStudentView
-  :: UserSessionInfo
-  -> ClockTime
-  -> ((String,String,String,String,ClockTime) -> Controller)
-  -> Controller -> [HtmlExp]
-blankStudentView sinfo ctime controller cancelcontroller =
-  createStudentView sinfo "stu...@mail.uni-kiel.de" "" "" "123456"
-                    ctime controller cancelcontroller
-
---- Supplies a WUI form to create a new Student entity.
---- Takes default values to be prefilled in the form fields.
-createStudentView
-  :: UserSessionInfo
-  -> String
-  -> String
-  -> String
-  -> String
-  -> ClockTime
-  -> ((String,String,String,String,ClockTime) -> Controller)
-  -> Controller -> [HtmlExp]
-createStudentView
-    sinfo
-    defaultEmail
-    defaultName
-    defaultFirst
-    defaultTAN
-    defaultLastLogin
-    controller
-    cancelcontroller =
-  renderWuiForm (wStudent False)
-   (defaultEmail,defaultName,defaultFirst,defaultTAN,defaultLastLogin)
-   controller
-   cancelcontroller
-   (t "Register as new student")
-   (t "Register")
- where t = translate sinfo
-
---- Supplies a WUI form to edit the given Student entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editStudentView
-  :: UserSessionInfo
-  -> Student -> (Student -> Controller) -> Controller -> [HtmlExp]
-editStudentView _ student controller cancelcontroller =
-  renderWuiForm (wStudentType student) student controller cancelcontroller
-   "Studierendendaten bearbeiten"
-   "Ändern"
-
+-----------------------------------------------------------------------------
 --- Supplies a view to show the details of a Student.
 showStudentView :: UserSessionInfo -> Student -> [HtmlExp]
-showStudentView _ student =
-  studentToDetailsView student
+showStudentView sinfo student =
+  studentToDetailsView sinfo student
    ++ [hrefButton "?Student/list" [htxt "Zur Studierendenliste"]]
 
 --- Compares two Student entities. This order is used in the list view.
@@ -131,9 +87,11 @@ listStudentView :: UserSessionInfo -> [Student] -> [HtmlExp]
 listStudentView sinfo students =
   [h1 [htxt "Liste der registrierten Studierenden"]
   ,spTable
-    ([take 3 studentLabelList] ++
+    ([take 3 labels ++ [labels!!4]] ++
      map listStudent (mergeSortBy leqStudent students))]
   where
+    labels = studentLabelList sinfo
+
     listStudent student =
       studentToListView student
        ++ (if not (isAdminSession sinfo)
@@ -148,18 +106,26 @@ listStudentView sinfo students =
                       [htxt "Anmelden"]]])
 
 -----------------------------------------------------------------------------
---- View to login.
-studentLoginView :: Controller -> Controller -> UserSessionInfo -> [HtmlExp]
-studentLoginView dfltcontroller landingcontroller sinfo =
-  [par (studentLoginExplanation sinfo),
+--- View to login as a student.
+studentLoginView :: UserSessionInfo -> HtmlExp -> [HtmlExp]
+studentLoginView sinfo loginform =
+  [par $ studentLoginExplanation sinfo,
    h3 [htxt $ t "Login as student"],
-   spTable [[[htxt $ t "Email address:"], [textfield emailfield ""]],
-            [[htxt $ t "Login code:"],    [textfield codefield ""]]],
-   par [spPrimButton (t "Login") loginHandler, nbsp,
-        hrefPrimButton "?Student/sendlogin"
-                       [htxt $ t "Forgot your login data?"]],
+   loginform,
    hrule,
    par [hrefPrimButton "?Student/new" [htxt $ t "Register as new student"]]
+  ]
+ where
+  t = translate sinfo
+
+--- A form view to login as a student.
+studentLoginFormView :: Controller -> Controller -> UserSessionInfo -> [HtmlExp]
+studentLoginFormView dfltcontroller landingcontroller sinfo =
+  [spTable [[[htxt $ t "Email address:"], [textField emailfield ""]],
+            [[htxt $ t "Login code:"],    [textField codefield ""]]],
+   par [spPrimButton (t "Login") loginHandler, nbsp,
+        hrefPrimButton "?Student/sendlogin"
+                       [htxt $ t "Forgot your login data?"]]
   ]
  where
   emailfield,codefield free
@@ -173,25 +139,32 @@ studentLoginView dfltcontroller landingcontroller sinfo =
     let students = filter (\s -> studentTAN s == code) estudents
     if null students
       then do setPageMessage $ t "Wrong login data!"
-              nextInProcessOr dfltcontroller Nothing >>= getForm
+              nextInProcessOr dfltcontroller Nothing >>= getPage
       else do loginToStudentSession email
               ctime <- getClockTime
               runT (updateStudent (setStudentLastLogin (head students) ctime))
               setPageMessage (t "Logged in as: " ++ email)
-              landingcontroller >>= getForm
+              landingcontroller >>= getPage
 
 ------------------------------------------------------------------------
 -- send new login code to student
-sendLoginCodeView :: Controller -> UserSessionInfo -> [HtmlExp]
-sendLoginCodeView controller sinfo =
+sendLoginCodeView :: UserSessionInfo -> HtmlExp -> [HtmlExp]
+sendLoginCodeView sinfo sendlogincodeform =
   [h1 [htxt $ t "Send new login code"],
    par [htxt $ sendCodeCmt sinfo],
-   par [htxt $ t "Your email address used for registration: ",
-               textfield emailref ""],
+   sendlogincodeform
+  ]
+ where
+  t = translate sinfo
+
+sendLoginCodeFormView :: Controller -> UserSessionInfo -> [HtmlExp]
+sendLoginCodeFormView controller sinfo =
+  [par [htxt $ t "Your email address used for registration: ",
+               textField emailref ""],
    hrule,
    spPrimButton (t "Send new login code") sendHandler,
    spButton (t "Cancel")
-            (const (cancelOperation >> controller >>= getForm))]
+            (const (cancelOperation >> controller >>= getPage))]
  where
   emailref free
 
@@ -200,21 +173,23 @@ sendLoginCodeView controller sinfo =
   sendHandler env = do
     students <- runQ $ queryCondStudent (\u -> studentEmail u == env emailref)
     if null students
-     then displayError (unknownUser sinfo) >>= getForm
-     else sendNewTAN sinfo (head students) >>= getForm
+     then displayError (unknownUser sinfo) >>= getPage
+     else sendNewTAN sinfo (head students) >>= getPage
 
 -- send a new TAN to a student
 sendNewTAN :: UserSessionInfo -> Student -> Controller
 sendNewTAN sinfo student = do
   newcode <- randomString 6
-  sendMail adminEmail
-           (studentEmail student)
-           (t "Login data for module database")
-           (studentLoginEmailText sinfo (studentEmail student) newcode)
-  runT $ updateStudent (setStudentTAN student newcode)
-  return [h1 [htxt $ t "Acknowledgment"],
-          h3 [htxt $ t "Your new login code has been sent to:" ++ " " ++
-                     studentEmail student]]
+  runT (updateStudent (setStudentTAN student newcode)) >>=
+    either (\error -> displayError (show error))
+      (\_ -> do
+        sendMail adminEmail
+                 (studentEmail student)
+                 (t "Login data for module database")
+                 (studentLoginEmailText sinfo (studentEmail student) newcode)
+        return [h1 [htxt $ t "Acknowledgment"],
+                h3 [htxt $ t "Your new login code has been sent to:" ++ " " ++
+                           studentEmail student]])
  where
   t = translate sinfo
 
@@ -254,15 +229,15 @@ showSelectionView sinfo mis =
 
 -- view to select modules
 selectCoursesView :: Controller -> ([ModInstID] -> [ModInstID] -> Controller)
-                  -> UserSessionInfo -> (String,Int) -> [ModInstID]
-                  -> [(ModInstID,ModDataID,String,String,String)] -> [HtmlExp]
-selectCoursesView cancelcontroller storecontroller sinfo sem stmis mititles =
+                  -> (UserSessionInfo, (String,Int), [ModInstID],
+                      [(ModInstID,ModDataID,String,String,String)]) -> [HtmlExp]
+selectCoursesView cancelcontroller storecontroller (sinfo,sem,stmis,mititles) =
   [h1 [htxt $ t "Select the modules you like to attend in " ++
               showSemester sem],
    spTable (map (map listModInst) selMatrix),
    spPrimButton (t "Store") storeHandler,
    spButton (t "Cancel")
-            (const (cancelOperation >> cancelcontroller >>= getForm))]
+            (const (cancelOperation >> cancelcontroller >>= getPage))]
  where
   t = translate sinfo
 
@@ -277,7 +252,7 @@ selectCoursesView cancelcontroller storecontroller sinfo sem stmis mititles =
    where n = length selList
 
   listModInst ((mi,mdkey,code,gtitle,etitle),ref) =
-    [(if mi `elem` stmis then checkedbox else checkbox) ref "True", nbsp,
+    [(if mi `elem` stmis then checkedBox else checkBox) ref "True", nbsp,
      withELink $ hrefModule
        ("?ModData/show/"++showModDataID mdkey)
        [htxt $ langSelect sinfo etitle gtitle ++ " (" ++ code ++ ")"]]
@@ -286,6 +261,6 @@ selectCoursesView cancelcontroller storecontroller sinfo sem stmis mititles =
     let selected = concatMap (\ ((mi,_,_,_,_),ref) ->
                                 if null (env ref) then [] else [mi])
                              selList
-    storecontroller stmis selected >>= getForm
+    storecontroller stmis selected >>= getPage
 
 ------------------------------------------------------------------------

@@ -1,12 +1,12 @@
 module View.UnivisInfo (
  wUnivisInfo, tuple2UnivisInfo, univisInfo2Tuple, wUnivisInfoType,
- blankUnivisInfoView, createUnivisInfoView, editUnivisInfoView,
  showUnivisInfoView, listUnivisInfoView, showUnivisLinks,
  loadUnivisView, missingMDBMessage, missingUnivISMessage
  ) where
 
-import WUI
+import HTML.WUI
 import HTML.Base
+import HTML.Styles.Bootstrap3
 import Time
 import Sort
 import System.Spicey
@@ -42,45 +42,7 @@ wUnivisInfoType :: UnivisInfo -> WuiSpec UnivisInfo
 wUnivisInfoType univisInfo =
   transformWSpec (tuple2UnivisInfo univisInfo,univisInfo2Tuple) wUnivisInfo
 
---- Supplies a WUI form to create a new UnivisInfo entity.
---- The fields of the entity have some default values.
-blankUnivisInfoView
- :: (Bool -> (String,String,Int,String) -> Controller) -> [HtmlExp]
-blankUnivisInfoView controller = createUnivisInfoView [] [] 0 [] controller
-
---- Supplies a WUI form to create a new UnivisInfo entity.
---- Takes default values to be prefilled in the form fields.
-createUnivisInfoView
- :: String -> String -> Int -> String
-  -> (Bool -> (String,String,Int,String) -> Controller) -> [HtmlExp]
-createUnivisInfoView defaultCode defaultTerm defaultYear defaultURL
-                     controller =
-  let initdata = (defaultCode,defaultTerm,defaultYear,defaultURL)
-      
-      wuiframe = wuiEditForm "new UnivisInfo" "create"
-                  (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm wUnivisInfo initdata
-                         (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
-
---- Supplies a WUI form to edit the given UnivisInfo entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editUnivisInfoView
- :: UnivisInfo -> (Bool -> UnivisInfo -> Controller) -> [HtmlExp]
-editUnivisInfoView univisInfo controller =
-  let initdata = univisInfo
-      
-      wuiframe = wuiEditForm "edit UnivisInfo" "change"
-                  (controller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm (wUnivisInfoType univisInfo) initdata
-                         (nextControllerForData (controller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
-
+------------------------------------------------------------------------
 --- Supplies a view to show the details of a UnivisInfo.
 showUnivisInfoView :: UnivisInfo -> Controller -> [HtmlExp]
 showUnivisInfoView univisInfo controller =
@@ -97,59 +59,35 @@ leqUnivisInfo x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of UnivisInfo entities
 --- and the controller functions to show, delete and edit entities.
-listUnivisInfoView
- :: [UnivisInfo] -> (UnivisInfo -> Controller) -> (UnivisInfo -> Controller)
-  -> (UnivisInfo -> Bool -> Controller) -> [HtmlExp]
-listUnivisInfoView univisInfos showUnivisInfoController
-                   editUnivisInfoController deleteUnivisInfoController =
+listUnivisInfoView :: [UnivisInfo] -> [HtmlExp]
+listUnivisInfoView univisInfos =
   [h1 [htxt "UnivisInfo list"]
   ,spTable
     ([take 4 univisInfoLabelList] ++
      map listUnivisInfo (mergeSortBy leqUnivisInfo univisInfos))]
   where listUnivisInfo :: UnivisInfo -> [[HtmlExp]]
-        listUnivisInfo univisInfo =
-          univisInfoToListView univisInfo ++
-           if True then [] else -- only show list, no changes allowed
-           [[spSmallButton "show"
-              (nextController (showUnivisInfoController univisInfo))
-            ,spSmallButton "edit"
-              (nextController (editUnivisInfoController univisInfo))
-            
-            ,spSmallButton "delete"
-              (confirmNextController
-                (h3
-                  [htxt
-                    (concat
-                      ["Really delete entity \""
-                      ,univisInfoToShortView univisInfo,"\"?"])])
-                (deleteUnivisInfoController univisInfo))]]
+        listUnivisInfo univisInfo = univisInfoToListView univisInfo
 
 
 ------------------------------------------------------------------------
 -- Show a web page with the UnivIS links of a module in a given semester.
 
-showUnivisLinks :: ModData -> (String,Int) -> Maybe User -> [String]
-                -> Bool ->  (String -> Controller)
+showUnivisLinks :: ModData -> (String,Int) -> Maybe User -> [String] -> Bool
                 -> [HtmlExp]
-showUnivisLinks md sem lecturer urls admin emailcontroller =
+showUnivisLinks md sem@(term,year) lecturer urls admin =
   [h1 [htxt $ "Modul "++modDataCode md++" im "++showSemester sem]] ++
   maybe [] (\u -> [par [htxt "Dozent: ", userToHtmlView u]]) lecturer ++
   if null urls
    then [par [htxt "Keine Einträge im UnivIS gefunden."]] ++
-        if admin
-        then [par [spButton mailButtonTitle
-                     (nextController
-                       (emailcontroller (missingUnivISMessage md sem)))]]
-        else []
+        if admin then [par [mailButton]] else []
    else [h3 [htxt "Links zu Einträgen im UnivIS:"],
          ulist (map (\url -> [ehref url [htxt url]]) urls)] ++
-        if admin && lecturer==Nothing
-        then [par [spButton mailButtonTitle
-                     (nextController
-                       (emailcontroller (missingMDBMessage md sem)))]]
-        else []
+        if admin && lecturer==Nothing then [par [mailButton]] else []
  where
-   mailButtonTitle = "Mail mit Korrekturbitte an Modulverantwortlichen senden"
+  mailButton = 
+   hrefPrimButton ("?UnivisInfo/email/" ++ showModDataKey md ++ "/"
+                                        ++ term ++ "/" ++ show year)
+     [htxt "Mail mit Korrekturbitte an Modulverantwortlichen senden"]
 
 missingUnivISMessage :: ModData -> (String,Int) -> String
 missingUnivISMessage md sem =
@@ -172,10 +110,9 @@ missingMDBMessage md sem =
      "Viele Gruesse vom Moduldatenbankadministrator"
 
 ------------------------------------------------------------------------
---- Supplies a WUI form to create a new UnivisInfo entity.
---- The fields of the entity have some default values.
-loadUnivisView :: (String,Int) -> ((String,Int) -> Controller) -> [HtmlExp]
-loadUnivisView cursem loadcontroller =
+--- A view to load data from a particular semester from UnivIS.
+loadUnivisView :: ((String,Int) -> Controller) -> (String,Int) -> [HtmlExp]
+loadUnivisView loadcontroller cursem =
     [h1 [htxt "Daten aus dem UnivIS der CAU laden"],
      par [htxt "Daten aus dem UnivIS für das Semester ",
           spShortSelectionInitial insem semSelection
@@ -190,6 +127,7 @@ loadUnivisView cursem loadcontroller =
 
   loadData env =
     let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
-     in loadcontroller (semesterSelection cursem !! semi) >>= getForm
+     in loadcontroller (semesterSelection cursem !! semi) >>= getPage
 
 
+------------------------------------------------------------------------

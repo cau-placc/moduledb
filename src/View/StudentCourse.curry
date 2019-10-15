@@ -1,11 +1,10 @@
 module View.StudentCourse
   ( wStudentCourse, tuple2StudentCourse, studentCourse2Tuple
-  , wStudentCourseType, blankStudentCourseView, createStudentCourseView
-  , editStudentCourseView, showStudentCourseView, listStudentCourseView
+  , wStudentCourseType, showStudentCourseView, listStudentCourseView
   , semesterConflictView )
 where
 
-import WUI
+import HTML.WUI
 import HTML.Base
 import Time
 import Sort
@@ -55,6 +54,7 @@ wStudentCourseType studentCourse modInst student modInstList studentList =
    (tuple2StudentCourse studentCourse,studentCourse2Tuple modInst student)
    (wStudentCourse modInstList studentList)
 
+{-
 --- Supplies a WUI form to create a new StudentCourse entity.
 --- The fields of the entity have some default values.
 blankStudentCourseView
@@ -126,6 +126,7 @@ editStudentCourseView
    cancelcontroller
    "Edit StudentCourse"
    "change"
+-}
 
 --- Supplies a view to show the details of a StudentCourse.
 showStudentCourseView

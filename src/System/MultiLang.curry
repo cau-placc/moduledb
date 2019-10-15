@@ -3,7 +3,7 @@
 --- and the translation of texts shown in the application.
 ---
 --- @author Michael Hanus
---- @version February 2019
+--- @version October 2019
 ----------------------------------------------------------------------------
 
 module System.MultiLang (
@@ -11,7 +11,7 @@ module System.MultiLang (
   translate, langSelect,
   loginEmailText, loginText, mainTitle, mainExplanation,
   masterStudyNote, masterStudyOldNote, minorSubjectNote,
-  privacyCookieCmt, sendCodeCmt, sendPasswordCmt, ssComment,
+  privacyCookieCmt, searchToolTip, sendCodeCmt, sendPasswordCmt, ssComment,
   studentExplanation, studentLoginEmailText,studentLoginExplanation,
   timeoutText, unknownUser, useURLText, prereqExplainText
  ) where
@@ -61,6 +61,7 @@ english2german =
  ,("All English modules","Alle englischen Module")
  ,("Back to last page"  ,"Zurück zur letzten Seite")
  ,("Cancel"             ,"Abbrechen")
+ ,("Change"             ,"Ändern")
  ,("Change basic data"  ,"Basisdaten ändern")
  ,("Change description" ,"Beschreibung ändern")
  ,("Change password"    ,"Passwort ändern")
@@ -84,13 +85,14 @@ english2german =
  ,("Duration:"          ,"Dauer:")
  ,("Email address:"     ,"Email-Adresse:")
  ,("Email address already registered!","Email-Adresse im System schon registriert!")
- ,("Email address not allowed!","Unzulaessige Email-Adresse!")
+ ,("Email address not allowed!","Unzulässige Email-Adresse!")
  ,("External URL for module","Externe URL für das Modul")
  ,("English"            ,"Englisch")
  ,("every year"         ,"jedes Jahr")
  ,("every year in summer term","jedes Jahr im SS")
  ,("every year in winter term","jedes Jahr im WS")
  ,("every semester"     ,"jedes Semester")
+ ,("First name"         ,"Vorname")
  ,("For programmers:"   ,"Für Programmierer:")
  ,("For persons in charge for modules: ","Für Modulverantwortliche: ")
  ,("Forgot your login data?","Login-Daten vergessen?")
@@ -107,6 +109,7 @@ english2german =
  ,("in the module code or title","im Modulcode oder -titel")
  ,("irregular"          ,"unregelmäßig")
  ,("Information on data privacy", "Information zum Datenschutz")
+ ,("Last name"          ,"Nachname")
  ,("LaTeX output"       ,"LaTeX-Ausgaben")
  ,("Logged in as: "     ,"Angemeldet als: ")
  ,("Logged out"         ,"Abgemeldet")
@@ -149,6 +152,7 @@ english2german =
  ,("New password:"      ,"Neues Passwort:")
  ,("New passwords are different!","Neue Passwörter sind verschieden!")
  ,("New master program" ,"Neues Masterprogramm")
+ ,("No","Nein")
  ,("not logged in"      ,"nicht angemeldet")
  ,("notes on module descriptions and their preparation",
    "Hinweise zu Modulbeschreibungen und deren Bearbeitung")
@@ -170,6 +174,7 @@ english2german =
  ,("Program overview by terms:","Programmübersicht nach Semestern:")
  ,("programming language","Programmiersprache")
  ,("public"             ,"öffentlich")
+ ,("Quick search"       ,"Schnellsuche")
  ,("Really logout?"     ,"Wirklich abmelden?")
  ,("Register as new student","Registrierung als neuer Studierender")
  ,("Register"           ,"Registrieren")
@@ -231,6 +236,7 @@ english2german =
   ,"Ihre registrierte Email-Adresse: ")
  ,("Your new login code has been sent to:"
   ,"Ihr neuer Zugangscode wurde gesendet an:")
+ ,("Yes","Ja")
  ,("Your new password has been sent","Ihr neues Passwort wurde Ihnen zugesandt")
  ,("Your selected modules:","Ihre ausgewählten Module:")
  ]
@@ -362,6 +368,11 @@ privacyCookieCmt sinfo = langSelect sinfo
  where
   dataProtectCAU = "http://www.uni-kiel.de/suchen/impressum.shtml#datenschutz"
   dataProtectMDB = "datenschutz.html"
+
+searchToolTip :: UserSessionInfo -> String
+searchToolTip sinfo = langSelect sinfo
+  "Show all modules containing a string in the module code or title."
+  "Alle Module mit einer Zeichenfolge im Modulcode oder -titel anzeigen."
 
 sendCodeCmt :: UserSessionInfo -> String
 sendCodeCmt sinfo = langSelect sinfo

@@ -1,6 +1,7 @@
 module Controller.AdvisorModule
-   ( mainAdvisorModuleController, selectAdvisorModuleController
-   , deleteAdvisorModuleController ) where
+   ( mainAdvisorModuleController --, selectAdvisorModuleController
+   , createAdvisorModuleT, deleteAdvisorModuleController
+   , deleteAdvisorModuleT ) where
 
 import System.Helpers
 import System.Spicey
@@ -22,46 +23,46 @@ mainAdvisorModuleController =
      case args of
        [] -> listAdvisorModuleController
        ["list"] -> listAdvisorModuleController
-       ["new"] -> newAdvisorModuleController
-       ["show",s] ->
-         applyControllerOn (readAdvisorModuleKey s) getAdvisorModule
-          showAdvisorModuleController
-       ["edit",s] ->
-         applyControllerOn (readAdvisorModuleKey s) getAdvisorModule
-          editAdvisorModuleController
-       ["delete",s] ->
-         applyControllerOn (readAdvisorModuleKey s) getAdvisorModule
-          (deleteAdvisorModuleController listAdvisorModuleController)
+       --["new"] -> newAdvisorModuleController
+       ["show",s] -> controllerOnKey s showAdvisorModuleController
+       --["edit",s] -> controllerOnKey s editAdvisorModuleController
+       ["delete",s] -> controllerOnKey s deleteAdvisorModuleController
+       ["destroy",s] -> controllerOnKey s destroyAdvisorModuleController
        _ -> displayError "Illegal URL"
 
---- Shows a form to create a new AdvisorModule entity.
-newAdvisorModuleController :: Controller
-newAdvisorModuleController =
-  checkAuthorization (advisorModuleOperationAllowed NewEntity)
-   $ (\sinfo ->
-     do allModInsts <- runQ queryAllModInsts
-        allCategorys <- runQ queryAllCategorys
-        allAdvisorStudyPrograms <- runQ queryAllAdvisorStudyPrograms
-        return
-         (blankAdvisorModuleView sinfo allModInsts allCategorys
-           allAdvisorStudyPrograms
-           (\entity ->
-             transactionController (createAdvisorModuleT entity)
-              (nextInProcessOr listAdvisorModuleController Nothing))
-           listAdvisorModuleController))
+instance EntityController AdvisorModule where
+  controllerOnKey s controller =
+    applyControllerOn (readAdvisorModuleKey s) getAdvisorModule controller
 
---- Shows a form to select and create a new AdvisorModule entity.
-selectAdvisorModuleController
-  :: AdvisorStudyProgram -> Category -> [(ModInst,ModData)]
-  -> Controller -> Controller
-selectAdvisorModuleController asprog cat modinstdatas nextctrl = do
-  sinfo <- getUserSessionInfo
-  return (selectAdvisorModuleView sinfo modinstdatas cat
-           (\entity ->
-             transactionController (let (c1,(c2,_),c3) = entity
-                                     in createAdvisorModuleT (c1,c2,c3,asprog))
-                                   nextctrl)
-           nextctrl)
+-----------------------------------------------------------------------
+--- Shows a form to create a new AdvisorModule entity.
+-- newAdvisorModuleController :: Controller
+-- newAdvisorModuleController =
+--   checkAuthorization (advisorModuleOperationAllowed NewEntity)
+--    $ (\sinfo ->
+--      do allModInsts <- runQ queryAllModInsts
+--         allCategorys <- runQ queryAllCategorys
+--         allAdvisorStudyPrograms <- runQ queryAllAdvisorStudyPrograms
+--         return
+--          (blankAdvisorModuleView sinfo allModInsts allCategorys
+--            allAdvisorStudyPrograms
+--            (\entity ->
+--              transactionController (createAdvisorModuleT entity)
+--               (nextInProcessOr listAdvisorModuleController Nothing))
+--            listAdvisorModuleController))
+
+-- --- Shows a form to select and create a new AdvisorModule entity.
+-- selectAdvisorModuleController
+--   :: AdvisorStudyProgram -> Category -> [(ModInst,ModData)]
+--   -> Controller -> Controller
+-- selectAdvisorModuleController asprog cat modinstdatas nextctrl = do
+--   sinfo <- getUserSessionInfo
+--   return (selectAdvisorModuleView sinfo modinstdatas cat
+--            (\entity ->
+--              transactionController (let (c1,(c2,_),c3) = entity
+--                                      in createAdvisorModuleT (c1,c2,c3,asprog))
+--                                    nextctrl)
+--            nextctrl)
 
 --- Transaction to persist a new AdvisorModule entity to the database.
 createAdvisorModuleT
@@ -74,35 +75,34 @@ createAdvisorModuleT (mandatory,modInst,category,advisorStudyProgram) =
    (modInstKey modInst)
    |>> returnT ()
 
---- Shows a form to edit the given AdvisorModule entity.
-editAdvisorModuleController :: AdvisorModule -> Controller
-editAdvisorModuleController advisorModuleToEdit =
-  checkAuthorization
-   (advisorModuleOperationAllowed (UpdateEntity advisorModuleToEdit))
-   $ (\sinfo ->
-     do allModInsts <- runQ queryAllModInsts
-        allCategorys <- runQ queryAllCategorys
-        allAdvisorStudyPrograms <- runQ queryAllAdvisorStudyPrograms
-        advisedProgramModuleInstancesModInst <- runJustT
-                                                 (getAdvisedProgramModuleInstancesModInst
-                                                   advisorModuleToEdit)
-        advisorCategorizingCategory <-
-          runJustT (getAdvisorCategorizingCategory advisorModuleToEdit)
-        advisorProgramModulesAdvisorStudyProgram <-
-          runJustT (getAdvisorProgramModulesAdvisorStudyProgram
-                                                          advisorModuleToEdit)
-        return
-         (editAdvisorModuleView sinfo advisorModuleToEdit
-           advisedProgramModuleInstancesModInst
-           advisorCategorizingCategory
-           advisorProgramModulesAdvisorStudyProgram
-           allModInsts
-           allCategorys
-           allAdvisorStudyPrograms
-           (\entity ->
-             transactionController (updateAdvisorModuleT entity)
-              (nextInProcessOr listAdvisorModuleController Nothing))
-           listAdvisorModuleController))
+-- --- Shows a form to edit the given AdvisorModule entity.
+-- editAdvisorModuleController :: AdvisorModule -> Controller
+-- editAdvisorModuleController advisorModuleToEdit =
+--   checkAuthorization
+--    (advisorModuleOperationAllowed (UpdateEntity advisorModuleToEdit))
+--    $ (\sinfo ->
+--      do allModInsts <- runQ queryAllModInsts
+--         allCategorys <- runQ queryAllCategorys
+--         allAdvisorStudyPrograms <- runQ queryAllAdvisorStudyPrograms
+--         advisedProgramModuleInstancesModInst <-
+--           runJustT (getAdvisedProgramModuleInstancesModInst advisorModuleToEdit)
+--         advisorCategorizingCategory <-
+--           runJustT (getAdvisorCategorizingCategory advisorModuleToEdit)
+--         advisorProgramModulesAdvisorStudyProgram <-
+--           runJustT (getAdvisorProgramModulesAdvisorStudyProgram
+--                                                           advisorModuleToEdit)
+--         return
+--          (editAdvisorModuleView sinfo advisorModuleToEdit
+--            advisedProgramModuleInstancesModInst
+--            advisorCategorizingCategory
+--            advisorProgramModulesAdvisorStudyProgram
+--            allModInsts
+--            allCategorys
+--            allAdvisorStudyPrograms
+--            (\entity ->
+--              transactionController (updateAdvisorModuleT entity)
+--               (nextInProcessOr listAdvisorModuleController Nothing))
+--            listAdvisorModuleController))
 
 --- Transaction to persist modifications of a given AdvisorModule entity
 --- to the database.
@@ -111,17 +111,20 @@ updateAdvisorModuleT advisorModule = updateAdvisorModule advisorModule
 
 --- Deletes a given AdvisorModule entity (after asking for confirmation)
 --- and proceeds with the list controller.
-deleteAdvisorModuleController :: Controller -> AdvisorModule -> Controller
-deleteAdvisorModuleController nextctrl advisorModule =
+deleteAdvisorModuleController :: AdvisorModule -> Controller
+deleteAdvisorModuleController advisorModule =
   checkAuthorization
-   (advisorModuleOperationAllowed (DeleteEntity advisorModule))
-   $ (\_ ->
-     confirmController
-      [h3
-        [htxt "Modulempfehlung wirklich löschen?"]]
-      (transactionController (deleteAdvisorModuleT advisorModule)
-                             nextctrl)
-      nextctrl)
+   (advisorModuleOperationAllowed (DeleteEntity advisorModule)) $ \si ->
+     confirmDeletionPage si "Modulempfehlung wirklich löschen?"
+
+--- Deletes a given AdvisorModule entity
+--- and proceeds with the list controller.
+destroyAdvisorModuleController :: AdvisorModule -> Controller
+destroyAdvisorModuleController advisorModule =
+  checkAuthorization
+   (advisorModuleOperationAllowed (DeleteEntity advisorModule)) $ \_ ->
+     transactionController (deleteAdvisorModuleT advisorModule)
+                           listAdvisorModuleController
 
 --- Transaction to delete a given AdvisorModule entity.
 deleteAdvisorModuleT :: AdvisorModule -> DBAction ()

@@ -1,6 +1,6 @@
 module View.MDBEntitiesToHtml where
 
-import WUI
+import HTML.WUI
 import HTML.Base
 import Time
 import System.Spicey
@@ -14,7 +14,7 @@ import System.SessionInfo
 --- to the current language.
 studyProgramToHRef :: UserSessionInfo -> StudyProgram -> HtmlExp
 studyProgramToHRef sinfo sprog =
-  href ("?Category/studyprogram/"++showStudyProgramKey sprog)
+  href ("?Category/studyprogram/" ++ showStudyProgramKey sprog)
        [textstyle "studyprogram"
                ((langSelect sinfo studyProgramNameE studyProgramName) sprog)]
 
@@ -639,7 +639,7 @@ studentToListView student =
   ,[stringToHtml (studentName student)]
   ,[stringToHtml (studentFirst student)]
   --,[stringToHtml (studentTAN student)]
-  --,[dateToHtml (studentLastLogin student)]
+  ,[dateToHtml (studentLastLogin student)]
   ]
 
 --- The short view of a Student entity as a string.
@@ -648,11 +648,11 @@ studentToShortView :: Student -> String
 studentToShortView student = studentEmail student
 
 --- The detailed view of a Student entity in HTML format.
-studentToDetailsView :: Student -> [HtmlExp]
-studentToDetailsView student =
+studentToDetailsView :: UserSessionInfo -> Student -> [HtmlExp]
+studentToDetailsView sinfo student =
   [spTable
     (map (\(label,value) -> [label,value])
-      (zip studentLabelList detailedView))]
+      (zip (studentLabelList sinfo) detailedView))]
   where
     detailedView =
       [[stringToHtml (studentEmail student)]
@@ -662,13 +662,15 @@ studentToDetailsView student =
       ,[dateToHtml (studentLastLogin student)]]
 
 --- The labels of a Student entity, as used in HTML tables.
-studentLabelList :: [[HtmlExp]]
-studentLabelList =
+studentLabelList :: UserSessionInfo -> [[HtmlExp]]
+studentLabelList sinfo =
   [[textstyle "spicey_label spicey_label_for_type_string" "Email"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "Name"]
-  ,[textstyle "spicey_label spicey_label_for_type_string" "First"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" (t "Last name")]
+  ,[textstyle "spicey_label spicey_label_for_type_string" (t "First name")]
   ,[textstyle "spicey_label spicey_label_for_type_string" "TAN"]
-  ,[textstyle "spicey_label spicey_label_for_type_date" "LastLogin"]]
+  ,[textstyle "spicey_label spicey_label_for_type_date" "Last Login"]]
+ where
+  t = translate sinfo
 
 --- The list view of a StudentCourse entity in HTML format.
 --- This view is used in a row of a table of all entities.

@@ -33,7 +33,7 @@ mainMasterProgramController =
       [] -> listMasterProgramController False
       ["list"] -> listMasterProgramController False
       ["listall"] -> listMasterProgramController True
-      ["new"] -> newMasterProgramController
+      --["new"] -> newMasterProgramController
       ["show" ,s] -> applyControllerOn (readMasterProgramKey s) getMasterProgram
                                        showMasterProgramController
       --["edit" ,s] ->
@@ -44,109 +44,6 @@ mainMasterProgramController =
       --  confirmDeleteMasterProgramController
       _ -> displayError "Illegal URL"
 
---- Shows a form to create a new MasterProgram entity.
-newMasterProgramController :: Controller
-newMasterProgramController =
-  checkAuthorization (masterProgramOperationAllowed NewEntity) $ \_ -> do
-    allMasterCoreAreas <- runQ queryAllMasterCoreAreas
-    allUsers <- runQ queryAllUsers
-    login <- getSessionLogin
-    let mbuser = maybe Nothing
-                       (\ln -> find (\u -> userLogin u == ln) allUsers)
-                       login
-    maybe (return [h1 [htxt "Illegal operation"]])
-          (\u -> do mprogs <- runQ $ queryMasterProgramOfUser (userKey u)
-                    csem  <- getCurrentSemester
-                    return $ blankMasterProgramView u csem mprogs
-                               allMasterCoreAreas
-                               createMasterProgramController)
-          mbuser
-
---- Persists a new MasterProgram entity to the database.
-createMasterProgramController
- :: Bool -> (String,Maybe MasterProgram,String,Int,String,String,String,
-             Bool,MasterCoreArea,User) -> Controller
-createMasterProgramController False _ = defaultController
-createMasterProgramController True
-   (name,mbmprog,term,year,desc,prereq,comments,visible,masterCoreArea,user) =
-  runT (maybe
-         (newMasterProgramWithUserAdvisingKeyWithMasterCoreAreaAreaProgramsKey
-            name term (Just year) desc prereq comments visible
-            (userKey user) (masterCoreAreaKey masterCoreArea))
-         (\mp ->
-          newMasterProgramWithUserAdvisingKeyWithMasterCoreAreaAreaProgramsKey
-            (masterProgramName mp) term (Just year)
-            (masterProgramDesc mp) (masterProgramPrereq mp)
-            (masterProgramComments mp) visible (userKey user)
-            (masterProgramMasterCoreAreaAreaProgramsKey mp))
-         mbmprog |>>= \mprog ->
-        newMasterProgInfoWithMasterProgramProgramInfoKey
-          "[]" radv radv radv aadv aadv (masterProgramKey mprog) |>>= \mpi ->
-        returnT (mprog,mpi) ) >>=
-  continueOrError
-    (\ (mp,mpi) ->
-           logEvent (NewMasterProgram mp) >>
-           logEvent (NewMasterProgInfo mpi) >>
-           nextInProcessOr
-            (return
-              [h2 [htxt "Masterprogramm angelegt. Bitte die weiteren Angaben ",
-                   href ("?MasterProgram/show/"++showMasterProgramKey mp)
-                        [htxt "hier"], htxt " ergänzen!"]])
-            Nothing)
- where
-   radv = "beim Research Advisor"
-   aadv = "nach Wahl der Studierenden in Absprache mit dem Academic Advisor"
-
---- Shows a form to edit the given MasterProgram entity.
-editMasterProgramController :: MasterProgram -> Controller
-editMasterProgramController mprog =
-  checkAuthorization
-   (masterProgramOperationAllowed (UpdateEntity mprog)) $ \_ ->
-   (do allMasterCoreAreas <- runQ queryAllMasterCoreAreas
-       allUsers <- runQ queryAllUsers
-       admin    <- isAdmin
-       areaProgramsMasterCoreArea <- runJustT
-                                      (getAreaProgramsMasterCoreArea mprog)
-       advisingUser <- runJustT (getAdvisingUser mprog)
-       return
-        (editMasterProgramView admin mprog
-          areaProgramsMasterCoreArea
-          advisingUser allMasterCoreAreas allUsers
-          updateMasterProgramController))
-
---- Persists modifications of a given MasterProgram entity to the
---- database depending on the Boolean argument. If the Boolean argument
---- is False, nothing is changed.
-updateMasterProgramController :: Bool -> MasterProgram -> Controller
-updateMasterProgramController False mprog = showMasterProgramController mprog
-updateMasterProgramController True mprog =
-  isAdmin >>= \admin ->
-  runT ((if masterProgramVisible mprog
-         then queryInfoOfMasterProgram (masterProgramKey mprog) |>>=
-              maybe (returnT "") reasonableMasterProgInfo
-         else returnT "") |>>= \reas ->
-        if null reas || admin then updateMasterProgram mprog |>> returnT ""
-        else updateMasterProgram (setMasterProgramVisible mprog False) |>>
-             returnT ("Masterprogramm nicht sichtbar, denn "++reas)) >>=
-  continueOrError
-    (\ reas -> logEvent (UpdateMasterProgram mprog) >>
-               (if null reas then done else setPageMessage reas) >>
-               nextInProcessOr (showMasterProgramController mprog) Nothing)
-
---- Deletes a given MasterProgram entity (depending on the Boolean
---- argument) and proceeds with the list controller.
-deleteMasterProgramController :: MasterProgram -> Bool -> Controller
-deleteMasterProgramController _ False = defaultController
-deleteMasterProgramController mprog True =
-  checkAuthorization
-   (masterProgramOperationAllowed (DeleteEntity mprog)) $ \_ ->
-     runT (queryInfoOfMasterProgram (masterProgramKey mprog) |>>= \mpi->
-           maybe (returnT ()) deleteMasterProgInfo mpi |>>
-           deleteMasterProgram mprog |>> returnT mpi) >>=
-     continueOrError
-       (\ mpi -> logEvent (DeleteMasterProgram mprog) >>
-                 maybe done (logEvent . DeleteMasterProgInfo) mpi >>
-                 defaultController)
 
 --- Lists all MasterProgram entities with buttons to show, delete,
 --- or edit an entity.
@@ -192,7 +89,7 @@ showMasterProgramController mprog =
           mcarea <- runJustT $ getMasterCoreArea
                      (masterProgramMasterCoreAreaAreaProgramsKey mprog)
           responsibleUser <- runJustT (getAdvisingUser mprog)
-          let semyr = (masterProgramTerm mprog,masterProgramYear mprog)
+          --let semyr = (masterProgramTerm mprog,masterProgramYear mprog)
           return
             (singleMasterProgramView admin
                (Just (userLogin responsibleUser)
@@ -200,10 +97,9 @@ showMasterProgramController mprog =
                responsibleUser
                mprog mpinfo tmodinfo mcarea (xmlURL mprog)
                showMasterProgramController
-               editMasterProgramController
-               deleteMasterProgramController
-               (editMasterProgInfoController semyr
-                  (showMasterProgramController mprog)))
+               (error "editMasterProgramController removed")
+               (error "deleteMasterProgramController removed")
+               (error "editMasterProgInfoController removed"))
         )
 
 --- Gets the associated MasterCoreArea entity for a given MasterProgram entity.
@@ -265,18 +161,18 @@ masterProgURL mp =
   baseURL++"?MasterProgram/show/"++string2urlencoded (showMasterProgramKey mp)
 
 -- Show XML document containing all visible master programs
-showAllXmlMasterPrograms :: IO HtmlForm
+showAllXmlMasterPrograms :: IO HtmlPage
 showAllXmlMasterPrograms = do
   allmprogs <- runQ $ liftM (filter masterProgramVisible) queryAllMasterPrograms
   mpxmls <- mapIO getMasterProgramXML allmprogs
   return (HtmlAnswer "text/xml"
                      (showXmlDoc (xml "studyprograms" (catMaybes mpxmls))))
 
-showXmlMasterProgram :: MasterProgramID -> IO HtmlForm
+showXmlMasterProgram :: MasterProgramID -> IO HtmlPage
 showXmlMasterProgram mpkey = do
   mprog <- runJustT $ getMasterProgram mpkey
   mbxml <- getMasterProgramXML mprog
-  maybe (displayError "Illegal URL" >>= getForm)
+  maybe (displayError "Illegal URL" >>= getPage)
         (\xdoc -> return (HtmlAnswer "text/xml" (showXmlDoc xdoc)))
         mbxml
 

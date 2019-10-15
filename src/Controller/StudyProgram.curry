@@ -1,8 +1,9 @@
 module Controller.StudyProgram
-  ( mainStudyProgramController )
+  ( mainStudyProgramController, newStudyProgramWuiForm, editStudyProgramForm )
  where
 
 import Directory
+import Global
 import IO     ( hPutStr, hClose )
 import IOExts ( connectToCommand, evalCmd, readCompleteFile )
 import List   ( (\\), nub )
@@ -11,8 +12,11 @@ import System
 import Time
 
 import HTML.Base
+import HTML.Session
+import HTML.WUI
 import ShowDotGraph ( showDotGraph )
 
+import Config.Storage
 import MDB
 import SpecialQueries
 import System.Helpers
@@ -34,81 +38,109 @@ mainStudyProgramController =
       [] -> listStudyProgramController
       ["list"] -> listStudyProgramController
       ["new"] -> newStudyProgramController
-      ["show" ,s] ->
-       applyControllerOn (readStudyProgramKey s) getStudyProgram
-        showStudyProgramController
-      ["edit" ,s] ->
-       applyControllerOn (readStudyProgramKey s) getStudyProgram
-        editStudyProgramController
-      ["delete" ,s] ->
-       applyControllerOn (readStudyProgramKey s) getStudyProgram
-        confirmDeleteStudyProgramController
-      ["prereqs" ,s] ->
-       applyControllerOn (readStudyProgramKey s) getStudyProgram
-        showPrereqsStudyProgramController
+      ["show" ,s] -> controllerOnKey s showStudyProgramController
+      ["edit" ,s] -> controllerOnKey s editStudyProgramController
+      ["delete" ,s] -> controllerOnKey s confirmDeleteStudyProgramController
+      ["destroy" ,s] -> controllerOnKey s destroyStudyProgramController
+      ["prereqs" ,s] -> controllerOnKey s showPrereqsStudyProgramController
       _ -> displayError "Illegal URL"
 
---- Shows a form to create a new StudyProgram entity.
+instance EntityController StudyProgram where
+  controllerOnKey s controller =
+    applyControllerOn (readStudyProgramKey s) getStudyProgram controller
+
+------------------------------------------------------------------------------
+-- Shows a form to create a new StudyProgram entity.
 newStudyProgramController :: Controller
 newStudyProgramController =
-  checkAuthorization (studyProgramOperationAllowed NewEntity)
-   $ (\sinfo ->
-     do return
-         (blankStudyProgramView sinfo
-           (\entity ->
-             transactionController (createStudyProgramT entity)
-              (nextInProcessOr listStudyProgramController Nothing))
-           listStudyProgramController))
+  checkAuthorization (studyProgramOperationAllowed NewEntity) $ \sinfo -> do
+    setParWuiStore newStudyProgramWuiStore sinfo ("", "", "", "", 0)
+    return [formExp newStudyProgramWuiForm]
+
+type NewStudyProgram = (String,String,String,String,Int)
+
+--- A WUI form to create a new StudyProgram entity.
+--- The default values for the fields are stored in the
+--- `newStudyProgramWuiStore`.
+newStudyProgramWuiForm ::
+  HtmlFormDef (UserSessionInfo, WuiStore NewStudyProgram)
+newStudyProgramWuiForm =
+  pwui2FormDef "Controller.StudyProgram.newStudyProgramWuiForm"
+    newStudyProgramWuiStore
+    (\_ -> wStudyProgram)
+    (\_ entity ->
+       checkAuthorization (studyProgramOperationAllowed NewEntity) $ \_ ->
+         transactionController (createStudyProgramT entity)
+           (nextInProcessOr listStudyProgramController Nothing))
+    (\sinfo ->
+       renderWUI sinfo "Create new StudyProgram" "Create"
+                 listStudyProgramController ())
+
+---- The data stored for executing the WUI form.
+newStudyProgramWuiStore ::
+  Global (SessionStore (UserSessionInfo, WuiStore NewStudyProgram))
+newStudyProgramWuiStore =
+  global emptySessionStore (Persistent (inDataDir "newStudyProgramWuiStore"))
 
 --- Transaction to persist a new StudyProgram entity to the database.
 createStudyProgramT :: (String,String,String,String,Int) -> DBAction ()
 createStudyProgramT (name,nameE,shortName,progKey,position) =
   newStudyProgram name nameE shortName progKey position |>> returnT ()
 
+------------------------------------------------------------------------------
 --- Shows a form to edit the given StudyProgram entity.
 editStudyProgramController :: StudyProgram -> Controller
-editStudyProgramController studyProgramToEdit =
-  checkAuthorization
-   (studyProgramOperationAllowed (UpdateEntity studyProgramToEdit)) $ \_ ->
-   (do return
-        (editStudyProgramView studyProgramToEdit
-          updateStudyProgramController))
+editStudyProgramController studyprog =
+  checkAuthorization (studyProgramOperationAllowed (UpdateEntity studyprog))
+   $ \sinfo -> do
+    setParWuiStore wuiEditStudyProgramStore (sinfo,studyprog) studyprog
+    return [formExp editStudyProgramForm]
 
---- Persists modifications of a given StudyProgram entity to the
---- database depending on the Boolean argument. If the Boolean argument
---- is False, nothing is changed.
-updateStudyProgramController :: Bool -> StudyProgram -> Controller
-updateStudyProgramController False _ = listStudyProgramController
-updateStudyProgramController True studyProgram =
-  do transResult <- runT (updateStudyProgram studyProgram)
-     flip either (\ _ -> nextInProcessOr listStudyProgramController Nothing)
-      (\ error -> displayError (showTError error)) transResult
+--- A form to edit the given StudyProgram entity.
+editStudyProgramForm ::
+  HtmlFormDef ((UserSessionInfo,StudyProgram), WuiStore StudyProgram)
+editStudyProgramForm = pwui2FormDef "Controller.StudyProgram.editStudyProgramForm"
+  wuiEditStudyProgramStore
+  (\ (_,studyprog) -> wStudyProgramType studyprog)
+  (\ (_,studyprog) entity ->
+     checkAuthorization (studyProgramOperationAllowed (UpdateEntity studyprog))
+      $ \_ -> updateStudyProgramController entity)
+  (\ (sinfo,_) ->
+      renderWUI sinfo "Studienprogramm ändern" "Change"
+                listStudyProgramController ())
 
+--- The data stored for executing the WUI form.
+wuiEditStudyProgramStore ::
+  Global (SessionStore ((UserSessionInfo,StudyProgram), WuiStore StudyProgram))
+wuiEditStudyProgramStore =
+  global emptySessionStore (Persistent (inDataDir "wuiEditStudyProgramStore"))
+
+--- Persists modifications of a given StudyProgram entity.
+updateStudyProgramController :: StudyProgram -> Controller
+updateStudyProgramController studyProgram =
+  runT (updateStudyProgram studyProgram) >>=
+  either (\ error -> displayError (showTError error))
+         (\ _ -> nextInProcessOr listStudyProgramController Nothing)
+
+------------------------------------------------------------------------------
 --- Deletes a given StudyProgram entity (after asking for confirmation)
 --- and proceeds with the list controller.
 confirmDeleteStudyProgramController :: StudyProgram -> Controller
 confirmDeleteStudyProgramController studyProgram =
   checkAuthorization
-   (studyProgramOperationAllowed (DeleteEntity studyProgram)) $ \_ ->
-   confirmControllerOLD
-    (h3
-      [htxt
-        (concat
-          ["Really delete entity \"",studyProgramToShortView studyProgram
-          ,"\"?"])])
-    (\ ack -> if ack
-               then deleteStudyProgramController studyProgram
-               else showStudyProgramController studyProgram)
+   (studyProgramOperationAllowed (DeleteEntity studyProgram)) $ \si ->
+   confirmDeletionPage si $ concat
+     ["Really delete entity \"", studyProgramToShortView studyProgram, "\"?"]
 
 --- Deletes a given StudyProgram entity (depending on the Boolean
 --- argument) and proceeds with the list controller.
-deleteStudyProgramController :: StudyProgram -> Controller
-deleteStudyProgramController studyProgram =
+destroyStudyProgramController :: StudyProgram -> Controller
+destroyStudyProgramController studyProgram =
   checkAuthorization
    (studyProgramOperationAllowed (DeleteEntity studyProgram)) $ \_ ->
-   (do transResult <- runT (deleteStudyProgram studyProgram)
-       flip either (\ _ -> listStudyProgramController)
-        (\ error -> displayError (showTError error)) transResult)
+   (runT (deleteStudyProgram studyProgram) >>=
+    either (\error -> displayError (showTError error))
+           (\ _ -> listStudyProgramController))
 
 --- Lists all StudyProgram entities with buttons to show, delete,
 --- or edit an entity.

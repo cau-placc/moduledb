@@ -10,7 +10,7 @@ module Controller.SpiceySystem
  where
 
 import System.Spicey
-import System.Session
+import HTML.Session
 import Config.UserProcesses
 import System.Processes
 import View.SpiceySystem

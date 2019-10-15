@@ -1,28 +1,35 @@
 module Controller.Category
- ( categoryController, showCategoryPlanController,
-   showEmailCorrectionController
+ ( categoryController, newCategoryWuiForm, editCategoryForm, semSelectForm
+ , listCategoryController
  ) where
 
-import System.Spicey
-import HTML.Base
+import Global
+import Maybe
+import List
+import Sort
 import Time
+
+import HTML.Base
+import HTML.Session
+import HTML.WUI
+
+import Config.Storage
+import Config.UserProcesses
 import MDB
 import MDB.Queries
 import MDBExts
 import View.Category
 import View.ModData
-import Maybe
 import System.Authorization
 import System.AuthorizedActions
-import Config.UserProcesses
 import System.Authentication
 import Controller.Default
 import Controller.ModData
+import Controller.StudyProgram
 import System.Helpers
-import List
-import Sort
 import System.SessionInfo
 import System.MultiLang
+import System.Spicey
 import View.MDBEntitiesToHtml
 import View.ModInst (leqModInst)
 import System.StudyPlanner
@@ -39,32 +46,53 @@ categoryController = do
     ["lecturerall"] -> listUserModulesController True True
     ["new"]     -> newCategoryController
     ["studyprogram",s] ->
-       applyControllerOn (readStudyProgramKey s)
-         getStudyProgram (listStudyProgramCategoryController False)
+       controllerOnKey s (listStudyProgramCategoryController False)
     ["studyprogramall",s] ->
-       applyControllerOn (readStudyProgramKey s)
-         getStudyProgram (listStudyProgramCategoryController True)
-    ["show",s] -> applyControllerOn (readCategoryKey s)
-                    getCategory showCategoryController
-    ["edit",s] -> applyControllerOn (readCategoryKey s)
-                    getCategory editCategoryController
-    ["delete",s] -> applyControllerOn (readCategoryKey s)
-                      getCategory askAndDeleteCategoryController
+       controllerOnKey s (listStudyProgramCategoryController True)
+    ["show",s] -> controllerOnKey s showCategoryController
+    ["edit",s] -> controllerOnKey s editCategoryController
+    ["delete",s] -> controllerOnKey s askAndDeleteCategoryController
+    ["destroy",s] -> controllerOnKey s destroyCategoryController
     _ -> displayError "Illegal URL"
 
+instance EntityController Category where
+  controllerOnKey s controller =
+    applyControllerOn (readCategoryKey s) getCategory controller
 
+------------------------------------------------------------------------------
 --- Shows a form to create a new Category entity.
 newCategoryController :: Controller
 newCategoryController =
-  checkAuthorization (categoryOperationAllowed NewEntity)
-   $ (\sinfo ->
-     do allStudyPrograms <- runQ queryAllStudyPrograms
-        return
-         (blankCategoryView sinfo allStudyPrograms
-           (\entity ->
-             transactionController (createCategoryT entity)
-              (nextInProcessOr listAllCategoryController Nothing))
-           listAllCategoryController))
+  checkAuthorization (categoryOperationAllowed NewEntity) $ \sinfo -> do
+    allStudyPrograms <- runQ queryAllStudyPrograms
+    setParWuiStore newCategoryWuiStore (sinfo, allStudyPrograms)
+                   ("", "", "", "", 0, 180, 0, head allStudyPrograms)
+    return [formExp newCategoryWuiForm]
+
+type NewCategory = (String,String,String,String,Int,Int,Int,StudyProgram)
+
+--- A WUI form to create a new Category entity.
+--- The default values for the fields are stored in the
+--- `newCategoryWuiStore`.
+newCategoryWuiForm ::
+  HtmlFormDef ((UserSessionInfo,[StudyProgram]), WuiStore NewCategory)
+newCategoryWuiForm =
+  pwui2FormDef "Controller.Category.newCategoryWuiForm"
+    newCategoryWuiStore
+    (\ (_,allstudyprogs) -> wCategory allstudyprogs)
+    (\_ entity ->
+       checkAuthorization (categoryOperationAllowed NewEntity) $ \_ ->
+         transactionController (createCategoryT entity)
+           (nextInProcessOr defaultController Nothing))
+    (\ (sinfo,_) ->
+       renderWUI sinfo "Neuen Kategorie" "Anlegen" defaultController ())
+
+---- The data stored for executing the WUI form.
+newCategoryWuiStore ::
+  Global (SessionStore ((UserSessionInfo,[StudyProgram]), WuiStore NewCategory))
+newCategoryWuiStore =
+  global emptySessionStore (Persistent (inDataDir "newCategoryWuiStore"))
+
 
 --- Transaction to persist a new Category entity to the database.
 createCategoryT
@@ -78,60 +106,130 @@ createCategoryT
    (studyProgramKey studyProgram)
   return ()
 
+------------------------------------------------------------------------------
 --- Shows a form to edit the given Category entity.
 editCategoryController :: Category -> Controller
-editCategoryController categoryToEdit =
-  checkAuthorization (categoryOperationAllowed (UpdateEntity categoryToEdit))
-   $ \_ ->
-   (do allStudyPrograms <- runQ queryAllStudyPrograms
-       programCategoriesStudyProgram <-
-         runJustT (getProgramCategoriesStudyProgram categoryToEdit)
-       return
-        (editCategoryView categoryToEdit programCategoriesStudyProgram
-          allStudyPrograms updateCategoryController))
+editCategoryController category =
+  checkAuthorization (categoryOperationAllowed (UpdateEntity category))
+   $ \sinfo -> do
+    allStudyPrograms <- runQ queryAllStudyPrograms
+    programCategoriesStudyProgram <-
+      runJustT (getProgramCategoriesStudyProgram category)
+    setParWuiStore wuiEditCategoryStore
+      (sinfo, category, programCategoriesStudyProgram, allStudyPrograms)
+      category
+    return [formExp editCategoryForm]
+
+--- A form to edit the given Category entity.
+editCategoryForm ::
+  HtmlFormDef ((UserSessionInfo,Category,StudyProgram,[StudyProgram]),
+               WuiStore Category)
+editCategoryForm = pwui2FormDef "Controller.Category.editCategoryForm"
+  wuiEditCategoryStore
+  (\ (_,cat,studyprog,allprogs) -> wCategoryType cat studyprog allprogs)
+  (\ (_,cat,_,_) entity ->
+     checkAuthorization (categoryOperationAllowed (UpdateEntity cat)) $ \_ ->
+     updateCategoryController entity)
+  (\ (sinfo,cat,_,_) ->
+       renderWUI sinfo "Kategorie ändern" "Change" (showCategoryController cat)
+                 ())
+
+--- The data stored for executing the WUI form.
+wuiEditCategoryStore ::
+  Global (SessionStore ((UserSessionInfo,Category,StudyProgram,[StudyProgram]),
+                        WuiStore Category))
+wuiEditCategoryStore =
+  global emptySessionStore (Persistent (inDataDir "wuiEditCategoryStore"))
+
 
 --- Persists modifications of a given Category entity to the
 --- database depending on the Boolean argument. If the Boolean argument
 --- is False, nothing is changed.
-updateCategoryController :: Bool -> Category -> Controller
-updateCategoryController False category = showCategoryController category
-updateCategoryController True category =
+updateCategoryController :: Category -> Controller
+updateCategoryController category =
   do transResult <- runT (updateCategory category)
      continueOrError
         (\ _ -> nextInProcessOr (showCategoryController category) Nothing)
         transResult
 
+--------------------------------------------------------------------------
 --- Deletes a given Category entity (after asking for acknowledgment)
 --- and proceeds with the show controller.
 askAndDeleteCategoryController :: Category -> Controller
 askAndDeleteCategoryController cat =
-  confirmControllerOLD
-    (h3 [htxt (concat ["Kategorie \"",categoryToShortView cat
-                      ,"\" wirklich löschen?"])])
-    (\ack -> if ack
-             then deleteCategoryController cat
-             else showCategoryController cat)
+  checkAuthorization (categoryOperationAllowed (DeleteEntity cat)) $ \si ->
+  confirmDeletionPage si $ concat
+    ["Kategorie \"", categoryToShortView cat, "\" wirklich löschen?"]
 
 --- Deletes a given Category entity and proceeds with the list controller.
-deleteCategoryController :: Category -> Controller
-deleteCategoryController category =
+destroyCategoryController :: Category -> Controller
+destroyCategoryController category =
   checkAuthorization (categoryOperationAllowed (DeleteEntity category)) $ \_ ->
    (do transResult <- runT (deleteCategory category)
        continueOrError (\ _ -> listAllCategoryController) transResult)
 
+--------------------------------------------------------------------------
+--- A form to select a semester period to show the module instances
+--- in this period.
+
+semSelectStore ::
+  Global (SessionStore (Maybe User, Either StudyProgram [HtmlExp],
+                        [(Either Category String, [ModData])],[(String,Int)]))
+semSelectStore =
+  global emptySessionStore (Persistent (inDataDir "semSelectStore"))
+
+--- An operation to store the data required for this view.
+storeCategoryListData :: Maybe User
+  -> Either StudyProgram [HtmlExp] -> [(Either Category String, [ModData])]
+  -> [(String,Int)]
+  -> IO ()
+storeCategoryListData mbuser sproghtml catmods semperiod =
+  putSessionData semSelectStore (mbuser,sproghtml,catmods,semperiod)
+
+--- An operation to read the data required for this view.
+readCategoryListData ::
+  IO ( Maybe User, Either StudyProgram [HtmlExp]
+     , [(Either Category String, [ModData])], [(String,Int)])
+readCategoryListData =
+   getSessionData semSelectStore (Nothing, Right [], [], [])
+
+--- The actual form to select a semester period.
+semSelectForm ::
+  HtmlFormDef ( UserSessionInfo, Maybe User, Either StudyProgram [HtmlExp]
+              , [(Either Category String, [ModData])]
+              , (String,Int), [(String,Int)])
+semSelectForm =
+  HtmlFormDef "Controller.Category.semSelectForm" readData
+              (selSemesterPlanningView showCategoryPlanController
+                                       showEmailCorrectionController
+                                       formatCatModulesForm)
+ where
+  readData = do
+    sinfo  <- getUserSessionInfo
+    cursem <- getCurrentSemester
+    (mbuser,sproghtml,catmods,semperiod) <- readCategoryListData
+    return (sinfo,mbuser,sproghtml,catmods,cursem,semperiod)
+
+--------------------------------------------------------------------------
+--- Lists a given list of categoy/module entities.
+listCategoryController :: UserSessionInfo -> Either StudyProgram [HtmlExp]
+                       -> [(Either Category String, [ModData])] -> Controller
+listCategoryController sinfo sproghtml catmods = do
+  storeCategoryListData Nothing sproghtml catmods []
+  return $ listCategoryView sinfo sproghtml
+             (map (\ (cat,mods) -> (cat, map (\m -> (m,[],[])) mods)) catmods)
+             [] [] (formExp semSelectForm)
+
+--------------------------------------------------------------------------
 --- Lists all Category entities with buttons to show, delete,
 --- or edit an entity.
 listAllCategoryController :: Controller
 listAllCategoryController =
   checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
     do let t = translate sinfo
-       csem  <- getCurrentSemester
        categorys <- runQ queryAllCategorys
-       return (listCategoryView sinfo csem (Right [htxt $ t "All categories"])
-                 (map (\c -> (Left c,[])) (mergeSortBy leqCategory categorys))
-                 [] []
-                 (showCategoryPlanController Nothing) formatCatModulesForm
-                 showEmailCorrectionController)
+       listCategoryController sinfo (Right [htxt $ t "All categories"])
+         (map (\c -> (Left c,[])) (mergeSortBy leqCategory categorys))
 
 --- Controller to list all modules of the current user.
 --- If the first argument is true, the modules taught by the user are shown.
@@ -155,12 +253,13 @@ listUserModulesController aslecturer listall =
                          else mapIO addModInsts usermods >>=
                               return . map fst . filter (isCurrentModInst csem)
            let t = translate sinfo
-           return $ listCategoryView sinfo csem
+           storeCategoryListData (if aslecturer then Just user else Nothing)
+                                 (Right $ listCatHeader t)
+                                 [(Right "", showmods)] []
+           return $ listCategoryView sinfo
              (Right $ listCatHeader t)
              [(Right "",map (\m->(m,[],[])) showmods)]
-             [] []
-             (showCategoryPlanController (if aslecturer then Just user else Nothing))
-             formatCatModulesForm showEmailCorrectionController
+             [] [] (formExp semSelectForm)
  where
    listCatHeader t =
      if listall
@@ -190,27 +289,22 @@ listStudyProgramCategoryController listall studyprog =
         if listall
         then mapM (\c -> do
                      mods <- getModDataOfCategory c
-                     returnT (Left c,map (\m->(m,[],[]))
-                                      (maybe (filter modDataVisible mods)
-                                             (const mods)
-                                             (userLoginOfSession sinfo))))
+                     returnT (Left c, maybe (filter modDataVisible mods)
+                                            (const mods)
+                                            (userLoginOfSession sinfo)))
                   categorys
         else mapM (\c -> return (Left c,[])) categorys
-       csem  <- getCurrentSemester
-       return (listCategoryView sinfo csem (Left studyprog)
-                  catmods [] []
-                  (showCategoryPlanController Nothing)
-                  formatCatModulesForm showEmailCorrectionController)
+       listCategoryController sinfo (Left studyprog) catmods
 
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
 showCategoryPlanController
-  :: Maybe User -> Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
+  :: Maybe User -> Either StudyProgram [HtmlExp]
+  -> [(Either Category String, [ModData])]
   -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller
 showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
                            withunivis withmprogs withstudyplan = do
   sinfo <- getUserSessionInfo
-  csem  <- getCurrentSemester
   let filterMods ms = maybe (filter modDataVisible ms)
                             (const ms)
                             (userLoginOfSession sinfo)
@@ -219,15 +313,17 @@ showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
                                mapIO getModInsts (filterMods mods) >>= \mmis ->
                                return (c,mmis))
                        catmods
-  return (listCategoryView sinfo csem mbstudyprog
-             catmodinsts semPeriod users
-             (showCategoryPlanController mblecturer)
-             formatCatModulesForm showEmailCorrectionController)
+  storeCategoryListData mblecturer mbstudyprog
+    (map (\ (cat,modinsts) -> (cat, map (\ (m,_,_) -> m) modinsts)) catmodinsts)
+    semPeriod
+  return (listCategoryView sinfo mbstudyprog
+             catmodinsts semPeriod users (formExp semSelectForm))
  where
    getModInsts md =
-    let queryinsts = maybe (queryInstancesOfMod (modDataKey md))
-                           (\u -> queryLecturedInstancesOfMod (modDataKey md) (userKey u))
-                           mblecturer
+    let queryinsts = maybe
+          (queryInstancesOfMod (modDataKey md))
+          (\u -> queryLecturedInstancesOfMod (modDataKey md) (userKey u))
+          mblecturer
     in if withstudyplan
          then do
            mis <- runJustT queryinsts
@@ -288,21 +384,16 @@ showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
 --- Shows a Category entity.
 showCategoryController :: Category -> Controller
 showCategoryController cat =
-  checkAuthorization (categoryOperationAllowed (ShowEntity cat)) $ \sinfo ->
-   (do sprogs <- runQ queryAllStudyPrograms
-       let spk     = categoryStudyProgramProgramCategoriesKey cat
-           mbsprog = find (\p -> studyProgramKey p == spk) sprogs
-       mods <- runJustT $ getModDataOfCategory cat
-       csem  <- getCurrentSemester
-       return (listCategoryView sinfo csem
-                 (maybe (Right [htxt "???"]) Left mbsprog)
-                 [(Left cat,map (\m->(m,[],[]))
-                                (maybe (filter modDataVisible mods)
-                                       (const mods)
-                                       (userLoginOfSession sinfo)))]
-                 [] []
-                 (showCategoryPlanController Nothing)
-                 formatCatModulesForm showEmailCorrectionController))
+  checkAuthorization (categoryOperationAllowed (ShowEntity cat)) $ \sinfo -> do
+    sprogs <- runQ queryAllStudyPrograms
+    let spk     = categoryStudyProgramProgramCategoriesKey cat
+        mbsprog = find (\p -> studyProgramKey p == spk) sprogs
+    mods <- runJustT $ getModDataOfCategory cat
+    listCategoryController sinfo
+      (maybe (Right [htxt "???"]) Left mbsprog)
+      [(Left cat, maybe (filter modDataVisible mods)
+                        (const mods)
+                        (userLoginOfSession sinfo))]
 
 --- Gets the associated StudyProgram entity for a given Category entity.
 getProgramCategoriesStudyProgram :: Category -> DBAction StudyProgram

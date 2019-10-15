@@ -1,11 +1,10 @@
 module View.ModInst (
- wModInst, tuple2ModInst, modInst2Tuple,
- addModInstView,
- editModInstView, showModInstView, listModInstView, leqModInst,
+ wModInst, tuple2ModInst, modInst2Tuple, wModInstsType,
+ showModInstView, listModInstView, leqModInst,
  singleModInstView
  ) where
 
-import WUI
+import HTML.WUI
 import HTML.Base
 import Time
 import Sort
@@ -78,52 +77,6 @@ wModInstsType curyear someyear insts userList =
                                  in Left (x,y,z,b)
    modinst2tuple (Right mi)    = Right (modInst2Tuple userList mi)
 
---- Supplies a WUI form to create a new ModInst entity.
---- Takes default values to be prefilled in the form fields.
-addModInstView :: User -> [User] -> (String,Int)
-               -> (Bool -> (String,Int,User) -> Controller) -> [HtmlExp]
-addModInstView defaultUser possibleUsers (curterm,curyear) storecontroller =
-  let initdata = (curterm,curyear+1,defaultUser)
-      
-      wuiframe = wuiEditForm "Neues Semester hinzufügen" "Hinzufügen"
-                             (storecontroller False initdata)
-      
-      (hexp ,handler) = wuiWithErrorForm
-                         (wModInst (curyear+1) possibleUsers) initdata
-                         (nextControllerForData (storecontroller True))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
-
---- Supplies a WUI form to edit the ModInst entities given in the
---- third argument. If the flag for a ModInst entity is true,
---- one can complete change the entity, otherwise one can only
---- change the lecturer of this entity.
---- Takes also associated entities and a list of possible associations
---- for every associated entity type.
-editModInstView :: Bool -> (String,Int) -> [(Bool,ModInst)] -> [User]
-                -> (Bool -> [(ModInst,Bool)] -> Controller) -> [HtmlExp]
-editModInstView admin (_,curyear) binsts possibleUsers controller =
-  let insts    = map snd binsts
-      wuiframe = wuiEditFormWithText
-                    "Semesterangaben ändern" "Änderungen speichern"
-                    [par [htxt modinstcomment]]
-                    (controller False (map (\i -> (i,False)) insts))
-      
-      (hexp ,handler) = wuiWithErrorForm
-                         (wModInstsType curyear admin insts possibleUsers)
-                         (map (\ (b,i) -> if b then Left (i,False) else Right i)
-                              binsts)
-                         (nextControllerForData
-                          (controller True . map (either id (\i -> (i,False)))))
-                         (wuiFrameToForm wuiframe)
-   in wuiframe hexp handler
- where
-  modinstcomment =
-    "Anmerkung: Veranstaltungen innerhalb des Planungszeitraumes " ++
-    "(bis zu den beiden nächsten Semestern) und Veranstaltungen, "++
-    "die schon in Masterprogrammen eingeplant sind, können nicht "++
-    "verändert werden! In Ausnahmefällen kontaktieren Sie die " ++
-    "Studiengangskoordinatoren."
 
 --- Supplies a view to show the details of a ModInst.
 showModInstView :: ModInst -> ModData -> User -> Controller -> [HtmlExp]
@@ -140,30 +93,14 @@ leqModInst x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of ModInst entities
 --- and the controller functions to show, delete and edit entities.
-listModInstView
- :: [ModInst] -> (ModInst -> Controller) -> (ModInst -> Controller)
-  -> (ModInst -> Bool -> Controller) -> [HtmlExp]
-listModInstView modInsts showModInstController editModInstController
-                deleteModInstController =
+listModInstView :: [ModInst] -> [HtmlExp]
+listModInstView modInsts =
   [h1 [htxt "ModInst list"]
   ,spTable
     ([take 2 modInstLabelList] ++
      map listModInst (sortBy leqModInst modInsts))]
   where listModInst :: ModInst -> [[HtmlExp]]
-        listModInst modInst =
-          modInstToListView modInst ++
-           [[spSmallButton "show"
-              (nextController (showModInstController modInst))
-            ,spSmallButton "edit"
-              (nextController (editModInstController modInst))
-            ,spSmallButton "delete"
-              (confirmNextController
-                (h3
-                  [htxt
-                    (concat
-                      ["Really delete entity \"",modInstToShortView modInst
-                      ,"\"?"])])
-                (deleteModInstController modInst))]]
+        listModInst modInst = modInstToListView modInst
 
 --- Supplies a view for a single ModInst entity.
 --- Shows also the master programs and AdvisorStudyPrograms
@@ -196,9 +133,9 @@ singleModInstView sinfo modinst moddata user mprogs sprogs =
                                              advisorStudyProgramYear sp)),
                          htxt ")"]])
                  sprogs)]) ++
-   [spEHref ("?ModData/number/"++showModDataKey moddata++
-             "/"++showSemesterCode modinstsem)
-            [htxt $ "Anzahl der Studierenden"], nbsp] ++
+   --[spEHref ("?ModData/number/"++showModDataKey moddata++
+   --          "/"++showSemesterCode modinstsem)
+   --         [htxt $ "Anzahl der Studierenden"], nbsp] ++
    (if isAdminSession sinfo
       then [spEHref ("?ModData/studs/" ++ showModDataKey moddata ++
                      "/" ++ showSemesterCode modinstsem)

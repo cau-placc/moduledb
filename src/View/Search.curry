@@ -2,12 +2,15 @@
 --- This module implements the views related to searching moduls.
 --------------------------------------------------------------------------
 
-module View.Search(searchPageView,selectUserView
-                  ,showExamOverview,showAllModuleResponsibleView
-                  ) where
+module View.Search
+  ( searchPageView, searchModulesView, showSemModsView
+  , selectUserView, selectUserFormView
+  , showExamOverview, showAllModuleResponsibleView
+  ) where
 
 import System.Spicey
 import HTML.Base
+import HTML.Styles.Bootstrap3
 import Char
 import List
 import System.Helpers
@@ -19,22 +22,12 @@ import System.MultiLang
 import System.SessionInfo
 
 -----------------------------------------------------------------------------
---- A view for searching modules.
-searchPageView :: UserSessionInfo -> (String,Int) -> (String -> Controller)
-               -> ((String,Int) -> Controller)
-               -> ((String,Int) -> Controller)
-               -> ((String,Int) -> Controller)
-               -> ((String,Int) -> Controller)
-               -> [HtmlExp]
-searchPageView sinfo cursem searchcontroller showSemModsController
-               showExamController showModSemResponsibles
-               showHandbookController =
+--- A page view for searching modules.
+searchPageView :: UserSessionInfo -> HtmlExp -> HtmlExp -> [HtmlExp]
+searchPageView sinfo searchform showsemmodsform =
   [h1 [htxt $ t "Search modules"],
    h2 [htxt $ t "Search for individual modules:"],
-   par [htxt $ t "Search all modules containing", nbsp,
-        textfield scode "" `addAttr` ("size","20"), nbsp,
-        htxt $ t "in the module code or title", nbsp,
-        spPrimButton (t "Search!") searchHandler],
+   par [searchform],
    h2 [htxt $ t "Show module selections:"],
    par $
     [hrefPrimButton "?search/all"      [htxt $ t "All modules"], nbsp,
@@ -45,38 +38,72 @@ searchPageView sinfo cursem searchcontroller showSemModsController
                                  [htxt $ t "Alle Modulverantwortlichen"]]
       else [],
    h2 [htxt $ t "Show semester modules:"],
-   par $ [ spShortSelectionInitial insem semSelection
-                                   (findSemesterSelection cursem cursem)
-         , spPrimButton (t "show modules") (showSem showSemModsController) ] ++
-         (if userLoginOfSession sinfo == Nothing
-            then []
-            else [ spPrimButton (t "show examination requirements")
-                                (showSem showExamController)]) ++
-         (if isAdminSession sinfo
-            then [ spPrimButton (t "persons in charge")
-                                (showSem showModSemResponsibles)
-                 , spPrimButton (t "format modules (PDF)")
-                                (showSem showHandbookController)]
-            else [])
+   par [showsemmodsform ]
   ]
  where
-  scode,insem free
-
   t = translate sinfo
 
-  searchHandler env = searchcontroller (map toLower (env scode)) >>= getForm
+--- A form view with a semester selection to show the modules of a semester.
+showSemModsView :: ((String,Int) -> Controller)
+                -> ((String,Int) -> Controller)
+                -> ((String,Int) -> Controller)
+                -> ((String,Int) -> Controller)
+                -> (UserSessionInfo, (String,Int)) -> [HtmlExp]
+showSemModsView showSemModsController showExamController
+                showModSemResponsibles showHandbookController (sinfo,cursem) =
+  [ spShortSelectionInitial insem semSelection
+                            (findSemesterSelection cursem cursem)
+  , spPrimButton (t "show modules") (showSem showSemModsController) ] ++
+  (if userLoginOfSession sinfo == Nothing
+     then []
+     else [ spPrimButton (t "show examination requirements")
+                         (showSem showExamController)]) ++
+  (if isAdminSession sinfo
+     then [ spPrimButton (t "persons in charge")
+                         (showSem showModSemResponsibles)
+          , spPrimButton (t "format modules (PDF)")
+                         (showSem showHandbookController)]
+     else [])
+ where
+  insem free
+
+  t = translate sinfo
 
   semSelection = map (\(s,i) -> (showSemester s,show i))
                      (zip (semesterSelection cursem) [0..])
 
   showSem controller env =
     let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
-    in controller (semesterSelection cursem !! semi) >>= getForm
+    in controller (semesterSelection cursem !! semi) >>= getPage
+
+
+searchModulesView :: (String -> Controller) -> UserSessionInfo -> [HtmlExp]
+searchModulesView searchcontroller sinfo =
+  [htxt $ t "Search all modules containing", nbsp,
+   textField scode "" `addAttr` ("size","20"), nbsp,
+   htxt $ t "in the module code or title", nbsp,
+   spPrimButton (t "Search!") searchHandler]
+ where
+  scode free
+  t = translate sinfo
+
+  searchHandler env = searchcontroller (map toLower (env scode)) >>= getPage
+
 
 -----------------------------------------------------------------------------
 --- A view to select a user and apply the given controller to the selected user.
-selectUserView :: UserSessionInfo -> [User] -> (User -> Controller) -> [HtmlExp]
-selectUserView sinfo users usercontroller =
+selectUserView :: UserSessionInfo -> HtmlExp -> [HtmlExp]
+selectUserView sinfo selectuserform =
+  [h1 [htxt $ t "Show modules of a person"],
+   par [selectuserform]]
+ where
+  t = translate sinfo
+
+--- A form view to select a user and apply the given controller
+--- to the selected user.
+selectUserFormView :: (User -> Controller) -> (UserSessionInfo, [User])
+                   -> [HtmlExp]
+selectUserFormView usercontroller (sinfo, users) =
   [h1 [htxt $ t "Show modules of a person"],
    htxt $ t "Select person:",
    selectionInitial seluser userSelection 2,
@@ -86,12 +113,12 @@ selectUserView sinfo users usercontroller =
   
   t = translate sinfo
 
-  userSelection = map (\(u,i) -> (userToShortView u, show i))
+  userSelection = map (\ (u,i) -> (userToShortView u, show i))
                       (zip users [0..])
 
   selectUser env =
-    let ui = maybe 0 id (findIndex (\(_,i) -> i==(env seluser)) userSelection)
-    in usercontroller (users!!ui) >>= getForm
+    let ui = maybe 0 id (findIndex (\ (_,i) -> i == env seluser) userSelection)
+    in usercontroller (users!!ui) >>= getPage
 
 -----------------------------------------------------------------------------
 --- Supplies a view for the examination requirements of a given list of modules.

@@ -16,7 +16,7 @@ import HTML.Base
 
 import System.Routes
 import Config.RoutesData
-import System.Session
+import HTML.Session
 
 import ReadShowTerm
 import Control.AllSolutions
@@ -46,7 +46,7 @@ currentProcess = global emptySessionStore Temporary
 --- Returns the process state stored in the user session.
 getCurrentProcess :: IO (Maybe _)
 getCurrentProcess = do
-  curProc <- getSessionData currentProcess
+  curProc <- getSessionMaybeData currentProcess
   case curProc of
     Just sids -> return $ Just (readQTerm sids)
     Nothing -> return Nothing
@@ -54,12 +54,12 @@ getCurrentProcess = do
 --- Is the current user session in a process interaction?
 isInProcess :: IO Bool
 isInProcess =
-  getSessionData currentProcess >>= return . maybe False (const True)
+  getSessionMaybeData currentProcess >>= return . maybe False (const True)
 
 --- Saves the state of a process, i.e., a node in the process graph,
 --- in the user session.
 saveCurrentProcess :: _ -> IO ()
-saveCurrentProcess sid = putSessionData (showQTerm sid) currentProcess
+saveCurrentProcess sid = putSessionData currentProcess (showQTerm sid)
 
 --- Deletes the process in the user session.
 removeCurrentProcess :: IO ()
