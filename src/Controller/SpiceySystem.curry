@@ -16,7 +16,6 @@ import System.Processes
 import View.SpiceySystem
 import ReadNumeric
 import System.Authentication
-import Controller.Default
 import System.SessionInfo
 
 -----------------------------------------------------------------------------
@@ -24,7 +23,7 @@ import System.SessionInfo
 loginController :: Controller
 loginController = do
   sinfo <- getUserSessionInfo
-  return $ loginView defaultController sinfo
+  return $ loginView redirectToDefaultController sinfo
 
 -----------------------------------------------------------------------------
 --- Controller for showing and selecting user processes.

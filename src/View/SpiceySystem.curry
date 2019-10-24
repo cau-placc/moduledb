@@ -10,6 +10,7 @@ module View.SpiceySystem
  where
 
 import Database.CDBI.Connection
+import HTML.Base
 
 import Config.UserProcesses
 import System.Processes

@@ -15,6 +15,7 @@ import HTML.WUI
 
 import Config.Storage
 import Config.UserProcesses
+import Config.EntityRoutes
 import MDB
 import MDB.Queries
 import MDBExts
@@ -23,7 +24,6 @@ import View.ModData
 import System.Authorization
 import System.AuthorizedActions
 import System.Authentication
-import Controller.Default
 import Controller.ModData
 import Controller.StudyProgram
 import System.Helpers
@@ -53,11 +53,7 @@ categoryController = do
     ["edit",s] -> controllerOnKey s editCategoryController
     ["delete",s] -> controllerOnKey s askAndDeleteCategoryController
     ["destroy",s] -> controllerOnKey s destroyCategoryController
-    _ -> displayError "Illegal URL"
-
-instance EntityController Category where
-  controllerOnKey s controller =
-    applyControllerOn (readCategoryKey s) getCategory controller
+    _ -> displayUrlError
 
 ------------------------------------------------------------------------------
 --- Shows a form to create a new Category entity.
@@ -83,9 +79,9 @@ newCategoryWuiForm =
     (\_ entity ->
        checkAuthorization (categoryOperationAllowed NewEntity) $ \_ ->
          transactionController (createCategoryT entity)
-           (nextInProcessOr defaultController Nothing))
+           (nextInProcessOr redirectToDefaultController Nothing))
     (\ (sinfo,_) ->
-       renderWUI sinfo "Neuen Kategorie" "Anlegen" defaultController ())
+       renderWUI sinfo "Neuen Kategorie" "Anlegen" "?" ())
 
 ---- The data stored for executing the WUI form.
 newCategoryWuiStore ::
@@ -131,8 +127,8 @@ editCategoryForm = pwui2FormDef "Controller.Category.editCategoryForm"
      checkAuthorization (categoryOperationAllowed (UpdateEntity cat)) $ \_ ->
      updateCategoryController entity)
   (\ (sinfo,cat,_,_) ->
-       renderWUI sinfo "Kategorie ändern" "Change" (showCategoryController cat)
-                 ())
+       renderWUI sinfo "Kategorie ändern" "Change"
+         ("?Category/show/" ++ showCategoryKey cat) ())
 
 --- The data stored for executing the WUI form.
 wuiEditCategoryStore ::
@@ -243,7 +239,7 @@ listUserModulesController aslecturer listall =
        -- get user entry with a given login name
        mbuser <- runQ $ queryUserWithLogin lname
        case mbuser of
-         Nothing   -> displayError "Illegal URL"
+         Nothing   -> displayUrlError
          Just user -> do
            usermods <- runQ $ (if aslecturer then queryModDataOfLecturer
                                              else queryModDataOfUser    ) (userKey user)

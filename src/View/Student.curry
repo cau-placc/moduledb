@@ -16,6 +16,7 @@ import HTML.Base
 import HTML.Styles.Bootstrap3
 
 import Config.Storage
+import Config.EntityRoutes
 import System.Authentication
 import Crypto.Hash ( randomString )
 import System.Helpers
@@ -93,17 +94,14 @@ listStudentView sinfo students =
     labels = studentLabelList sinfo
 
     listStudent student =
-      studentToListView student
-       ++ (if not (isAdminSession sinfo)
-              then []
-              else [[hrefButton ("?Student/show/" ++ showStudentKey student)
-                      [htxt "Anzeigen"]]
-                   ,[hrefButton ("?Student/edit/" ++ showStudentKey student)
-                      [htxt "Ändern"]]
-                   ,[hrefButton ("?Student/delete/" ++ showStudentKey student)
-                      [htxt "Löschen"]]
-                   ,[hrefButton ("?Student/rlogin/" ++ showStudentKey student)
-                      [htxt "Anmelden"]]])
+      studentToListView student ++
+      (if not (isAdminSession sinfo)
+         then []
+         else [[hrefButton (showRoute   student) [htxt "Anzeigen"]]
+              ,[hrefButton (editRoute   student) [htxt "Ändern"]]
+              ,[hrefButton (deleteRoute student) [htxt "Löschen"]]
+              ,[hrefButton (entityRoute "rlogin" student) [htxt "Anmelden"]]
+              ])
 
 -----------------------------------------------------------------------------
 --- View to login as a student.
@@ -143,7 +141,7 @@ studentLoginFormView dfltcontroller landingcontroller sinfo =
       else do loginToStudentSession email
               ctime <- getClockTime
               runT (updateStudent (setStudentLastLogin (head students) ctime))
-              setPageMessage (t "Logged in as: " ++ email)
+              setPageMessage (t "Logged in as '" ++ email ++ "'")
               landingcontroller >>= getPage
 
 ------------------------------------------------------------------------

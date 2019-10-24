@@ -9,6 +9,7 @@ module Controller.ModData
   ) where
 
 import Global
+import System
 import Time
 
 import Config.Storage
@@ -22,6 +23,7 @@ import MDB
 import MDBExts
 import MDB.Queries
 import View.ModData
+import Config.EntityRoutes
 import Controller.ModDescr
 import Controller.ModInst
 import Maybe
@@ -32,7 +34,6 @@ import System.Authentication
 import List
 import Sort
 import View.StudyProgram
-import Controller.Default
 import System.Helpers
 import View.MDBEntitiesToHtml
 import View.ModDescr ( wModDescrType )
@@ -47,6 +48,9 @@ import System.StudyPlanner
 
 import SpecialQueries ( queryStudentsOfModSemester
                       , queryStudentNumberOfModSemester )
+
+------------------------------------------------------------------------------
+-- Routing
 
 --- Choose the controller for a ModData entity according to the URL parameter.
 mainModDataController :: Controller
@@ -73,11 +77,7 @@ mainModDataController =
       ["editdesc", s] -> controllerOnKey s editDescrOfModDataController
       ["newpreq",  s] -> controllerOnKey s newPreqModDataController
       ["editpreq", s] -> controllerOnKey s editPreqModDataController
-      _ -> displayError "Illegal URL"
-
-instance EntityController ModData where
-  controllerOnKey s controller =
-    applyControllerOn (readModDataKey s) getModData controller
+      _ -> displayUrlError
 
 --- Returns the ModData entity specified by the second URL parameter.
 getModDataFromURL :: IO ModData
@@ -125,7 +125,7 @@ newModDataWuiForm =
            createModDataController isimport entity)
     (\ (sinfo,_,isimport,_,_) ->
         renderWUI sinfo ("Neues "++if isimport then "Importmodul" else "Modul")
-                  "Anlegen" defaultController ())
+                  "Anlegen" "?" ())
 
 ---- The data stored for executing the WUI form.
 wuiNewModDataWuiStore ::
@@ -157,7 +157,7 @@ createModDataController isimport
   either (\ error -> displayError (showTError error))
          (\ (md,mi) -> logEvent (NewModData md) >>
                        maybe done (logEvent . NewModDescr) mi >>
-                       nextInProcessOr defaultController Nothing)
+                       nextInProcessOr redirectToDefaultController Nothing)
 
 
 -------------------------------------------------------------------------
@@ -189,7 +189,7 @@ editModDataForm =
     (\_ -> updateModDataController)
     (\ (sinfo,_,mdata,_,_,_) ->
          renderWUIWithText sinfo "Moduldaten ändern" "Änderungen speichern"
-                           [par cmts] (showModDataController mdata) ())
+           [par cmts] (showRoute mdata) ())
  where
   cmts = [htxt "Bitte auch die allgemeinen ",
           ehref "edit_infos.html" [htxt "Hinweise zu Modulbeschreibungen"],
@@ -218,7 +218,8 @@ updateModDataController (modData,newcats) =
     else updateModData modData
   either (displayError . showTError)
          (\ _ -> logEvent (UpdateModData modData) >>
-                 nextInProcessOr (showModDataController modData) Nothing)
+                 nextInProcessOr (redirectToShowModDataController modData)
+                                 Nothing)
          tr
 
 --- Toggles the visibility of the given ModData entity.
@@ -257,7 +258,7 @@ destroyModDataController modData =
           returnT mbdescr) >>=
     flip either (\ mbdescr -> logEvent (DeleteModData modData) >>
                          maybe done (logEvent . DeleteModDescr) mbdescr >>
-                         defaultController)
+                         redirectToDefaultController)
            (\ error -> displayError (showTError error))
  where
   killCategorizing categorys =
@@ -335,11 +336,12 @@ storeCopiedModController mdata mdesc newcode = do
             (modDescrComments mdesc)
             (modDataKey md) |>>= \mi ->
           returnT (md,mi)) >>=
-        flip either (\ (md,mi) -> logEvent (NewModData md) >>
-                             logEvent (NewModDescr mi) >>
-                             setPageMessage "Modul kopiert" >>
-                             nextInProcessOr defaultController Nothing)
-               (\ error -> displayError (showTError error))
+        either (\ error -> displayError (showTError error))
+               (\ (md,mi) -> do
+                   logEvent (NewModData md)
+                   logEvent (NewModDescr mi)
+                   setPageMessage "Modul kopiert"
+                   nextInProcessOr redirectToDefaultController Nothing)
 
 
 -------------------------------------------------------------------------
@@ -370,7 +372,7 @@ listModDataController =
                         (maybe (filter modDataVisible modDatas) (const modDatas)
                                login))
      else
-      maybe (displayError "Illegal URL")
+      maybe displayUrlError
             (\mdkey -> runJustT (getModData mdkey) >>= showModDataController)
             (readModDataKey (head args))
 
@@ -393,6 +395,11 @@ showModDataWithCode mcode = do
    if null modDatas
     then displayError "Illegal URL: illegal module code"
     else showModDataController (head modDatas)
+
+--- Redirect to a page showing the given ModData entity.
+--- Useful to set the URL route correctly.
+redirectToShowModDataController :: ModData -> Controller
+redirectToShowModDataController = redirectController . showRoute
 
 --- Shows a ModData entity.
 showModDataController :: ModData -> Controller
@@ -643,7 +650,7 @@ showXmlIndex = do
 showXmlModule :: String -> IO HtmlPage
 showXmlModule mcode = do
    modDatas <- runQ $ queryModDataWithCode mcode
-   if null modDatas then displayError "Illegal URL" >>= getPage else do
+   if null modDatas then displayUrlError >>= getPage else do
     let md = head modDatas
     responsibleUser <- runJustT (getResponsibleUser md)
     categories <- runJustT (getModDataCategories md)
@@ -747,10 +754,10 @@ addModInstForm =
     wuiAddModInstStore
     (\ (_,curyear,allusers,_) -> wModInst (curyear+1) allusers)
     (\ (_,_,_,mdata) -> createModInstController mdata
-                          (showModDataController mdata))
+                          (redirectToShowModDataController mdata))
     (\ (sinfo,_,_,mdata) ->
          renderWUI sinfo "Neues Semester hinzufügen" "Hinzufügen"
-                   (showModDataController mdata) ())
+           (showRoute mdata) ())
 
 --- The data stored for executing the WUI form.
 wuiAddModInstStore ::
@@ -811,12 +818,12 @@ editModInstForm =
                     wModInstsType curyear admin (map snd binsts) allusers)
     (\ (_,_,_,binsts,_,mdata) ->
         updateAllModInstController mdata (map snd binsts)
-                                   (showModDataController mdata)
+                                   (redirectToShowModDataController mdata)
           . map (either id (\i -> (i,False))))
     (\ (sinfo,_,_,_,_,mdata) ->
          renderWUIWithText sinfo "Semesterangaben ändern" "Änderungen speichern"
                            [par [htxt modinstcomment]]
-                           (showModDataController mdata) ())
+                           (showRoute mdata) ())
  where
   modinstcomment =
     "Anmerkung: Veranstaltungen innerhalb des Planungszeitraumes " ++
@@ -840,7 +847,7 @@ editDescrOfModDataController :: ModData -> Controller
 editDescrOfModDataController mdata =
  checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \sinfo-> do
    moddesc <- runQ $ queryDescriptionOfMod (modDataKey mdata)
-   maybe (displayError "Illegal URL")
+   maybe displayUrlError
          (\md -> do setParWuiStore wuiEditModDescrStore (sinfo,mdata,md) md
                     return [formExp editModDescrForm])
          moddesc
@@ -854,10 +861,12 @@ editModDescrForm =
   pwui2FormDef "Controller.ModData.editModDescrForm"
     wuiEditModDescrStore
     (\ (sinfo,_,moddescr) -> wModDescrType sinfo moddescr)
-    (\ (_,mdata,_) -> updateModDescrController (showModDataController mdata) True)
+    (\ (_,mdata,_) -> updateModDescrController
+                        (redirectToShowModDataController mdata))
     (\ (sinfo,mdata,_) ->
          renderWUIWithText sinfo "Modulbeschreibung ändern"
-           "Änderungen speichern"  [par cmts] (showModDataController mdata) ())
+           "Änderungen speichern"  [par cmts]
+           (showRoute mdata) ())
  where
   cmts = [htxt "Bitte auch die allgemeinen ",
           ehref "edit_infos.html" [htxt "Hinweise zu Modulbeschreibungen"],
@@ -896,7 +905,7 @@ newPreqModDataForm =
 
 addPreqModDataController :: ModData -> Maybe ModDataID -> Controller
 addPreqModDataController mdata Nothing =
-  nextInProcessOr (showModDataController mdata) Nothing
+  nextInProcessOr (redirectToShowModDataController mdata) Nothing
 addPreqModDataController mdata (Just preqmodkey) =
   checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
     tr <- runT $ do
@@ -907,7 +916,8 @@ addPreqModDataController mdata (Just preqmodkey) =
     either (\ error -> displayError (showTError error))
            (\ _ -> do logEvent (NewPrerequisite mdata preqmodkey)
                       setPageMessage "Neue Voraussetzung hinzugefügt"
-                      nextInProcessOr (showModDataController mdata) Nothing
+                      nextInProcessOr (redirectToShowModDataController mdata)
+                                      Nothing
            )
            tr
 
@@ -937,7 +947,7 @@ deletePreqModDataForm =
     (\ (_,mdata) -> deletePreqModDataController mdata)
     (\ (sinfo,mdata) ->
          renderWUI sinfo "Prerequisite selection" "Store"
-                   (showModDataController mdata) ())
+           (showRoute mdata) ())
  where
   --- A WUI specification for a list of strings with a deletion option.
   wListDelete :: UserSessionInfo -> WuiSpec [(ModDataID,String,Bool)]
@@ -964,7 +974,7 @@ deletePreqModDataController mdata delmods = do
          (\ _ -> do
             logEvent (DeletePrerequisites mdata delkeys)
             unless (null delkeys) $ setPageMessage "Voraussetzungen gelöscht"
-            nextInProcessOr (showModDataController mdata) Nothing
+            nextInProcessOr (redirectToShowModDataController mdata) Nothing
          )
          tr
 

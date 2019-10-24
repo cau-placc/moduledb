@@ -3,7 +3,7 @@ module Controller.AdvisorStudyProgram
   , editAdvisorStudyProgramWuiForm, addCatModForm
   , showAllXmlAdvisorStudyPrograms, showXmlAdvisorStudyProgram
   )
-where
+ where
 
 import Global
 import List(find)
@@ -15,8 +15,8 @@ import HTML.WUI
 
 import ConfigMDB ( baseURL )
 import Config.Storage
+import Config.EntityRoutes
 import Controller.AdvisorModule
-import Controller.Default
 import System.Helpers
 import System.Spicey
 import MDB
@@ -35,7 +35,11 @@ import Config.UserProcesses
 import View.MDBEntitiesToHtml
 import XML
 
---- Choose the controller for a AdvisorStudyProgram entity according to the URL parameter.
+------------------------------------------------------------------------------
+-- Routing
+
+--- Choose the controller for a AdvisorStudyProgram entity
+--- according to the URL parameter.
 mainAdvisorStudyProgramController :: Controller
 mainAdvisorStudyProgramController =
   do args <- getControllerParams
@@ -53,11 +57,6 @@ mainAdvisorStudyProgramController =
        ["destroyadvmod",s,am] ->
           controllerOnKey s (destroyAdvModKeyController am)
        _ -> displayUrlError
-
-instance EntityController AdvisorStudyProgram where
-  controllerOnKey s controller =
-    applyControllerOn (readAdvisorStudyProgramKey s) getAdvisorStudyProgram
-                      controller
 
 -------------------------------------------------------------------------
 --- Shows a form to create a new AdvisorStudyProgram entity.
@@ -104,10 +103,10 @@ createAdvisorStudyProgramWuiForm =
                   transactionBindController
                     (createAdvisorStudyProgramT entity)
                     (\asp -> logEvent (NewAdvisorStudyProgram asp) >>
-                             showAdvisorStudyProgramController asp))
+                             redirectToAdvisorStudyProgramController asp))
     (\ (sinfo,_,_,_) ->
          renderWUI sinfo "Neues Studienprogramm" "Studienprogramm anlegen"
-                   defaultController ())
+                   "?" ())
 
 ---- The data stored for executing the WUI form.
 wuiCreateAdvisorStudyProgramStore ::
@@ -174,10 +173,9 @@ editAdvisorStudyProgramWuiForm =
                   transactionController
                     (updateAdvisorStudyProgramT entity)
                     (logEvent (UpdateAdvisorStudyProgram entity) >>
-                     showAdvisorStudyProgramController entity))
+                     redirectToAdvisorStudyProgramController entity))
     (\ (sinfo,_,asp,_,_,_,_) ->
-         renderWUI sinfo "Studienprogramm ändern" "Change"
-                   (showAdvisorStudyProgramController asp) ())
+         renderWUI sinfo "Studienprogramm ändern" "Change" (showRoute asp) ())
 
 ---- The data stored for executing the WUI form.
 wuiEditAdvisorStudyProgramStore ::
@@ -188,12 +186,6 @@ wuiEditAdvisorStudyProgramStore =
   global emptySessionStore
          (Persistent (inDataDir "wuiEditAdvisorStudyProgramStore"))
 
-
---- A show controller for a given AdvisorStudyProgram key:
-showASPController :: AdvisorStudyProgramID -> Controller
-showASPController aspkey =
-  runJustT (getAdvisorStudyProgram aspkey)
-                       >>= showAdvisorStudyProgramController
 
 --- Transaction to persist modifications of a given AdvisorStudyProgram entity
 --- to the database.
@@ -211,8 +203,9 @@ toggleVisibilityASPController asp =
      tr <- runT $ updateAdvisorStudyProgram newasp
      either (displayError . showTError)
             (\ _ -> logEvent (UpdateAdvisorStudyProgram newasp) >>
-                    nextInProcessOr (showAdvisorStudyProgramController newasp)
-                                    Nothing)
+                    nextInProcessOr
+                      (redirectToAdvisorStudyProgramController newasp)
+                      Nothing)
             tr
 
 ------------------------------------------------------------------------------
@@ -292,10 +285,10 @@ addCatModForm =
         transactionController
           (let (c1,(c2,_),c3) = entity
            in createAdvisorModuleT (c1,c2,c3,asp))
-          (showASPController (advisorStudyProgramKey asp)))
+          (redirectToAdvisorStudyProgramController asp))
     (\ (sinfo,asp,_) ->
          renderWUI sinfo "Neues Modul im Studienprogramm" "Hinzufügen"
-                   (showAdvisorStudyProgramController asp) ())
+                   (showRoute asp) ())
 
 ---- The data stored for executing the WUI form.
 wuiAddCatModFormStore ::
@@ -316,7 +309,7 @@ deleteAdvModKeyController _ asprog =
       (entity,ctrlargs) <- getControllerURL
       case ctrlargs of
         [_,s,am] -> confirmDeletionPageWithRefs sinfo
-          ("Modulempfehlung im Program \"" ++ advisorStudyProgramName asprog ++
+          ("Modulempfehlung im Programm \"" ++ advisorStudyProgramName asprog ++
            "\" wirklich löschen?")
           (showControllerURL entity ["destroyadvmod",s,am])
           (showControllerURL entity ["show",s])
@@ -331,11 +324,16 @@ destroyAdvModKeyController amkeys asprog =
        maybe displayUrlError
              (\amkey -> transactionController (getAdvisorModule amkey >>=
                                                deleteAdvisorModuleT)
-                          (showAdvisorStudyProgramController asprog))
+                          (redirectToAdvisorStudyProgramController asprog))
              (readAdvisorModuleKey amkeys)
 
 
 -------------------------------------------------------------------------
+--- Redirect to a page showing the given ModData entity.
+--- Useful to set the URL route correctly.
+redirectToAdvisorStudyProgramController :: AdvisorStudyProgram -> Controller
+redirectToAdvisorStudyProgramController = redirectController . showRoute
+
 --- Shows a AdvisorStudyProgram entity.
 showAdvisorStudyProgramController :: AdvisorStudyProgram -> Controller
 showAdvisorStudyProgramController asprog =
@@ -390,12 +388,14 @@ getStudyAdvisingUser aUser =
 
 -- XML URL of an AdvisorStudyProgram:
 xmlURL :: AdvisorStudyProgram -> String
-xmlURL asp = baseURL++"?xmlaprog="++string2urlencoded (showAdvisorStudyProgramKey asp)
+xmlURL asp =
+  baseURL++"?xmlaprog=" ++ string2urlencoded (showAdvisorStudyProgramKey asp)
 
 -- URL of an AdvisorStudyProgram:
 advisorProgURL :: AdvisorStudyProgram -> String
 advisorProgURL asp =
-  baseURL++"?AdvisorStudyProgram/show/"++string2urlencoded (showAdvisorStudyProgramKey asp)
+  baseURL ++ "?AdvisorStudyProgram/show/" ++
+  string2urlencoded (showAdvisorStudyProgramKey asp)
 
 -- Show XML document containing all visible master programs
 showAllXmlAdvisorStudyPrograms :: IO HtmlPage

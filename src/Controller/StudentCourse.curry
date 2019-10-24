@@ -5,7 +5,9 @@ module Controller.StudentCourse
 import System.Spicey
 import HTML.Base
 import Time
+
 import MDB
+import Config.EntityRoutes
 import View.StudentCourse
 import Maybe
 import System.SessionInfo
@@ -33,10 +35,6 @@ mainStudentCourseController =
        ["delete",s] -> controllerOnKey s deleteStudentCourseController
        ["destroy",s] -> controllerOnKey s destroyStudentCourseController
        _ -> displayError "Illegal URL"
-
-instance EntityController StudentCourse where
-  controllerOnKey s controller =
-    applyControllerOn (readStudentCourseKey s) getStudentCourse controller
 
 -----------------------------------------------------------------------
 {-

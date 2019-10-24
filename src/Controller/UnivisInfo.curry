@@ -35,7 +35,7 @@ mainUnivisInfoController =
           controllerOnKey s (showModDataUnivisInfoController ts ys)
       ["email",s,ts,ys] ->
           controllerOnKey s (emailModDataUnivisInfoController ts ys)
-      _ -> displayError "Illegal URL"
+      _ -> displayUrlError
 
 ------------------------------------------------------------------------
 --- Shows a form to create a new UnivisInfo entity.
@@ -58,7 +58,7 @@ newUnivisInfoForm =
       checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ ->
       createUnivisInfoController entity)
     (\sinfo -> renderWUI sinfo "New UnivisInfo" "Create"
-                         listUnivisInfoController ())
+                         "?UnivisInfo/list" ())
 
 ---- The data stored for executing the WUI form.
 newUnivisInfoStore ::
@@ -97,7 +97,7 @@ editUnivisInfoWuiForm =
            updateUnivisInfoController univisInfo)
     (\ (sinfo,_) ->
           renderWUI sinfo "Edit UnivisInfo" "Change"
-                    listUnivisInfoController ())
+                    "?UnivisInfo/list" ())
 
 ---- The data stored for executing the WUI form.
 editUnivisInfoWuiStore ::

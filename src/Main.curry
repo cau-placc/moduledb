@@ -4,28 +4,32 @@
 
 module Main where
 
-import Config.ControllerMapping
-import System.Spicey
+import List
+import Sort
+import System     ( setEnviron )
 import HTML.WUI
 import HTML.Base
-import System.Routes
+import Text.CSV
+
+import Config.ControllerMapping
 import Config.RoutesData
-import System.Processes
 import Controller.ModData
 import Controller.AdvisorStudyProgram ( showXmlAdvisorStudyProgram
                                       , showAllXmlAdvisorStudyPrograms)
-import Controller.MasterProgram (showXmlMasterProgram,showAllXmlMasterPrograms)
+import Controller.MasterProgram       ( showXmlMasterProgram
+                                      , showAllXmlMasterPrograms)
 import ConfigMDB ( baseLoginURL )
 import MDB
 import MDBExts
-import View.MDBEntitiesToHtml
 import System.Helpers
-import List
-import Sort
 import System.MultiLang
+import System.Logging       ( logUrlParameter )
+import System.Routes
+import System.Processes
 import System.SessionInfo
+import System.Spicey
+import View.MDBEntitiesToHtml
 
-import Text.CSV
 
 dispatcher :: IO HtmlPage
 dispatcher = do
@@ -38,8 +42,7 @@ dispatcher = do
            else return url0
   
   controller <- nextControllerRefInProcessOrForUrl url >>=
-                maybe (displayError "Illegal URL!")
-                      getController
+                maybe displayUrlError getController
 
   saveLastUrl (url ++ concatMap ("/"++) ctrlparams)
   form <- getPage controller
@@ -48,19 +51,8 @@ dispatcher = do
 --- Main function: check for old form of URL parameters or call the dispatcher
 main :: IO HtmlPage
 main = do
-  --sinfo <- getUserSessionInfo
-  if True --userLoginOfSession sinfo == Nothing
-    then noLoginMain
-    else return $ HtmlPage "forward to login session"
-           [pageMetaInfo [("http-equiv","refresh"),
-                          ("content","1; url=" ++ baseLoginURL)]]
-           [par [htxt $ "Since you are logged in, " ++
-                        "you will be forwarded to the correct URL..."]]
-
---- Main function: check for old form of URL parameters or call the dispatcher
-noLoginMain :: IO HtmlPage
-noLoginMain = do
   params <- getUrlParameter
+  logUrlParameter params
   case params of
     ('M':s1:s2:code) -> if [s1,s2] `elem`
                             ["BS","BW","B2","MS","MW","ME","M2","NF","EX","OI"]
@@ -75,18 +67,17 @@ noLoginMain = do
     ('x':'m':'l':'p':'r':'o':'g':'=':code)
         -> if code=="all"
            then showAllXmlMasterPrograms
-           else maybe (displayError "Illegal URL" >>= getPage)
+           else maybe (displayUrlError >>= getPage)
                       showXmlMasterProgram
                       (readMasterProgramKey (urlencoded2string code))
     ('x':'m':'l':'a':'p':'r':'o':'g':'=':code)
         -> if code=="all"
            then showAllXmlAdvisorStudyPrograms
-           else maybe (displayError "Illegal URL" >>= getPage)
+           else maybe (displayUrlError >>= getPage)
                       showXmlAdvisorStudyProgram
                       (readAdvisorStudyProgramKey (urlencoded2string code))
     ['l','a','n','g',l1,l2] -> setLanguage [l1,l2] >> dispatcher
     "csv"    -> allModuleCSV
-    "csvold" -> allModuleCSV_OLD
     "saveDB" -> storeTermDB >>
                 return (answerEncText "iso-8859-1" "DB saved to term files")
     "ping"   -> pingAnswer -- to check whether the MDB server is alive
@@ -105,17 +96,17 @@ pingAnswer :: IO HtmlPage
 pingAnswer = return (answerEncText "iso-8859-1" "ALIVE")
 
 -------------------------------------------------------------------------
--- Script for generating csv of module infos:
+-- Script for generating an answer page with module infos in CSV format.
 allModuleCSV :: IO HtmlPage
 allModuleCSV = do
   studyprogs <- runQ queryAllStudyPrograms
-  runQ queryAllModDatas >>= moduleCSV studyprogs
+  runQ queryAllModDatas >>= modules2CSV studyprogs
 
--- Generate csv of module infos:
-moduleCSV :: [StudyProgram] -> [ModData] -> IO HtmlPage
-moduleCSV studyprogs mods = do
-  csvfields <- mapIO mod2csv (filter isNotCopy mods)
-  return (answerEncText "iso-8859-1" (showCSV csvfields))
+-- Generates module infos as CSV string.
+modules2CSV :: [StudyProgram] -> [ModData] -> IO HtmlPage
+modules2CSV studyprogs mods = do
+  csvmods <- mapM mod2csv (filter isNotCopy mods)
+  return $ answerEncText "utf-8" $ showCSV csvmods
  where
   isNotCopy m = take 5 (reverse (modDataCode m)) /= "ypoc-"
 
@@ -146,52 +137,6 @@ moduleCSV studyprogs mods = do
                          (c1/="G" && c1/="A" && c1 <= c2)
 
 -------------------------------------------------------------------------
--- Script for generating csv of module infos (old format!)
-allModuleCSV_OLD :: IO HtmlPage
-allModuleCSV_OLD = do
-  studyprogs <- runQ queryAllStudyPrograms
-  runQ queryAllModDatas >>= moduleCSV_OLD studyprogs
-
--- Generate csv of module infos:
-moduleCSV_OLD :: [StudyProgram] -> [ModData] -> IO HtmlPage
-moduleCSV_OLD studyprogs mods = do
-  csvfields <- mapIO mod2csv (filter isNotCopy mods)
-  return (answerEncText "iso-8859-1" (showCSV csvfields))
- where
-  isNotCopy m = take 5 (reverse (modDataCode m)) /= "ypoc-"
-
-  studyprogsKeysShortNames =
-        map (\sp -> (studyProgramKey sp, studyProgramShortName sp)) studyprogs
-
-  mod2csv m = do
-    modinsts <- runQ $ queryInstancesOfMod (modDataKey m)
-    cats <- runJustT $ getModDataCategories m
-    responsibleUser <- runJustT (getResponsibleUser m)
-    return
-      [modDataCode m,modDataNameG m,modDataNameE m,
-       if null (modDataURL m) then userToShortView responsibleUser else "",
-       showDiv10 (modDataECTS m),
-       concat . intersperse "|" . sortCats . nub . map categoryShortName
-                                                 . filterCats $ cats,
-       concat . intersperse "|" . map (showSemester . modInstSemester)
-              $ modinsts]
-
-  -- Filter out categories that belong to new BSc15 study programs
-  -- that are identified by their short name which ends with "(15)".
-  -- This is necessary as long as Corinna Ohlsen does not support
-  -- a reasonable solution in the StudiDB.
-  filterCats =
-    filter (\c -> maybe True -- this case should not occur
-                        (\shortname -> not ("(15)" `isSuffixOf` shortname))
-                        (lookup (categoryStudyProgramProgramCategoriesKey c)
-                                studyprogsKeysShortNames))
-                                
-  -- Sorting categories according to a wish of Corinna Ohlsen:
-  sortCats = mergeSortBy leqCat
-    where leqCat c1 c2 = c1=="G" || (c1=="A" && c2/="G") ||
-                         (c1/="G" && c1/="A" && c1 <= c2)
-
--------------------------------------------------------------------------
 -- For benchmarking:
 --benchMDB :: IO ()
 --benchMDB = allModuleCSV >>= print . length . show
@@ -201,3 +146,5 @@ moduleCSV_OLD studyprogs mods = do
 --> lascombes/kics2: 0.6
 --> belair/pakcs: 5.5s (result: 57332)
 --> belair/kics2: 0.7s (result: 57332)
+
+-------------------------------------------------------------------------

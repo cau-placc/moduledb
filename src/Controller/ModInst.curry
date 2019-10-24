@@ -30,7 +30,7 @@ mainModInstController =
       --["list"] -> listModInstController
       ["show" ,s] ->
        applyControllerOn (readModInstKey s) getModInst showModInstController
-      _ -> displayError "Illegal URL"
+      _ -> displayUrlError
 
 
 -------------------------------------------------------------------------
@@ -142,9 +142,9 @@ listModInstController =
   checkAuthorization (modInstOperationAllowed ListEntities) $ \sinfo -> do
     args <- getControllerParams
     if null args
-     then displayError "Illegal URL"
+     then displayUrlError
      else
-       maybe (displayError "Illegal URL")
+       maybe displayUrlError
        (\mik -> do
          mi       <- runJustT $ getModInst mik
          user     <- runJustT $ getUser (modInstUserLecturerModsKey mi)

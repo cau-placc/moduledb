@@ -136,15 +136,11 @@ loginFormView controller sinfo =
       else do loginToSession loginname
               ctime <- getClockTime
               runT (updateUser (setUserLastLogin (head users) ctime))
-              setPageMessage (t "Logged in as: " ++ loginname)
+              setPageMessage (t "Logged in as '" ++ loginname ++
+                              "' (" ++ timeoutText sinfo ++ ")")
               urls <- getLastUrls
-              getPage $
-               [h1 [htxt $ t "Login successful"],
-                par [htxt $ loginText sinfo loginname],
-                par [htxt $ timeoutText sinfo]] ++
-                if length urls > 1
-                then [] --[par [href ('?':urls!!1) [htxt "Back to last page"]]]
-                else []
+              redirectController (if length urls > 1 then '?':urls!!1 else "?" )
+                >>= getPage
 
 ------------------------------------------------------------------------
 -- A view to send login data to a new user.

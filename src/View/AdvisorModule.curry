@@ -31,7 +31,7 @@ wSelectAdvisorModule modInstList =
            modDataNameG md1 < modDataNameG md2 ||
            (modDataNameG md1 == modDataNameG md2 && leqModInst mi1 mi2)
 
-  wMandatory = wRadioBool [htxt "Pflicht"]
+  wMandatory = wRadioBool [htxt "Pflicht", nbsp]
                           [htxt "Empfehlung"]
 
   selectName (modinst,moddata) =

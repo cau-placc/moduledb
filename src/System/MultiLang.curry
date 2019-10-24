@@ -9,7 +9,7 @@
 module System.MultiLang (
   toEnglish,
   translate, langSelect,
-  loginEmailText, loginText, mainTitle, mainExplanation,
+  loginEmailText, mainTitle, mainExplanation,
   masterStudyNote, masterStudyOldNote, minorSubjectNote,
   privacyCookieCmt, searchToolTip, sendCodeCmt, sendPasswordCmt, ssComment,
   studentExplanation, studentLoginEmailText,studentLoginExplanation,
@@ -241,13 +241,6 @@ english2german =
  ,("Your selected modules:","Ihre ausgewählten Module:")
  ]
 
-loginText :: UserSessionInfo -> String -> String
-loginText sinfo loginname = langSelect sinfo
-  ("You are logged in as user '" ++ loginname ++
-   "' and are allowed to change your modules and programs.")
-  ("Sie sind als Benutzer '" ++ loginname ++
-   "' angemeldet und können Ihre Module und Programme bearbeiten.")
-
 loginEmailText :: UserSessionInfo -> String -> String -> String
 loginEmailText sinfo loginname passwd = langSelect sinfo
   ("Your login data:\n\nLogin name: " ++ loginname ++
@@ -426,10 +419,10 @@ studentLoginExplanation sinfo = studentExplanation sinfo ++ langSelect sinfo
 
 timeoutText :: UserSessionInfo -> String
 timeoutText sinfo = langSelect sinfo
-  ("Please note that you are automatically logged out "++
+  ("Please note: you will be automatically logged out "++
    "if you are inactive for more than 60 minutes.")
-  ("Bitte beachten Sie, dass Sie bei mehr als 60 Minuten "++
-   "Inaktivität automatisch wieder abgemeldet werden.")
+  ("Bitte beachten: bei mehr als 60 Minuten Inaktivität " ++
+   "erfolgt eine automatische Abmeldung.")
 
 unknownUser :: UserSessionInfo -> String
 unknownUser sinfo = langSelect sinfo

@@ -10,6 +10,7 @@ import Time
 import MDB
 import View.AdvisorModule
 import Maybe
+import Config.EntityRoutes
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions
@@ -28,11 +29,7 @@ mainAdvisorModuleController =
        --["edit",s] -> controllerOnKey s editAdvisorModuleController
        ["delete",s] -> controllerOnKey s deleteAdvisorModuleController
        ["destroy",s] -> controllerOnKey s destroyAdvisorModuleController
-       _ -> displayError "Illegal URL"
-
-instance EntityController AdvisorModule where
-  controllerOnKey s controller =
-    applyControllerOn (readAdvisorModuleKey s) getAdvisorModule controller
+       _ -> displayUrlError
 
 -----------------------------------------------------------------------
 --- Shows a form to create a new AdvisorModule entity.

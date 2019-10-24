@@ -16,10 +16,10 @@ import HTML.WUI
 import Time
 
 import Config.Storage
+import Config.EntityRoutes
 import MDB
 import View.Student
 import Maybe
-import Controller.Default
 import System.SessionInfo
 import System.Authentication
 import System.Authorization
@@ -55,10 +55,6 @@ mainStudentController = do
     ["rlogin",s]  -> controllerOnKey s loginAsStudentController
     _ -> displayUrlError
 
-instance EntityController Student where
-  controllerOnKey s controller =
-    applyControllerOn (readStudentKey s) getStudent controller
-
 -----------------------------------------------------------------------
 --- Shows a form to create a new Student entity.
 newStudentController :: Controller
@@ -80,7 +76,7 @@ newStudentForm =
     (\sinfo -> wStudent sinfo False)
     (\_ p -> createController p)
     (\sinfo -> renderWUI sinfo "Register as new student" "Register"
-                         defaultController ())
+                         "?" ())
  where
   createController entity =
     checkAuthorization (studentOperationAllowed NewEntity) $ \sinfo -> do
@@ -139,9 +135,9 @@ editStudentWuiForm =
          (studentOperationAllowed (UpdateEntity student)) $ \_ ->
            transactionController (updateStudentT student)
              (nextInProcessOr (showStudentController student) Nothing))
-    (\ (sinfo,student) ->
+    (\ (sinfo,_) ->
           renderWUI sinfo "Studierendendaten bearbeiten" "Change"
-                    (showStudentController student) ())
+                    "?Student/list" ())
 
 ---- The data stored for executing the WUI form.
 wuiEditStudentWuiStore ::
@@ -185,7 +181,7 @@ loginAsStudentController student = do
     then do let email = studentEmail student
             loginToStudentSession email
             setPageMessage (translate sinfo "Logged in as: " ++ email)
-            showSelectionController
+            redirectController "?Student/showcourses"
     else return [h3 [htxt $ "Operation not allowed!"]]
 
 -----------------------------------------------------------------------
@@ -215,7 +211,7 @@ sendLoginCodeController = do
 sendLoginCodeForm :: HtmlFormDef UserSessionInfo
 sendLoginCodeForm =
   HtmlFormDef "Controller.Student.sendLoginCodeForm" getUserSessionInfo
-    (sendLoginCodeFormView defaultController)
+    (sendLoginCodeFormView redirectToDefaultController)
 
 --- Login to the system.
 loginController :: Controller
@@ -228,7 +224,8 @@ loginController = do
 loginForm :: HtmlFormDef UserSessionInfo
 loginForm =
   HtmlFormDef "Controller.Student.loginForm" getUserSessionInfo
-    (studentLoginFormView defaultController showSelectionController)
+    (studentLoginFormView redirectToDefaultController
+       (redirectController "?Student/showcourses"))
 
 --- Logout the current user.
 logoutController :: Controller
@@ -239,7 +236,7 @@ logoutController = do
     Nothing -> return [h3 [htxt $ "Operation not allowed!"]]
     Just _  -> do logoutFromSession
                   setPageMessage (t "Logged out")
-                  defaultController
+                  redirectToDefaultController
 
 -----------------------------------------------------------------------
 
@@ -291,7 +288,8 @@ selectCourseSelectionForm ::
                [(ModInstID,ModDataID,String,String,String)])
 selectCourseSelectionForm =
   HtmlFormDef "Controller.Student.selectCourseSelectionForm" readData
-    (selectCoursesView defaultController storeCourseSelectionController)
+    (selectCoursesView redirectToDefaultController
+                       storeCourseSelectionController)
  where
   readData = do
     sinfo <- getUserSessionInfo
@@ -324,7 +322,7 @@ storeCourseSelectionController oldmis newmis = do
               delmids = oldmis \\ newmis 
           deleteCourseSelect scs (studentKey stud) delmids
           runJustT (mapM_ (addCourseSelect ctime (studentKey stud)) addmids)
-          showSelectionController
+          redirectController "?Student/showcourses"
  where
   addCourseSelect ctime si mi =
     newStudentCourseWithStudentStudentCoursesKeyWithModInstStudentCourseInstancesKey

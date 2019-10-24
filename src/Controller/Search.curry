@@ -8,15 +8,17 @@ module Controller.Search
   , selectUserModulesForm )
  where
 
+import Char
+import List
+import Maybe
 import Sort (mergeSortBy)
+
+import HTML.Base
 import System.Spicey
 import System.Authentication
 import MDB
 import MDBExts
 import MDB.Queries
-import Char
-import List
-import Maybe
 import Database.CDBI.ER 
 
 import Controller.ModData
@@ -27,6 +29,7 @@ import View.ModData
 import View.User (leqUser)
 import View.MDBEntitiesToHtml
 import System.Helpers
+import System.Logging     ( logSearchTerm )
 import System.MultiLang
 import System.SessionInfo
 
@@ -65,6 +68,7 @@ showSemModsForm =
 --- Controller for searching modules in the module database.
 searchModules :: String -> Controller
 searchModules pat = do
+  logSearchTerm pat
   sinfo <- getUserSessionInfo
   let t = translate sinfo
       pattern = "%" ++ filter (`notElem` "%_") pat ++ "%"
@@ -78,6 +82,7 @@ searchModules pat = do
   listCategoryController sinfo
     (Right [htxt $ t "Found modules"])
     [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat, vismods)]
+
 
 -- simple generic string pattern matcher:
 match :: Eq a => [a] -> [a] -> Bool

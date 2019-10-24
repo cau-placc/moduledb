@@ -8,6 +8,7 @@ import Maybe
 import Time
 
 import Config.Storage
+import Config.EntityRoutes
 import System.Helpers
 import System.Spicey
 import HTML.Base
@@ -20,7 +21,6 @@ import System.AuthorizedActions
 import System.MultiLang
 import System.SessionInfo
 import Config.UserProcesses
-import Controller.Default
 import System.Authentication
 import Controller.Search
 import View.MDBEntitiesToHtml ---!!!!!NEW!!!!
@@ -44,10 +44,6 @@ userController = do
     ["modules",keystr] -> controllerOnKey keystr searchUserModules
     _ -> displayUrlError
 
-instance EntityController User where
-  controllerOnKey s controller =
-    applyControllerOn (readUserKey s) getUser controller
-
 -----------------------------------------------------------------------
 --- Shows a form to create a new User entity.
 newUserController :: Controller
@@ -70,7 +66,7 @@ newUserWuiForm =
     (\_ entity -> checkAuthorization (userOperationAllowed NewEntity) $ \_ ->
                   createUserController entity)
     (\sinfo -> renderWUI sinfo "Neuen Benutzer anlegen" "Anlegen"
-                         defaultController ())
+                         "?" ())
 
 ---- The data stored for executing the WUI form.
 wuiNewUserWuiStore ::
@@ -112,7 +108,7 @@ editUserWuiForm =
          updateUserController user)
     (\ (sinfo,user) ->
           renderWUI sinfo "Benutzerdaten ändern" "Store"
-                    (showUserController user) ())
+                    ("?User/show/" ++ showUserKey user) ())
 
 ---- The data stored for executing the WUI form.
 wuiEditUserWuiStore ::
@@ -156,7 +152,7 @@ loginAsUserController user =
     let loginname = userLogin user
     loginToSession loginname
     setPageMessage ("Angemeldet als: "++loginname)
-    defaultController
+    redirectToDefaultController
 
 --- Send login data to a user.
 sendLoginDataController :: Controller
@@ -168,7 +164,7 @@ sendLoginDataController = do
 sendLoginDataForm :: HtmlFormDef UserSessionInfo
 sendLoginDataForm =
   formDefWithID "Controller.User.sendLoginDataForm" getUserSessionInfo
-    (sendLoginDataFormView defaultController)
+    (sendLoginDataFormView redirectToDefaultController)
 
 --- Login to the system.
 loginController :: Controller
@@ -182,7 +178,7 @@ loginController = do
 loginForm :: HtmlFormDef UserSessionInfo
 loginForm =
   formDefWithID "Controller.User.loginForm" getUserSessionInfo
-    (loginFormView defaultController)
+    (loginFormView redirectToDefaultController)
 
 --- Logout the current user.
 logoutController :: Controller
@@ -193,7 +189,7 @@ logoutController = do
     Nothing -> return [h3 [htxt $ "Operation not allowed!"]]
     Just _  -> do logoutFromSession
                   setPageMessage (t "Logged out")
-                  defaultController
+                  redirectToDefaultController
 
 --- Change password of logged in user.
 changePasswordController :: Controller
@@ -204,7 +200,7 @@ changePasswordController =
 changePasswordForm :: HtmlFormDef UserSessionInfo
 changePasswordForm =
   formDefWithID "Controller.User.changePasswordForm" getUserSessionInfo
-    (changePasswordFormView defaultController)
+    (changePasswordFormView redirectToDefaultController)
 
 --- Lists all User entities.
 listUserController :: Controller

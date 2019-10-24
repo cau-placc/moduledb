@@ -17,6 +17,7 @@ import HTML.WUI
 import ShowDotGraph ( showDotGraph )
 
 import Config.Storage
+import Config.EntityRoutes
 import MDB
 import SpecialQueries
 import System.Helpers
@@ -45,10 +46,6 @@ mainStudyProgramController =
       ["prereqs" ,s] -> controllerOnKey s showPrereqsStudyProgramController
       _ -> displayError "Illegal URL"
 
-instance EntityController StudyProgram where
-  controllerOnKey s controller =
-    applyControllerOn (readStudyProgramKey s) getStudyProgram controller
-
 ------------------------------------------------------------------------------
 -- Shows a form to create a new StudyProgram entity.
 newStudyProgramController :: Controller
@@ -74,7 +71,7 @@ newStudyProgramWuiForm =
            (nextInProcessOr listStudyProgramController Nothing))
     (\sinfo ->
        renderWUI sinfo "Create new StudyProgram" "Create"
-                 listStudyProgramController ())
+                 "?StudyProgram/list" ())
 
 ---- The data stored for executing the WUI form.
 newStudyProgramWuiStore ::
@@ -107,7 +104,7 @@ editStudyProgramForm = pwui2FormDef "Controller.StudyProgram.editStudyProgramFor
       $ \_ -> updateStudyProgramController entity)
   (\ (sinfo,_) ->
       renderWUI sinfo "Studienprogramm ändern" "Change"
-                listStudyProgramController ())
+                "?StudyProgram/list" ())
 
 --- The data stored for executing the WUI form.
 wuiEditStudyProgramStore ::

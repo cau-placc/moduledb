@@ -61,7 +61,7 @@ newMasterCoreAreaForm =
        checkAuthorization (masterCoreAreaOperationAllowed NewEntity) $ \_ ->
          createMasterCoreAreaController entity)
     (\sinfo -> renderWUI sinfo "New MasterCoreArea" "Create"
-                         listMasterCoreAreaController ())
+                         "?MasterCoreArea/list" ())
 
 ---- The data stored for executing the WUI form.
 newMasterCoreAreaStore ::
@@ -102,8 +102,8 @@ editMasterCoreAreaForm =
          (masterCoreAreaOperationAllowed (UpdateEntity masterCoreArea)) $ \_ ->
            updateMasterCoreAreaController masterCoreArea)
     (\ (sinfo,masterCoreArea) ->
-          renderWUI sinfo "Studierendendaten bearbeiten" "Change"
-                    (showMasterCoreAreaController masterCoreArea) ())
+         renderWUI sinfo "Studierendendaten bearbeiten" "Change"
+           ("?MasterCoreArea/show/" ++ showMasterCoreAreaKey masterCoreArea) ())
 
 ---- The data stored for executing the WUI form.
 editMasterCoreAreaWuiStore ::

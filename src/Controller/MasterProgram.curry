@@ -18,7 +18,6 @@ import System.AuthorizedActions
 import Config.UserProcesses
 import System.Authentication
 import Controller.MasterProgInfo
-import Controller.Default
 import List
 import System.Helpers
 import XML
@@ -42,7 +41,7 @@ mainMasterProgramController =
       --["delete" ,s] ->
       -- applyControllerOn (readMasterProgramKey s) getMasterProgram
       --  confirmDeleteMasterProgramController
-      _ -> displayError "Illegal URL"
+      _ -> displayUrlError
 
 
 --- Lists all MasterProgram entities with buttons to show, delete,
@@ -172,7 +171,7 @@ showXmlMasterProgram :: MasterProgramID -> IO HtmlPage
 showXmlMasterProgram mpkey = do
   mprog <- runJustT $ getMasterProgram mpkey
   mbxml <- getMasterProgramXML mprog
-  maybe (displayError "Illegal URL" >>= getPage)
+  maybe (displayUrlError >>= getPage)
         (\xdoc -> return (HtmlAnswer "text/xml" (showXmlDoc xdoc)))
         mbxml
 

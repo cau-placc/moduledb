@@ -32,21 +32,9 @@ createModDescrController True (language ,shortDesc ,objectives ,contents
             (\ _ -> nextInProcessOr listModDescrController Nothing)
             transResult
  
-{-
---- Shows a form to edit the given ModDescr entity.
-editModDescrController :: Controller -> ModDescr -> Controller
-editModDescrController cntcontroller modDescrToEdit =
-  checkAuthorization (modDescrOperationAllowed (UpdateEntity modDescrToEdit))
-   $ \sinfo -> return (editModDescrView sinfo modDescrToEdit
-                         (updateModDescrController cntcontroller))
--}
-
---- Persists modifications of a given ModDescr entity to the
---- database depending on the Boolean argument. If the Boolean argument
---- is False, nothing is changed.
-updateModDescrController :: Controller -> Bool -> ModDescr -> Controller
-updateModDescrController cntcontroller False _ = cntcontroller
-updateModDescrController cntcontroller True modDescr =
+--- Persists modifications of a given ModDescr entity to the database.
+updateModDescrController :: Controller -> ModDescr -> Controller
+updateModDescrController cntcontroller modDescr =
  checkAuthorization (modDescrOperationAllowed (UpdateEntity modDescr)) $ \_ ->
   runT (updateModDescr modDescr) >>=
   either (\ error -> displayError (showTError error))

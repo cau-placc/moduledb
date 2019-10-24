@@ -4,10 +4,9 @@
 --------------------------------------------------------------------------
 
 module System.Spicey (
-  module System, 
-  module HTML.Base, 
-  module ReadNumeric, 
-  Controller, EntityController(..), applyControllerOn,
+  Controller, EntityController(..), showRoute, editRoute, deleteRoute,
+  applyControllerOn,
+  redirectController, redirectToDefaultController,
   nextController, nextControllerForData,
   confirmDeletionPage, confirmDeletionPageWithRefs,
   transactionController, transactionBindController,
@@ -15,7 +14,8 @@ module System.Spicey (
   getPage, wDateType, wBoolean, wUncheckMaybe,
   mainContentsWithSideMenu,
   displayError, displayUrlError, displayHtmlError, cancelOperation,
-  renderWUI, renderWUIWithText, renderLabels,
+  renderWUI, renderWUIWithText,
+  renderLabels,
   nextInProcessOr,
   selectSemesterFormView,
   stringToHtml, maybeStringToHtml,
@@ -35,14 +35,10 @@ module System.Spicey (
   continueOrError
   ) where
 
-import FilePath       ( (</>) )
-import List           ( findIndex, init, last )
-import ReadNumeric
-import System
+import List             ( findIndex, init, last )
 import Time
 
 import Config.Storage   ( inDataDir )
-import ConfigMDB        ( baseLoginURL )
 import Config.UserProcesses
 import HTML.Base
 import HTML.WUI
@@ -51,7 +47,6 @@ import HTML.Styles.Bootstrap3
 import Global
 import System.Authentication
 import System.Helpers
-import Distribution
 import System.MultiLang
 import System.SessionInfo
 import System.Routes
@@ -76,10 +71,28 @@ type ViewBlock = [HtmlExp]
 --- Spicey.getControllerParams inside the controller.
 type Controller = IO ViewBlock
 
---- The type class `EntityController` provides the application
---- of a controller to some entity identified by a key string.
+
+--- The type class `EntityController` contains:
+--- * the application of a controller to some entity identified by a key string
+--- * an operation to construct a URL route for an entity w.r.t. to a route
+---   string
 class EntityController a where
   controllerOnKey :: String -> (a -> Controller) -> Controller
+
+  entityRoute :: String -> a -> String
+  entityRoute _ _ = error "entityRoute: implementation missing"
+
+--- Returns the URL route to show a given entity.
+showRoute :: EntityController a => a -> String
+showRoute = entityRoute "show"
+
+--- Returns the URL route to edit a given entity.
+editRoute :: EntityController a => a -> String
+editRoute = entityRoute "edit"
+
+--- Returns the URL route to delete a given entity.
+deleteRoute :: EntityController a => a -> String
+deleteRoute = entityRoute "delete"
 
 
 --- Reads an entity for a given key and applies a controller to it.
@@ -88,6 +101,16 @@ applyControllerOn :: Maybe enkey -> (enkey -> DBAction en)
 applyControllerOn Nothing _ _ = displayError "Illegal URL"
 applyControllerOn (Just userkey) getuser usercontroller =
   runJustT (getuser userkey) >>= usercontroller
+
+--- A controller to redirect to an URL starting with "?"
+--- (see implementation of `getPage`).
+redirectController :: String -> Controller
+redirectController url = return [HtmlText url]
+
+--- Redirect to a page of the default controller.
+--- Useful to set the URL route correctly.
+redirectToDefaultController :: Controller
+redirectToDefaultController = redirectController "?"
 
 nextController :: Controller -> _ -> IO HtmlPage
 nextController controller _ = do
@@ -207,18 +230,18 @@ showControllerURL ctrlurl params = '?' : ctrlurl ++ concatMap ('/':) params
 --- @param sinfo      - the UserSessionInfo to select the language
 --- @param title      - the title of the WUI form
 --- @param buttontag  - the text on the submit button
---- @param cancelctrl - the controller called if submission is cancelled
+--- @param cancelurl  - the URL selected if submission is cancelled
 --- @param envpar     - environment parameters (e.g., user session data)
 --- @param hexp       - the HTML expression representing the WUI form
 --- @param handler    - the handler for submitting data
-renderWUI :: UserSessionInfo -> String -> String -> Controller
+renderWUI :: UserSessionInfo -> String -> String -> String
           -> a -> HtmlExp -> (CgiEnv -> Controller) -> [HtmlExp]
-renderWUI sinfo title buttontag cancelctrl _ hexp handler =
+renderWUI sinfo title buttontag cancelurl _ hexp handler =
   [h1 [htxt $ t title],
    blockstyle "editform" [hexp],
    breakline,
    primButton (t buttontag) (\env -> handler env >>= getPage),
-   defaultButton (t "Cancel") (nextController (cancelOperation >> cancelctrl))]
+   hrefButton cancelurl [htxt $ t "Cancel"]]
  where t = translate sinfo
 
 --- Standard rendering for WUI forms to edit data where some
@@ -227,18 +250,18 @@ renderWUI sinfo title buttontag cancelctrl _ hexp handler =
 --- @param title      - the title of the WUI form
 --- @param buttontag  - the text on the submit button
 --- @param cmts       - the explanations to be included at the top
---- @param cancelctrl - the controller called if submission is cancelled
+--- @param cancelurl  - the URL selected if submission is cancelled
 --- @param envpar     - environment parameters (e.g., user session data)
 --- @param hexp       - the HTML expression representing the WUI form
 --- @param handler    - the handler for submitting data
 renderWUIWithText :: UserSessionInfo -> String -> String -> [HtmlExp]
-  -> Controller -> a -> HtmlExp -> (CgiEnv -> Controller) -> [HtmlExp]
-renderWUIWithText sinfo title buttontag cmts cancelctrl _ hexp handler =
+  -> String -> a -> HtmlExp -> (CgiEnv -> Controller) -> [HtmlExp]
+renderWUIWithText sinfo title buttontag cmts cancelurl _ hexp handler =
   [h1 [htxt $ t title]] ++ cmts ++
   [blockstyle "editform" [hexp],
    breakline,
    primButton (t buttontag) (\env -> handler env >>= getPage),
-   defaultButton (t "Cancel") (nextController (cancelOperation >> cancelctrl))]
+   hrefButton cancelurl [htxt $ t "Cancel"]]
  where t = translate sinfo
 
 --------------------------------------------------------------------------
@@ -487,28 +510,33 @@ stdNavBar routemenu adminmenu sinfo =
 
 getPage :: ViewBlock -> IO HtmlPage
 getPage viewBlock = case viewBlock of
-  [HtmlText ""] ->
-       return $ HtmlPage "forward to Spicey"
-                  [pageMetaInfo [("http-equiv","refresh"),
-                                 ("content","1; url=show.cgi")]]
-                  [par [htxt "You will be forwarded..."]]
+  [HtmlText ""]          -> return $ redirectPage "show.cgi"
+  [HtmlText ('?':route)] -> return $ redirectPage ('?':route)
   _ -> do
-    body    <- addLayout viewBlock
-    withSessionCookieInfo $ HtmlPage spiceyTitle
-                ([pageEnc "utf-8", responsiveView, icon] ++
-                 map (\f -> PageCSS $ "css/"++f++".css")
-                     ["bootstrap.min","spicey"])
-                (body ++
-                 map (\f -> HtmlStruct "script" [("src","js/"++f++".js")] [])
-                     ["jquery.min","bootstrap.min"])
+    hassession <- doesSessionExist
+    urlparam   <- getUrlParameter
+    body       <- addLayout $ if hassession then viewBlock
+                                            else cookieInfo urlparam
+    withSessionCookie $ HtmlPage spiceyTitle
+      ([pageEnc "utf-8", responsiveView, icon] ++
+       map (\f -> PageCSS $ "css/"++f++".css")
+           ["bootstrap.min","spicey"])
+      (body ++
+       map (\f -> HtmlStruct "script" [("src","js/"++f++".js")] [])
+           ["jquery.min","bootstrap.min"])
  where
-   responsiveView =
-     pageMetaInfo [("name","viewport"),
-                   ("content","width=device-width, initial-scale=1.0")]
+  responsiveView =
+    pageMetaInfo [("name","viewport"),
+                  ("content","width=device-width, initial-scale=1.0")]
 
-   icon = PageHeadInclude $
-            HtmlStruct "link" [("rel","shortcut icon"),
-                               ("href","favicon.ico")] []
+  icon = PageHeadInclude $
+           HtmlStruct "link" [("rel","shortcut icon"),
+                              ("href","favicon.ico")] []
+
+  cookieInfo urlparam =
+    [ par [ htxt $ "This web site uses cookies for navigation and user " ++
+                   "inputs and preferences. In order to proceed, "
+          , hrefPrimButton ('?' : urlparam) [htxt "please click here."]] ]
 
 --- A form view to select a semester with a controller for this semester
 selectSemesterFormView :: ((String,Int) -> Controller) -> String
@@ -768,7 +796,7 @@ textWithInfoIcon s = infoIcon `addTitle` s
 
 --- Definition of the session state to store the page message (a string).
 pageMessage :: Global (SessionStore String)
-pageMessage = global emptySessionStore Temporary
+pageMessage = global emptySessionStore (Persistent (inDataDir "pageMessage"))
 
 --- Gets the page message and delete it.
 getPageMessage :: IO String
