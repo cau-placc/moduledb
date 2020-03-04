@@ -1,112 +1,21 @@
 module View.MasterProgram (
- wMasterProgram, tuple2MasterProgram, masterProgram2Tuple, wMasterProgramType,
  showMasterProgramView, listMasterProgramView, singleMasterProgramView
  ) where
 
-import HTML.WUI
-import HTML.Base
-import Time
+import List
+import Maybe
 import Sort
+
+import HTML.Base
+
 import System.Spicey
 import MDB
 import MDBExts
 import View.MDBEntitiesToHtml
 import System.Helpers
-import ReadShowTerm
-import ConfigMDB
-import List
-import Maybe
 import View.MasterCoreArea
 import System.SessionInfo
 import System.MultiLang
-
---- The WUI specification for the entity type MasterProgram.
---- It also includes fields for associated entities.
-wMasterProgram
- :: Bool -> [MasterCoreArea] -> [User]
-  -> WuiSpec (String,String,Int,String,String,String,Bool,MasterCoreArea,User)
-wMasterProgram admin masterCoreAreaList userList =
-  withRendering
-   (w9Tuple wLargeRequiredString wTrm wYr wStr wStr wStr
-     wVisible
-     (wSelect masterCoreAreaToShortView masterCoreAreaList)
-     wAdvisor)
-   (renderLabels masterProgramLabelList)
- where
-  wTrm = if admin then wTerm else wConstant stringToHtml
-  wYr  = if admin then wYear else wConstant intToHtml
-
-  wAdvisor = if admin then wSelect userToShortView userList
-                      else wConstant (stringToHtml . userToShortView)
-
-  wStr = wTextArea (6,70)
-
---- Transformation from data of a WUI form to entity type MasterProgram.
-tuple2MasterProgram
- :: MasterProgram
-  -> (String,String,Int,String,String,String,Bool,MasterCoreArea,User)
-  -> MasterProgram
-tuple2MasterProgram masterProgramToUpdate (name ,term ,year ,desc ,prereq
-                                           ,comments ,visible ,masterCoreArea
-                                           ,user) =
-  setMasterProgramName
-   (setMasterProgramTerm
-     (setMasterProgramYear
-       (setMasterProgramDesc
-         (setMasterProgramPrereq
-           (setMasterProgramComments
-             (setMasterProgramVisible
-               (setMasterProgramUserAdvisingKey
-                 (setMasterProgramMasterCoreAreaAreaProgramsKey
-                   masterProgramToUpdate (masterCoreAreaKey masterCoreArea))
-                 (userKey user))
-               visible)
-             comments)
-           prereq)
-         desc)
-       year)
-     term)
-   name
-
---- Transformation from entity type MasterProgram to a tuple
---- which can be used in WUI specifications.
-masterProgram2Tuple
- :: MasterCoreArea -> User -> MasterProgram
-  -> (String,String,Int,String,String,String,Bool,MasterCoreArea,User)
-masterProgram2Tuple masterCoreArea user masterProgram =
-  (masterProgramName masterProgram,masterProgramTerm masterProgram
-  ,masterProgramYear masterProgram,masterProgramDesc masterProgram
-  ,masterProgramPrereq masterProgram,masterProgramComments masterProgram
-  ,masterProgramVisible masterProgram,masterCoreArea,user)
-
---- WUI Type for editing or creating MasterProgram entities.
---- Includes fields for associated entities.
-wMasterProgramType
- :: Bool -> MasterProgram -> MasterCoreArea -> User -> [MasterCoreArea]
- -> [User] -> WuiSpec MasterProgram
-wMasterProgramType admin masterProgram masterCoreArea user masterCoreAreaList
-                   userList =
-  transformWSpec
-   (tuple2MasterProgram masterProgram,masterProgram2Tuple masterCoreArea user)
-   (wMasterProgram admin masterCoreAreaList userList)
-
-wMasterProgramTitle :: Int -> [MasterProgram] -> [MasterCoreArea]
-           -> WuiSpec (String,Maybe MasterProgram,String,Int,MasterCoreArea)
-wMasterProgramTitle curyear mprogs possibleMasterCoreAreas =
-  w5Tuple wLargeString
-          (wSelect (maybe "" masterProgramToShortView)
-                   (Nothing : map Just mprogs))
-          wTerm (wCurrentYear curyear)
-          (wSelect masterCoreAreaToShortView possibleMasterCoreAreas)
-  `withCondition` (\ (t,mp,_,_,_) -> not (null t && mp==Nothing))
-  `withError` "Fehler: Titel eingeben oder altes Masterprogramm auswaehlen!"
-  `withRendering`
-    renderLabels
-     [[textstyle "label label_for_type_string" "Titel (neues Masterprogramm)"]
-     ,[textstyle "label label_for_type_string" "oder kopiere dieses Programm:"]
-     ,[textstyle "label label_for_type_string" "Beginn im Semester"]
-     ,[textstyle "label label_for_type_int" "Beginn im Jahr"]
-     ,[textstyle "label label_for_type_relation" "Masterbereich"]]
 
 
 --- Supplies a view to show the details of a MasterProgram.

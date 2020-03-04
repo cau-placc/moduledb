@@ -141,7 +141,7 @@ studentLoginFormView dfltcontroller landingcontroller sinfo =
       else do loginToStudentSession email
               ctime <- getClockTime
               runT (updateStudent (setStudentLastLogin (head students) ctime))
-              setPageMessage (t "Logged in as '" ++ email ++ "'")
+              setPageMessage (t "Logged in as" ++  " '" ++ email ++ "'")
               landingcontroller >>= getPage
 
 ------------------------------------------------------------------------

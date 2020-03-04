@@ -29,7 +29,7 @@ studyProgramToListView sinfo sprog =
  where
   name2href n =
     [hrefStudyProgram
-       ("?Category/studyprogram/"++showStudyProgramKey sprog)
+       ("?Category/studyprogram/" ++ showStudyProgramKey sprog)
        [textstyle "studyprogram" n]]
 
 --- The short view of a StudyProgram entity as a string.
@@ -68,13 +68,13 @@ categoryToListView sinfo category =
   ,[stringToHtml (categoryShortName category)]
   ,[intToHtml (categoryPosition category)]]
  where
-   name2href n = [hrefCategory ("?Category/show/"++showCategoryKey category)
+   name2href n = [hrefCategory ("?Category/show/" ++ showCategoryKey category)
                                [stringToHtml n]]
 
 --- The HTML view of a Category entity.
 categoryToHtmlView :: Category -> HtmlExp
 categoryToHtmlView category =
-  smallHrefCategory ("?Category/show/"++showCategoryKey category)
+  smallHrefCategory ("?Category/show/" ++ showCategoryKey category)
     [htxt (categoryShortName category)]
 
 --- The short view of a Category entity as a string.
@@ -212,7 +212,7 @@ modDataToListView modData =
    withHref hexp =
      let txtelem = [if modDataVisible modData then hexp else italic [hexp]]
       in  if null (modDataURL modData)
-          then hrefModule ("?ModData/show/"++showModDataKey modData) txtelem
+          then hrefModule ("?ModData/show/" ++ showModDataKey modData) txtelem
           else hrefExtModule (modDataURL modData) txtelem
 
 --- A more compact list view of a ModData entity in HTML format
@@ -227,7 +227,7 @@ modDataToCompactListView sinfo modData =
    withHref hexp =
      let txtelem = [if modDataVisible modData then hexp else italic [hexp]]
       in if null (modDataURL modData)
-         then hrefModule ("?ModData/show/"++showModDataKey modData) txtelem
+         then hrefModule ("?ModData/show/" ++ showModDataKey modData) txtelem
          else hrefExtModule (modDataURL modData) txtelem
 
 
@@ -461,7 +461,7 @@ advisorModuleLabelList =
 --- This view is used in a row of a table of all entities.
 masterProgramToListView :: MasterProgram -> HtmlExp
 masterProgramToListView masterProgram =
-  spHref ("?MasterProgram/show/"++showMasterProgramKey masterProgram)
+  spHref ("?MasterProgram/show/" ++ showMasterProgramKey masterProgram)
        [if masterProgramVisible masterProgram
         then stringToHtml (masterProgramName masterProgram)
         else italic [stringToHtml (masterProgramName masterProgram)]]
@@ -601,7 +601,7 @@ showStudyProgCategoriesAsHtml :: UserSessionInfo -> [StudyProgram]
 showStudyProgCategoriesAsHtml sinfo sprogs cats =
   inline
     (intersperse nbsp --(stringToHtml " ")
-       (map (\c -> smallHrefCategory ("?Category/show/"++showCategoryKey c)
+       (map (\c -> smallHrefCategory ("?Category/show/" ++ showCategoryKey c)
                      [stringToHtml (showStudyProgCategory sinfo True sprogs c)]
                     `addTitle` (showStudyProgCategory sinfo False sprogs c))
             cats))
@@ -626,7 +626,7 @@ showModDatasAsLinks :: UserSessionInfo -> [ModData] -> HtmlExp
 showModDatasAsLinks _ mods =
   inline
     (intersperse nbsp
-       (map (\md -> smallHrefModule ("?ModData/show/"++showModDataKey md)
+       (map (\md -> smallHrefModule ("?ModData/show/" ++ showModDataKey md)
                      [stringToHtml (modDataCode md)]
                     `addTitle` (modDataNameG md))
             mods))

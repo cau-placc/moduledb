@@ -111,7 +111,7 @@ english2german =
  ,("Information on data privacy", "Information zum Datenschutz")
  ,("Last name"          ,"Nachname")
  ,("LaTeX output"       ,"LaTeX-Ausgaben")
- ,("Logged in as: "     ,"Angemeldet als: ")
+ ,("Logged in as"       ,"Angemeldet als")
  ,("Logged out"         ,"Abgemeldet")
  ,("Login"              ,"Anmelden")
  ,("Login..."           ,"Anmeldung...")

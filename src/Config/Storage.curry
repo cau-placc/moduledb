@@ -4,11 +4,11 @@
 
 module Config.Storage where
 
-import FilePath        ( (</>) )
+import FilePath  ( (</>) )
 
-import ConfigMDB ( storageDir )
+import ConfigMDB ( sessionDataDir )
 
 --- Prefix a file name with the directory where global form data
 --- is stored during run time.
 inDataDir :: String -> String
-inDataDir filename = storageDir </> "sessiondata" </> filename
+inDataDir filename = sessionDataDir </> filename

@@ -17,7 +17,7 @@ adminEmail = "mh@informatik.uni-kiel.de"
 -- The URL of the main script of the module system
 -- (used to generate external URLs for modules and master programs):
 baseURL :: String
-baseURL = "https://mdb.ps.informatik.uni-kiel.de/show.cgi"
+baseURL = "https://mdb.ps.informatik.uni-kiel.de/pakcs/show.cgi"
 
 -- Directory where all data is stored:
 storageDir :: String
@@ -25,7 +25,7 @@ storageDir = "/srv/sites/ps.informatik.uni-kiel.de/mdb/mdb/"
 
 -- Directory where global form data is stored during run time:
 sessionDataDir :: String
-sessionDataDir = storageDir </> "sessiondata"
+sessionDataDir = storageDir </> "sessiondata_pakcs"
 
 --- The base URL of the study planner
 studyPlannerURL :: String

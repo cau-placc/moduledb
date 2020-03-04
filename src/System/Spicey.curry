@@ -825,7 +825,7 @@ getLastUrls = getSessionData lastUrls []
 --- Gets the last URL of the current session (or "?").
 getLastUrl :: IO String
 getLastUrl = do urls <- getLastUrls
-                return (if null urls then "?" else head urls)
+                return (if null urls then "?" else '?' : head urls)
 
 --- Gets the parameters of the last URL of the current session.
 getLastUrlParameters :: IO (String,[String])

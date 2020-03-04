@@ -1,6 +1,6 @@
 # Generic Makefile for Spicey applications
 
-# The compilation target (IFI for real deployment, TEST for mdbtest)
+# The compilation target (IFI or IFIPAKCS for real deployment, TEST for mdbtest)
 TARGET = TEST
 
 # check setting of TARGET variable:
@@ -9,16 +9,21 @@ ifeq ($(TARGET),IFI)
 DATADIR=/srv/sites/ps.informatik.uni-kiel.de/mdb/mdb
 # Definition of the Curry installation bin directory to be used:
 CURRYHOME=/opt/kics2/kics2
+else ifeq ($(TARGET),IFIPAKCS)
+# directory with all data:
+DATADIR=/srv/sites/ps.informatik.uni-kiel.de/mdb/mdb
+# Definition of the Curry installation bin directory to be used:
+CURRYHOME=/opt/pakcs/pakcs
 else ifeq ($(TARGET),TEST)
 # directory with all data:
 DATADIR=$(HOME)/home/data/mdbtest
-# Definition of the Curry installation bin directory to be used:
+# Definition of the Curry installation directory to be used:
 #CURRYHOME=/opt/kics2/kics2
 CURRYHOME=$(HOME)/pakcs
 else
 error:
 	echo "ERROR: invalid definition of variable TARGET!"
-	echo "Please use 'TARGET=IFI' or 'TARGET=TEST'
+	echo "Please use 'TARGET=IFI', 'TARGET=IFIPAKCS' or 'TARGET=TEST'
 	exit 1
 endif
 
@@ -28,6 +33,9 @@ WEBSERVERDIR=$(HOME)/public_html/mdbtest
 
 # Name of the compile cgi program
 ifeq ($(TARGET),IFI)
+CGIPROGRAM=$(WEBSERVERDIR)/show.cgi
+else ifeq ($(TARGET),IFIPAKCS)
+WEBSERVERDIR=$(HOME)/public_html/mdbtest/pakcs
 CGIPROGRAM=$(WEBSERVERDIR)/show.cgi
 else
 CGIPROGRAM=$(WEBSERVERDIR)/mdb.cgi
@@ -107,9 +115,10 @@ restoredata:
 # web directory WEBSERVERDIR:
 .PHONY: deploy
 deploy: checkdeploy
-ifeq ($(TARGET),IFI)
+ifeq ($(TARGET),TEST)
+else
 	cd src/Model && $(CURRYBIN)/cleancurry ConfigMDB.curry && \
-	 /bin/rm -f ConfigMDB.curry && ln -s ConfigMDB_IFI.curry ConfigMDB.curry
+	 /bin/rm -f ConfigMDB.curry && ln -s ConfigMDB_$(TARGET).curry ConfigMDB.curry
 endif
 	mkdir -p $(WEBSERVERDIR)
 	$(MAKE) $(CGIPROGRAM)
@@ -121,8 +130,7 @@ ifeq ($(TARGET),TEST)
 	#/bin/rm -r $(SESSIONDATADIR)
 	mkdir -p $(SESSIONDATADIR)
 	chmod 700 $(SESSIONDATADIR)
-endif
-ifeq ($(TARGET),IFI)
+else
 	cd src/Model && $(CURRYBIN)/cleancurry ConfigMDB.curry && \
 	 /bin/rm -f ConfigMDB.curry && ln -s ConfigMDB_TEST.curry ConfigMDB.curry
 endif

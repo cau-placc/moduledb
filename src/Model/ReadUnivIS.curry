@@ -6,7 +6,7 @@ import ReadShowTerm
 
 import Control.SetFunctions
 import Debug.Profile
-import URL
+import System.URL
 import XML
 import XCuery
 

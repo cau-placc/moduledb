@@ -31,8 +31,10 @@ wSelectAdvisorModule modInstList =
            modDataNameG md1 < modDataNameG md2 ||
            (modDataNameG md1 == modDataNameG md2 && leqModInst mi1 mi2)
 
-  wMandatory = wRadioBool [htxt "Pflicht", nbsp]
-                          [htxt "Empfehlung"]
+  -- The wRadioBool implementation leads to an internal run-time error
+  -- with KiCS2 2.2.0!
+  --wMandatory = wRadioBool [htxt "Pflicht", nbsp] [htxt "Empfehlung"]
+  wMandatory = wSelectBool "Pflicht" "Empfehlung"
 
   selectName (modinst,moddata) =
     modDataNameG moddata ++

@@ -136,7 +136,7 @@ showAdvisorStudyProgramView
                                   showAdvisorStudyProgramKey asprog)
                                  [htxt "Beschreibung ändern"], nbsp]
             else []) ++
-         (if admin || not (advisorStudyProgramVisible asprog)
+         (if admin || (not (advisorStudyProgramVisible asprog) && editallowed)
             then [hrefPrimButton ("?AdvisorStudyProgram/visible/" ++
                                   showAdvisorStudyProgramKey asprog)
                                  [htxt $ t $ if admin

@@ -1,10 +1,14 @@
 -------------------------------------------------------------------------------
--- Globale Konfigurationen fuer Moduldatenbank:
+-- Global configurations for the module data base
 -------------------------------------------------------------------------------
 
 module ConfigMDB
-  ( adminEmail, baseURL, baseLoginURL, storageDir, studyPlannerURL, systemHashKey )
+  ( adminEmail, baseURL, storageDir, sessionDataDir
+  , studyPlannerURL, systemHashKey
+  )
  where
+
+import FilePath ( (</>) )
 
 -- Email address of administrator:
 adminEmail :: String
@@ -15,15 +19,13 @@ adminEmail = "mh@informatik.uni-kiel.de"
 baseURL :: String
 baseURL = "http://localhost/~mh/mdbtest/show.cgi"
 
--- The URL of the main script of the module system
--- when a user wants login in (used during the transformation phase).
-baseLoginURL :: String
---baseLoginURL = "http://localhost/~mh/mdbtest/pakcs/show.cgi"
-baseLoginURL = "https://mdb.ps.informatik.uni-kiel.de/pakcs/show.cgi"
-
--- directory where all data is stored:
+-- Directory where all data is stored:
 storageDir :: String
 storageDir = "/net/medoc/home/mh/home/data/mdbtest/"
+
+-- Directory where global form data is stored during run time:
+sessionDataDir :: String
+sessionDataDir = storageDir </> "sessiondata"
 
 --- The base URL of the study planner
 studyPlannerURL :: String

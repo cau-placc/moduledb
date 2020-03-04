@@ -136,7 +136,7 @@ loginFormView controller sinfo =
       else do loginToSession loginname
               ctime <- getClockTime
               runT (updateUser (setUserLastLogin (head users) ctime))
-              setPageMessage (t "Logged in as '" ++ loginname ++
+              setPageMessage (t "Logged in as" ++ " '" ++ loginname ++
                               "' (" ++ timeoutText sinfo ++ ")")
               urls <- getLastUrls
               redirectController (if length urls > 1 then '?':urls!!1 else "?" )

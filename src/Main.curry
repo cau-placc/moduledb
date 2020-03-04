@@ -18,7 +18,6 @@ import Controller.AdvisorStudyProgram ( showXmlAdvisorStudyProgram
                                       , showAllXmlAdvisorStudyPrograms)
 import Controller.MasterProgram       ( showXmlMasterProgram
                                       , showAllXmlMasterPrograms)
-import ConfigMDB ( baseLoginURL )
 import MDB
 import MDBExts
 import System.Helpers
@@ -34,16 +33,9 @@ import View.MDBEntitiesToHtml
 dispatcher :: IO HtmlPage
 dispatcher = do
   -- get url
-  (url0,ctrlparams) <- getControllerURL
-  -- if the URL starts with langEN? or langDE?, we set the language and
-  -- drop this part of the URL:
-  url <- if take 4 url0 == "lang" && url0!!6 == '?'
-           then setLanguage (take 2 (drop 4 url0)) >> return (drop 7 url0)
-           else return url0
-  
+  (url,ctrlparams) <- getControllerURL
   controller <- nextControllerRefInProcessOrForUrl url >>=
                 maybe displayUrlError getController
-
   saveLastUrl (url ++ concatMap ("/"++) ctrlparams)
   form <- getPage controller
   return form
@@ -76,20 +68,20 @@ main = do
            else maybe (displayUrlError >>= getPage)
                       showXmlAdvisorStudyProgram
                       (readAdvisorStudyProgramKey (urlencoded2string code))
-    ['l','a','n','g',l1,l2] -> setLanguage [l1,l2] >> dispatcher
+    ['l','a','n','g',l1,l2] -> setLanguage [l1,l2]
     "csv"    -> allModuleCSV
     "saveDB" -> storeTermDB >>
                 return (answerEncText "iso-8859-1" "DB saved to term files")
     "ping"   -> pingAnswer -- to check whether the MDB server is alive
     _        -> dispatcher
 
-setLanguage :: String -> IO ()
+setLanguage :: String -> IO HtmlPage
 setLanguage langcode = do
   let lang = if langcode=="EN" then English else German
   updateUserSessionInfo (setLanguageOfSession lang)
   setPageMessage $ if lang==English then "Language: English"
                                     else "Sprache: Deutsch"
-  getLastUrl >>= setEnviron "QUERY_STRING"
+  getLastUrl >>= redirectController >>= getPage
 
 -- Send an alive answer (to check whether the MDB server is alive)
 pingAnswer :: IO HtmlPage

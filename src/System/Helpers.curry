@@ -18,7 +18,7 @@ module System.Helpers
     showSemester, showLongSemester, showSemesterCode, readSemesterCode,
     nextSemester, prevSemester, leqSemester,
     semesterSelection, findSemesterSelection,
-    imageNB, wTerm, wCurrentYear, wYear, wVisible,
+    imageNB, wTerm, wCurrentYear, wYear,
     wLargeString, wLargeRequiredString,
     wMediumString, wMediumRequiredString,
     largetextinputRendering, mediumtextinputRendering,
@@ -346,11 +346,6 @@ wCurrentYear curyear = wSelect show [(curyear-4) .. (curyear+6)]
 --- The WUI specification for an arbitrary year.
 wYear :: WuiSpec Int
 wYear = wInt `withRendering` shorttextinputRendering
-
---- A WUI for the visibility of a module:
-wVisible :: WuiSpec Bool
-wVisible = wRadioBool [htxt "öffentlich sichtbar", nbsp, nbsp]
-                      [htxt "nur zur internen Bearbeitung"]
 
 --- A WUI for a large input text line
 wLargeString :: WuiSpec String

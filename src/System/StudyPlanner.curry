@@ -11,7 +11,7 @@ module System.StudyPlanner
 import ReadNumeric    ( readInt )
 
 import HTML.Base
-import URL            ( getContentsOfUrl )
+import System.URL     ( getContentsOfUrl )
 
 import ConfigMDB      ( studyPlannerURL )
 import MDB
