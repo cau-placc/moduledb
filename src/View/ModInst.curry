@@ -107,10 +107,10 @@ listModInstView modInsts =
 --- where this instance is used.
 singleModInstView :: UserSessionInfo -> ModInst -> ModData -> User
                   -> [MasterProgram] -> [AdvisorStudyProgram] -> [HtmlExp]
-singleModInstView sinfo modinst moddata user mprogs sprogs =
+singleModInstView sinfo modinst moddata lecturer mprogs sprogs =
   [h1 [htxt $ "Modul \""++ modDataNameG moddata ++ "\" im " ++
               showSemester modinstsem],
-   h3 [htxt "Dozent: ", userToHtmlView user]] ++
+   h3 [htxt "Dozent: ", userToHtmlView lecturer]] ++
    (if null mprogs && null sprogs
     then [par [htxt notusedcmt]]
     else [par [htxt usedcmt],
@@ -133,9 +133,12 @@ singleModInstView sinfo modinst moddata user mprogs sprogs =
                                              advisorStudyProgramYear sp)),
                          htxt ")"]])
                  sprogs)]) ++
-   --[spEHref ("?ModData/number/"++showModDataKey moddata++
-   --          "/"++showSemesterCode modinstsem)
-   --         [htxt $ "Anzahl der Studierenden"], nbsp] ++
+   (if Just (userLogin lecturer) == userLoginOfSession sinfo ||
+       isAdminSession sinfo
+      then [spEHref ("?ModData/number/"++showModDataKey moddata++
+                     "/"++showSemesterCode modinstsem)
+                    [htxt $ "Anzahl der registrierten Studierenden"], nbsp]
+      else []) ++
    (if isAdminSession sinfo
       then [spEHref ("?ModData/studs/" ++ showModDataKey moddata ++
                      "/" ++ showSemesterCode modinstsem)

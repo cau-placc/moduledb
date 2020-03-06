@@ -17,7 +17,7 @@ adminEmail = "mh@informatik.uni-kiel.de"
 -- The URL of the main script of the module system
 -- (used to generate external URLs for modules and master programs):
 baseURL :: String
-baseURL = "http://localhost/~mh/mdbtest/show.cgi"
+baseURL = "http://localhost/~mh/mdbtest/mdb.cgi"
 
 -- Directory where all data is stored:
 storageDir :: String

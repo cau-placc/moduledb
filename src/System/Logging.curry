@@ -45,6 +45,6 @@ showLogFile fname =
 
 showLogLine :: (CalendarTime, String, String) -> String
 showLogLine (ct,pat,ip) =
-    ``format "%-20s: %-35.35s (%s)", calendarTimeToString ct, pat, ip''
+  ``format "%-20s: %-35.35s (%s)", calendarTimeToString ct, show pat, ip''
 
 --------------------------------------------------------------------------

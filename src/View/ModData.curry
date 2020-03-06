@@ -192,9 +192,11 @@ studentModuleView semcode modData studs =
   [h1 [htxt $ "Modul \"" ++ modDataNameG modData ++ "\""],
    par [htxt "Studierende, die dieses Modul für das Semester '",
         htxt semcode, htxt "' in der Moduldatenbank eingeplant haben: "],
-   spTable (map stud2row studs)]
+   spTable ([[htxt "Email"], [htxt "Vorname"], [htxt "Nachname"]] :
+            map stud2row studs)
+  ]
  where
-  stud2row (email,name,first) = [[htxt email], [htxt name], [htxt first]]
+  stud2row (email,name,first) = [[htxt email], [htxt first], [htxt name]]
 
 --- A view for searching modules.
 copyModView :: ModData -> (String -> Controller) -> [HtmlExp]

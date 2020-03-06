@@ -90,14 +90,14 @@ data LogInfo = LogInfo String String String LogEvent
 
 -- Adds an event with some info string to the global log file.
 logEvent :: LogEvent -> IO ()
-logEvent event = exclusiveIO (logFile++".lock") $ do
+logEvent event = exclusiveIO (logFile ++ ".lock") $ do
   time  <- getLocalTime
   login <- getSessionLogin
   raddr <- getEnviron "REMOTE_ADDR"
   rhost <- if null raddr then getHostname else getHostnameForIP raddr
   appendFile logFile
      (showQTerm (LogInfo (calendarTimeToString time) (maybe "???" id login)
-                         (rhost++"/"++raddr) event) ++ "\n")
+                         (rhost ++ "/" ++ raddr) event) ++ "\n")
 
 --- Get symbolic name of ip address:
 getHostnameForIP :: String -> IO String
@@ -174,7 +174,7 @@ hrefs2markdown s =
       else sps ++ toHref w ++ hrefs2markdown s2
  where
   toHref w = if take 7 w == "http://" || take 8 w == "https://"
-             then "<"++w++">"
+             then "<" ++ w ++ ">"
              else w
 
 -----------------------------------------------------------------------------
@@ -258,8 +258,8 @@ allowedLatexCommands =
    "leftarrow","rightarrow"]
 
 -- logging for development:
-logUnknownLatex cmd =
- unsafePerformIO (appendFile (storageDir++"LATEX.LOG") ('\\':take 20 cmd++"\n"))
+logUnknownLatex cmd = unsafePerformIO $
+  appendFile (storageDir ++ "LATEX.LOG") ('\\':take 20 cmd ++ "\n")
 
 -----------------------------------------------------------------------------
 -- Semester/Year management:
@@ -277,14 +277,15 @@ getCurrentSemester = do
 -- show a semester:
 showSemester (sem,year) =
   let yr2 = year `mod` 100
-   in if sem=="SS" then "SS"++showDigit2 yr2
-                   else "WS"++showDigit2 yr2++"/"++showDigit2 (yr2+1)
+   in if sem=="SS" then "SS" ++ showDigit2 yr2
+                   else "WS" ++ showDigit2 yr2 ++ "/" ++ showDigit2 (yr2+1)
 
 -- show a semester in long format:
 showLongSemester (sem,year) =
-  let yr2 = year `mod` 100
-   in if sem=="SS" then "Sommersemester 20"++showDigit2 yr2
-                   else "Wintersemester 20"++showDigit2 yr2++"/20"++showDigit2 (yr2+1)
+  if sem=="SS"
+    then "Sommersemester 20" ++ showDigit2 yr2
+    else "Wintersemester 20" ++ showDigit2 yr2 ++ "/20" ++ showDigit2 (yr2+1)
+ where yr2 = year `mod` 100
 
 -- show a semester as a short code, i.e., in the form "ss13" or "ws14":
 showSemesterCode :: (String,Int) -> String

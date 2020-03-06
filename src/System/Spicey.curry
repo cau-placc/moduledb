@@ -398,7 +398,7 @@ addLayout viewblock = do
         [blockstyle "col-md-12" mainDoc]] ++
       [hrule,
        HtmlStruct "footer" []
-        [par [htxt "powered by",
+        [par [htxt "Version of March 6, 2020, powered by",
               withELink $
                 href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
                      [image "images/spicey-logo.png" "Spicey"],

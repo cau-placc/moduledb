@@ -89,7 +89,9 @@ listStudentView sinfo students =
   [h1 [htxt "Liste der registrierten Studierenden"]
   ,spTable
     ([take 3 labels ++ [labels!!4]] ++
-     map listStudent (mergeSortBy leqStudent students))]
+     map listStudent (mergeSortBy leqStudent students))
+  ,emphasize [htxt $ "Anzahl der Studierenden: " ++ show (length students)]
+  ]
   where
     labels = studentLabelList sinfo
 
