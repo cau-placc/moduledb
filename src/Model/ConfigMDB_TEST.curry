@@ -3,7 +3,7 @@
 -------------------------------------------------------------------------------
 
 module ConfigMDB
-  ( adminEmail, baseURL, storageDir, sessionDataDir
+  ( adminEmail, baseCGI, baseURL, storageDir, sessionDataDir
   , studyPlannerURL, systemHashKey
   )
  where
@@ -14,10 +14,14 @@ import FilePath ( (</>) )
 adminEmail :: String
 adminEmail = "mh@informatik.uni-kiel.de"
 
+-- The name of the main script of the module system.
+baseCGI :: String
+baseCGI = "mdb.cgi"
+
 -- The URL of the main script of the module system
 -- (used to generate external URLs for modules and master programs):
 baseURL :: String
-baseURL = "http://localhost/~mh/mdbtest/mdb.cgi"
+baseURL = "http://localhost/~mh/mdbtest/" ++ baseCGI
 
 -- Directory where all data is stored:
 storageDir :: String

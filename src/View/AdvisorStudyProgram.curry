@@ -229,7 +229,7 @@ leqAdvisorStudyProgram (x1,sp1) (x2,sp2) =
 listAdvisorStudyProgramView
   :: UserSessionInfo -> [(AdvisorStudyProgram,StudyProgram)] -> [HtmlExp]
 listAdvisorStudyProgramView sinfo advisorStudyPrograms =
-  [h1 [htxt $ t "Degree programs at the department of computer science"]] ++
+  [h1 [htxt $ t "Master programs at the department of computer science"]] ++
   masterStudyOldNote sinfo ++
   [hrule] ++
   if null advisorprogramgroups then [] else

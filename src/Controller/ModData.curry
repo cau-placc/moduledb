@@ -8,7 +8,11 @@ module Controller.ModData
   , newPreqModDataForm, deletePreqModDataForm
   ) where
 
+import Directory
 import Global
+import List
+import Maybe
+import Sort
 import System
 import Time
 
@@ -16,6 +20,7 @@ import Config.Storage
 import ConfigMDB
 import System.Spicey
 import HTML.Base
+import HTML.Styles.Bootstrap4
 import HTML.Session
 import HTML.WUI
 import XML
@@ -26,13 +31,10 @@ import View.ModData
 import Config.EntityRoutes
 import Controller.ModDescr
 import Controller.ModInst
-import Maybe
 import System.Authorization
 import System.AuthorizedActions
 import Config.UserProcesses
 import System.Authentication
-import List
-import Sort
 import View.StudyProgram
 import System.Helpers
 import View.MDBEntitiesToHtml
@@ -41,7 +43,6 @@ import View.ModInst
 import View.User    ( leqUser )
 import FileGoodies  ( baseName )
 import Mail
-import Directory
 import System.SessionInfo
 import System.MultiLang
 import System.StudyPlanner

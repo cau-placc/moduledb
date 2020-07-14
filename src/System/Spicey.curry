@@ -39,6 +39,7 @@ import FilePath         ( (</>) )
 import List             ( findIndex, init, last )
 import Time
 
+import ConfigMDB        ( baseCGI )
 import Config.Storage   ( inDataDir )
 import Config.UserProcesses
 import HTML.Base
@@ -361,12 +362,12 @@ spiceyTitle = "Module Information System"
 
 --- The home URL and brand shown at the left top of the main page.
 spiceyHomeBrand :: (String, [HtmlExp])
-spiceyHomeBrand = ("?", [htxt "MDB"])
+spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 
 --- The standard footer of the Spicey page.
 spiceyFooter :: [HtmlExp]
 spiceyFooter =
-  [par [htxt "Version of July 13, 2020, powered by",
+  [par [htxt "Version of July 14, 2020, powered by",
         href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
@@ -382,7 +383,7 @@ mainContentsWithSideMenu menuitems contents =
 
 getPage :: ViewBlock -> IO HtmlPage
 getPage viewBlock = case viewBlock of
-  [HtmlText ""]          -> return $ redirectPage "show.cgi"
+  [HtmlText ""]          -> return $ redirectPage baseCGI
   [HtmlText ('?':route)] -> return $ redirectPage ('?':route)
   _ -> do
     hassession <- doesSessionExist
@@ -400,11 +401,12 @@ getPage viewBlock = case viewBlock of
                     map addDropDownItemClass routemenunews
         body      = if hassession then viewBlock
                                   else cookieInfo urlparam
+        title     = translate sinfo spiceyTitle
     withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
-      spiceyTitle spiceyHomeBrand
+      title spiceyHomeBrand
       (addNavItemClass $ standardMenu sinfo)
       (rightTopMenu sinfo admin adminmenu)
-      0 []  [h1 [htxt spiceyTitle]]
+      0 []  [h1 [htxt title]]
       (messageLine msg lasturl : body) spiceyFooter
  where
   addNavItemClass = map (\i -> ("nav-item", i))
@@ -469,19 +471,25 @@ getPage viewBlock = case viewBlock of
 
   extUrls t =
    [ toEHref "http://www.inf.uni-kiel.de"
-             (t "Department of Computer Science")
-   , toEHref "http://www.uni-kiel.de" "CAU Kiel"
-   , toEHref "http://univis.uni-kiel.de/" "UnivIS"
+             [htxt $ t "Department of Computer Science"]
+   , toEHref "http://www.uni-kiel.de" [htxt "CAU Kiel"]
+   , toEHref "http://univis.uni-kiel.de/" [htxt "UnivIS"]
    , blockstyle "dropdown-divider" []
    , h5 [htxt $ t "Supported by:"] `addClass` "dropdown-header"
    , toEHref "http://www.curry-lang.org"
-             ("Curry (" ++ t "programming language" ++ ")")
+             [image "bt4/img/curry.svg" "Curry"
+                `addAttrs` [("width","24"), ("height","24")],
+              htxt $ " Curry (" ++ t "programming language" ++ ")"]
    , toEHref "http://www.informatik.uni-kiel.de/~pakcs/spicey"
-             "Spicey (Web Framework)"
-   , toEHref "http://getbootstrap.com/" "Bootstrap (Style Sheets)"
+             [image "bt4/img/spicey-logo.png" "Spicey"
+                `addAttrs` [("height","24")],
+              htxt $ t " Spicey (Web Framework)"]
+   , toEHref "http://getbootstrap.com/"
+             [image "bt4/img/bootstrap.svg" "Bootstrap",
+              htxt " Bootstrap (Style Sheets)"]
    ]
 
-  toEHref url s = ehref url [htxt s] `addClass` "dropdown-item"
+  toEHref url he = ehref url he `addClass` "dropdown-item"
 
 
 favIcon :: String
@@ -709,6 +717,12 @@ addTitle hexp title = hexp `addAttr` ("title",title)
 
 --------------------------------------------------------------------------
 -- Icons:
+
+--- User (white) icon:
+mdbHomeIcon :: HtmlExp
+mdbHomeIcon =
+  image "bt4/img/book.svg" "MDB"
+    `addAttrs` [("width","32"), ("height","32")]
 
 --- User (white) icon:
 userWhiteIcon :: HtmlExp

@@ -10,13 +10,12 @@ module System.MultiLang (
   toEnglish,
   translate, langSelect,
   loginEmailText, mainTitle, mainExplanation,
-  masterStudyNote, masterStudyOldNote, minorSubjectNote,
+  masterStudyOldNote, minorSubjectNote,
   privacyCookieCmt, searchToolTip, sendCodeCmt, sendPasswordCmt, ssComment,
   studentExplanation, studentLoginEmailText,studentLoginExplanation,
   timeoutText, unknownUser, useURLText, prereqExplainText
  ) where
 
-import System.Helpers         ( ehref, ehrefBlock )
 import System.SessionInfo
 import HTML.Base
 import HTML.Styles.Bootstrap4
@@ -76,8 +75,6 @@ english2german =
  ,("Cycle:"             ,"Turnus:")
  ,("Degree program"      ,"Studiengang")
  ,("Degree programs"     ,"Studiengänge")
- ,("Degree programs at the department of computer science",
-   "Studiengänge im Institut für Informatik")
  ,("Delete module"      ,"Modul löschen")
  ,("Delete prerequisites","Voraussetzungen löschen")
  ,("delete as prerequisite","als Voraussetzung löschen")
@@ -130,6 +127,8 @@ english2german =
  ,("Master programs"    ,"Masterprogramme")
  ,("Master programs (since WS15/16)","Masterprogramme (ab WS15/16)")
  ,("Master programs (until SS15)","Masterprogramme (bis SS15)")
+ ,("Master programs at the department of computer science",
+   "Masterprogramme im Institut für Informatik")
  ,("Master programs in computer science","Programme im Masterstudiengang Informatik")
  ,("Master studies in computer science:","Masterstudium Informatik:")
  ,("Maximal ECTS points in this category",
@@ -296,27 +295,15 @@ mainExplanation sinfo = langSelect sinfo
  where
   univisURL = "http://univis.uni-kiel.de/"
 
-masterStudyNote :: UserSessionInfo -> [HtmlExp]
-masterStudyNote sinfo = langSelect sinfo
-  [italic [htxt "Important note: "],
-   htxt "All master students should plan their individual studies with the ",
-   ehrefBlock studyPlannerURL [bold [htxt "study planner"]], htxt "!"]
-  [italic [htxt "Wichtiger Hinweis: "],
-   htxt "Alle Masterstudierenden sollten ihre individualle Planung mit dem ",
-   ehrefBlock studyPlannerURL [bold [htxt "Studienplaner"]],
-   htxt " durchführen! ",
-   htxt "Damit wird weitgehend gewährleistet, dass das geplante Studium ",
-   htxt "auch wirklich durchführbar ist."]
-   
 masterStudyOldNote :: UserSessionInfo -> [HtmlExp]
 masterStudyOldNote sinfo = langSelect sinfo
   [htxt "The master programs until SS15 can be found ",
-   ehrefInfoBadge oldMasterProgURL [bold [htxt "here"]], htxt "."]
+   hrefInfoBadge oldMasterProgURL [bold [htxt "here"]], htxt "."]
   [htxt "Die Masterprogramme bis zum Sommersemester 2015 sind ",
-   ehrefInfoBadge oldMasterProgURL [bold [htxt "hier"]],
+   hrefInfoBadge oldMasterProgURL [bold [htxt "hier"]],
    htxt " zu finden."]
  where
-  oldMasterProgURL = "?MasterProgram/list" 
+  oldMasterProgURL = "?MasterProgram/listall"
    
 minorSubjectNote :: UserSessionInfo -> [HtmlExp]
 minorSubjectNote sinfo = langSelect sinfo
