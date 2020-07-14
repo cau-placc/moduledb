@@ -9,6 +9,7 @@ import Sort
 import Time
 
 import HTML.Base
+import HTML.Styles.Bootstrap4
 import HTML.WUI
 
 import MDB
@@ -61,7 +62,7 @@ wStudyProgramType studyProgram =
 showStudyProgramView :: StudyProgram -> [HtmlExp]
 showStudyProgramView studyProgram =
   studyProgramToDetailsView studyProgram ++
-   [spHref "?StudyProgram/list" [htxt "back to StudyProgram list"]]
+   [hrefPrimSmButton "?StudyProgram/list" [htxt "back to StudyProgram list"]]
 
 --- Compares two StudyProgram entities. This order is used in the list view.
 leqStudyProgram :: StudyProgram -> StudyProgram -> Bool
@@ -86,13 +87,13 @@ listStudyProgramView sinfo studyPrograms =
   listStudyProgram :: StudyProgram -> [[HtmlExp]]
   listStudyProgram studyProgram =
      studyProgramToListView sinfo studyProgram ++
-      [[spHref
+      [[hrefPrimBadge
          ("?StudyProgram/show/" ++ showStudyProgramKey studyProgram)
          [htxt "show"]]
-      ,[spHref
+      ,[hrefPrimBadge
          ("?StudyProgram/edit/" ++ showStudyProgramKey studyProgram)
          [htxt "edit"]]
-      ,[spHref
+      ,[hrefPrimBadge
          ("?StudyProgram/delete/" ++ showStudyProgramKey studyProgram)
          [htxt "delete"]]]
 

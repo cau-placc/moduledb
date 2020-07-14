@@ -6,6 +6,7 @@ module View.ModInst (
 
 import HTML.WUI
 import HTML.Base
+import HTML.Styles.Bootstrap4
 import Time
 import Sort
 import System.SessionInfo
@@ -115,34 +116,37 @@ singleModInstView sinfo modinst moddata lecturer mprogs sprogs =
     then [par [htxt notusedcmt]]
     else [par [htxt usedcmt],
           ulist
-           (map (\mp -> [htxt "Masterprogramm ",
-                     ehref ("?MasterProgram/show/"++showMasterProgramKey mp)
-                            [htxt (masterProgramName mp), htxt " (",
-                             htxt "Beginn : ",
-                             htxt (showSemester (masterProgramTerm mp,
-                                                 masterProgramYear mp)),
-                             htxt ")"]])
+           (map (\mp ->
+                   [ehrefInfoBadge
+                      ("?MasterProgram/show/" ++ showMasterProgramKey mp)
+                      [htxt (masterProgramName mp), htxt " (",
+                       htxt "Beginn : ",
+                       htxt (showSemester (masterProgramTerm mp,
+                                           masterProgramYear mp)),
+                       htxt ")"]])
                 mprogs ++
             map (\sp ->
-                 [htxt "Masterprogramm ",
-                  ehref
-                   ("?AdvisorStudyProgram/show/"++showAdvisorStudyProgramKey sp)
-                        [htxt (advisorStudyProgramName sp), htxt " (",
-                         htxt "Beginn : ",
-                         htxt (showSemester (advisorStudyProgramTerm sp,
-                                             advisorStudyProgramYear sp)),
-                         htxt ")"]])
+                   [ehrefInfoBadge
+                      ("?AdvisorStudyProgram/show/" ++
+                       showAdvisorStudyProgramKey sp)
+                      [htxt (advisorStudyProgramName sp), htxt " (",
+                       htxt "Beginn : ",
+                       htxt (showSemester (advisorStudyProgramTerm sp,
+                                           advisorStudyProgramYear sp)),
+                       htxt ")"]])
                  sprogs)]) ++
    (if Just (userLogin lecturer) == userLoginOfSession sinfo ||
        isAdminSession sinfo
-      then [spEHref ("?ModData/number/"++showModDataKey moddata++
-                     "/"++showSemesterCode modinstsem)
-                    [htxt $ "Anzahl der registrierten Studierenden"], nbsp]
+      then [ehrefPrimBadge
+              ("?ModData/number/" ++ showModDataKey moddata ++
+               "/" ++ showSemesterCode modinstsem)
+              [htxt $ "Anzahl der registrierten Studierenden"], nbsp]
       else []) ++
    (if isAdminSession sinfo
-      then [spEHref ("?ModData/studs/" ++ showModDataKey moddata ++
-                     "/" ++ showSemesterCode modinstsem)
-                    [htxt $ "Registrierte Studierende"]]
+      then [ehrefPrimBadge
+              ("?ModData/studs/" ++ showModDataKey moddata ++
+               "/" ++ showSemesterCode modinstsem)
+              [htxt $ "Registrierte Studierende"]]
       else [])
  where
   modinstsem = (modInstTerm modinst,modInstYear modinst)

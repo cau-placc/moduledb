@@ -6,16 +6,19 @@ module View.Category
  ) where
 
 import Either
+import List
 import Maybe ( isJust )
-import HTML.WUI
-import HTML.Base
 import Time
 import Sort
+
+import HTML.Base
+import HTML.Styles.Bootstrap4
+import HTML.WUI
+
 import System.Spicey
 import MDB
 import View.MDBEntitiesToHtml
 import System.Helpers
-import List
 import View.ModData
 import ConfigMDB
 import View.UnivisInfo
@@ -100,7 +103,7 @@ wCategoryType category studyProgram studyProgramList =
 showCategoryView :: Category -> StudyProgram -> [HtmlExp]
 showCategoryView category relatedStudyProgram =
   categoryToDetailsView category relatedStudyProgram ++
-   [spHref "?Category/list" [htxt "back to Category list"]]
+   [hrefPrimSmButton "?Category/list" [htxt "back to Category list"]]
 
 --- Compares two Category entities. This order is used in the list view.
 leqCategory :: Category -> Category -> Bool
@@ -180,18 +183,20 @@ listCategoryView sinfo mbsprog catmods semperiod users semselectform =
                           mods)))
         catmods)] ++
    (if null (concatMap snd catmods)
-    then either
-          (\sprog ->
-            [par
-              [ spHref ("?Category/studyprogramall/"++showStudyProgramKey sprog)
-                       [htxt $ t "Show all modules in this degree program"]
-              , nbsp
-              , spHref ("?StudyProgram/prereqs/"++showStudyProgramKey sprog)
-                       [htxt $ t "Show all module dependencies"]
-              ]])
-          (const [])
-          mbsprog
-    else [par [semselectform]])
+     then either
+           (\sprog ->
+             [par
+               [ hrefPrimBadge
+                   ("?Category/studyprogramall/" ++ showStudyProgramKey sprog)
+                   [htxt $ t "Show all modules in this degree program"]
+               , nbsp
+               , hrefPrimBadge
+                   ("?StudyProgram/prereqs/" ++ showStudyProgramKey sprog)
+                   [htxt $ t "Show all module dependencies"]
+               ]])
+           (const [])
+           mbsprog
+     else [par [semselectform]])
   where
    t = translate sinfo
 
@@ -222,9 +227,12 @@ listCategoryView sinfo mbsprog catmods semperiod users semselectform =
 
    listCategory category =
      categoryToListView sinfo category ++
-     [[spHref ("?Category/show/"  ++ showCategoryKey category) [htxt "Anzeigen"]]
-     ,[spHref ("?Category/edit/"  ++ showCategoryKey category) [htxt "Ändern"]]
-     ,[spHref ("?Category/delete/"++ showCategoryKey category) [htxt "Löschen"]]
+     [[hrefPrimBadge ("?Category/show/"  ++ showCategoryKey category)
+                     [htxt "Anzeigen"]]
+     ,[hrefPrimBadge ("?Category/edit/"  ++ showCategoryKey category)
+                     [htxt "Ändern"]]
+     ,[hrefPrimBadge ("?Category/delete/"++ showCategoryKey category)
+                     [htxt "Löschen"]]
      ]
 
 --- A view for a form to select a semester period to show the module instances

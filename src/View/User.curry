@@ -9,7 +9,7 @@ module View.User (
 import Mail ( sendMail )
 import HTML.WUI
 import HTML.Base
-import HTML.Styles.Bootstrap3
+import HTML.Styles.Bootstrap4
 import Time
 import Sort
 import System.Authentication
@@ -74,10 +74,13 @@ showUserView :: User -> [HtmlExp]
 showUserView user =
   [h1 [htxt $ "Benutzer " ++ userLogin user]] ++
   userToDetailsView user ++
-  [par [spHref ("?User/edit/"++showUserKey user) [htxt "Ändern"], nbsp
-       ,spHref ("?User/delete/"++showUserKey user) [htxt "Löschen"], nbsp
-       ,spHref ("?User/loginAs/"++showUserKey user) [htxt "Anmelden"], nbsp
-       ,spHref ("?User/modules/"++showUserKey user) [htxt "Module"]]
+  [par [ hrefPrimBadge ("?User/edit/"++showUserKey user)    [htxt "Ändern"]
+       , nbsp
+       , hrefPrimBadge ("?User/delete/"++showUserKey user)  [htxt "Löschen"]
+       , nbsp
+       , hrefPrimBadge ("?User/loginAs/"++showUserKey user) [htxt "Anmelden"]
+       , nbsp
+       , hrefPrimBadge ("?User/modules/"++showUserKey user) [htxt "Module"]]
   ]
 
 --- Compares two User entities. This order is used in the list view.
@@ -96,11 +99,11 @@ listUserView users =
    listUser :: User -> [[HtmlExp]]
    listUser user =
       userToListView user ++
-      [[spHref ("?User/show/" ++ showUserKey user) [htxt "Anzeigen"]],
-       [spHref ("?User/edit/" ++ showUserKey user) [htxt "Ändern"]],
-       [spHref ("?User/delete/" ++ showUserKey user) [htxt "Löschen"]],
-       [spHref ("?User/loginAs/" ++ showUserKey user) [htxt "Anmelden"]],
-       [spHref ("?User/modules/" ++ showUserKey user) [htxt "Module"]]]
+      [[hrefPrimBadge ("?User/show/" ++ showUserKey user) [htxt "Anzeigen"]],
+       [hrefPrimBadge ("?User/edit/" ++ showUserKey user) [htxt "Ändern"]],
+       [hrefPrimBadge ("?User/delete/" ++ showUserKey user) [htxt "Löschen"]],
+       [hrefPrimBadge ("?User/loginAs/" ++ showUserKey user) [htxt "Anmelden"]],
+       [hrefPrimBadge ("?User/modules/" ++ showUserKey user) [htxt "Module"]]]
 
 -----------------------------------------------------------------------------
 --- View to login.
@@ -109,7 +112,7 @@ loginView sinfo loginform =
   [h3 [htxt $ t "Login as lecturer"],
    loginform,
    hrule,
-   par [hrefPrimButton "?User/sendlogin" [htxt $ t "Forgot your login data?"]]
+   par [hrefPrimSmButton "?User/sendlogin" [htxt $ t "Forgot your login data?"]]
   ]
  where
   t = translate sinfo

@@ -10,6 +10,7 @@ import List(find)
 import Time
 
 import HTML.Base
+import HTML.Styles.Bootstrap4
 import HTML.Session
 import HTML.WUI
 
@@ -361,12 +362,12 @@ showAdvisorStudyProgramController asprog =
            categories
            advisor))
  where
-  addCatModRef cat = spHref ("?AdvisorStudyProgram/addcatmod/" ++
+  addCatModRef cat = hrefPrimBadge ("?AdvisorStudyProgram/addcatmod/" ++
                              showAdvisorStudyProgramKey asprog ++ "/" ++
                              showCategoryKey cat)
                             [htxt "Modulempfehlung hinzufügen"]
 
-  delAdvModRef am  = spHref ("?AdvisorStudyProgram/deladvmod/" ++
+  delAdvModRef am  = hrefPrimBadge ("?AdvisorStudyProgram/deladvmod/" ++
                              showAdvisorStudyProgramKey asprog ++ "/" ++
                              showAdvisorModuleKey am)
                             [htxt "Modulempfehlung löschen"]

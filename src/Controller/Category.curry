@@ -11,6 +11,7 @@ import Time
 
 import HTML.Base
 import HTML.Session
+import HTML.Styles.Bootstrap4
 import HTML.WUI
 
 import Config.Storage
@@ -260,8 +261,11 @@ listUserModulesController aslecturer listall =
    listCatHeader t =
      if listall
        then [htxt $ t alltitle]
-       else [htxt $ t $ (if aslecturer then "Taught" else "My") ++ " modules", nbsp,
-             htxt "(", href ("?Category/" ++ allhref) [htxt $ t alltitle], htxt ")"]
+       else [htxt $ t $ (if aslecturer then "Taught" else "My") ++ " modules",
+             nbsp,
+             htxt "(",
+             hrefScndBadge ("?Category/" ++ allhref) [htxt $ t alltitle],
+             htxt ")"]
     where alltitle = "All " ++ (if aslecturer then "taught" else "my") ++ " modules"
           allhref  = if aslecturer then "lecturerall" else "userall"
    

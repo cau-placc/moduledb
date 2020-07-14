@@ -5,6 +5,7 @@ module Controller.ModInst
 
 import System.Spicey
 import HTML.Base
+import HTML.Styles.Bootstrap4
 import Time
 import MDB
 import MDBExts
@@ -67,12 +68,13 @@ updateAllModInstController mdata oldinsts cntcontroller modinsts =
          [h1 [htxt "Fehler: Einige Instanzen nicht veränderbar!"],
           par [htxt "Die folgenden Instanzen können nicht geändert werden, ",
                htxt "da einige Studierende diese schon eingeplant haben ",
-               htxt "(vgl. ", spEHref studyPlannerURL [htxt "Studienplaner"],
+               htxt "(vgl. ",
+               ehrefPrimBadge studyPlannerURL [htxt "Studienplaner"],
                htxt "):"],
           par [htxt (unwords
                       (map (showSemester . modInstSemester) takenmodinsts))],
-          spHref ("?ModData/show/" ++ showModDataKey md)
-                 [htxt "Zurück zum Modul"]]
+          hrefPrimSmButton ("?ModData/show/" ++ showModDataKey md)
+                           [htxt "Zurück zum Modul"]]
    else
     runT (mapM (\ (oi,(ni,del)) ->
                  if del

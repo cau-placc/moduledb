@@ -5,8 +5,9 @@ module View.MasterCoreArea (
  leqMasterCoreArea, listMasterCoreAreaView
  ) where
 
-import HTML.WUI
 import HTML.Base
+import HTML.Styles.Bootstrap4
+import HTML.WUI
 import Time
 import Sort
 import System.Spicey
@@ -56,7 +57,7 @@ wMasterCoreAreaType masterCoreArea =
 showMasterCoreAreaView :: MasterCoreArea -> [HtmlExp]
 showMasterCoreAreaView masterCoreArea =
   masterCoreAreaToDetailsView masterCoreArea ++
-   [spHref "?MCA/list" [htxt "back to MasterCoreArea list"]]
+   [hrefPrimSmButton "?MCA/list" [htxt "back to MasterCoreArea list"]]
 
 --- Compares two MasterCoreArea entities. This order is used in the list view.
 leqMasterCoreArea :: MasterCoreArea -> MasterCoreArea -> Bool
@@ -81,9 +82,9 @@ listMasterCoreAreaView admin masterCoreAreas =
   where listMasterCoreArea :: MasterCoreArea -> [[HtmlExp]]
         listMasterCoreArea mca =
           masterCoreAreaToListView mca ++
-           [[spHref ("?MCA/show/"++showMasterCoreAreaKey mca)
-                    [htxt "Anzeigen"]],
-            [spHref ("?MCA/edit/"++showMasterCoreAreaKey mca)
-                    [htxt "Ändern"]],
-            [spHref ("?MCA/delete/"++showMasterCoreAreaKey mca)
-                    [htxt "Löschen"]]]
+           [[hrefPrimBadge ("?MCA/show/"++showMasterCoreAreaKey mca)
+                           [htxt "Anzeigen"]],
+            [hrefPrimBadge ("?MCA/edit/"++showMasterCoreAreaKey mca)
+                           [htxt "Ändern"]],
+            [hrefPrimBadge ("?MCA/delete/"++showMasterCoreAreaKey mca)
+                           [htxt "Löschen"]]]

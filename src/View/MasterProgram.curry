@@ -7,6 +7,7 @@ import Maybe
 import Sort
 
 import HTML.Base
+import HTML.Styles.Bootstrap4
 
 import System.Spicey
 import MDB
@@ -24,7 +25,7 @@ showMasterProgramView
 showMasterProgramView masterProgram relatedMasterCoreArea relatedUser
                       controller =
   masterProgramToDetailsView masterProgram relatedMasterCoreArea relatedUser
-   ++ [spButton "back to MasterProgram list" (nextController controller)]
+   ++ [spPrimButton "back to MasterProgram list" (nextController controller)]
 
 --- Compares two MasterProgram entities. This order is used in the list view.
 leqMasterProgram :: MasterProgram -> MasterProgram -> Bool
@@ -62,8 +63,8 @@ listMasterProgramView sinfo listall mpinfos allcoreareas =
       in catSems (term,year) allmpinfos ++
          if listall then [] else
           [hrule,
-           par [spHref "?MasterProgram/listall"
-                       [htxt $ t "Show all master programs"]]]
+           par [hrefPrimSmButton "?MasterProgram/listall"
+                                 [htxt $ t "Show all master programs"]]]
     where
      catSems sem progs = if null progs then [] else
        [hrule, h2 [htxt $ t "Start: " ++ showLongSemester sem]] ++
@@ -107,8 +108,8 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
    h3 [htxt $ "Beginn: " ++ showSemester (startSem,startYear) ++
               " / Research advisor: " ++ userToShortView advisor],
    par $ (if admin || editallowed
-          then [spButton "Beschreibung/Sichtbarkeit ändern"
-                       (nextController (editMasterProgramController mprog))]
+          then [spPrimButton "Beschreibung/Sichtbarkeit ändern"
+                  (nextController (editMasterProgramController mprog))]
           else [])] ++
   [h4 [htxt "Beschreibung:"],
    par [HtmlText (docText2html (masterProgramDesc mprog))],
@@ -118,8 +119,8 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
    par [HtmlText (docText2html (masterProgramComments mprog))],
    h3 [htxt "Masterprogrammübersicht"],
    par $ if admin || editallowed
-         then [spButton "Modulempfehlungen ändern"
-                        (nextController (editMasterProgInfoController mpinfo))]
+         then [spPrimButton "Modulempfehlungen ändern"
+                 (nextController (editMasterProgInfoController mpinfo))]
          else [],
    semTable,
    h3 [htxt "Masterprogrammübersicht nach Studienbereichen"]

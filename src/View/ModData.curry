@@ -11,7 +11,7 @@ import Sort
 
 import HTML.WUI
 import HTML.Base
-import HTML.Styles.Bootstrap3
+import HTML.Styles.Bootstrap4
 
 import System.Spicey
 import MDB
@@ -54,19 +54,20 @@ wPresence =
            [v,u,pue,p,s] -> (v,u,pue,p,s) -- new format
 
 -- a WUI to select a set of category keys from a given list of categories:
-wCatList :: [(StudyProgram,[Category])] -> WuiSpec [Category]
-wCatList spcats =
-  wMultiCheckSelect (\c->[catref c,nbsp]) allcats
-       `withCondition` (not . null)
-       `withError` "Es muss mindestens eine Kategorie angegeben werden!"
-       `withRendering` renderCats
+wCatList :: UserSessionInfo -> [(StudyProgram,[Category])] -> WuiSpec [Category]
+wCatList sinfo spcats =
+  wMultiCheckSelect (\c->[catref c, nbsp]) allcats
+    `withCondition` (not . null)
+    `withError` "Es muss mindestens eine Kategorie angegeben werden!"
+    `withRendering` renderCats
  where
   allcats = concatMap snd spcats
 
-  catref c = ehref ("?Category/show/"++showCategoryKey c)
+  catref c = ehref ("?Category/show/" ++ showCategoryKey c)
                    [htxt (categoryShortName c)]
+               `addTitle` showStudyProgCategory sinfo False (map fst spcats) c
 
-  renderCats hexps = spTable (split2rows spcats hexps)
+  renderCats hexps = spTable (addBadge2TableData (split2rows spcats hexps))
 
   split2rows [] _ = []
   split2rows ((sp,cats):sps) hexps =
@@ -74,23 +75,29 @@ wCatList spcats =
                              : map (\h -> [h]) (take (length cats) hexps))
     : split2rows sps (drop (length cats) hexps)
 
+-- Enclose all data items of a table as a light badge.
+addBadge2TableData :: [[[HtmlExp]]] -> [[[HtmlExp]]]
+addBadge2TableData xss =
+  map (\xs -> map (\x -> [style "badge badge-light" x]) xs) xss
 
 --- The WUI specification for the entity type ModData.
 --- It also includes fields for associated entities.
-wModData :: Bool -> Bool -> [User] -> [(StudyProgram,[Category])]
+wModData :: UserSessionInfo -> Bool -> Bool -> [User]
+         -> [(StudyProgram,[Category])]
          -> WuiSpec (String,String,String,String,String,Int,String,Int,
                      String,Bool,User,[Category])
-wModData admin allowchangemcode userList spcats =
+wModData sinfo admin allowchangemcode userList spcats =
   withRendering
    (w12Tuple (if allowchangemcode then wLargeRequiredString
                                   else wConstant htxt)
              wLargeRequiredString wLargeString wCycle wPresence wECTS
              wLargeRequiredString wLength wURL wHidden wResp wCats)
    -- render such that Visibility field is omitted:
-   (\fields -> if admin
-                 then renderLabels (take 9 labelList ++ drop 10 labelList)
-                                   (take 9 fields ++ drop 10 fields)
-                 else renderLabels (take 9 labelList) fields )
+   (\fields -> blockstyle "table-responsive"
+                 [if admin
+                    then renderLabels (take 9 labelList ++ drop 10 labelList)
+                                      (take 9 fields ++ drop 10 fields)
+                    else renderLabels (take 9 labelList) fields] )
  where
   labelList = if allowchangemcode
               then [textstyle "label label_for_type_string"
@@ -105,7 +112,7 @@ wModData admin allowchangemcode userList spcats =
              `withRendering` numwidthRendering
 
   wCats = if admin
-          then wCatList spcats
+          then wCatList sinfo spcats
           else wConstant (htxt . unwords . map categoryToShortView)
 
 
@@ -162,12 +169,12 @@ modData2Tuple user (modData ,categorys) =
 
 --- WUI Type for editing or creating ModData entities.
 --- Includes fields for associated entities.
-wModDataType :: Bool -> ModData -> User -> [User]
+wModDataType :: UserSessionInfo -> Bool -> ModData -> User -> [User]
              -> [(StudyProgram,[Category])]
              -> WuiSpec (ModData,[Category])
-wModDataType admin modData user userList spcats =
-  transformWSpec (tuple2ModData modData,modData2Tuple user)
-   (wModData admin admin userList spcats)
+wModDataType sinfo admin modData user userList spcats =
+  transformWSpec (tuple2ModData modData, modData2Tuple user)
+   (wModData sinfo admin admin userList spcats)
 
 
 -----------------------------------------------------------------------------
@@ -239,11 +246,11 @@ listModDataView admin title modDatas =
         listModData modData =
           modDataToListView modData ++
             if not admin then [] else
-              [[spHref ("?ModData/show/" ++ showModDataKey modData)
+              [[hrefPrimBadge ("?ModData/show/" ++ showModDataKey modData)
                  [htxt "show"]]
-              ,[spHref ("?ModData/edit/" ++ showModDataKey modData)
+              ,[hrefPrimBadge ("?ModData/edit/" ++ showModDataKey modData)
                  [htxt "edit"]]
-              ,[spHref ("?ModData/delete/" ++ showModDataKey modData)
+              ,[hrefPrimBadge ("?ModData/delete/" ++ showModDataKey modData)
                  [htxt "delete"]]]
 
 --- Improves the cycle information of a module w.r.t. a given list
@@ -306,7 +313,7 @@ singleModDataView sinfo editallowed modData responsibleUser
                 modDataEditButton "delete" "Delete module"]
           else [])] ++
   mainContentsWithSideMenu
-   (map (\tag -> [href ('#':tag) [htxt tag]]) descTitles)
+   (map (\tag -> [hrefNav ('#':tag) [htxt tag]]) descTitles)
   ([spTable $
     [[[bold [stringToHtml $ t "Module code:"]],
       [stringToHtml (modDataCode modData)]],
@@ -336,7 +343,7 @@ singleModDataView sinfo editallowed modData responsibleUser
            (maybe ""
                   (\md -> langSelect sinfo toEnglish id (modDescrLanguage md))
                   maybedesc)]],
-     [[bold [stringToHtml $ t "Prerequisites:",
+     [[bold [stringToHtml $ t "Prerequisites: ",
              textWithInfoIcon (prereqExplainText sinfo)]],
       [showModDatasAsLinks sinfo prerequisites]]
     ] ++
@@ -355,8 +362,8 @@ singleModDataView sinfo editallowed modData responsibleUser
      concatMap (\ (title,cnt) ->
                   [HtmlStruct "section" [("id",title)] [h3 [htxt $ title++":"]],
                    par [HtmlText (if title=="Verweise"
-                                  then docText2html (hrefs2markdown cnt)
-                                  else docText2html cnt)]])
+                                    then docText2html (hrefs2markdown cnt)
+                                    else docText2html cnt)]])
                (zip descTitles
                  (map (\sel -> sel moddesc)
                       [modDescrShortDesc,modDescrObjectives,modDescrContents,
@@ -367,8 +374,8 @@ singleModDataView sinfo editallowed modData responsibleUser
    modKeyString = showModDataKey modData
 
    modDataEditButton act label =
-     hrefPrimButton ("?ModData/" ++ act ++ "/" ++ modKeyString)
-                    [htxt $ t label]
+     hrefPrimSmButton ("?ModData/" ++ act ++ "/" ++ modKeyString)
+                      [htxt $ t label]
 
    admin = isAdminSession sinfo
 
@@ -390,12 +397,12 @@ singleModDataView sinfo editallowed modData responsibleUser
 showSemsOfModInstances :: [ModInst] -> [HtmlExp]
 showSemsOfModInstances mis =
   if null mis then []
-              else htxt "(" : intersperse (htxt ", ") (map showSem mis) ++
+              else htxt "(" : intersperse (htxt " ") (map showSem mis) ++
                    [htxt ")"]
  where
   showSem mi = 
-    ehref ("?ModInst/show/"++showModInstKey mi)
-          [htxt $ showSemester (modInstTerm mi,modInstYear mi)]
+    ehrefInfoBadge ("?ModInst/show/"++showModInstKey mi)
+                   [htxt $ showSemester (modInstTerm mi,modInstYear mi)]
 
 -----------------------------------------------------------------------------
 --- A form view to select a module and to add it as a prerequisite.

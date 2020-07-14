@@ -6,6 +6,7 @@
 module System.Logging
  where
 
+import IOExts   ( exclusiveIO )
 import FilePath ( (</>) )
 import System   ( getEnviron )
 import Time
@@ -28,14 +29,25 @@ logEntity :: Show a => String -> a -> IO ()
 logEntity logfile entity = do
   ltime <- getLocalTime
   raddr <- getEnviron "REMOTE_ADDR"
-  appendFile logfile (show (ltime, entity, raddr) ++ "\n")
+  -- Usually, appendFile should not be subject to race conditions.
+  -- In practice, it happened in the written log files so that
+  -- we write the file exclusively:
+  exclusiveIO (logfile ++ ".lock") $
+    appendFile logfile (show (ltime, entity, raddr) ++ "\n")
 
 --------------------------------------------------------------------------
 --- Reads the contents of a log file with information written by `logEntity`.
+--- The read is safe, i.e., unreadable lines are ignored.
 readLogFile :: Read a => String -> IO [a]
 readLogFile fname = do
   cnt <- readFile fname
-  return $ map read (lines cnt)
+  xss <- mapM safeRead (zip [1..] (lines cnt))
+  return $ concat xss
+ where
+  safeRead (n,s) = do
+    catch (return $!! ((:[]) (read s)))
+          (\_ -> putStrLn ("READ ERROR IN LINE " ++ show n ++ ": " ++ s) >>
+                 return [])
 
 --- Reads and shows the contents of a log file with information
 --- written by `logEntity` where the entity is a string.

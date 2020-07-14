@@ -10,7 +10,7 @@ module View.Search
 
 import System.Spicey
 import HTML.Base
-import HTML.Styles.Bootstrap3
+import HTML.Styles.Bootstrap4
 import Char
 import List
 import System.Helpers
@@ -28,14 +28,14 @@ searchPageView sinfo searchform showsemmodsform =
   [h1 [htxt $ t "Search modules"],
    h2 [htxt $ t "Search for individual modules:"],
    par [searchform],
-   h2 [htxt $ t "Show module selections:"],
+   h2 [htxt $ t "Show modules:"],
    par $
-    [hrefPrimButton "?search/all"      [htxt $ t "All modules"], nbsp,
-     hrefPrimButton "?search/english"  [htxt $ t "All English modules"], nbsp,
-     hrefPrimButton "?search/usermods" [htxt $ t "All modules of a person"]] ++
+    [hrefPrimSmButton "?search/all"      [htxt $ t "All modules"], nbsp,
+     hrefPrimSmButton "?search/english"  [htxt $ t "All English modules"], nbsp,
+     hrefPrimSmButton "?search/usermods" [htxt $ t "All modules of a person"]] ++
     if isAdminSession sinfo
-      then [nbsp, hrefPrimButton "?search/allresp"
-                                 [htxt $ t "Alle Modulverantwortlichen"]]
+      then [nbsp, hrefPrimSmButton "?search/allresp"
+                                   [htxt $ t "Alle Modulverantwortlichen"]]
       else [],
    h2 [htxt $ t "Show semester modules:"],
    par [showsemmodsform ]

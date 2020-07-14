@@ -6,7 +6,7 @@ module View.UnivisInfo (
 
 import HTML.WUI
 import HTML.Base
-import HTML.Styles.Bootstrap3
+import HTML.Styles.Bootstrap4
 import Time
 import Sort
 import System.Spicey
@@ -85,8 +85,8 @@ showUnivisLinks md sem@(term,year) lecturer urls admin =
         if admin && lecturer==Nothing then [par [mailButton]] else []
  where
   mailButton = 
-   hrefPrimButton ("?UnivisInfo/email/" ++ showModDataKey md ++ "/"
-                                        ++ term ++ "/" ++ show year)
+   hrefPrimSmButton ("?UnivisInfo/email/" ++ showModDataKey md ++ "/"
+                                          ++ term ++ "/" ++ show year)
      [htxt "Mail mit Korrekturbitte an Modulverantwortlichen senden"]
 
 missingUnivISMessage :: ModData -> (String,Int) -> String

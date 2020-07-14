@@ -26,7 +26,7 @@ module System.Spicey (
   hrefModule, smallHrefModule, hrefExtModule, hrefModInst,
   hrefUnivisInfo, hrefUnivisDanger,
   withELink,
-  spHref, spHrefBlock, spEHref,
+  spHrefBlock,
   spButton, spPrimButton, spSmallButton, spSmallPrimaryButton,
   spTable, spHeadedTable, addTitle, textWithInfoIcon,
   spShortSelectionInitial,
@@ -35,6 +35,7 @@ module System.Spicey (
   continueOrError
   ) where
 
+import FilePath         ( (</>) )
 import List             ( findIndex, init, last )
 import Time
 
@@ -43,7 +44,7 @@ import Config.UserProcesses
 import HTML.Base
 import HTML.WUI
 import HTML.Session
-import HTML.Styles.Bootstrap3
+import HTML.Styles.Bootstrap4
 import Global
 import System.Authentication
 import System.Helpers
@@ -149,8 +150,8 @@ confirmDeletionPageWithRefs :: UserSessionInfo -> String -> String -> String
                             -> Controller
 confirmDeletionPageWithRefs sinfo question yesref noref = return $
   [h3 [htxt question],
-   par [hrefButton yesref [htxt $ t "Yes"], nbsp,
-        hrefButton noref  [htxt $ t "No"]]]
+   par [hrefPrimSmButton yesref [htxt $ t "Yes"], nbsp,
+        hrefPrimSmButton noref  [htxt $ t "No"]]]
  where
   t = translate sinfo
 
@@ -240,8 +241,8 @@ renderWUI sinfo title buttontag cancelurl _ hexp handler =
   [h1 [htxt $ t title],
    blockstyle "editform" [hexp],
    breakline,
-   primButton (t buttontag) (\env -> handler env >>= getPage),
-   hrefButton cancelurl [htxt $ t "Cancel"]]
+   primSmButton (t buttontag) (\env -> handler env >>= getPage), nbsp,
+   hrefScndSmButton cancelurl [htxt $ t "Cancel"]]
  where t = translate sinfo
 
 --- Standard rendering for WUI forms to edit data where some
@@ -260,8 +261,8 @@ renderWUIWithText sinfo title buttontag cmts cancelurl _ hexp handler =
   [h1 [htxt $ t title]] ++ cmts ++
   [blockstyle "editform" [hexp],
    breakline,
-   primButton (t buttontag) (\env -> handler env >>= getPage),
-   hrefButton cancelurl [htxt $ t "Cancel"]]
+   primSmButton (t buttontag) (\env -> handler env >>= getPage),
+   hrefScndSmButton cancelurl [htxt $ t "Cancel"]]
  where t = translate sinfo
 
 --------------------------------------------------------------------------
@@ -297,18 +298,15 @@ wUncheckMaybe defval wspec =
          defval
 
 --- The standard menu for all users.
-getStandardMenu :: UserSessionInfo -> IO HtmlExp
-getStandardMenu sinfo = do
-  let t = translate sinfo
-  return $
-     ulist $
-      [[href "?StudyProgram/list"
-             [stprogIcon, nbsp, htxt $ t "Degree programs"]],
-       [href "?AdvisorStudyProgram/list"
-             [adprogIcon, nbsp, htxt $ t "Master programs"]],
-       [rawSearchForm sinfo],
-       [href "?search" [searchIcon, nbsp, htxt $ t "Search modules"]]
-      ]
+standardMenu :: UserSessionInfo -> [[HtmlExp]]
+standardMenu sinfo =
+  [[hrefNav "?StudyProgram/list" [htxt $ t "Degree programs"]],
+   [hrefNav "?AdvisorStudyProgram/list" [htxt $ t "Master programs"]],
+   [rawSearchForm sinfo],
+   [hrefNav "?search" [searchIcon, htxt $ t " Search modules"]]
+  ]
+ where t = translate sinfo
+
 
 -- This is the translation of the search form produced by
 -- `Controller.Search.searchModuleForm`. To avoid cyclic module
@@ -317,196 +315,70 @@ getStandardMenu sinfo = do
 rawSearchForm :: UserSessionInfo -> HtmlExp
 rawSearchForm sinfo = 
   HtmlStruct "form" [("method","post"), ("action","?search"),
-                     ("class","navbar-form navbar-left"),
+                     ("class","form-inline my-2 my-lg-0"),
                      ("title", searchToolTip sinfo)]
     [HtmlStruct "input" [("type","hidden"), ("name","FORMID"),
                          ("value","Controller.Search.searchModuleForm")] [],
-     HtmlStruct "input" [("type","text"), ("class","form-control input-sm"),
+     HtmlStruct "input" [("type","text"), ("class","form-control mr-sm-2"),
                          ("placeholder", t "Quick search"),
                          ("name","FIELD_0")] [],
-     HtmlStruct "input" [("type","submit"), ("class","btn btn-success btn-sm"),
+     HtmlStruct "input" [("type","submit"),
+                         ("class","btn btn-outline-success my-2 my-sm-0"),
                          ("name","FIELD_1"), ("value", t "Search!")] []
     ]
  where t = translate sinfo
 
 --- The menu for a user if it he is logged in.
-userMenu :: UserSessionInfo -> HtmlExp
+userMenu :: UserSessionInfo -> [(String,[HtmlExp])]
 userMenu sinfo =
-  ulist (maybe (maybe loginMenu
-                      (const studentMenu)
-                      (studentLoginOfSession sinfo))
-               (const cuserMenu)
-               (userLoginOfSession sinfo))
+  maybe (maybe loginMenu
+               (const studentMenu)
+               (studentLoginOfSession sinfo))
+        (const cuserMenu)
+        (userLoginOfSession sinfo)
  where
   t = translate sinfo
 
-  loginMenu   = [ [href "?User/login"
-                        [logoutIcon, nbsp, htxt (t "...as lecturer")]]
-                , [href "?Student/login"
-                        [logoutIcon, nbsp, htxt (t "...as student")]]
+  loginMenu   = [ ("?User/login",    [htxt (t "...as lecturer")])
+                , ("?Student/login", [htxt (t "...as student")])
                 ]
 
-  cuserMenu   = [ [href "?Category/user"     [htxt $ t "My modules"]]
-                , [href "?Category/lecturer" [htxt $ t "Taught modules"]]
-                , [href "?AdvisorStudyProgram/new"
-                        [htxt $ t "New master program"]]
-                , [href "?User/passwd"
-                        [htxt (t "Change password")]]
-                , [href "?User/logout"
-                        [logoutIcon, nbsp, htxt (t "Logout")]]
-                ] 
+  cuserMenu   = [ ("?Category/user",     [htxt $ t "My modules"])
+                , ("?Category/lecturer", [htxt $ t "Taught modules"])
+                , ("?AdvisorStudyProgram/new",  [htxt $ t "New master program"])
+                , ("?User/passwd",       [htxt (t "Change password")])
+                , ("?User/logout",       [htxt (t "Logout")])
+                ]
 
-  studentMenu = [ [href "?Student/showcourses"
-                        [htxt (t "Show selected modules")]]
-                , [href "?Student/select"
-                        [htxt (t "Select/change modules")]]
-                , [href "?Student/logout"
-                        [logoutIcon, nbsp, htxt (t "Logout")]]
+  studentMenu = [ ("?Student/showcourses", [htxt (t "Show selected modules")])
+                , ("?Student/select",      [htxt (t "Select/change modules")])
+                , ("?Student/logout",      [htxt (t "Logout")])
                 ]
 
 --- The title of this application (shown in the header).
 spiceyTitle :: String
 spiceyTitle = "Module Information System"
 
---- Adds the basic page layout to a view.
-addLayout :: ViewBlock -> IO ViewBlock
-addLayout viewblock = do
-  sinfo      <- getUserSessionInfo
-  stdmenu    <- getStandardMenu sinfo
-  msg        <- getPageMessage
-  admin      <- isAdmin
-  (routemenu1,routemenu2) <- getRouteMenus
-  let uppermenu = routemenu2 ++ [[href ("?StudentCourse/conflicts")
-                                       [htxt "Zeige Studienkonflikte"]]]
-  let adminmenu =  HtmlStruct "ul" [] $
-                     map litem uppermenu ++
-                     [litem [htxt " "] `addClass` "divider"] ++
-                     map litem routemenu1
-  let (mainTitle,mainDoc) =
-          case viewblock of
-            (HtmlStruct "h1" [] t : hexps) -> (t,hexps)
-            _ -> ([htxt (translate sinfo spiceyTitle)], viewblock)
-  return $
-    stdNavBar stdmenu (if admin then Just adminmenu else Nothing) sinfo ++
-    [blockstyle "container-fluid" $
-      [HtmlStruct "header" [("class","jumbotron")] [h1 mainTitle],
-       if null msg
-        then HtmlStruct "header" [("class","pagemessage pagemessage-empty")]
-                        [nbsp]
-        else HtmlStruct "header" [("class","pagemessage")] [htxt msg],
-       blockstyle "row"
-        [blockstyle "col-md-12" mainDoc]] ++
-      [hrule,
-       HtmlStruct "footer" []
-        [par [htxt "Version of March 6, 2020, powered by",
-              withELink $
-                href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
-                     [image "images/spicey-logo.png" "Spicey"],
-              htxt "Framework"]]]]
+--- The home URL and brand shown at the left top of the main page.
+spiceyHomeBrand :: (String, [HtmlExp])
+spiceyHomeBrand = ("?", [htxt "MDB"])
 
---- Create a side menu containing a (possibly empty) title and a list of items:
-titledSideMenu :: String -> [[HtmlExp]] -> [HtmlExp]
-titledSideMenu title items =
-  (if null title
-   then []
-   else [HtmlStruct "small" [] [htxt title]]) ++
-  [ulist items `addClass` "nav nav-sidebar"]
+--- The standard footer of the Spicey page.
+spiceyFooter :: [HtmlExp]
+spiceyFooter =
+  [par [htxt "Version of July 13, 2020, powered by",
+        href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
+             [image "bt4/img/spicey-logo.png" "Spicey"]
+          `addAttr` ("target","_blank"),
+        htxt "Framework"]]
 
 --- Create contents in the main page area with a side menu.
 mainContentsWithSideMenu :: [[HtmlExp]] -> [HtmlExp] -> [HtmlExp]
 mainContentsWithSideMenu menuitems contents =
   [blockstyle "row"
     [blockstyle "col-sm-3 col-md-3"
-      [blockstyle "well nav-sidebar" (titledSideMenu "" menuitems)],
+      [blockstyle "card" (titledSideMenu "" menuitems)],
        blockstyle "col-sm-9 col-md-9" contents]]
-
--- Standard navigation bar at the top.
--- The first argument is the route menu (a ulist).
--- The second argument is the possible admin menu (a ulist).
--- The third argument is the possible login name.
--- The fourth argument is the user session information.
-stdNavBar :: HtmlExp -> Maybe HtmlExp -> UserSessionInfo
-          -> [HtmlExp]
-stdNavBar routemenu adminmenu sinfo =
-  [blockstyle "navbar navbar-inverse navbar-fixed-top"
-    [blockstyle "container-fluid"
-      [navBarHeaderItem,
-       HtmlStruct "div" [("id","topnavbar"),
-                         ("class","navbar-collapse collapse")]
-         [routemenu `addClass` "nav navbar-nav",
-          appendDropdownItem
-            (ulist
-              [[if languageOfSession sinfo == English
-                  then href "?langDE" [htxt "[Deutsch]"]
-                  else href "?langEN" [htxt "[English]"]]]
-             `addClass` "nav navbar-nav navbar-right")]]
-    ]
-  ]
- where
-  t = translate sinfo
-
-  navBarHeaderItem =
-    blockstyle "navbar-header"
-      [HtmlStruct "button"
-        [("type","button"),("class","navbar-toggle collapsed"),
-         ("data-toggle","collapse"),("data-target","#topnavbar"),
-         ("aria-expanded","false"),("aria-controls","navbar")]
-        [textstyle "sr-only" "Toggle navigation",
-         textstyle "icon-bar" "",
-         textstyle "icon-bar" "",
-         textstyle "icon-bar" ""],
-       href "?" [homeIcon, htxt " MDB"] `addClass` "navbar-brand"]
-       
-  appendDropdownItem (HtmlStruct tag ats items) =
-    HtmlStruct tag ats
-     (init items ++ --take (length items - 1) items ++
-      [dropDownMenu
-         (maybe [loginIcon, htxt $ " " ++ t "Login..."]
-                (\n -> [style "text-success" [userIcon]
-                       , htxt $ " " ++ n])
-                (loginNameOfSession sinfo))
-         (userMenu sinfo)] ++
-       maybe [] (\m -> [dropDownMenu [htxt $ "Administrator"] m]) adminmenu ++
-       [gotoDropDownMenu] ++
-       [last items])
-
-  -- A dropdown menu (represented as a HTML list item).
-  -- The first argument is title (as HTML expressions) and
-  -- the second argument is the actual menu (a ulist).
-  dropDownMenu :: [HtmlExp] -> HtmlExp -> HtmlExp
-  dropDownMenu title ddmenu =
-    HtmlStruct "li" [("class","dropdown")]
-       [href "#" (title ++ [bold [htxt " "] `addClass` "caret"])
-         `addAttrs` [("class","dropdown-toggle"),("data-toggle","dropdown")],
-        ddmenu `addClass` "dropdown-menu"]
-
-  gotoDropDownMenu =
-    HtmlStruct "li" [("class","dropdown")]
-     [href "#" [htxt $ t "Go to", bold [htxt " "] `addClass` "caret"]
-       `addAttrs` [("class","dropdown-toggle"),("data-toggle","dropdown")],
-      HtmlStruct "ul" []
-        (litem [href "?main"
-                     [htxt $ t "Main page of the module information system"]]
-           : extUrls)
-        `addClass` "dropdown-menu"]
-
-  extUrls =
-   [toEHref "http://www.inf.uni-kiel.de"
-            (t "Department of Computer Science")
-   ,toEHref "http://www.uni-kiel.de" "CAU Kiel"
-   ,toEHref "http://univis.uni-kiel.de/" "UnivIS"
-   ,litem [htxt " "] `addClass` "divider"
-   ,litem [htxt $ t "Supported by:"] `addClass` "dropdown-header"
-   ,toEHref "http://www.curry-lang.org"
-            ("Curry (" ++ t "programming language" ++ ")")
-   ,toEHref "http://www.informatik.uni-kiel.de/~pakcs/spicey"
-            "Spicey (Web Framework)"
-   ,toEHref "http://getbootstrap.com/"
-            "Twitter Bootstrap (Style Sheets)"
-   ]
-
-  toEHref url s = litem [ehref url [arrowIcon, nbsp, htxt s]]
-
 
 getPage :: ViewBlock -> IO HtmlPage
 getPage viewBlock = case viewBlock of
@@ -515,29 +387,117 @@ getPage viewBlock = case viewBlock of
   _ -> do
     hassession <- doesSessionExist
     urlparam   <- getUrlParameter
-    body       <- addLayout $ if hassession then viewBlock
-                                            else cookieInfo urlparam
-    withSessionCookie $ HtmlPage spiceyTitle
-      ([pageEnc "utf-8", responsiveView, icon] ++
-       map (\f -> PageCSS $ "css/"++f++".css")
-           ["bootstrap.min","spicey"])
-      (body ++
-       map (\f -> HtmlStruct "script" [("src","js/"++f++".js")] [])
-           ["jquery.min","bootstrap.min"])
+    sinfo      <- getUserSessionInfo
+    msg        <- getPageMessage
+    lasturl    <- getLastUrl
+    admin      <- isAdmin
+    (routemenunews,routemenuothers) <- getRouteMenus
+    let adminmenu = map addDropDownItemClass
+                        (routemenuothers ++
+                         [href "?StudentCourse/conflicts"
+                               [htxt "Zeige Studienkonflikte"]]) ++
+                    [blockstyle "dropdown-divider" []] ++
+                    map addDropDownItemClass routemenunews
+        body      = if hassession then viewBlock
+                                  else cookieInfo urlparam
+    withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
+      spiceyTitle spiceyHomeBrand
+      (addNavItemClass $ standardMenu sinfo)
+      (rightTopMenu sinfo admin adminmenu)
+      0 []  [h1 [htxt spiceyTitle]]
+      (messageLine msg lasturl : body) spiceyFooter
  where
-  responsiveView =
-    pageMetaInfo [("name","viewport"),
-                  ("content","width=device-width, initial-scale=1.0")]
+  addNavItemClass = map (\i -> ("nav-item", i))
+  addDropDownItemClass he = he `addClass` "dropdown-item"
 
-  icon = PageHeadInclude $
-           HtmlStruct "link" [("rel","shortcut icon"),
-                              ("href","favicon.ico")] []
-
+  messageLine msg _ =
+    if null msg
+      then HtmlStruct "header" [("class","pagemessage pagemessage-empty")]
+                      [nbsp] --[htxt ("Last page: "++lasturl)]
+      else HtmlStruct "header" [("class","pagemessage")] [htxt msg]
+        
   cookieInfo urlparam =
     [ par [ htxt $ "This web site uses cookies for navigation and user " ++
                    "inputs and preferences. In order to proceed, "
           , hrefPrimButton ('?' : urlparam) [htxt "please click here."]] ]
+        
+  rightTopMenu sinfo admin adminmenu =
+    [dropDownMenu
+       (maybe [htxt $ t "Login" ++ " ", dropDownIcon]
+              (\n -> [userWhiteIcon, htxt $ " " ++ n, dropDownIcon])
+              (loginNameOfSession sinfo))
+       (map (\ (hr,he) -> href hr he `addClass` "dropdown-item")
+            (userMenu sinfo))] ++
+    (if admin then [dropDownMenu [htxt $ "Administrator", dropDownIcon]
+                                 adminmenu]
+              else []) ++
+    [gotoDropDownMenu t,
+     ("nav-item",
+      [if languageOfSession sinfo == English
+         then hrefNav "?langDE" [htxt "[Deutsch]"]
+         else hrefNav "?langEN" [htxt "[English]"]])]
+   where t = translate sinfo
 
+  -- A dropdown menu (represented as a HTML list item).
+  -- The first argument is title (as HTML expressions) and
+  -- the second argument is the actual menu (a list of elements with
+  -- class "dropdown-item").
+  dropDownMenu :: [HtmlExp] -> [HtmlExp] -> (String,[HtmlExp])
+  dropDownMenu title ddmenu =
+    ("nav-item dropdown",
+     [hrefNav "#" title
+      `addAttrs` [("class","dropdown-toggle"),
+                  ("id", "dropdownuser"),
+                  ("data-toggle","dropdown"),
+                  ("aria-haspopup", "true"),
+                  ("aria-expanded", "false")],
+     blockstyle "dropdown-menu" ddmenu
+       `addAttr` ("area-labelledby", "dropdownuser")])
+
+  gotoDropDownMenu t =
+    ("nav-item dropdown",
+     [hrefNav "#" [htxt $ t "Go to", dropDownIcon]
+      `addAttrs` [("class","dropdown-toggle"),
+                  ("id", "dropdowngoto"),
+                  ("data-toggle","dropdown"),
+                  ("aria-haspopup", "true"),
+                  ("aria-expanded", "false")],
+      blockstyle "dropdown-menu dropdown-menu-right"
+       ((href "?main" [htxt $ t "Main page of the module information system"]
+          `addClass` "dropdown-item") : extUrls t)
+       `addAttr` ("area-labelledby", "dropdowngoto")])
+
+  extUrls t =
+   [ toEHref "http://www.inf.uni-kiel.de"
+             (t "Department of Computer Science")
+   , toEHref "http://www.uni-kiel.de" "CAU Kiel"
+   , toEHref "http://univis.uni-kiel.de/" "UnivIS"
+   , blockstyle "dropdown-divider" []
+   , h5 [htxt $ t "Supported by:"] `addClass` "dropdown-header"
+   , toEHref "http://www.curry-lang.org"
+             ("Curry (" ++ t "programming language" ++ ")")
+   , toEHref "http://www.informatik.uni-kiel.de/~pakcs/spicey"
+             "Spicey (Web Framework)"
+   , toEHref "http://getbootstrap.com/" "Bootstrap (Style Sheets)"
+   ]
+
+  toEHref url s = ehref url [htxt s] `addClass` "dropdown-item"
+
+
+favIcon :: String
+favIcon = "bt4" </> "img" </> "favicon.ico"
+
+cssIncludes :: [String]
+cssIncludes =
+  map (\n -> "bt4" </> "css" </> n ++ ".css")
+      ["bootstrap.min", "spicey"]
+
+jsIncludes :: [String]
+jsIncludes = 
+  map (\n -> "bt4" </> "js" </> n ++ ".js")
+      ["jquery.slim.min", "bootstrap.bundle.min"]
+
+--------------------------------------------------------------------------
 --- A form view to select a semester with a controller for this semester
 selectSemesterFormView :: ((String,Int) -> Controller) -> String
                        -> (UserSessionInfo, (String,Int)) -> [HtmlExp]
@@ -597,7 +557,7 @@ renderLabels :: [[HtmlExp]] -> Rendering
 renderLabels labels hexps =
   spTable (map (\(l, h) -> [l, [h]]) (zip labels hexps))
 
--- convert standard-datatype-values to html representation
+-- Convert standard datatype values to HTML representation
 stringToHtml :: String -> HtmlExp
 stringToHtml s = textstyle "type_string" s
 
@@ -650,16 +610,15 @@ hrefCategory ref hexps =
 
 --- Small hypertext reference to a category:
 smallHrefCategory :: String -> [HtmlExp] -> HtmlExp
-smallHrefCategory = spEHref
+smallHrefCategory = ehrefInfoBadge
 
 --- Hypertext reference to a module:
 hrefModule :: String -> [HtmlExp] -> HtmlExp
-hrefModule ref hexps =
-  href ref hexps `addClass` "btn btn-link"
+hrefModule ref hexps = hrefInfoSmButton ref hexps
 
 --- Small hypertext reference to a module:
 smallHrefModule :: String -> [HtmlExp] -> HtmlExp
-smallHrefModule = spEHref
+smallHrefModule = ehrefInfoBadge
 
 --- Hypertext reference to an external module:
 hrefExtModule :: String -> [HtmlExp] -> HtmlExp
@@ -671,11 +630,11 @@ hrefModInst = spEHrefBlock
 
 --- Hypertext reference to a UnivIS information:
 hrefUnivisInfo :: String -> [HtmlExp] -> HtmlExp
-hrefUnivisInfo = spEHrefInfoBlock
+hrefUnivisInfo = ehrefInfoBadge
 
 --- Hypertext reference to a UnivIS information with "danger" rendering:
 hrefUnivisDanger :: String -> [HtmlExp] -> HtmlExp
-hrefUnivisDanger = spEHrefDangerBlock
+hrefUnivisDanger = ehrefDangBadge
 
 --- Hypertext reference in Spicey (rendered as a block button):
 spHref :: String -> [HtmlExp] -> HtmlExp
@@ -698,10 +657,6 @@ spHrefDangerBlock ref hexps =
   href ref hexps `addClass` "btn btn-danger btn-block"
 
 --- External hypertext reference in Spicey (rendered as a block button):
-spEHref :: String -> [HtmlExp] -> HtmlExp
-spEHref ref hexps = withELink $ spHref ref hexps
-
---- External hypertext reference in Spicey (rendered as a block button):
 spEHrefBlock :: String -> [HtmlExp] -> HtmlExp
 spEHrefBlock ref hexps = withELink $ spHrefBlock ref hexps
 
@@ -715,15 +670,15 @@ spEHrefDangerBlock ref hexps = withELink $ spHrefDangerBlock ref hexps
 
 --- Input button in Spicey (rendered as a default button):
 spButton :: String -> HtmlHandler -> HtmlExp
-spButton = defaultButton
+spButton = scndSmButton
 
 --- Primary input button in Spicey (rendered as a default primary button):
 spPrimButton :: String -> HtmlHandler -> HtmlExp
-spPrimButton = primButton
+spPrimButton = primSmButton
 
 --- Small input button in Spicey (rendered as a small button):
 spSmallButton :: String -> HtmlHandler -> HtmlExp
-spSmallButton = smallButton
+spSmallButton = scndSmButton
 
 --- Small input button in Spicey (rendered as a small primary button):
 spSmallPrimaryButton :: String -> HtmlHandler -> HtmlExp
@@ -755,35 +710,23 @@ addTitle hexp title = hexp `addAttr` ("title",title)
 --------------------------------------------------------------------------
 -- Icons:
 
-homeIcon :: HtmlExp
-homeIcon   = glyphicon "home"
+--- User (white) icon:
+userWhiteIcon :: HtmlExp
+userWhiteIcon =
+  image "bt4/img/user-white.svg" "User"
+    `addAttrs` [("width","32"), ("height","32")]
 
-infoIcon :: HtmlExp
-infoIcon   = glyphicon "info-sign"
+--- Drowdown icon:
+dropDownIcon :: HtmlExp
+dropDownIcon = image "bt4/img/caret-down-white.svg" "Open"
 
-userIcon :: HtmlExp
-userIcon   = glyphicon "user"
-
-loginIcon :: HtmlExp
-loginIcon  = glyphicon "log-in"
-
-logoutIcon :: HtmlExp
-logoutIcon = glyphicon "log-out"
-
+--- Search icon:
 searchIcon :: HtmlExp
-searchIcon = glyphicon "search"
+searchIcon = image "bt4/img/search.svg" "Search"
 
-arrowIcon :: HtmlExp
-arrowIcon  = glyphicon "arrow-right"
-
-stprogIcon :: HtmlExp
-stprogIcon = glyphicon "book"
-
-adprogIcon :: HtmlExp
-adprogIcon = glyphicon "road"
-
-glyphicon :: String -> HtmlExp
-glyphicon n = textstyle ("glyphicon glyphicon-"++n) ""
+--- Info icon:
+infoIcon :: HtmlExp
+infoIcon = image "bt4/img/info-circle-fill.svg" "Info"
 
 --- Some additional information under an info icon.
 textWithInfoIcon :: String -> HtmlExp

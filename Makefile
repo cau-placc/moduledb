@@ -1,7 +1,7 @@
 # Generic Makefile for Spicey applications
 
 # The compilation target (IFI or IFIPAKCS for real deployment, TEST for mdbtest)
-TARGET = TEST
+TARGET=TEST
 
 # check setting of TARGET variable:
 ifeq ($(TARGET),IFI)
@@ -76,7 +76,7 @@ install:
 .PHONY: checkdeploy
 checkdeploy:
 	@if [ ! -x "$(CURRY2CGI)" ] ; then \
-	   echo "Installing required executable 'curry-makecgi'..." ; \
+	   echo "Installing required executable 'curry2cgi'..." ; \
            $(CPM) $(CPMOPTIONS) install html2 ; fi
 
 # Invoke the REPL of the Curry system:

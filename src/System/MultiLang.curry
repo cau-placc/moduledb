@@ -3,7 +3,7 @@
 --- and the translation of texts shown in the application.
 ---
 --- @author Michael Hanus
---- @version October 2019
+--- @version July 2020
 ----------------------------------------------------------------------------
 
 module System.MultiLang (
@@ -16,10 +16,11 @@ module System.MultiLang (
   timeoutText, unknownUser, useURLText, prereqExplainText
  ) where
 
-import System.Helpers     ( ehref, ehrefBlock )
+import System.Helpers         ( ehref, ehrefBlock )
 import System.SessionInfo
 import HTML.Base
-import ConfigMDB          ( baseURL, studyPlannerURL )
+import HTML.Styles.Bootstrap4
+import ConfigMDB              ( baseURL, studyPlannerURL )
 
 --------------------------------------------------------------------------
 --- Translates a string w.r.t. given user session info.
@@ -114,7 +115,6 @@ english2german =
  ,("Logged in as"       ,"Angemeldet als")
  ,("Logged out"         ,"Abgemeldet")
  ,("Login"              ,"Anmelden")
- ,("Login..."           ,"Anmeldung...")
  ,("Login as lecturer"  ,"Anmeldung als Modulverwalter")
  ,("Login as student"   ,"Anmeldung als Studierender")
  ,("Login code:"        ,"Zugangscode:")
@@ -204,8 +204,8 @@ english2german =
  ,("Show all module dependencies", "Alle Modulabhängigkeiten anzeigen")
  ,("Show all modules in this degree program",
    "Alle Module in diesem Studienprogramm anzeigen")
- ,("Show module selections:","Module anzeigen:")
  ,("show examination requirements","Prüfungsanforderungen anzeigen")
+ ,("Show modules:"      ,"Module anzeigen:")
  ,("show modules"       ,"Module anzeigen")
  ,("Show selected modules","Ausgewählte Module anzeigen")
  ,("Show semester modules:","Module eines Semesters anzeigen:")
@@ -291,7 +291,7 @@ mainExplanation sinfo = langSelect sinfo
      "Außerdem befindet sich hier eine Übersicht über alle "++
      "angebotenen Masterprogramme in Informatik und Wirtschaftsinformatik.",
    htxt $ "Aktuelle Informationen zu den Lehrveranstaltungen kann man auch im ",
-   ehrefBlock univisURL [htxt "UnivIS"],
+   ehrefScndBadge univisURL [htxt "UnivIS"],
    htxt $ " finden."]
  where
   univisURL = "http://univis.uni-kiel.de/"
@@ -311,9 +311,9 @@ masterStudyNote sinfo = langSelect sinfo
 masterStudyOldNote :: UserSessionInfo -> [HtmlExp]
 masterStudyOldNote sinfo = langSelect sinfo
   [htxt "The master programs until SS15 can be found ",
-   ehrefBlock oldMasterProgURL [bold [htxt "here"]], htxt "."]
+   ehrefInfoBadge oldMasterProgURL [bold [htxt "here"]], htxt "."]
   [htxt "Die Masterprogramme bis zum Sommersemester 2015 sind ",
-   ehrefBlock oldMasterProgURL [bold [htxt "hier"]],
+   ehrefInfoBadge oldMasterProgURL [bold [htxt "hier"]],
    htxt " zu finden."]
  where
   oldMasterProgURL = "?MasterProgram/list" 
@@ -322,11 +322,11 @@ minorSubjectNote :: UserSessionInfo -> [HtmlExp]
 minorSubjectNote sinfo = langSelect sinfo
   [italic [htxt "Note: "],
    htxt "The possible minor/application subjects and their modules are listed ",
-   ehrefBlock minorURL [htxt "on this page."]]
+   ehrefScndBadge minorURL [htxt "on this page."]]
   [italic [htxt "Hinweis: "],
    htxt "Die möglichen Anwendungsgebiete im Bachelor- und Masterstudiengang ",
    htxt "Informatik sowie die dazugehörigen Module findet man ",
-   ehrefBlock minorURL [htxt "auf dieser Seite."]]
+   ehrefScndBadge minorURL [htxt "auf dieser Seite."]]
  where
   minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf-1-fach/bachelorstudiengang/nebenfaecher_anwendungsgebiete"
 

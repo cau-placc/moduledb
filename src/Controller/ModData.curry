@@ -119,7 +119,8 @@ newModDataWuiForm :: HtmlFormDef
 newModDataWuiForm =
   pwui2FormDef "Controller.ModData.newModDataWuiForm"
     wuiNewModDataWuiStore
-    (\ (_,admin,_,allusers,spcats) -> wModData admin True allusers spcats)
+    (\ (sinfo,admin,_,allusers,spcats) ->
+         wModData sinfo admin True allusers spcats)
     (\ (_,_,isimport,_,_) entity ->
          checkAuthorization (modDataOperationAllowed NewEntity) $ \_ ->
            createModDataController isimport entity)
@@ -184,8 +185,8 @@ editModDataForm ::
 editModDataForm =
   pwui2FormDef "Controller.ModData.editModDataForm"
     wuiEditModDataStore
-    (\ (_,admin,mdata,relatedUser,allusers,spcats) ->
-        wModDataType admin mdata relatedUser allusers spcats)
+    (\ (sinfo,admin,mdata,relatedUser,allusers,spcats) ->
+        wModDataType sinfo admin mdata relatedUser allusers spcats)
     (\_ -> updateModDataController)
     (\ (sinfo,_,mdata,_,_,_) ->
          renderWUIWithText sinfo "Moduldaten ändern" "Änderungen speichern"

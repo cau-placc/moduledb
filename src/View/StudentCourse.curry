@@ -8,7 +8,7 @@ import HTML.WUI
 import HTML.Base
 import Time
 import Sort
-import HTML.Styles.Bootstrap3
+import HTML.Styles.Bootstrap4
 import System.Helpers
 import System.Spicey
 import System.SessionInfo
@@ -133,7 +133,7 @@ showStudentCourseView
   :: UserSessionInfo -> StudentCourse -> ModInst -> Student -> [HtmlExp]
 showStudentCourseView _ studentCourse relatedModInst relatedStudent =
   studentCourseToDetailsView studentCourse relatedModInst relatedStudent
-   ++ [hrefButton "?StudentCourse/list" [htxt "back to StudentCourse list"]]
+   ++ [hrefScndSmButton "?StudentCourse/list" [htxt "back to StudentCourse list"]]
 
 --- Compares two StudentCourse entities. This order is used in the list view.
 leqStudentCourse :: StudentCourse -> StudentCourse -> Bool
@@ -154,15 +154,15 @@ listStudentCourseView sinfo studentCourses =
       studentCourseToListView studentCourse
        ++ (if userLoginOfSession sinfo == Nothing
               then []
-              else [[hrefButton
+              else [[hrefPrimBadge
                       ("?StudentCourse/show/"
                         ++ showStudentCourseKey studentCourse)
                       [htxt "show"]]
-                   ,[hrefButton
+                   ,[hrefPrimBadge
                       ("?StudentCourse/edit/"
                         ++ showStudentCourseKey studentCourse)
                       [htxt "edit"]]
-                   ,[hrefButton
+                   ,[hrefPrimBadge
                       ("?StudentCourse/delete/"
                         ++ showStudentCourseKey studentCourse)
                       [htxt "delete"]]])

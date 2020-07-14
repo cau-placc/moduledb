@@ -2,6 +2,7 @@ module View.MDBEntitiesToHtml where
 
 import HTML.WUI
 import HTML.Base
+import HTML.Styles.Bootstrap4
 import Time
 import System.Spicey
 import MDB
@@ -54,11 +55,11 @@ studyProgramToDetailsView studyProgram =
 --- The labels of a StudyProgram entity, as used in HTML tables.
 studyProgramLabelList :: [[HtmlExp]]
 studyProgramLabelList =
-  [[textstyle "label label_for_type_string" "Name"]
-  ,[textstyle "label label_for_type_string" "English name"]
-  ,[textstyle "label label_for_type_string" "ShortName"]
-  ,[textstyle "label label_for_type_string" "ProgKey (to identify programs)"]
-  ,[textstyle "label label_for_type_int" "Position"]]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Name"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "English name"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "ShortName"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "ProgKey (to identify programs)"]
+  ,[textstyle "spicey_label spicey_label_for_type_int" "Position"]]
 
 --- The list view of a Category entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -100,14 +101,14 @@ categoryToDetailsView category relatedStudyProgram =
 --- The labels of a Category entity, as used in HTML tables.
 categoryLabelList :: [[HtmlExp]]
 categoryLabelList =
-  [[textstyle "label label_for_type_string" "Deutscher Name"]
-  ,[textstyle "label label_for_type_string" "Englischer Name"]
-  ,[textstyle "label label_for_type_string" "Abkürzung"]
-  ,[textstyle "label label_for_type_string" "Kommentar", markdownRef]
-  ,[textstyle "label label_for_type_int" "Minimale ECTS"]
-  ,[textstyle "label label_for_type_int" "Maximale ECTS"]
-  ,[textstyle "label label_for_type_int" "Position"]
-  ,[textstyle "label label_for_type_relation" "Studiengang"]]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Deutscher Name"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Englischer Name"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Abkürzung"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Kommentar", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_int" "Minimale ECTS"]
+  ,[textstyle "spicey_label spicey_label_for_type_int" "Maximale ECTS"]
+  ,[textstyle "spicey_label spicey_label_for_type_int" "Position"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Studiengang"]]
 
 --- The list view of a MasterCoreArea entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -142,11 +143,11 @@ masterCoreAreaToDetailsView masterCoreArea =
 --- The labels of a MasterCoreArea entity, as used in HTML tables.
 masterCoreAreaLabelList :: [[HtmlExp]]
 masterCoreAreaLabelList =
-  [[textstyle "label label_for_type_string" "Name"]
-  ,[textstyle "label label_for_type_string" "ShortName"]
-  ,[textstyle "label label_for_type_string" "Description", markdownRef]
-  ,[textstyle "label label_for_type_string" "AreaKey"]
-  ,[textstyle "label label_for_type_int" "Position"]]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Name"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "ShortName"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Description", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "AreaKey"]
+  ,[textstyle "spicey_label spicey_label_for_type_int" "Position"]]
 
 --- The list view of a User entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -192,14 +193,14 @@ userToDetailsView user =
 --- The labels of a User entity, as used in HTML tables.
 userLabelList :: [[HtmlExp]]
 userLabelList =
-  [[textstyle "label label_for_type_string" "Login"]
-  ,[textstyle "label label_for_type_string" "Name"]
-  ,[textstyle "label label_for_type_string" "First"]
-  ,[textstyle "label label_for_type_string" "Title"]
-  ,[textstyle "label label_for_type_string" "Email"]
-  ,[textstyle "label label_for_type_string" "Url"]
-  ,[textstyle "label label_for_type_string" "Password"]
-  ,[textstyle "label label_for_type_calendarTime" "LastLogin"]]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Login"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Name"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "First"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Title"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Email"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Url"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Password"]
+  ,[textstyle "spicey_label spicey_label_for_type_calendarTime" "LastLogin"]]
 
 --- The list view of a ModData entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -261,18 +262,18 @@ modDataToDetailsView modData relatedUser categorys =
 --- The labels of a ModData entity, as used in HTML tables.
 modDataLabelList :: [[HtmlExp]]
 modDataLabelList =
-  [[textstyle "label label_for_type_string" "Modulcode"]
-  ,[textstyle "label label_for_type_string" "Titel"]
-  ,[textstyle "label label_for_type_string" "Englischer Titel"]
-  ,[textstyle "label label_for_type_string" "Turnus"]
-  ,[textstyle "label label_for_type_string" "Präsenzzeiten"]
-  ,[textstyle "label label_for_type_int" "ECTS"]
-  ,[textstyle "label label_for_type_string" "Workload"]
-  ,[textstyle "label label_for_type_int" "Dauer (Semester)"]
-  ,[textstyle "label label_for_type_string" "URL (für externe Module)"]
-  ,[textstyle "label label_for_type_bool" "Sichtbarkeit"]
-  ,[textstyle "label label_for_type_relation" "Modulverantwortlicher"]
-  ,[textstyle "label label_for_type_relation" "Kategorien"]]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Modulcode"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Titel"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Englischer Titel"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Turnus"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Präsenzzeiten"]
+  ,[textstyle "spicey_label spicey_label_for_type_int" "ECTS"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Workload"]
+  ,[textstyle "spicey_label spicey_label_for_type_int" "Dauer (Semester)"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "URL (für externe Module)"]
+  ,[textstyle "spicey_label spicey_label_for_type_bool" "Sichtbarkeit"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Modulverantwortlicher"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Kategorien"]]
 
 --- The list view of a ModDescr entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -320,19 +321,19 @@ modDescrToDetailsView modDescr relatedModData =
 --- The labels of a ModDescr entity, as used in HTML tables.
 modDescrLabelList :: [[HtmlExp]]
 modDescrLabelList =
-  [[textstyle "label label_for_type_string" "Lehrsprache"]
-  ,[textstyle "label label_for_type_string" "Kurzbeschreibung", markdownRef]
-  ,[textstyle "label label_for_type_string" "Lernziele", markdownRef]
-  ,[textstyle "label label_for_type_string" "Inhalt", markdownRef]
-  ,[textstyle "label label_for_type_string" "Voraussetzungen", markdownRef]
-  ,[textstyle "label label_for_type_string" "Prüfungsleistung", markdownRef]
-  ,[textstyle "label label_for_type_string" "Lehr- und Lernmethoden",
+  [[textstyle "spicey_label spicey_label_for_type_string" "Lehrsprache"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Kurzbeschreibung", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Lernziele", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Inhalt", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Voraussetzungen", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Prüfungsleistung", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Lehr- und Lernmethoden",
     markdownRef]
-  ,[textstyle "label label_for_type_string" "Verwendbarkeit", markdownRef]
-  ,[textstyle "label label_for_type_string" "Literatur", markdownRef]
-  ,[textstyle "label label_for_type_string" "Verweise", markdownRef]
-  ,[textstyle "label label_for_type_string" "Kommentar", markdownRef]
-  ,[textstyle "label label_for_type_relation" "Modul"]]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Verwendbarkeit", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Literatur", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Verweise", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Kommentar", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Modul"]]
 
 -- Reference to markdown syntax description:
 markdownRef :: HtmlExp
@@ -364,10 +365,10 @@ modInstToDetailsView modInst relatedModData relatedUser =
 --- The labels of a ModInst entity, as used in HTML tables.
 modInstLabelList :: [[HtmlExp]]
 modInstLabelList =
-  [[textstyle "label label_for_type_string" "Semester"]
-  ,[textstyle "label label_for_type_int" "Jahr"]
-  ,[textstyle "label label_for_type_relation" "ModData"]
-  ,[textstyle "label label_for_type_relation" "Dozent"]]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Semester"]
+  ,[textstyle "spicey_label spicey_label_for_type_int" "Jahr"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "ModData"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Dozent"]]
 
 --- The list view of a AdvisorStudyProgram entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -411,15 +412,15 @@ advisorStudyProgramToDetailsView
 --- The labels of a AdvisorStudyProgram entity, as used in HTML tables.
 advisorStudyProgramLabelList :: [[HtmlExp]]
 advisorStudyProgramLabelList =
-  [[textstyle "label label_for_type_string" "Titel"]
-  ,[textstyle "label label_for_type_string" "Beginn im Semester"]
-  ,[textstyle "label label_for_type_int"    "Beginn im Jahr"]
-  ,[textstyle "label label_for_type_string" "Beschreibung", markdownRef]
-  ,[textstyle "label label_for_type_string" "Voraussetzungen", markdownRef]
-  ,[textstyle "label label_for_type_string" "Kommentar", markdownRef]
-  ,[textstyle "label label_for_type_bool" "Sichtbarkeit"]
-  ,[textstyle "label label_for_type_relation" "Zugehöriger Studiengang"]
-  ,[textstyle "label label_for_type_relation" "Research Advisor"]]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Titel"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Beginn im Semester"]
+  ,[textstyle "spicey_label spicey_label_for_type_int"    "Beginn im Jahr"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Beschreibung", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Voraussetzungen", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Kommentar", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_bool" "Sichtbarkeit"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Zugehöriger Studiengang"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Research Advisor"]]
 
 --- The list view of a AdvisorModule entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -452,19 +453,20 @@ advisorModuleToDetailsView
 --- The labels of a AdvisorModule entity, as used in HTML tables.
 advisorModuleLabelList :: [[HtmlExp]]
 advisorModuleLabelList =
-  [[textstyle "label label_for_type_bool" "Status"]
-  ,[textstyle "label label_for_type_relation" "Modulinstanz"]
-  ,[textstyle "label label_for_type_relation" "Kategorie"]
-  ,[textstyle "label label_for_type_relation" "Studienprogramm"]]
+  [[textstyle "spicey_label spicey_label_for_type_bool" "Status"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Modulinstanz"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Kategorie"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Studienprogramm"]]
 
 --- The list view of a MasterProgram entity in HTML format.
 --- This view is used in a row of a table of all entities.
 masterProgramToListView :: MasterProgram -> HtmlExp
 masterProgramToListView masterProgram =
-  spHref ("?MasterProgram/show/" ++ showMasterProgramKey masterProgram)
-       [if masterProgramVisible masterProgram
-        then stringToHtml (masterProgramName masterProgram)
-        else italic [stringToHtml (masterProgramName masterProgram)]]
+  hrefPrimSmButton
+    ("?MasterProgram/show/" ++ showMasterProgramKey masterProgram)
+    [if masterProgramVisible masterProgram
+       then stringToHtml (masterProgramName masterProgram)
+       else italic [stringToHtml (masterProgramName masterProgram)]]
 
 --- The short view of a MasterProgram entity as a string.
 --- This view is used in menus and comments to refer to a MasterProgram entity.
@@ -496,15 +498,15 @@ masterProgramToDetailsView masterProgram relatedMasterCoreArea relatedUser =
 --- The labels of a MasterProgram entity, as used in HTML tables.
 masterProgramLabelList :: [[HtmlExp]]
 masterProgramLabelList =
-  [[textstyle "label label_for_type_string" "Titel"]
-  ,[textstyle "label label_for_type_string" "Beginn im Semester"]
-  ,[textstyle "label label_for_type_int" "Beginn im Jahr"]
-  ,[textstyle "label label_for_type_string" "Beschreibung", markdownRef]
-  ,[textstyle "label label_for_type_string" "Voraussetzungen", markdownRef]
-  ,[textstyle "label label_for_type_string" "Kommentar", markdownRef]
-  ,[textstyle "label label_for_type_bool" "Sichtbarkeit"]
-  ,[textstyle "label label_for_type_relation" "Masterbereich"]
-  ,[textstyle "label label_for_type_relation" "Research Advisor"]]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Titel"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Beginn im Semester"]
+  ,[textstyle "spicey_label spicey_label_for_type_int" "Beginn im Jahr"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Beschreibung", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Voraussetzungen", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Kommentar", markdownRef]
+  ,[textstyle "spicey_label spicey_label_for_type_bool" "Sichtbarkeit"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Masterbereich"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "Research Advisor"]]
 
 --- The list view of a MasterProgInfo entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -543,13 +545,13 @@ masterProgInfoToDetailsView masterProgInfo relatedMasterProgram =
 --- The labels of a MasterProgInfo entity, as used in HTML tables.
 masterProgInfoLabelList :: [[HtmlExp]]
 masterProgInfoLabelList =
-  [[textstyle "label label_for_type_string" "Studienbereiche"]
-  ,[textstyle "label label_for_type_string" "Praktikum"]
-  ,[textstyle "label label_for_type_string" "Seminar"]
-  ,[textstyle "label label_for_type_string" "Thesis"]
-  ,[textstyle "label label_for_type_string" "AllgGrundlagen"]
-  ,[textstyle "label label_for_type_string" "Anwendungsfach"]
-  ,[textstyle "label label_for_type_relation" "MasterProgram"]]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Studienbereiche"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Praktikum"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Seminar"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Thesis"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "AllgGrundlagen"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Anwendungsfach"]
+  ,[textstyle "spicey_label spicey_label_for_type_relation" "MasterProgram"]]
 
 --- The list view of a UnivisInfo entity in HTML format.
 --- This view is used in a row of a table of all entities.
@@ -581,10 +583,10 @@ univisInfoToDetailsView univisInfo =
 --- The labels of a UnivisInfo entity, as used in HTML tables.
 univisInfoLabelList :: [[HtmlExp]]
 univisInfoLabelList =
-  [[textstyle "label label_for_type_string" "Code"]
-  ,[textstyle "label label_for_type_string" "Term"]
-  ,[textstyle "label label_for_type_int" "Year"]
-  ,[textstyle "label label_for_type_string" "URL"]]
+  [[textstyle "spicey_label spicey_label_for_type_string" "Code"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "Term"]
+  ,[textstyle "spicey_label spicey_label_for_type_int" "Year"]
+  ,[textstyle "spicey_label spicey_label_for_type_string" "URL"]]
 
 -- Show the short name of each category and its study program
 -- for a given list of categories:

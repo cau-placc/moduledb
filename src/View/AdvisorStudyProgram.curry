@@ -6,7 +6,7 @@ module View.AdvisorStudyProgram
 import HTML.WUI
 import System.Helpers
 import HTML.Base
-import HTML.Styles.Bootstrap3
+import HTML.Styles.Bootstrap4
 import List
 import Time
 import Sort
@@ -132,20 +132,20 @@ showAdvisorStudyProgramView
   [h3 [htxt $ t "Start: " ++ showSemester (startSem,startYear) ++
               " / Research advisor: ", userToHtmlView advisor]] ++
   [par $ (if admin || editallowed
-            then [hrefPrimButton ("?AdvisorStudyProgram/edit/" ++
-                                  showAdvisorStudyProgramKey asprog)
-                                 [htxt "Beschreibung ändern"], nbsp]
+            then [hrefPrimSmButton ("?AdvisorStudyProgram/edit/" ++
+                                    showAdvisorStudyProgramKey asprog)
+                                   [htxt "Beschreibung ändern"], nbsp]
             else []) ++
          (if admin || (not (advisorStudyProgramVisible asprog) && editallowed)
-            then [hrefPrimButton ("?AdvisorStudyProgram/visible/" ++
-                                  showAdvisorStudyProgramKey asprog)
-                                 [htxt $ t $ if admin
-                                               then "Change visibility"
-                                               else "Make visible"], nbsp]
+            then [hrefPrimSmButton
+                    ("?AdvisorStudyProgram/visible/" ++
+                     showAdvisorStudyProgramKey asprog)
+                    [htxt $ t $ if admin then "Change visibility"
+                                         else "Make visible"], nbsp]
             else []) ++
-         (if admin then [hrefPrimButton ("?AdvisorStudyProgram/delete/" ++
-                                         showAdvisorStudyProgramKey asprog)
-                                        [htxt "Studienprogramm löschen"]]
+         (if admin then [hrefPrimSmButton ("?AdvisorStudyProgram/delete/" ++
+                                           showAdvisorStudyProgramKey asprog)
+                                          [htxt "Studienprogramm löschen"]]
                    else [])] ++
   [h4 [htxt $ t "Description"++":"],
    par [HtmlText (docText2html (advisorStudyProgramDesc asprog))],
@@ -184,7 +184,7 @@ showAdvisorStudyProgramView
      modInstSemester modinst == sem
 
    showAdvisorModuleCode (am,_,md) =
-     [spHrefBlock ("?ModData/show/"++showModDataKey md)
+     [spHrefBlock ("?ModData/show/" ++ showModDataKey md)
         [(if mandatory then bold else italic) [htxt $ modDataCode md]]
          `addTitle` ((langSelect sinfo modDataNameE modDataNameG) md)]
     where

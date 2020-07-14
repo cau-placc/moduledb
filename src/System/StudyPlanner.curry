@@ -18,7 +18,6 @@ import MDB
 import MDBExts        ( modInstSemester )
 import SpecialQueries ( queryStudentNumberOfModSemester )
 import System.Helpers ( showSemesterCode )
-import System.Spicey  ( spEHref )
 
 --- Retrieve the number of students of a module in a given semester
 --- (represented by the semester code string).

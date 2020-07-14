@@ -13,7 +13,7 @@ import Time
 import Mail ( sendMail )
 import HTML.WUI
 import HTML.Base
-import HTML.Styles.Bootstrap3
+import HTML.Styles.Bootstrap4
 
 import Config.Storage
 import Config.EntityRoutes
@@ -73,7 +73,7 @@ wStudentType sinfo student =
 showStudentView :: UserSessionInfo -> Student -> [HtmlExp]
 showStudentView sinfo student =
   studentToDetailsView sinfo student
-   ++ [hrefButton "?Student/list" [htxt "Zur Studierendenliste"]]
+   ++ [hrefScndSmButton "?Student/list" [htxt "Zur Studierendenliste"]]
 
 --- Compares two Student entities. This order is used in the list view.
 leqStudent :: Student -> Student -> Bool
@@ -99,10 +99,10 @@ listStudentView sinfo students =
       studentToListView student ++
       (if not (isAdminSession sinfo)
          then []
-         else [[hrefButton (showRoute   student) [htxt "Anzeigen"]]
-              ,[hrefButton (editRoute   student) [htxt "Ändern"]]
-              ,[hrefButton (deleteRoute student) [htxt "Löschen"]]
-              ,[hrefButton (entityRoute "rlogin" student) [htxt "Anmelden"]]
+         else [[hrefPrimBadge (showRoute   student) [htxt "Anzeigen"]]
+              ,[hrefPrimBadge (editRoute   student) [htxt "Ändern"]]
+              ,[hrefPrimBadge (deleteRoute student) [htxt "Löschen"]]
+              ,[hrefPrimBadge (entityRoute "rlogin" student) [htxt "Anmelden"]]
               ])
 
 -----------------------------------------------------------------------------
@@ -113,7 +113,7 @@ studentLoginView sinfo loginform =
    h3 [htxt $ t "Login as student"],
    loginform,
    hrule,
-   par [hrefPrimButton "?Student/new" [htxt $ t "Register as new student"]]
+   par [hrefPrimSmButton "?Student/new" [htxt $ t "Register as new student"]]
   ]
  where
   t = translate sinfo
@@ -124,8 +124,8 @@ studentLoginFormView dfltcontroller landingcontroller sinfo =
   [spTable [[[htxt $ t "Email address:"], [textField emailfield ""]],
             [[htxt $ t "Login code:"],    [textField codefield ""]]],
    par [spPrimButton (t "Login") loginHandler, nbsp,
-        hrefPrimButton "?Student/sendlogin"
-                       [htxt $ t "Forgot your login data?"]]
+        hrefPrimSmButton "?Student/sendlogin"
+                         [htxt $ t "Forgot your login data?"]]
   ]
  where
   emailfield,codefield free
@@ -234,12 +234,16 @@ selectCoursesView :: Controller -> ([ModInstID] -> [ModInstID] -> Controller)
 selectCoursesView cancelcontroller storecontroller (sinfo,sem,stmis,mititles) =
   [h1 [htxt $ t "Select the modules you like to attend in " ++
               showSemester sem],
-   spTable (map (map listModInst) selMatrix),
+   blockstyle "table-responsive"
+     [spTable (addBadge2TableData (map (map listModInst) selMatrix))],
    spPrimButton (t "Store") storeHandler,
    spButton (t "Cancel")
             (const (cancelOperation >> cancelcontroller >>= getPage))]
  where
   t = translate sinfo
+
+  addBadge2TableData xss =
+    map (\xs -> map (\x -> [style "badge badge-light" x]) xs) xss
 
   leqMIT (_,_,c1,g1,e1) (_,_,c2,g2,e2) =
     (langSelect sinfo e1 g1, c1) <= (langSelect sinfo e2 g2, c2)

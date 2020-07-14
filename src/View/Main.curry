@@ -7,6 +7,7 @@ module View.Main(mainPageView)
 
 import System.Spicey
 import HTML.Base
+import HTML.Styles.Bootstrap4
 import Char
 import System.Helpers
 import MDB
@@ -28,7 +29,7 @@ mainPageView sinfo studyPrograms =
    h3 [htxt $ t "Further information:"],
    ulist
     [[htxt $ t "Master studies in computer science:", nbsp,
-      spHref "?MCA/list" [htxt $ t "Core areas"], nbsp
+      hrefPrimBadge "?MCA/list" [htxt $ t "Core areas"], nbsp
       --spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
       --        [htxt $ t "Study planner"]
      ],
@@ -38,13 +39,15 @@ mainPageView sinfo studyPrograms =
      [bold [htxt $ t "For persons in charge for modules: "],
       htxt $ t "General ",
       ehref "edit_infos.html"
-            [htxt $ t "notes on module descriptions and their preparation"]],
+        [htxt $ t "notes on module descriptions and their preparation"]],
      [bold [htxt $ t "For programmers:"], nbsp,
-      ehref "?xml" [htxt $ t "XML index to all modules"],
-      htxt " | ",
-      ehref "?xmlaprog=all" [htxt $ t "XML document with all master programs"],
-      htxt " | ",
-      ehref "?xmlprog=all" [htxt $ t "XML document with all master programs (until SS15)"]]],
+      ehrefPrimBadge "?xml" [htxt $ t "XML index to all modules"],
+      nbsp,
+      ehrefPrimBadge "?xmlaprog=all"
+        [htxt $ t "XML document with all master programs"],
+      nbsp,
+      ehrefPrimBadge "?xmlprog=all"
+        [htxt $ t "XML document with all master programs (until SS15)"]]],
    h3 [htxt $ t "Information on data privacy" ++ ":"],
    par $ privacyCookieCmt sinfo
   ]

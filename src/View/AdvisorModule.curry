@@ -5,8 +5,9 @@ module View.AdvisorModule
 where
 
 import System.Helpers
-import HTML.WUI
 import HTML.Base
+import HTML.Styles.Bootstrap4
+import HTML.WUI
 import Time
 import Sort
 import System.Spicey
@@ -249,7 +250,8 @@ showAdvisorModuleView
     relatedAdvisorStudyProgram =
   advisorModuleToDetailsView advisorModule relatedModInst relatedCategory
    relatedAdvisorStudyProgram
-   ++ [spHref "?AdvisorModule/list" [htxt "back to AdvisorModule list"]]
+   ++ [hrefPrimSmButton "?AdvisorModule/list"
+                        [htxt "back to AdvisorModule list"]]
 
 --- Compares two AdvisorModule entities. This order is used in the list view.
 leqAdvisorModule :: AdvisorModule -> AdvisorModule -> Bool
@@ -271,14 +273,14 @@ listAdvisorModuleView sinfo advisorModules =
       advisorModuleToListView advisorModule
        ++ (if userLoginOfSession sinfo == Nothing
               then []
-              else [[spHref
+              else [[hrefPrimBadge
                       ("?AdvisorModule/show/"
                         ++ showAdvisorModuleKey advisorModule)
-                      [htxt "show"]],[spHref
+                      [htxt "show"]],[hrefPrimBadge
                                        ("?AdvisorModule/edit/"
                                          ++ showAdvisorModuleKey
                                              advisorModule)
-                                       [htxt "edit"]],[spHref
+                                       [htxt "edit"]],[hrefPrimBadge
                                                         ("?AdvisorModule/delete/"
                                                           ++ showAdvisorModuleKey
                                                               advisorModule)
