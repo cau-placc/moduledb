@@ -16,7 +16,6 @@ import HTML.Session
 import HTML.WUI
 import ShowDotGraph ( showDotGraph )
 
-import Config.Storage
 import Config.EntityRoutes
 import MDB
 import SpecialQueries
@@ -77,7 +76,7 @@ newStudyProgramWuiForm =
 newStudyProgramWuiStore ::
   Global (SessionStore (UserSessionInfo, WuiStore NewStudyProgram))
 newStudyProgramWuiStore =
-  global emptySessionStore (Persistent (inDataDir "newStudyProgramWuiStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "newStudyProgramWuiStore"))
 
 --- Transaction to persist a new StudyProgram entity to the database.
 createStudyProgramT :: (String,String,String,String,Int) -> DBAction ()
@@ -110,7 +109,8 @@ editStudyProgramForm = pwui2FormDef "Controller.StudyProgram.editStudyProgramFor
 wuiEditStudyProgramStore ::
   Global (SessionStore ((UserSessionInfo,StudyProgram), WuiStore StudyProgram))
 wuiEditStudyProgramStore =
-  global emptySessionStore (Persistent (inDataDir "wuiEditStudyProgramStore"))
+  global emptySessionStore
+         (Persistent (inSessionDataDir "wuiEditStudyProgramStore"))
 
 --- Persists modifications of a given StudyProgram entity.
 updateStudyProgramController :: StudyProgram -> Controller

@@ -5,7 +5,6 @@ module Controller.MasterCoreArea (
 
 import Global
 
-import Config.Storage
 import System.Helpers
 import System.Spicey
 import HTML.Base
@@ -67,7 +66,7 @@ newMasterCoreAreaForm =
 newMasterCoreAreaStore ::
   Global (SessionStore (UserSessionInfo, WuiStore NewMasterCoreArea))
 newMasterCoreAreaStore =
-  global emptySessionStore (Persistent (inDataDir "newMasterCoreAreaStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "newMasterCoreAreaStore"))
 
 --- Persists a new MasterCoreArea entity to the database.
 createMasterCoreAreaController :: NewMasterCoreArea -> Controller
@@ -110,7 +109,8 @@ editMasterCoreAreaWuiStore ::
   Global (SessionStore ((UserSessionInfo,MasterCoreArea),
           WuiStore MasterCoreArea))
 editMasterCoreAreaWuiStore =
-  global emptySessionStore (Persistent (inDataDir "editMasterCoreAreaWuiStore"))
+  global emptySessionStore
+         (Persistent (inSessionDataDir "editMasterCoreAreaWuiStore"))
 
 --- Persists modifications of a given MasterCoreArea entity.
 updateMasterCoreAreaController :: MasterCoreArea -> Controller

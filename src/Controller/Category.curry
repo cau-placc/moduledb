@@ -14,7 +14,6 @@ import HTML.Session
 import HTML.Styles.Bootstrap4
 import HTML.WUI
 
-import Config.Storage
 import Config.UserProcesses
 import Config.EntityRoutes
 import MDB
@@ -88,7 +87,7 @@ newCategoryWuiForm =
 newCategoryWuiStore ::
   Global (SessionStore ((UserSessionInfo,[StudyProgram]), WuiStore NewCategory))
 newCategoryWuiStore =
-  global emptySessionStore (Persistent (inDataDir "newCategoryWuiStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "newCategoryWuiStore"))
 
 
 --- Transaction to persist a new Category entity to the database.
@@ -136,7 +135,7 @@ wuiEditCategoryStore ::
   Global (SessionStore ((UserSessionInfo,Category,StudyProgram,[StudyProgram]),
                         WuiStore Category))
 wuiEditCategoryStore =
-  global emptySessionStore (Persistent (inDataDir "wuiEditCategoryStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiEditCategoryStore"))
 
 
 --- Persists modifications of a given Category entity to the
@@ -173,7 +172,7 @@ semSelectStore ::
   Global (SessionStore (Maybe User, Either StudyProgram [HtmlExp],
                         [(Either Category String, [ModData])],[(String,Int)]))
 semSelectStore =
-  global emptySessionStore (Persistent (inDataDir "semSelectStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "semSelectStore"))
 
 --- An operation to store the data required for this view.
 storeCategoryListData :: Maybe User

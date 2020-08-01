@@ -7,7 +7,6 @@ import Global
 import Maybe
 import Time
 
-import Config.Storage
 import Config.EntityRoutes
 import System.Helpers
 import System.Spicey
@@ -72,7 +71,7 @@ newUserWuiForm =
 wuiNewUserWuiStore ::
   Global (SessionStore (UserSessionInfo, WuiStore NewUser))
 wuiNewUserWuiStore =
-  global emptySessionStore (Persistent (inDataDir "wuiNewUserWuiStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiNewUserWuiStore"))
 
 
 --- Persists a new User entity to the database.
@@ -114,7 +113,7 @@ editUserWuiForm =
 wuiEditUserWuiStore ::
   Global (SessionStore ((UserSessionInfo,User), WuiStore User))
 wuiEditUserWuiStore =
-  global emptySessionStore (Persistent (inDataDir "wuiEditUserWuiStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiEditUserWuiStore"))
 
 
 --- Persists modifications of a given User entity to the

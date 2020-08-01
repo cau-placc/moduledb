@@ -20,7 +20,6 @@ module System.SessionInfo (
 import FilePath       ( (</>) )
 import Global
 
-import Config.Storage ( inDataDir )
 import HTML.Session
 
 --------------------------------------------------------------------------
@@ -79,7 +78,7 @@ setLanguageOfSession lang (SD login slogin _) = SD login slogin lang
 --- Definition of the session state to store the login name (as a string).
 userSessionInfo :: Global (SessionStore UserSessionInfo)
 userSessionInfo =
-  global emptySessionStore (Persistent (inDataDir "userSessionInfo"))
+  global emptySessionStore (Persistent (inSessionDataDir "userSessionInfo"))
 
 --- Gets the data of the current user session.
 getUserSessionInfo :: IO UserSessionInfo

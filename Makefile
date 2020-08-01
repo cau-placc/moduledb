@@ -51,7 +51,7 @@ CURRYOPTIONS=:set -time
 CPM := $(CURRYBIN)/cypm
 
 # directory with all session data:
-SESSIONDATADIR=$(DATADIR)/sessiondata
+SESSIONDATADIR=$(WEBSERVERDIR)/sessiondata
 
 # The root directory of the package of the Spicey application:
 PKGDIR := $(CURDIR)

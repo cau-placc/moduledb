@@ -16,7 +16,6 @@ import Sort
 import System
 import Time
 
-import Config.Storage
 import ConfigMDB
 import System.Spicey
 import HTML.Base
@@ -135,7 +134,7 @@ wuiNewModDataWuiStore ::
             ((UserSessionInfo, Bool, Bool, [User], [(StudyProgram,[Category])]),
              WuiStore NewModData))
 wuiNewModDataWuiStore =
-  global emptySessionStore (Persistent (inDataDir "wuiNewModDataWuiStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiNewModDataWuiStore"))
 
 
 --- Persists a new ModData entity to the database.
@@ -203,7 +202,7 @@ wuiEditModDataStore ::
      ((UserSessionInfo,Bool,ModData,User,[User],[(StudyProgram,[Category])]),
       WuiStore (ModData,[Category])))
 wuiEditModDataStore =
-  global emptySessionStore (Persistent (inDataDir "wuiEditModDataStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiEditModDataStore"))
 
 
 --- Persists modifications of a given ModData entity.
@@ -307,7 +306,7 @@ copyModuleForm =
 ---- The data stored for executing the WUI form.
 copyModuleStore :: Global (SessionStore ModData)
 copyModuleStore =
-  global emptySessionStore (Persistent (inDataDir "copyModuleStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "copyModuleStore"))
 
 --- Controller for copying a module with a new code:
 storeCopiedModController :: ModData -> ModDescr -> String -> Controller
@@ -494,7 +493,7 @@ emailModuleMessageForm =
 ---- The data stored for executing the WUI form.
 emailModuleStore :: Global (SessionStore (ModData,String))
 emailModuleStore =
-  global emptySessionStore (Persistent (inDataDir "emailModuleStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "emailModuleStore"))
 
 
 ----------------------------------------------------------------------
@@ -766,7 +765,7 @@ wuiAddModInstStore ::
   Global (SessionStore ((UserSessionInfo, Int, [User], ModData),
                         WuiStore (String,Int,User)))
 wuiAddModInstStore =
-  global emptySessionStore (Persistent (inDataDir "wuiAddModInstStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiAddModInstStore"))
 
 -----------------------------------------------------------------------------
 -- A controller to edit all module instances of the given module.
@@ -840,7 +839,7 @@ wuiEditModInstStore ::
             ((UserSessionInfo, Int, Bool, [(Bool,ModInst)],[User], ModData),
              WuiStore [Either (ModInst,Bool) ModInst]))
 wuiEditModInstStore =
-  global emptySessionStore (Persistent (inDataDir "wuiEditModInstStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiEditModInstStore"))
 
 
 -----------------------------------------------------------------------------
@@ -878,7 +877,7 @@ editModDescrForm =
 wuiEditModDescrStore ::
   Global (SessionStore ((UserSessionInfo,ModData,ModDescr), WuiStore ModDescr))
 wuiEditModDescrStore =
-  global emptySessionStore (Persistent (inDataDir "wuiEditModDescrStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiEditModDescrStore"))
 
 
 -----------------------------------------------------------------------------
@@ -964,7 +963,7 @@ wuiDeletePreqModulStore ::
   Global (SessionStore ((UserSessionInfo, ModData),
                         WuiStore [(ModDataID,String,Bool)]))
 wuiDeletePreqModulStore =
-  global emptySessionStore (Persistent (inDataDir "wuiDeletePreqModulStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiDeletePreqModulStore"))
 
 deletePreqModDataController :: ModData -> [(ModDataID,String,Bool)]
                             -> Controller

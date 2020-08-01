@@ -15,7 +15,6 @@ import HTML.Session
 import HTML.WUI
 import Time
 
-import Config.Storage
 import Config.EntityRoutes
 import MDB
 import View.Student
@@ -97,7 +96,7 @@ newStudentForm =
 wuiNewStudentStore ::
   Global (SessionStore (UserSessionInfo, WuiStore NewStudent))
 wuiNewStudentStore =
-  global emptySessionStore (Persistent (inDataDir "wuiNewStudentStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiNewStudentStore"))
 
 --- Is the email address allowed to register?
 emailAllowed :: String -> Bool
@@ -143,7 +142,7 @@ editStudentWuiForm =
 wuiEditStudentWuiStore ::
   Global (SessionStore ((UserSessionInfo,Student), WuiStore Student))
 wuiEditStudentWuiStore =
-  global emptySessionStore (Persistent (inDataDir "wuiEditStudentWuiStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiEditStudentWuiStore"))
 
 
 --- Transaction to persist modifications of a given Student entity
@@ -300,7 +299,7 @@ selectCourseSelectionForm =
 
 selectCoursesFormStore :: Global (SessionStore ((String,Int), String))
 selectCoursesFormStore =
-  global emptySessionStore (Persistent (inDataDir "selectCourseFormStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "selectCourseFormStore"))
 
 
 --- Store selected modules for a student.

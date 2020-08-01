@@ -15,7 +15,6 @@ import HTML.WUI
 import HTML.Base
 import HTML.Styles.Bootstrap4
 
-import Config.Storage
 import Config.EntityRoutes
 import System.Authentication
 import Crypto.Hash ( randomString )

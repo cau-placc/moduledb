@@ -7,7 +7,6 @@ import Read
 import Maybe
 import Time
 
-import Config.Storage
 import Controller.ModData
 import System.Helpers
 import System.Spicey
@@ -64,7 +63,7 @@ newUnivisInfoForm =
 newUnivisInfoStore ::
   Global (SessionStore (UserSessionInfo, WuiStore NewUnivisInfo))
 newUnivisInfoStore =
-  global emptySessionStore (Persistent (inDataDir "newUnivisInfoStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "newUnivisInfoStore"))
 
 --- Persists a new UnivisInfo entity to the database.
 createUnivisInfoController :: NewUnivisInfo -> Controller
@@ -103,7 +102,8 @@ editUnivisInfoWuiForm =
 editUnivisInfoWuiStore ::
   Global (SessionStore ((UserSessionInfo,UnivisInfo), WuiStore UnivisInfo))
 editUnivisInfoWuiStore =
-  global emptySessionStore (Persistent (inDataDir "editUnivisInfoWuiStore"))
+  global emptySessionStore
+         (Persistent (inSessionDataDir "editUnivisInfoWuiStore"))
 
 
 --- Persists modifications of a given UnivisInfo entity to the

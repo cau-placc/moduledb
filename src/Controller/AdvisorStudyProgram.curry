@@ -15,7 +15,6 @@ import HTML.Session
 import HTML.WUI
 
 import ConfigMDB ( baseURL )
-import Config.Storage
 import Config.EntityRoutes
 import Controller.AdvisorModule
 import System.Helpers
@@ -115,7 +114,7 @@ wuiCreateAdvisorStudyProgramStore ::
                         WuiStore NewAdvisorStudyProgram))
 wuiCreateAdvisorStudyProgramStore =
   global emptySessionStore
-         (Persistent (inDataDir "wuiCreateAdvisorStudyProgramStore"))
+         (Persistent (inSessionDataDir "wuiCreateAdvisorStudyProgramStore"))
 
 --- Transaction to persist a new AdvisorStudyProgram entity to the database.
 createAdvisorStudyProgramT ::
@@ -185,7 +184,7 @@ wuiEditAdvisorStudyProgramStore ::
                         WuiStore AdvisorStudyProgram))
 wuiEditAdvisorStudyProgramStore =
   global emptySessionStore
-         (Persistent (inDataDir "wuiEditAdvisorStudyProgramStore"))
+         (Persistent (inSessionDataDir "wuiEditAdvisorStudyProgramStore"))
 
 
 --- Transaction to persist modifications of a given AdvisorStudyProgram entity
@@ -297,7 +296,7 @@ wuiAddCatModFormStore ::
             ((UserSessionInfo,AdvisorStudyProgram,[(ModInst,ModData)]),
              WuiStore (Bool,(ModInst,ModData),Category)))
 wuiAddCatModFormStore =
-  global emptySessionStore (Persistent (inDataDir "wuiAddCatModFormStore"))
+  global emptySessionStore (Persistent (inSessionDataDir "wuiAddCatModFormStore"))
 
 -------------------------------------------------------------------------
 --- Deletes an advisor module from a given AdvisorStudyProgram entity
