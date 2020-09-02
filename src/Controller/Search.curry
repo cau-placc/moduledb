@@ -50,15 +50,16 @@ searchController = do
 --- A form with a field to search modules containing a string.
 searchModuleForm :: HtmlFormDef UserSessionInfo
 searchModuleForm =
-  HtmlFormDef "Controller.Search.searchModuleForm" getUserSessionInfo
-              (searchModulesView searchModules)
+  formDefWithID "Controller.Search.searchModuleForm"
+    getUserSessionInfo (searchModulesView searchModules)
 
 --- A form with a semester selection to show the modules of a semester.
 showSemModsForm :: HtmlFormDef (UserSessionInfo, (String,Int))
 showSemModsForm =
-  HtmlFormDef "Controller.Search.showSemModsForm" readData
-              (showSemModsView showSemModsController showExamController
-                 showModSemResponsibleController showHandbookController)
+  formDefWithID "Controller.Search.showSemModsForm"
+    readData
+    (showSemModsView showSemModsController showExamController
+                     showModSemResponsibleController showHandbookController)
  where
   readData = do
     sinfo <- getUserSessionInfo
@@ -104,7 +105,7 @@ selectUserModulesController = do
   return $ selectUserView sinfo (formExp selectUserModulesForm)
 
 selectUserModulesForm :: HtmlFormDef (UserSessionInfo, [User])
-selectUserModulesForm = HtmlFormDef "Controller.Search.selectUserModulesForm"
+selectUserModulesForm = formDefWithID "Controller.Search.selectUserModulesForm"
   readData (selectUserFormView searchUserModules)
  where
   readData = do

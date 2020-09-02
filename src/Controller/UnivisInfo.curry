@@ -176,7 +176,7 @@ loadUnivisController =
 
 --- A form to load data from UnivisInfo for a selectable term.
 loadUnivisDataForm :: HtmlFormDef (String,Int)
-loadUnivisDataForm = HtmlFormDef "Controller.UnivisInfo.loadUnivisDataForm"
+loadUnivisDataForm = formDefWithID "Controller.UnivisInfo.loadUnivisDataForm"
   getCurrentSemester (loadUnivisView loadUnivisDataController)
 
 loadUnivisDataController :: (String,Int) -> Controller

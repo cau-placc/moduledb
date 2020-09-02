@@ -169,7 +169,7 @@ showConflictsController = do
 --- A form to select modules for a semester.
 selectSemesterConflictForm :: HtmlFormDef (UserSessionInfo, (String,Int))
 selectSemesterConflictForm =
-  HtmlFormDef "Controller.StudentCourse.selectSemesterConflictForm" readData
+  formDefWithID "Controller.StudentCourse.selectSemesterConflictForm" readData
    (selectSemesterFormView semesterConflictController
       "Zeige Modulbelegungskonflikte")
  where

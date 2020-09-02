@@ -209,7 +209,7 @@ sendLoginCodeController = do
 
 sendLoginCodeForm :: HtmlFormDef UserSessionInfo
 sendLoginCodeForm =
-  HtmlFormDef "Controller.Student.sendLoginCodeForm" getUserSessionInfo
+  formDefWithID "Controller.Student.sendLoginCodeForm" getUserSessionInfo
     (sendLoginCodeFormView redirectToDefaultController)
 
 --- Login to the system.
@@ -222,7 +222,7 @@ loginController = do
 
 loginForm :: HtmlFormDef UserSessionInfo
 loginForm =
-  HtmlFormDef "Controller.Student.loginForm" getUserSessionInfo
+  formDefWithID "Controller.Student.loginForm" getUserSessionInfo
     (studentLoginFormView redirectToDefaultController
        (redirectController "?Student/showcourses"))
 
@@ -262,7 +262,7 @@ selectSemesterController = do
 
 --- A form to select modules for a semester.
 selectSemesterForm :: HtmlFormDef (UserSessionInfo, (String,Int))
-selectSemesterForm = HtmlFormDef "Controller.Student.selectSemesterForm"
+selectSemesterForm = formDefWithID "Controller.Student.selectSemesterForm"
   readData (selectSemesterFormView selectCourseController
               "select/change modules in semester")
  where
@@ -286,7 +286,7 @@ selectCourseSelectionForm ::
   HtmlFormDef (UserSessionInfo, (String,Int), [ModInstID],
                [(ModInstID,ModDataID,String,String,String)])
 selectCourseSelectionForm =
-  HtmlFormDef "Controller.Student.selectCourseSelectionForm" readData
+  formDefWithID "Controller.Student.selectCourseSelectionForm" readData
     (selectCoursesView redirectToDefaultController
                        storeCourseSelectionController)
  where

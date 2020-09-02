@@ -343,7 +343,7 @@ singleModDataView sinfo editallowed modData responsibleUser
            (maybe ""
                   (\md -> langSelect sinfo toEnglish id (modDescrLanguage md))
                   maybedesc)]],
-     [[bold [stringToHtml $ t "Prerequisites: ",
+     [[bold [stringToHtml $ t "Prerequisites" ++ ": ",
              textWithInfoIcon (prereqExplainText sinfo)]],
       [showModDatasAsLinks sinfo prerequisites]]
     ] ++

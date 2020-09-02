@@ -292,7 +292,7 @@ copyModuleController mdata =
 
 copyModuleForm :: HtmlFormDef (ModData,ModDescr)
 copyModuleForm =
-  HtmlFormDef "Controller.ModData.copyModuleForm" readData
+  formDefWithID "Controller.ModData.copyModuleForm" readData
     (\ (mdata,mdesc) -> copyModView mdata
                           (storeCopiedModController mdata mdesc))
  where
@@ -451,7 +451,7 @@ emailModuleController mdata =
 --- stored in `emailModuleStore` (which also contains the initial message).
 emailModuleMessageForm :: HtmlFormDef (ModData,User,String)
 emailModuleMessageForm =
-  HtmlFormDef "Controller.ModData.emailModuleMessageForm" readData formView
+  formDefWithID "Controller.ModData.emailModuleMessageForm" readData formView
  where
   readData = do
     (mdata,msg) <- getSessionData emailModuleStore (failed,"")
@@ -891,7 +891,7 @@ newPreqModDataController mdata =
 newPreqModDataForm :: HtmlFormDef
   (UserSessionInfo , [(ModDataID,String)], Maybe ModDataID -> Controller)
 newPreqModDataForm =
-  HtmlFormDef "Controller.ModData.newPreqModDataForm" readData
+  formDefWithID "Controller.ModData.newPreqModDataForm" readData
     selectPreqModuleFormView
  where
   readData = do

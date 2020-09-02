@@ -195,10 +195,10 @@ semSelectForm ::
               , [(Either Category String, [ModData])]
               , (String,Int), [(String,Int)])
 semSelectForm =
-  HtmlFormDef "Controller.Category.semSelectForm" readData
-              (selSemesterPlanningView showCategoryPlanController
-                                       showEmailCorrectionController
-                                       formatCatModulesForm)
+  formDefWithID "Controller.Category.semSelectForm" readData
+    (selSemesterPlanningView showCategoryPlanController
+                             showEmailCorrectionController
+                             formatCatModulesForm)
  where
   readData = do
     sinfo  <- getUserSessionInfo

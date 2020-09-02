@@ -166,7 +166,6 @@ english2german =
  ,("Person in charge:"  ,"Modulverantwortliche(r):")
  ,("planning instruments of the institute","Lehrplanungsinstrumente des Instituts")
  ,("Prerequisites"      ,"Voraussetzungen")
- ,("Prerequisites:"     ,"Voraussetzungen:")
  ,("Prerequisite selection","Voraussetzungen bearbeiten")
  ,("Presence:"          ,"Präsenzzeiten:")
  ,("Program overview by categories:","Programmübersicht nach Studienbereichen:")
