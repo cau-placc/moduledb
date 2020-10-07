@@ -73,7 +73,7 @@ newAdvisorStudyProgramController =
            (sinfo, snd csem, sortBy leqStudyProgram allStudyPrograms, allUsers)
            ("", "", snd csem, "", "", "", False,
             defaultStudyProgram allStudyPrograms, user)
-         return [formExp createAdvisorStudyProgramWuiForm])
+         return [formElem createAdvisorStudyProgramWuiForm])
        (maybe Nothing
               (\ln -> find (\u -> userLogin u == ln) allUsers)
               (userLoginOfSession sinfo))
@@ -153,7 +153,7 @@ editAdvisorStudyProgramController advisorStudyProgramToEdit =
             sortBy leqStudyProgram allStudyPrograms,
             studyAdvisingUser, allUsers)
            advisorStudyProgramToEdit
-        return [formExp editAdvisorStudyProgramWuiForm]
+        return [formElem editAdvisorStudyProgramWuiForm]
 
 --- A WUI form to edit a given AdvisorStudyProgram entity.
 editAdvisorStudyProgramWuiForm ::
@@ -267,7 +267,7 @@ addCatModController asprog cat =
     setParWuiStore wuiAddCatModFormStore
                    (sinfo, asprog,modinstdatas)
                    (False, head modinstdatas, cat)
-    return [formExp addCatModForm]
+    return [formElem addCatModForm]
  where
   startsem = (advisorStudyProgramTerm asprog,
               advisorStudyProgramYear asprog)

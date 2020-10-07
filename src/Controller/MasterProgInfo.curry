@@ -87,13 +87,10 @@ listMasterProgInfoController =
 showMasterProgInfoController :: MasterProgInfo -> Controller
 showMasterProgInfoController masterProgInfo =
   checkAuthorization
-   (masterProgInfoOperationAllowed (ShowEntity masterProgInfo)) $ \_ ->
-   (do programInfoMasterProgram <- runJustT
-                                    (getProgramInfoMasterProgram
-                                      masterProgInfo)
-       return
-        (showMasterProgInfoView masterProgInfo programInfoMasterProgram
-          listMasterProgInfoController))
+   (masterProgInfoOperationAllowed (ShowEntity masterProgInfo)) $ \_ -> do
+     programInfoMasterProgram <- runJustT
+                                   (getProgramInfoMasterProgram masterProgInfo)
+     return (showMasterProgInfoView masterProgInfo programInfoMasterProgram)
 
 --- Gets the associated MasterProgram entity for a given MasterProgInfo entity.
 getProgramInfoMasterProgram :: MasterProgInfo -> DBAction MasterProgram

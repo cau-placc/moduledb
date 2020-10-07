@@ -44,7 +44,7 @@ newMasterCoreAreaController :: Controller
 newMasterCoreAreaController =
   checkAuthorization (masterCoreAreaOperationAllowed NewEntity) $ \sinfo -> do
     setParWuiStore newMasterCoreAreaStore sinfo ("", "", "", "", 1)
-    return [formExp newMasterCoreAreaForm]
+    return [formElem newMasterCoreAreaForm]
 
 type NewMasterCoreArea = (String,String,String,String,Int)
 
@@ -85,7 +85,7 @@ editMasterCoreAreaController mca =
   checkAuthorization
    (masterCoreAreaOperationAllowed (UpdateEntity mca)) $ \sinfo -> do
      setParWuiStore editMasterCoreAreaWuiStore (sinfo,mca) mca
-     return [formExp editMasterCoreAreaForm]
+     return [formElem editMasterCoreAreaForm]
 
 --- A WUI form to edit MasterCoreArea entity.
 --- The default values for the fields are stored in the

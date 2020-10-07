@@ -50,7 +50,7 @@ newUserController =
   checkAuthorization (userOperationAllowed NewEntity) $ \sinfo -> do
     ctime <- getClockTime
     setParWuiStore wuiNewUserWuiStore sinfo ("","","","","","","",ctime)
-    return [formExp newUserWuiForm]
+    return [formElem newUserWuiForm]
 
 type NewUser = (String,String,String,String,String,String,String,ClockTime)
 
@@ -92,7 +92,7 @@ editUserController :: User -> Controller
 editUserController user =
   checkAuthorization (userOperationAllowed (UpdateEntity user)) $ \sinfo -> do
     setParWuiStore wuiEditUserWuiStore (sinfo,user) user
-    return [formExp editUserWuiForm]
+    return [formElem editUserWuiForm]
 
 --- A WUI form to create a edit User entity.
 --- The default values for the fields are stored in the
@@ -157,12 +157,13 @@ loginAsUserController user =
 sendLoginDataController :: Controller
 sendLoginDataController = do
   sinfo <- getUserSessionInfo
-  return $ sendLoginDataView sinfo (formExp sendLoginDataForm)
+  return $ sendLoginDataView sinfo (formElem sendLoginDataForm)
 
 --- A form to login to the system.
 sendLoginDataForm :: HtmlFormDef UserSessionInfo
 sendLoginDataForm =
-  formDefWithID "Controller.User.sendLoginDataForm" getUserSessionInfo
+  formDefWithID "Controller.User.sendLoginDataForm"
+    (toFormReader $ getUserSessionInfo)
     (sendLoginDataFormView redirectToDefaultController)
 
 --- Login to the system.
@@ -171,12 +172,13 @@ loginController = do
   sinfo <- getUserSessionInfo
   case userLoginOfSession sinfo of
     Just _  -> return [h3 [htxt $ "Operation not allowed!"]]
-    Nothing -> return $ loginView sinfo (formExp loginForm)
+    Nothing -> return $ loginView sinfo (formElem loginForm)
 
 --- A form to login to the system.
 loginForm :: HtmlFormDef UserSessionInfo
 loginForm =
-  formDefWithID "Controller.User.loginForm" getUserSessionInfo
+  formDefWithID "Controller.User.loginForm"
+    (toFormReader $ getUserSessionInfo)
     (loginFormView redirectToDefaultController)
 
 --- Logout the current user.
@@ -193,12 +195,13 @@ logoutController = do
 --- Change password of logged in user.
 changePasswordController :: Controller
 changePasswordController =
-  return [formExp changePasswordForm]
+  return [formElem changePasswordForm]
 
 --- A form to change the password of a logged in user.
 changePasswordForm :: HtmlFormDef UserSessionInfo
 changePasswordForm =
-  formDefWithID "Controller.User.changePasswordForm" getUserSessionInfo
+  formDefWithID "Controller.User.changePasswordForm"
+    (toFormReader $ getUserSessionInfo)
     (changePasswordFormView redirectToDefaultController)
 
 --- Lists all User entities.

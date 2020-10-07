@@ -169,11 +169,9 @@ wMasterProgInfoType cursem masterProgInfo modinsts =
 --    in wuiframe hexp handler
 
 --- Supplies a view to show the details of a MasterProgInfo.
-showMasterProgInfoView
- :: MasterProgInfo -> MasterProgram -> Controller -> [HtmlExp]
-showMasterProgInfoView masterProgInfo relatedMasterProgram controller =
-  masterProgInfoToDetailsView masterProgInfo relatedMasterProgram ++
-   [spButton "back to MasterProgInfo list" (nextController controller)]
+showMasterProgInfoView :: MasterProgInfo -> MasterProgram -> [BaseHtml]
+showMasterProgInfoView masterProgInfo relatedMasterProgram =
+  masterProgInfoToDetailsView masterProgInfo relatedMasterProgram
 
 --- Compares two MasterProgInfo entities. This order is used in the list view.
 leqMasterProgInfo :: MasterProgInfo -> MasterProgInfo -> Bool
@@ -187,12 +185,12 @@ leqMasterProgInfo x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of MasterProgInfo entities
 --- and the controller functions to show, delete and edit entities.
-listMasterProgInfoView :: [MasterProgInfo] -> [HtmlExp]
+listMasterProgInfoView :: [MasterProgInfo] -> [BaseHtml]
 listMasterProgInfoView masterProgInfos =
   [h1 [htxt "MasterProgInfo list"]
   ,spTable
     ([take 6 masterProgInfoLabelList] ++
      map listMasterProgInfo (mergeSortBy leqMasterProgInfo masterProgInfos))]
-  where listMasterProgInfo :: MasterProgInfo -> [[HtmlExp]]
+  where listMasterProgInfo :: MasterProgInfo -> [[BaseHtml]]
         listMasterProgInfo masterProgInfo =
           masterProgInfoToListView masterProgInfo

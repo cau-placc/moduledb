@@ -76,7 +76,7 @@ wCatList sinfo spcats =
     : split2rows sps (drop (length cats) hexps)
 
 -- Enclose all data items of a table as a light badge.
-addBadge2TableData :: [[[HtmlExp]]] -> [[[HtmlExp]]]
+addBadge2TableData :: HTML h => [[[h]]] -> [[[h]]]
 addBadge2TableData xss =
   map (\xs -> map (\x -> [style "badge badge-light" x]) xs) xss
 
@@ -186,7 +186,7 @@ showModDataView modData relatedUser categorys controller =
 
 
 --- A view to show the number of students of a module in a semester.
-numberModuleView :: String -> ModData -> Int -> [HtmlExp]
+numberModuleView :: String -> ModData -> Int -> [BaseHtml]
 numberModuleView semcode modData mdbnums =
   [h1 [htxt $ "Modul \""++modDataNameG modData++"\""],
    par [htxt "Anzahl der Studierenden, die dieses Modul für das Semester '",
@@ -194,7 +194,7 @@ numberModuleView semcode modData mdbnums =
         htxt (show mdbnums)]]
 
 --- A view to show the students registered for a module in a semester.
-studentModuleView :: String -> ModData -> [(String,String,String)] -> [HtmlExp]
+studentModuleView :: String -> ModData -> [(String,String,String)] -> [BaseHtml]
 studentModuleView semcode modData studs =
   [h1 [htxt $ "Modul \"" ++ modDataNameG modData ++ "\""],
    par [htxt "Studierende, die dieses Modul für das Semester '",
@@ -236,13 +236,13 @@ leqModData x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of ModData entities
 --- and the controller functions to show, delete and edit entities.
-listModDataView :: Bool -> String -> [ModData] -> [HtmlExp]
+listModDataView :: Bool -> String -> [ModData] -> [BaseHtml]
 listModDataView admin title modDatas =
   [h1 [htxt title]
   ,spTable
     ([take 2 modDataLabelList ++ [[htxt "ECTS"]]] ++
      map listModData (sortBy leqModData modDatas))]
-  where listModData :: ModData -> [[HtmlExp]]
+  where listModData :: ModData -> [[BaseHtml]]
         listModData modData =
           modDataToListView modData ++
             if not admin then [] else
@@ -280,7 +280,7 @@ getUniqueTerm mis
 singleModDataView :: UserSessionInfo -> Bool -> ModData -> User
                   -> [StudyProgram] -> [Category]
                   -> [ModData] -> [ModInst] -> Maybe ModDescr -> String
-                  -> [HtmlExp]
+                  -> [BaseHtml]
 singleModDataView sinfo editallowed modData responsibleUser
      sprogs categorys prerequisites modinsts maybedesc xmlurl =
   [h1 [htxt ((langSelect sinfo modDataNameE modDataNameG) modData), nbsp,
@@ -360,8 +360,8 @@ singleModDataView sinfo editallowed modData responsibleUser
   maybe []
    (\moddesc ->
      concatMap (\ (title,cnt) ->
-                  [HtmlStruct "section" [("id",title)] [h3 [htxt $ title++":"]],
-                   par [HtmlText (if title=="Verweise"
+                  [htmlStruct "section" [("id",title)] [h3 [htxt $ title++":"]],
+                   par [htmlText (if title=="Verweise"
                                     then docText2html (hrefs2markdown cnt)
                                     else docText2html cnt)]])
                (zip descTitles
@@ -394,7 +394,7 @@ singleModDataView sinfo editallowed modData responsibleUser
              | otherwise = show l
 
 -- show the semesters of module instances enclosed in brackets:
-showSemsOfModInstances :: [ModInst] -> [HtmlExp]
+showSemsOfModInstances :: [ModInst] -> [BaseHtml]
 showSemsOfModInstances mis =
   if null mis then []
               else htxt "(" : intersperse (htxt " ") (map showSem mis) ++

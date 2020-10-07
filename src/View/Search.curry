@@ -23,7 +23,7 @@ import System.SessionInfo
 
 -----------------------------------------------------------------------------
 --- A page view for searching modules.
-searchPageView :: UserSessionInfo -> HtmlExp -> HtmlExp -> [HtmlExp]
+searchPageView :: UserSessionInfo -> BaseHtml -> BaseHtml -> [BaseHtml]
 searchPageView sinfo searchform showsemmodsform =
   [h1 [htxt $ t "Search modules"],
    h2 [htxt $ t "Search for individual modules:"],
@@ -92,7 +92,7 @@ searchModulesView searchcontroller sinfo =
 
 -----------------------------------------------------------------------------
 --- A view to select a user and apply the given controller to the selected user.
-selectUserView :: UserSessionInfo -> HtmlExp -> [HtmlExp]
+selectUserView :: UserSessionInfo -> BaseHtml -> [BaseHtml]
 selectUserView sinfo selectuserform =
   [h1 [htxt $ t "Show modules of a person"],
    par [selectuserform]]
@@ -122,18 +122,18 @@ selectUserFormView usercontroller (sinfo, users) =
 
 -----------------------------------------------------------------------------
 --- Supplies a view for the examination requirements of a given list of modules.
-showExamOverview :: (String,Int) -> [(ModData,String)] -> [HtmlExp]
+showExamOverview :: (String,Int) -> [(ModData,String)] -> [BaseHtml]
 showExamOverview sem mods =
   [h1 [htxt $ "Prüfungsanforderungen aller Module im " ++ showSemester sem],
    spHeadedTable $
      [[htxt "Modul:"],[htxt "Prüfungsanforderungen:"]] :
      map (\ (m,e) -> [[htxt (modDataCode m ++": "++ modDataNameG m)],
-                     [HtmlText (docText2html e)]])
+                     [htmlText (docText2html e)]])
          (mergeSortBy (\ (m1,_) (m2,_) -> leqModData m1 m2) mods)]
 
 -----------------------------------------------------------------------------
 --- Supplies a view for the examination requirements of a given list of modules.
-showAllModuleResponsibleView :: String -> [User] -> [HtmlExp]
+showAllModuleResponsibleView :: String -> [User] -> [BaseHtml]
 showAllModuleResponsibleView title users =
   [h1 [htxt title],
    htxt (intercalate ", " (map userInfo users))]

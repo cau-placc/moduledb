@@ -63,7 +63,7 @@ import MDB              ( runT, runJustT )
 -- here: a representation of a HTML page
 type Viewable = HtmlPage
 
-type ViewBlock = [HtmlExp]
+type ViewBlock = [BaseHtml]
 
 --- Controllers contains all logic and their result should be a Viewable.
 --- if the behavior of controller should depend on URL parameters
@@ -106,7 +106,7 @@ applyControllerOn (Just userkey) getuser usercontroller =
 --- A controller to redirect to an URL starting with "?"
 --- (see implementation of `getPage`).
 redirectController :: String -> Controller
-redirectController url = return [HtmlText url]
+redirectController url = return [htmlText url]
 
 --- Redirect to a page of the default controller.
 --- Useful to set the URL route correctly.
@@ -298,7 +298,7 @@ wUncheckMaybe defval wspec =
          defval
 
 --- The standard menu for all users.
-standardMenu :: UserSessionInfo -> [[HtmlExp]]
+standardMenu :: UserSessionInfo -> [[BaseHtml]]
 standardMenu sinfo =
   [[hrefNav "?StudyProgram/list" [htxt $ t "Degree programs"]],
    [hrefNav "?AdvisorStudyProgram/list" [htxt $ t "Master programs"]],
@@ -312,24 +312,24 @@ standardMenu sinfo =
 -- `Controller.Search.searchModuleForm`. To avoid cyclic module
 -- dependencies, we have to include the generated form here.
 -- Be careful with changes in the original form!
-rawSearchForm :: UserSessionInfo -> HtmlExp
+rawSearchForm :: UserSessionInfo -> BaseHtml
 rawSearchForm sinfo = 
-  HtmlStruct "form" [("method","post"), ("action","?search"),
+  htmlStruct "form" [("method","post"), ("action","?search"),
                      ("class","form-inline my-2 my-lg-0"),
                      ("title", searchToolTip sinfo)]
-    [HtmlStruct "input" [("type","hidden"), ("name","FORMID"),
+    [htmlStruct "input" [("type","hidden"), ("name","FORMID"),
                          ("value","Controller.Search.searchModuleForm")] [],
-     HtmlStruct "input" [("type","text"), ("class","form-control mr-sm-2"),
+     htmlStruct "input" [("type","text"), ("class","form-control mr-sm-2"),
                          ("placeholder", t "Quick search"),
                          ("name","FIELD_0")] [],
-     HtmlStruct "input" [("type","submit"),
+     htmlStruct "input" [("type","submit"),
                          ("class","btn btn-outline-success my-2 my-sm-0"),
                          ("name","FIELD_1"), ("value", t "Search!")] []
     ]
  where t = translate sinfo
 
 --- The menu for a user if it he is logged in.
-userMenu :: UserSessionInfo -> [(String,[HtmlExp])]
+userMenu :: UserSessionInfo -> [(String,[BaseHtml])]
 userMenu sinfo =
   maybe (maybe loginMenu
                (const studentMenu)
@@ -360,20 +360,20 @@ spiceyTitle :: String
 spiceyTitle = "Module Information System"
 
 --- The home URL and brand shown at the left top of the main page.
-spiceyHomeBrand :: (String, [HtmlExp])
+spiceyHomeBrand :: (String, [BaseHtml])
 spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 
 --- The standard footer of the Spicey page.
-spiceyFooter :: [HtmlExp]
+spiceyFooter :: [BaseHtml]
 spiceyFooter =
-  [par [htxt "Version of September 1, 2020, powered by",
+  [par [htxt "Version of October 7, 2020, powered by",
         href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
         htxt "Framework"]]
 
 --- Create contents in the main page area with a side menu.
-mainContentsWithSideMenu :: [[HtmlExp]] -> [HtmlExp] -> [HtmlExp]
+mainContentsWithSideMenu :: [[BaseHtml]] -> [BaseHtml] -> [BaseHtml]
 mainContentsWithSideMenu menuitems contents =
   [blockstyle "row"
     [blockstyle "col-sm-3 col-md-3"
@@ -381,9 +381,9 @@ mainContentsWithSideMenu menuitems contents =
        blockstyle "col-sm-9 col-md-9" contents]]
 
 getPage :: ViewBlock -> IO HtmlPage
-getPage viewBlock = case viewBlock of
-  [HtmlText ""]          -> return $ redirectPage baseCGI
-  [HtmlText ('?':route)] -> return $ redirectPage ('?':route)
+getPage viewblock = case viewblock of
+  [BaseText ""]          -> return $ redirectPage baseCGI
+  [BaseText ('?':route)] -> return $ redirectPage ('?':route)
   _ -> do
     hassession <- doesSessionExist
     urlparam   <- getUrlParameter
@@ -398,7 +398,7 @@ getPage viewBlock = case viewBlock of
                                [htxt "Zeige Studienkonflikte"]]) ++
                     [blockstyle "dropdown-divider" []] ++
                     map addDropDownItemClass routemenunews
-        body      = if hassession then viewBlock
+        body      = if hassession then viewblock
                                   else cookieInfo urlparam
         title     = translate sinfo spiceyTitle
     withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
@@ -413,9 +413,9 @@ getPage viewBlock = case viewBlock of
 
   messageLine msg _ =
     if null msg
-      then HtmlStruct "header" [("class","pagemessage pagemessage-empty")]
+      then htmlStruct "header" [("class","pagemessage pagemessage-empty")]
                       [nbsp] --[htxt ("Last page: "++lasturl)]
-      else HtmlStruct "header" [("class","pagemessage")] [htxt msg]
+      else htmlStruct "header" [("class","pagemessage")] [htxt msg]
         
   cookieInfo urlparam =
     [ par [ htxt $ "This web site uses cookies for navigation and user " ++
@@ -443,7 +443,7 @@ getPage viewBlock = case viewBlock of
   -- The first argument is title (as HTML expressions) and
   -- the second argument is the actual menu (a list of elements with
   -- class "dropdown-item").
-  dropDownMenu :: [HtmlExp] -> [HtmlExp] -> (String,[HtmlExp])
+  dropDownMenu :: [BaseHtml] -> [BaseHtml] -> (String,[BaseHtml])
   dropDownMenu title ddmenu =
     ("nav-item dropdown",
      [hrefNav "#" title
@@ -550,7 +550,7 @@ displayError msg = do
                 else msg]]
 
 -- dummy-controller to display an error in HTML format
-displayHtmlError :: [HtmlExp] -> Controller
+displayHtmlError :: [BaseHtml] -> Controller
 displayHtmlError hexps = do
   inproc <- isInProcess
   if inproc then removeCurrentProcess else done
@@ -565,114 +565,114 @@ renderLabels labels hexps =
   spTable (map (\(l, h) -> [l, [h]]) (zip labels hexps))
 
 -- Convert standard datatype values to HTML representation
-stringToHtml :: String -> HtmlExp
+stringToHtml :: HTML h => String -> h
 stringToHtml s = textstyle "type_string" s
 
-maybeStringToHtml :: Maybe String -> HtmlExp
+maybeStringToHtml :: HTML h => Maybe String -> h
 maybeStringToHtml s = textstyle "type_string" (maybe "" id s)
 
-intToHtml :: Int -> HtmlExp
+intToHtml :: HTML h => Int -> h
 intToHtml i = textstyle "type_int" (show i)
 
-maybeIntToHtml :: Maybe Int -> HtmlExp
+maybeIntToHtml :: HTML h => Maybe Int -> h
 maybeIntToHtml i = textstyle "type_int" (maybe "" show i)
 
-floatToHtml :: Float -> HtmlExp
+floatToHtml :: HTML h => Float -> h
 floatToHtml i = textstyle "type_float" (show i)
 
-maybeFloatToHtml :: Maybe Float -> HtmlExp
+maybeFloatToHtml :: HTML h => Maybe Float -> h
 maybeFloatToHtml i = textstyle "type_float" (maybe "" show i)
 
-boolToHtml :: Bool -> HtmlExp
+boolToHtml :: HTML h => Bool -> h
 boolToHtml b = textstyle "type_bool" (show b)
 
-maybeBoolToHtml :: Maybe Bool -> HtmlExp
+maybeBoolToHtml :: HTML h => Maybe Bool -> h
 maybeBoolToHtml b = textstyle "type_bool" (maybe "" show b)
 
-dateToHtml :: ClockTime -> HtmlExp
+dateToHtml :: HTML h => ClockTime -> h
 dateToHtml ct = textstyle "type_calendartime" (toDayString (toUTCTime ct))
 
-maybeDateToHtml :: Maybe ClockTime -> HtmlExp
+maybeDateToHtml :: HTML h => Maybe ClockTime -> h
 maybeDateToHtml ct =
   textstyle "type_calendartime" (maybe "" (toDayString . toUTCTime) ct)
 
-userDefinedToHtml :: Show a => a -> HtmlExp
+userDefinedToHtml :: (Show a, HTML h) => a -> h
 userDefinedToHtml ud = textstyle "type_string" (show ud)
 
-maybeUserDefinedToHtml :: Show a => Maybe a -> HtmlExp
+maybeUserDefinedToHtml :: (Show a, HTML h) => Maybe a -> h
 maybeUserDefinedToHtml ud = textstyle "type_string" (maybe "" show ud)
 
 --------------------------------------------------------------------------
 -- Auxiliary HTML items:
 
 --- Hypertext reference to a study program:
-hrefStudyProgram :: String -> [HtmlExp] -> HtmlExp
+hrefStudyProgram :: HTML h => String -> [h] -> h
 hrefStudyProgram ref hexps =
   href ref hexps `addClass` "btn btn-info btn-block btn-left"
 
 --- Hypertext reference to a category:
-hrefCategory :: String -> [HtmlExp] -> HtmlExp
+hrefCategory :: HTML h => String -> [h] -> h
 hrefCategory ref hexps =
   href ref hexps `addClass` "btn btn-info btn-block btn-left"
 
 --- Small hypertext reference to a category:
-smallHrefCategory :: String -> [HtmlExp] -> HtmlExp
+smallHrefCategory :: HTML h => String -> [h] -> h
 smallHrefCategory = ehrefInfoBadge
 
 --- Hypertext reference to a module:
-hrefModule :: String -> [HtmlExp] -> HtmlExp
+hrefModule :: HTML h => String -> [h] -> h
 hrefModule ref hexps = hrefInfoSmButton ref hexps
 
 --- Small hypertext reference to a module:
-smallHrefModule :: String -> [HtmlExp] -> HtmlExp
+smallHrefModule :: HTML h => String -> [h] -> h
 smallHrefModule = ehrefInfoBadge
 
 --- Hypertext reference to an external module:
-hrefExtModule :: String -> [HtmlExp] -> HtmlExp
+hrefExtModule :: HTML h => String -> [h] -> h
 hrefExtModule ref hexps = withELink $ hrefModule ref hexps
 
 --- Hypertext reference to a module instance:
-hrefModInst :: String -> [HtmlExp] -> HtmlExp
+hrefModInst :: HTML h => String -> [h] -> h
 hrefModInst = spEHrefBlock
 
 --- Hypertext reference to a UnivIS information:
-hrefUnivisInfo :: String -> [HtmlExp] -> HtmlExp
+hrefUnivisInfo :: HTML h => String -> [h] -> h
 hrefUnivisInfo = ehrefInfoBadge
 
 --- Hypertext reference to a UnivIS information with "danger" rendering:
-hrefUnivisDanger :: String -> [HtmlExp] -> HtmlExp
+hrefUnivisDanger :: HTML h => String -> [h] -> h
 hrefUnivisDanger = ehrefDangBadge
 
 --- Hypertext reference in Spicey (rendered as a block button):
-spHref :: String -> [HtmlExp] -> HtmlExp
+spHref :: HTML h => String -> [h] -> h
 spHref ref hexps =
   href ref hexps `addClass` "btn btn-sm btn-default"
 
 --- Hypertext reference in Spicey (rendered as a block button):
-spHrefBlock :: String -> [HtmlExp] -> HtmlExp
+spHrefBlock :: HTML h => String -> [h] -> h
 spHrefBlock ref hexps =
   href ref hexps `addClass` "btn btn-sm btn-default btn-block"
 
 --- Hypertext reference in Spicey (rendered as an info block button):
-spHrefInfoBlock :: String -> [HtmlExp] -> HtmlExp
+spHrefInfoBlock :: HTML h => String -> [h] -> h
 spHrefInfoBlock ref hexps =
   href ref hexps `addClass` "btn btn-info btn-block"
 
 --- Hypertext reference in Spicey (rendered as a danger block button):
-spHrefDangerBlock :: String -> [HtmlExp] -> HtmlExp
+spHrefDangerBlock :: HTML h => String -> [h] -> h
 spHrefDangerBlock ref hexps =
   href ref hexps `addClass` "btn btn-danger btn-block"
 
 --- External hypertext reference in Spicey (rendered as a block button):
-spEHrefBlock :: String -> [HtmlExp] -> HtmlExp
+spEHrefBlock :: HTML h => String -> [h] -> h
 spEHrefBlock ref hexps = withELink $ spHrefBlock ref hexps
 
 --- External hypertext reference in Spicey (rendered as an info block button):
-spEHrefInfoBlock :: String -> [HtmlExp] -> HtmlExp
+spEHrefInfoBlock :: HTML h => String -> [h] -> h
 spEHrefInfoBlock ref hexps = withELink $ spHrefInfoBlock ref hexps
 
 --- External hypertext reference in Spicey (rendered as a danger block button):
-spEHrefDangerBlock :: String -> [HtmlExp] -> HtmlExp
+spEHrefDangerBlock :: HTML h => String -> [h] -> h
 spEHrefDangerBlock ref hexps = withELink $ spHrefDangerBlock ref hexps
 
 --- Input button in Spicey (rendered as a default button):
@@ -698,51 +698,51 @@ spShortSelectionInitial cref sellist sel =
   selectionInitial cref sellist sel `addClass` "shorttextinput"
 
 --- Standard table in Spicey.
-spTable :: [[[HtmlExp]]] -> HtmlExp
+spTable :: HTML h => [[[h]]] -> h
 spTable items = table items  `addClass` "table table-hover table-condensed"
 
 --- Headed table in Spicey.
-spHeadedTable :: [[[HtmlExp]]] -> HtmlExp
+spHeadedTable :: HTML h => [[[h]]] -> h
 spHeadedTable items =
   headedTable items  `addClass` "table table-hover table-condensed"
 
 --- Makes a link to an external reference.
-withELink :: HtmlExp -> HtmlExp
+withELink :: HTML h => h -> h
 withELink hexp = hexp `addAttr` ("target","_blank")
 
 --- Adds a title attribute to an HTML element.
-addTitle :: HtmlExp -> String -> HtmlExp
+addTitle :: HTML h => h -> String -> h
 addTitle hexp title = hexp `addAttr` ("title",title)
 
 --------------------------------------------------------------------------
 -- Icons:
 
 --- User (white) icon:
-mdbHomeIcon :: HtmlExp
+mdbHomeIcon :: HTML h => h
 mdbHomeIcon =
   image "bt4/img/book.svg" "MDB"
     `addAttrs` [("width","32"), ("height","32")]
 
 --- User (white) icon:
-userWhiteIcon :: HtmlExp
+userWhiteIcon :: HTML h => h
 userWhiteIcon =
   image "bt4/img/user-white.svg" "User"
     `addAttrs` [("width","32"), ("height","32")]
 
 --- Drowdown icon:
-dropDownIcon :: HtmlExp
+dropDownIcon :: HTML h => h
 dropDownIcon = image "bt4/img/caret-down-white.svg" "Open"
 
 --- Search icon:
-searchIcon :: HtmlExp
+searchIcon :: HTML h => h
 searchIcon = image "bt4/img/search.svg" "Search"
 
 --- Info icon:
-infoIcon :: HtmlExp
+infoIcon :: HTML h => h
 infoIcon = image "bt4/img/info-circle-fill.svg" "Info"
 
 --- Some additional information under an info icon.
-textWithInfoIcon :: String -> HtmlExp
+textWithInfoIcon :: HTML h => String -> h
 textWithInfoIcon s = infoIcon `addTitle` s
 
 --------------------------------------------------------------------------
@@ -758,13 +758,13 @@ pageMessage =
 --- Gets the page message and delete it.
 getPageMessage :: IO String
 getPageMessage = do
-  msg <- getSessionData pageMessage ""
+  msg <- fromFormReader $ getSessionData pageMessage ""
   removeSessionData pageMessage
   return msg
 
 --- Set the page message of the current session.
 setPageMessage :: String -> IO ()
-setPageMessage msg = putSessionData pageMessage msg
+setPageMessage msg = writeSessionData pageMessage msg
 
 --------------------------------------------------------------------------
 -- Another example for using sessions.
@@ -778,7 +778,7 @@ lastUrls =
 
 --- Gets the list of URLs of the current session.
 getLastUrls :: IO [String]
-getLastUrls = getSessionData lastUrls []
+getLastUrls = fromFormReader $ getSessionData lastUrls []
 
 --- Gets the last URL of the current session (or "?").
 getLastUrl :: IO String
@@ -797,7 +797,7 @@ getLastUrlParameters = do
 saveLastUrl :: String -> IO ()
 saveLastUrl url = do
   urls <- getLastUrls
-  putSessionData lastUrls (url : take 2 urls)
+  writeSessionData lastUrls (url : take 2 urls)
 
 --------------------------------------------------------------------------
 --- If the SQLResult is an error, display it, otherwise apply the

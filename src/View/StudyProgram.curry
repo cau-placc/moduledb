@@ -59,7 +59,7 @@ wStudyProgramType studyProgram =
 
 ------------------------------------------------------------------------------
 --- Supplies a view to show the details of a StudyProgram.
-showStudyProgramView :: StudyProgram -> [HtmlExp]
+showStudyProgramView :: StudyProgram -> [BaseHtml]
 showStudyProgramView studyProgram =
   studyProgramToDetailsView studyProgram ++
    [hrefPrimSmButton "?StudyProgram/list" [htxt "back to StudyProgram list"]]
@@ -73,7 +73,7 @@ leqStudyProgram x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of StudyProgram entities
 --- and the controller functions to show, delete and edit entities.
-listStudyProgramView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
+listStudyProgramView :: UserSessionInfo -> [StudyProgram] -> [BaseHtml]
 listStudyProgramView sinfo studyPrograms =
   [h1 [htxt $ t "Degree programs"],
    if isAdminSession sinfo
@@ -84,7 +84,7 @@ listStudyProgramView sinfo studyPrograms =
  where
   t = translate sinfo
  
-  listStudyProgram :: StudyProgram -> [[HtmlExp]]
+  listStudyProgram :: StudyProgram -> [[BaseHtml]]
   listStudyProgram studyProgram =
      studyProgramToListView sinfo studyProgram ++
       [[hrefPrimBadge
@@ -98,7 +98,7 @@ listStudyProgramView sinfo studyPrograms =
          [htxt "delete"]]]
 
 -- Generates a table of all StudyProgram entities.
-studyProgramHtmlTable :: UserSessionInfo -> [StudyProgram] -> HtmlExp
+studyProgramHtmlTable :: UserSessionInfo -> [StudyProgram] -> BaseHtml
 studyProgramHtmlTable sinfo studyPrograms =
   table
     (transposeProgs

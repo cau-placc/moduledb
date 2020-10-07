@@ -44,14 +44,14 @@ searchController = do
     ["usermods"] -> selectUserModulesController
     ["english"]  -> showAllEnglishModulesController
     _ -> do sinfo <- getUserSessionInfo
-            return $ searchPageView sinfo (formExp searchModuleForm)
-                                          (formExp showSemModsForm)
+            return $ searchPageView sinfo (formElem searchModuleForm)
+                                          (formElem showSemModsForm)
                                     
 --- A form with a field to search modules containing a string.
 searchModuleForm :: HtmlFormDef UserSessionInfo
 searchModuleForm =
   formDefWithID "Controller.Search.searchModuleForm"
-    getUserSessionInfo (searchModulesView searchModules)
+    (toFormReader $ getUserSessionInfo) (searchModulesView searchModules)
 
 --- A form with a semester selection to show the modules of a semester.
 showSemModsForm :: HtmlFormDef (UserSessionInfo, (String,Int))
@@ -61,7 +61,7 @@ showSemModsForm =
     (showSemModsView showSemModsController showExamController
                      showModSemResponsibleController showHandbookController)
  where
-  readData = do
+  readData = toFormReader $ do
     sinfo <- getUserSessionInfo
     csem  <- getCurrentSemester
     return (sinfo,csem)
@@ -82,7 +82,7 @@ searchModules pat = do
                       (userLoginOfSession sinfo)
   listCategoryController sinfo
     (Right [htxt $ t "Found modules"])
-    [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat, vismods)]
+    [(Right $ "..." ++ t "with pattern" ++ ": " ++ pat, vismods)] []
 
 
 -- simple generic string pattern matcher:
@@ -102,13 +102,13 @@ match pattern string = loop pattern string pattern string
 selectUserModulesController :: Controller
 selectUserModulesController = do
   sinfo <- getUserSessionInfo
-  return $ selectUserView sinfo (formExp selectUserModulesForm)
+  return $ selectUserView sinfo (formElem selectUserModulesForm)
 
 selectUserModulesForm :: HtmlFormDef (UserSessionInfo, [User])
 selectUserModulesForm = formDefWithID "Controller.Search.selectUserModulesForm"
   readData (selectUserFormView searchUserModules)
  where
-  readData = do
+  readData = toFormReader $ do
     sinfo <- getUserSessionInfo
     allUsers <- runQ queryAllUsers
     return (sinfo, mergeSortBy leqUser allUsers)
@@ -121,13 +121,13 @@ searchUserModules user = do
   mods <- runQ $ queryModDataOfUser (userKey user)
   listCategoryController sinfo
     (Right [htxt $ t "Modules of" ++ " " ++ userToShortView user])
-    [(Right "", mods)]
+    [(Right "", mods)] []
 
 --- Controller to list all (visible) modules.
 showAllModulesController :: Controller
 showAllModulesController = do
   mods  <- runQ $ liftM (filter modDataVisible) queryAllModDatas
-  showModulesController mods
+  showModulesController mods []
 
 --- Controller to list all responsible persons of all modules.
 showAllModuleResponsibleController :: Controller
@@ -153,7 +153,7 @@ showAllEnglishModulesController :: Controller
 showAllEnglishModulesController = do
   mods  <- runQ $ liftM (filter modDataVisible) queryAllModDatas
   emods <- mapIO checkEnglishMod mods
-  showModulesController (concat emods)
+  showModulesController (concat emods) []
  where
   checkEnglishMod md = do
     moddesc <- runQ $ queryDescriptionOfMod (modDataKey md)
@@ -163,8 +163,8 @@ showAllEnglishModulesController = do
                      moddesc)
 
 --- Controller to list given modules.
-showModulesController :: [ModData] -> Controller
-showModulesController mods = do
+showModulesController :: [ModData] -> [(String,Int)] -> Controller
+showModulesController mods semperiod = do
   sinfo <- getUserSessionInfo
   let t = translate sinfo
       (pmods,wmods) = partition isMandatoryModule mods
@@ -172,8 +172,7 @@ showModulesController mods = do
     (Right [htxt $ t "All modules"])
     [(Right (t "Mandatary modules" ++
              " (Informatik, Wirtschaftsinformatik, Nebenfach)"), pmods),
-     (Right $ t "Further modules", wmods)]
- where
+     (Right $ t "Further modules", wmods)] semperiod
 
 isMandatoryModule :: ModData -> Bool
 isMandatoryModule md = modDataCode md `elem` mandatoryModulCodes
@@ -194,7 +193,7 @@ showSemModsController :: (String,Int) -> Controller
 showSemModsController sem = do
   semmodkeys <- runQ $ queryModKeysOfSem sem
   semmods    <- runJustT $ mapM getModData semmodkeys
-  showModulesController semmods
+  showModulesController semmods [sem]
 
 --- Controller to show all examination requirements of the modules
 --- in the given semester.

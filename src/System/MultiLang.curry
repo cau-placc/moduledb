@@ -3,7 +3,7 @@
 --- and the translation of texts shown in the application.
 ---
 --- @author Michael Hanus
---- @version July 2020
+--- @version October 2020
 ----------------------------------------------------------------------------
 
 module System.MultiLang (
@@ -274,7 +274,7 @@ mainTitle sinfo = langSelect sinfo
   "Modules and degree programs of the Department of Computer Science"
   "Module und Studiengänge des Instituts für Informatik"
 
-mainExplanation :: UserSessionInfo -> [HtmlExp]
+mainExplanation :: HTML h => UserSessionInfo -> [h]
 mainExplanation sinfo = langSelect sinfo
   [htxt $
     "This web site provides an overview on all modules and "++
@@ -294,7 +294,7 @@ mainExplanation sinfo = langSelect sinfo
  where
   univisURL = "http://univis.uni-kiel.de/"
 
-masterStudyOldNote :: UserSessionInfo -> [HtmlExp]
+masterStudyOldNote :: HTML h => UserSessionInfo -> [h]
 masterStudyOldNote sinfo = langSelect sinfo
   [htxt "The master programs until SS15 can be found ",
    hrefInfoBadge oldMasterProgURL [bold [htxt "here"]], htxt "."]
@@ -304,7 +304,7 @@ masterStudyOldNote sinfo = langSelect sinfo
  where
   oldMasterProgURL = "?MasterProgram/listall"
    
-minorSubjectNote :: UserSessionInfo -> [HtmlExp]
+minorSubjectNote :: HTML h => UserSessionInfo -> [h]
 minorSubjectNote sinfo = langSelect sinfo
   [italic [htxt "Note: "],
    htxt "The possible minor/application subjects and their modules are listed ",
@@ -316,7 +316,7 @@ minorSubjectNote sinfo = langSelect sinfo
  where
   minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf-1-fach/bachelorstudiengang/nebenfaecher_anwendungsgebiete"
 
-privacyCookieCmt :: UserSessionInfo -> [HtmlExp]
+privacyCookieCmt :: HTML h => UserSessionInfo -> [h]
 privacyCookieCmt sinfo = langSelect sinfo
   [htxt $
     "This page uses cookies to store navigation information, login data, " ++
@@ -376,7 +376,7 @@ ssComment sinfo = langSelect sinfo
    "benachbarten Wintersemester gewählt werden. "++
    "Bei der Anpassung berät Sie der Academic Advisor.")
 
-studentExplanation :: UserSessionInfo -> [HtmlExp]
+studentExplanation :: HTML h => UserSessionInfo -> [h]
 studentExplanation sinfo = langSelect sinfo
   [htxt $
     "You can select modules which you want to take in the next " ++
@@ -391,7 +391,7 @@ studentExplanation sinfo = langSelect sinfo
     "das Modulangebot so zu planen, dass es möglichst wenig " ++
     "Terminüberschneidungen gibt. "]
 
-studentLoginExplanation :: UserSessionInfo -> [HtmlExp]
+studentLoginExplanation :: HTML h => UserSessionInfo -> [h]
 studentLoginExplanation sinfo = studentExplanation sinfo ++ langSelect sinfo
   [htxt $
     "In order to store and change your selection, you have to register " ++

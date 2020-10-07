@@ -100,7 +100,7 @@ wCategoryType category studyProgram studyProgramList =
 
 ------------------------------------------------------------------------------
 --- Supplies a view to show the details of a Category.
-showCategoryView :: Category -> StudyProgram -> [HtmlExp]
+showCategoryView :: Category -> StudyProgram -> [BaseHtml]
 showCategoryView category relatedStudyProgram =
   categoryToDetailsView category relatedStudyProgram ++
    [hrefPrimSmButton "?Category/list" [htxt "back to Category list"]]
@@ -110,7 +110,7 @@ leqCategory :: Category -> Category -> Bool
 leqCategory x1 x2 =
   categoryPosition x1 <= categoryPosition x2
 
-showCategoryInfo :: UserSessionInfo -> Category -> [HtmlExp]
+showCategoryInfo :: UserSessionInfo -> Category -> [BaseHtml]
 showCategoryInfo sinfo cat =
   (if minpts==0 && maxpts==0 then []
    else [par [htxt $ t "Minimal ECTS points in this category" ++": "++
@@ -118,7 +118,7 @@ showCategoryInfo sinfo cat =
                      " / " ++
                      t "Maximal ECTS points in this category" ++": "++
                      showDiv10 maxpts]]) ++
-  (if null catcmt then [] else [par [HtmlText (docText2html catcmt)]])
+  (if null catcmt then [] else [par [htmlText (docText2html catcmt)]])
  where
   catcmt = categoryComment cat
   minpts = categoryMinECTS cat
@@ -144,10 +144,10 @@ showCategoryInfo sinfo cat =
 --- the HTML expression of the form to select a semester period to show
 --- the module instances in this period.
 listCategoryView
-  :: UserSessionInfo -> Either StudyProgram [HtmlExp]
+  :: UserSessionInfo -> Either StudyProgram [BaseHtml]
   -> [(Either Category String, [(ModData,[Maybe (ModInst,Int)],[Bool])])]
-  -> [(String,Int)] -> [User] -> HtmlExp
-  -> [HtmlExp]
+  -> [(String,Int)] -> [User] -> BaseHtml
+  -> [BaseHtml]
 listCategoryView sinfo mbsprog catmods semperiod users semselectform =
   [h1 $ either (\sp -> [studyProgramToHRef sinfo sp]) id mbsprog] ++
   (if length catmods == 1 && isLeft (fst (head catmods))
@@ -240,15 +240,15 @@ listCategoryView sinfo mbsprog catmods semperiod users semselectform =
 --- Various controller functions to show plans, format entities
 --- as well as sending emails to request corrections are passed as arguments.
 selSemesterPlanningView ::
-     (Maybe User -> Either StudyProgram [HtmlExp]
+     (Maybe User -> Either StudyProgram [BaseHtml]
       -> [(Either Category String, [ModData])]
       -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller)
-  -> (Either StudyProgram [HtmlExp] -> [(Either Category String, [ModData])]
+  -> (Either StudyProgram [BaseHtml] -> [(Either Category String, [ModData])]
         -> (String,Int) -> (String,Int) -> Controller)
   -> ([(String,[ModData])] -> Controller)
   -> ( UserSessionInfo
      , Maybe User
-     , Either StudyProgram [HtmlExp]
+     , Either StudyProgram [BaseHtml]
      , [(Either Category String, [ModData])]
      , (String,Int)
      , [(String,Int)])
@@ -314,19 +314,15 @@ selSemesterPlanningView showCategoryPlanController showEmailCorrectionController
      (semesterSelection cursem !!start) (semesterSelection cursem !! stop)
         >>= getPage
 
---- Supplies a list view for a given list of Category entities.
---- Shows also buttons to show, delete, or edit entries.
---- The arguments are the list of Category entities
---- and the controller functions to show, delete and edit entities.
+--- Supplies a form view for a given list of module instances combined
+--- with their UnivIS occurrences and a button to send mails to the
+--- responsible person to correct their entries.
 listEmailCorrectionView
- :: Either StudyProgram [HtmlExp]
-  -> [(ModData,[Maybe ModInst],[Bool])]
-  -> [(String,Int)] -> [User]
-  -> [HtmlExp]
-listEmailCorrectionView mbsprog modinsts semperiod users =
-  [h1 $ either (\sp -> [htxt $ studyProgramName sp]) id mbsprog,
-   spTable (map showUnivisInst problemmods),
-   spButton "UnivIS-Korrektur-Emails jetzt an alle versenden" sendMails]
+  :: [(ModData,[Maybe ModInst],[Bool])] -> [(String,Int)] -> [User] -> [HtmlExp]
+listEmailCorrectionView modinsts semperiod users =
+  [spTable (map showUnivisInst problemmods),
+   spPrimButton "UnivIS-Korrektur-Emails jetzt an alle versenden" sendMails
+  ]
   where
    -- show UnivIS instance of a semester
    showUnivisInst (md,sem,reason) =
@@ -346,8 +342,8 @@ listEmailCorrectionView mbsprog modinsts semperiod users =
          from    = adminEmail
          subject = "Modul "++modDataCode md++": "++modDataNameG md
          contents = (if reason=="NOMDB"
-                     then missingMDBMessage
-                     else missingUnivISMessage) md sem
+                       then missingMDBMessage
+                       else missingUnivISMessage) md sem
      sendMail from to subject contents
      sleep 1
      return ("=======\nTO: " ++ to ++ "\n" ++
@@ -364,12 +360,13 @@ listEmailCorrectionView mbsprog modinsts semperiod users =
                            modinsts
      where
       analyzeUnivisInst md (sem,mbmi,hasinst)
-        | hasinst && mbmi/=Nothing = []
-        | hasinst                  = [(md,sem,"NOMDB")]
-        | mbmi/=Nothing            = [(md,sem,"NOUNIVIS")]
-        | otherwise                = []
+        | hasinst && isJust mbmi = []
+        | hasinst                = [(md,sem,"NOMDB")]
+        | isJust mbmi            = [(md,sem,"NOUNIVIS")]
+        | otherwise              = []
 
    getResponsibleEmail md =
      let mduserkey = modDataUserResponsibleKey md
       in maybe adminEmail userEmail (find (\u -> userKey u == mduserkey) users)
 
+------------------------------------------------------------------------------

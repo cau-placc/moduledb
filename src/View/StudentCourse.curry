@@ -130,7 +130,7 @@ editStudentCourseView
 
 --- Supplies a view to show the details of a StudentCourse.
 showStudentCourseView
-  :: UserSessionInfo -> StudentCourse -> ModInst -> Student -> [HtmlExp]
+  :: UserSessionInfo -> StudentCourse -> ModInst -> Student -> [BaseHtml]
 showStudentCourseView _ studentCourse relatedModInst relatedStudent =
   studentCourseToDetailsView studentCourse relatedModInst relatedStudent
    ++ [hrefScndSmButton "?StudentCourse/list" [htxt "back to StudentCourse list"]]
@@ -143,7 +143,7 @@ leqStudentCourse x1 x2 =
 --- Supplies a list view for a given list of StudentCourse entities.
 --- Shows also show/edit/delete buttons if the user is logged in.
 --- The arguments are the session info and the list of StudentCourse entities.
-listStudentCourseView :: UserSessionInfo -> [StudentCourse] -> [HtmlExp]
+listStudentCourseView :: UserSessionInfo -> [StudentCourse] -> [BaseHtml]
 listStudentCourseView sinfo studentCourses =
   [h1 [htxt "StudentCourse list"]
   ,spTable
@@ -172,7 +172,7 @@ listStudentCourseView sinfo studentCourses =
 --- Shows also show/edit/delete buttons if the user is logged in.
 --- The arguments are the session info and the list of StudentCourse entities.
 semesterConflictView :: UserSessionInfo -> (String,Int)
-                     -> [(String,String,Int)] -> [HtmlExp]
+                     -> [(String,String,Int)] -> [BaseHtml]
 semesterConflictView sinfo sem conflicts =
   [ h2 [htxt $ t "Modulbelegungskonflikte im " ++ showLongSemester sem]
   , spTable $

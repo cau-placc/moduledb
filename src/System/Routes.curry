@@ -43,7 +43,7 @@ getControllerReference url = getRoutes >>= return . findControllerReference
 --- Exact in the module RouteData are taken as menu entries.
 --- The first component contain the "new" references and
 --- the second component the remaining references.
-getRouteMenus :: IO ([HtmlExp],[HtmlExp])
+getRouteMenus :: IO ([BaseHtml],[BaseHtml])
 getRouteMenus = do
   routes <- getRoutes
   let links = getLinks routes
@@ -53,7 +53,7 @@ getRouteMenus = do
  where
    isNewLink s = take 3 s == "new" || "/new" `isPrefixOf` snd (break (=='/') s)
 
-   getLinks :: [Route] -> [(String,HtmlExp)]
+   getLinks :: [Route] -> [(String,BaseHtml)]
    getLinks ((name, matcher, _):restroutes) =
      case matcher of
        Exact string -> if string `elem` ["main","login"]

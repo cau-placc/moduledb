@@ -94,11 +94,7 @@ showMasterProgramController mprog =
                (Just (userLogin responsibleUser)
                    == userLoginOfSession sinfo)
                responsibleUser
-               mprog mpinfo tmodinfo mcarea (xmlURL mprog)
-               showMasterProgramController
-               (error "editMasterProgramController removed")
-               (error "deleteMasterProgramController removed")
-               (error "editMasterProgInfoController removed"))
+               mprog mpinfo tmodinfo mcarea (xmlURL mprog))
         )
 
 --- Gets the associated MasterCoreArea entity for a given MasterProgram entity.

@@ -13,7 +13,7 @@ import System.SessionInfo
 
 --- Shows a reference to a study program with its title according
 --- to the current language.
-studyProgramToHRef :: UserSessionInfo -> StudyProgram -> HtmlExp
+studyProgramToHRef :: HTML h => UserSessionInfo -> StudyProgram -> h
 studyProgramToHRef sinfo sprog =
   href ("?Category/studyprogram/" ++ showStudyProgramKey sprog)
        [textstyle "studyprogram"
@@ -21,7 +21,7 @@ studyProgramToHRef sinfo sprog =
 
 --- The list view of a StudyProgram entity in HTML format.
 --- This view is used in a row of a table of all entities.
-studyProgramToListView :: UserSessionInfo -> StudyProgram -> [[HtmlExp]]
+studyProgramToListView :: HTML h => UserSessionInfo -> StudyProgram -> [[h]]
 studyProgramToListView sinfo sprog =
   [name2href ((langSelect sinfo studyProgramNameE studyProgramName) sprog)
   ,[stringToHtml (studyProgramShortName sprog)]
@@ -39,7 +39,7 @@ studyProgramToShortView :: StudyProgram -> String
 studyProgramToShortView studyProgram = studyProgramShortName studyProgram
 
 --- The detailed view of a StudyProgram entity in HTML format.
-studyProgramToDetailsView :: StudyProgram -> [HtmlExp]
+studyProgramToDetailsView :: HTML h => StudyProgram -> [h]
 studyProgramToDetailsView studyProgram =
   [spTable
     (map (\(label,value) -> [label,value])
@@ -53,7 +53,7 @@ studyProgramToDetailsView studyProgram =
       ,[intToHtml (studyProgramPosition studyProgram)]]
 
 --- The labels of a StudyProgram entity, as used in HTML tables.
-studyProgramLabelList :: [[HtmlExp]]
+studyProgramLabelList :: HTML h => [[h]]
 studyProgramLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Name"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "English name"]
@@ -63,7 +63,7 @@ studyProgramLabelList =
 
 --- The list view of a Category entity in HTML format.
 --- This view is used in a row of a table of all entities.
-categoryToListView :: UserSessionInfo -> Category -> [[HtmlExp]]
+categoryToListView :: HTML h => UserSessionInfo -> Category -> [[h]]
 categoryToListView sinfo category =
   [name2href ((langSelect sinfo categoryNameE categoryName) category)
   ,[stringToHtml (categoryShortName category)]
@@ -73,7 +73,7 @@ categoryToListView sinfo category =
                                [stringToHtml n]]
 
 --- The HTML view of a Category entity.
-categoryToHtmlView :: Category -> HtmlExp
+categoryToHtmlView :: HTML h => Category -> h
 categoryToHtmlView category =
   smallHrefCategory ("?Category/show/" ++ showCategoryKey category)
     [htxt (categoryShortName category)]
@@ -85,7 +85,7 @@ categoryToShortView category = categoryShortName category
 
 --- The detailed view of a Category entity in HTML format.
 --- It also takes associated entities for every associated entity type.
-categoryToDetailsView :: Category -> StudyProgram -> [HtmlExp]
+categoryToDetailsView :: HTML h => Category -> StudyProgram -> [h]
 categoryToDetailsView category relatedStudyProgram =
   [spTable
     (map (\(label,value) -> [label,value])
@@ -99,7 +99,7 @@ categoryToDetailsView category relatedStudyProgram =
       ,[htxt (studyProgramToShortView relatedStudyProgram)]]
 
 --- The labels of a Category entity, as used in HTML tables.
-categoryLabelList :: [[HtmlExp]]
+categoryLabelList :: HTML h => [[h]]
 categoryLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Deutscher Name"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Englischer Name"]
@@ -112,7 +112,7 @@ categoryLabelList =
 
 --- The list view of a MasterCoreArea entity in HTML format.
 --- This view is used in a row of a table of all entities.
-masterCoreAreaToListView :: MasterCoreArea -> [[HtmlExp]]
+masterCoreAreaToListView :: HTML h => MasterCoreArea -> [[h]]
 masterCoreAreaToListView masterCoreArea =
   [[stringToHtml (masterCoreAreaName masterCoreArea)]
   ,[stringToHtml (masterCoreAreaShortName masterCoreArea)]
@@ -127,7 +127,7 @@ masterCoreAreaToShortView masterCoreArea =
   masterCoreAreaName masterCoreArea
 
 --- The detailed view of a MasterCoreArea entity in HTML format.
-masterCoreAreaToDetailsView :: MasterCoreArea -> [HtmlExp]
+masterCoreAreaToDetailsView :: HTML h => MasterCoreArea -> [h]
 masterCoreAreaToDetailsView masterCoreArea =
   [spTable
     (map (\(label,value) -> [label,value])
@@ -141,7 +141,7 @@ masterCoreAreaToDetailsView masterCoreArea =
       ,[intToHtml (masterCoreAreaPosition masterCoreArea)]]
 
 --- The labels of a MasterCoreArea entity, as used in HTML tables.
-masterCoreAreaLabelList :: [[HtmlExp]]
+masterCoreAreaLabelList :: HTML h => [[h]]
 masterCoreAreaLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Name"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "ShortName"]
@@ -151,7 +151,7 @@ masterCoreAreaLabelList =
 
 --- The list view of a User entity in HTML format.
 --- This view is used in a row of a table of all entities.
-userToListView :: User -> [[HtmlExp]]
+userToListView :: HTML h => User -> [[h]]
 userToListView user =
   [[stringToHtml (userLogin user)]
   ,[stringToHtml (userName user)]
@@ -159,7 +159,7 @@ userToListView user =
   ,[dateToHtml (userLastLogin user)]]
 
 --- The HTML view of a User entity.
-userToHtmlView :: User -> HtmlExp
+userToHtmlView :: HTML h => User -> h
 userToHtmlView user =
   let name = userToShortView user
    in if null (userUrl user)
@@ -175,7 +175,7 @@ userToShortView user =
                  else ut ++ " " ++ userFirst user ++ " " ++ userName user
 
 --- The detailed view of a User entity in HTML format.
-userToDetailsView :: User -> [HtmlExp]
+userToDetailsView :: HTML h => User -> [h]
 userToDetailsView user =
   [spTable
     (map (\(label,value) -> [label,value]) (zip userLabelList detailedView))]
@@ -191,7 +191,7 @@ userToDetailsView user =
       ,[dateToHtml (userLastLogin user)]]
 
 --- The labels of a User entity, as used in HTML tables.
-userLabelList :: [[HtmlExp]]
+userLabelList :: HTML h => [[h]]
 userLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Login"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Name"]
@@ -204,7 +204,7 @@ userLabelList =
 
 --- The list view of a ModData entity in HTML format.
 --- This view is used in a row of a table of all entities.
-modDataToListView :: ModData -> [[HtmlExp]]
+modDataToListView :: HTML h => ModData -> [[h]]
 modDataToListView modData =
   [[withHref (stringToHtml (modDataCode modData))],
    [withHref (stringToHtml (modDataNameG modData))],
@@ -218,7 +218,7 @@ modDataToListView modData =
 
 --- A more compact list view of a ModData entity in HTML format
 --- where code and title is shown in one column.
-modDataToCompactListView :: UserSessionInfo -> ModData -> [[HtmlExp]]
+modDataToCompactListView :: HTML h => UserSessionInfo -> ModData -> [[h]]
 modDataToCompactListView sinfo modData =
   [[withHref (stringToHtml
                  (modDataCode modData ++ ": " ++
@@ -239,7 +239,7 @@ modDataToShortView modData = modDataCode modData
 
 --- The detailed view of a ModData entity in HTML format.
 --- It also takes associated entities for every associated entity type.
-modDataToDetailsView :: ModData -> User -> [Category] -> [HtmlExp]
+modDataToDetailsView :: HTML h => ModData -> User -> [Category] -> [h]
 modDataToDetailsView modData relatedUser categorys =
   [spTable
     (map (\(label,value) -> [label,value])
@@ -260,7 +260,7 @@ modDataToDetailsView modData relatedUser categorys =
       ,[htxt (unwords (map categoryToShortView categorys))]]
 
 --- The labels of a ModData entity, as used in HTML tables.
-modDataLabelList :: [[HtmlExp]]
+modDataLabelList :: HTML h => [[h]]
 modDataLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Modulcode"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Titel"]
@@ -277,7 +277,7 @@ modDataLabelList =
 
 --- The list view of a ModDescr entity in HTML format.
 --- This view is used in a row of a table of all entities.
-modDescrToListView :: ModDescr -> [[HtmlExp]]
+modDescrToListView :: HTML h => ModDescr -> [[h]]
 modDescrToListView modDescr =
   [[stringToHtml (modDescrLanguage modDescr)]
   ,[stringToHtml (modDescrShortDesc modDescr)]
@@ -298,7 +298,7 @@ modDescrToShortView modDescr = modDescrLanguage modDescr
 
 --- The detailed view of a ModDescr entity in HTML format.
 --- It also takes associated entities for every associated entity type.
-modDescrToDetailsView :: ModDescr -> ModData -> [HtmlExp]
+modDescrToDetailsView :: HTML h => ModDescr -> ModData -> [h]
 modDescrToDetailsView modDescr relatedModData =
   [spTable
     (map (\(label,value) -> [label,value])
@@ -319,7 +319,7 @@ modDescrToDetailsView modDescr relatedModData =
       ,[htxt (modDataToShortView relatedModData)]]
 
 --- The labels of a ModDescr entity, as used in HTML tables.
-modDescrLabelList :: [[HtmlExp]]
+modDescrLabelList :: HTML h => [[h]]
 modDescrLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Lehrsprache"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Kurzbeschreibung", markdownRef]
@@ -336,12 +336,12 @@ modDescrLabelList =
   ,[textstyle "spicey_label spicey_label_for_type_relation" "Modul"]]
 
 -- Reference to markdown syntax description:
-markdownRef :: HtmlExp
+markdownRef :: HTML h => h
 markdownRef = ehref "edit_infos.html#markdown" [htxt "(mit Markdown-Syntax)"]
 
 --- The list view of a ModInst entity in HTML format.
 --- This view is used in a row of a table of all entities.
-modInstToListView :: ModInst -> [[HtmlExp]]
+modInstToListView :: HTML h => ModInst -> [[h]]
 modInstToListView modInst =
   [[stringToHtml (modInstTerm modInst)],[intToHtml (modInstYear modInst)]]
 
@@ -352,7 +352,7 @@ modInstToShortView modInst = modInstTerm modInst
 
 --- The detailed view of a ModInst entity in HTML format.
 --- It also takes associated entities for every associated entity type.
-modInstToDetailsView :: ModInst -> ModData -> User -> [HtmlExp]
+modInstToDetailsView :: HTML h => ModInst -> ModData -> User -> [h]
 modInstToDetailsView modInst relatedModData relatedUser =
   [spTable
     (map (\ (label ,value) -> [label,value])
@@ -363,7 +363,7 @@ modInstToDetailsView modInst relatedModData relatedUser =
                        ,[htxt (userToShortView relatedUser)]]
 
 --- The labels of a ModInst entity, as used in HTML tables.
-modInstLabelList :: [[HtmlExp]]
+modInstLabelList :: HTML h => [[h]]
 modInstLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Semester"]
   ,[textstyle "spicey_label spicey_label_for_type_int" "Jahr"]
@@ -372,7 +372,7 @@ modInstLabelList =
 
 --- The list view of a AdvisorStudyProgram entity in HTML format.
 --- This view is used in a row of a table of all entities.
-advisorStudyProgramToListView :: AdvisorStudyProgram -> [[HtmlExp]]
+advisorStudyProgramToListView :: HTML h => AdvisorStudyProgram -> [[h]]
 advisorStudyProgramToListView advisorStudyProgram =
   [[stringToHtml (advisorStudyProgramName advisorStudyProgram)]
   ,[stringToHtml (advisorStudyProgramTerm advisorStudyProgram)]
@@ -391,7 +391,7 @@ advisorStudyProgramToShortView advisorStudyProgram =
 --- The detailed view of a AdvisorStudyProgram entity in HTML format.
 --- It also takes associated entities for every associated entity type.
 advisorStudyProgramToDetailsView
-  :: AdvisorStudyProgram -> StudyProgram -> User -> [HtmlExp]
+  :: HTML h => AdvisorStudyProgram -> StudyProgram -> User -> [h]
 advisorStudyProgramToDetailsView
     advisorStudyProgram relatedStudyProgram relatedUser =
   [spTable
@@ -410,7 +410,7 @@ advisorStudyProgramToDetailsView
       ,[htxt (userToShortView relatedUser)]]
 
 --- The labels of a AdvisorStudyProgram entity, as used in HTML tables.
-advisorStudyProgramLabelList :: [[HtmlExp]]
+advisorStudyProgramLabelList :: HTML h => [[h]]
 advisorStudyProgramLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Titel"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Beginn im Semester"]
@@ -424,7 +424,7 @@ advisorStudyProgramLabelList =
 
 --- The list view of a AdvisorModule entity in HTML format.
 --- This view is used in a row of a table of all entities.
-advisorModuleToListView :: AdvisorModule -> [[HtmlExp]]
+advisorModuleToListView :: HTML h => AdvisorModule -> [[h]]
 advisorModuleToListView advisorModule =
   [[boolToHtml (advisorModuleMandatory advisorModule)]]
 
@@ -437,7 +437,7 @@ advisorModuleToShortView advisorModule =
 --- The detailed view of a AdvisorModule entity in HTML format.
 --- It also takes associated entities for every associated entity type.
 advisorModuleToDetailsView
-  :: AdvisorModule -> ModInst -> Category -> AdvisorStudyProgram -> [HtmlExp]
+  :: HTML h => AdvisorModule -> ModInst -> Category -> AdvisorStudyProgram -> [h]
 advisorModuleToDetailsView
     advisorModule relatedModInst relatedCategory relatedAdvisorStudyProgram =
   [spTable
@@ -451,7 +451,7 @@ advisorModuleToDetailsView
       ,[htxt (advisorStudyProgramToShortView relatedAdvisorStudyProgram)]]
 
 --- The labels of a AdvisorModule entity, as used in HTML tables.
-advisorModuleLabelList :: [[HtmlExp]]
+advisorModuleLabelList :: HTML h => [[h]]
 advisorModuleLabelList =
   [[textstyle "spicey_label spicey_label_for_type_bool" "Status"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "Modulinstanz"]
@@ -460,7 +460,7 @@ advisorModuleLabelList =
 
 --- The list view of a MasterProgram entity in HTML format.
 --- This view is used in a row of a table of all entities.
-masterProgramToListView :: MasterProgram -> HtmlExp
+masterProgramToListView :: HTML h => MasterProgram -> h
 masterProgramToListView masterProgram =
   hrefPrimSmButton
     ("?MasterProgram/show/" ++ showMasterProgramKey masterProgram)
@@ -478,7 +478,7 @@ masterProgramToShortView mprog =
 --- The detailed view of a MasterProgram entity in HTML format.
 --- It also takes associated entities for every associated entity type.
 masterProgramToDetailsView
- :: MasterProgram -> MasterCoreArea -> User -> [HtmlExp]
+ :: HTML h => MasterProgram -> MasterCoreArea -> User -> [h]
 masterProgramToDetailsView masterProgram relatedMasterCoreArea relatedUser =
   [spTable
     (map (\(label,value) -> [label,value])
@@ -496,7 +496,7 @@ masterProgramToDetailsView masterProgram relatedMasterCoreArea relatedUser =
       ,[htxt (userToShortView relatedUser)]]
 
 --- The labels of a MasterProgram entity, as used in HTML tables.
-masterProgramLabelList :: [[HtmlExp]]
+masterProgramLabelList :: HTML h => [[h]]
 masterProgramLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Titel"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Beginn im Semester"]
@@ -510,7 +510,7 @@ masterProgramLabelList =
 
 --- The list view of a MasterProgInfo entity in HTML format.
 --- This view is used in a row of a table of all entities.
-masterProgInfoToListView :: MasterProgInfo -> [[HtmlExp]]
+masterProgInfoToListView :: HTML h => MasterProgInfo -> [[h]]
 masterProgInfoToListView masterProgInfo =
   [[stringToHtml (masterProgInfoProgModules masterProgInfo)]
   ,[stringToHtml (masterProgInfoPraktikum masterProgInfo)]
@@ -527,7 +527,7 @@ masterProgInfoToShortView masterProgInfo =
 
 --- The detailed view of a MasterProgInfo entity in HTML format.
 --- It also takes associated entities for every associated entity type.
-masterProgInfoToDetailsView :: MasterProgInfo -> MasterProgram -> [HtmlExp]
+masterProgInfoToDetailsView :: HTML h => MasterProgInfo -> MasterProgram -> [h]
 masterProgInfoToDetailsView masterProgInfo relatedMasterProgram =
   [spTable
     (map (\(label,value) -> [label,value])
@@ -543,7 +543,7 @@ masterProgInfoToDetailsView masterProgInfo relatedMasterProgram =
       ,[htxt (masterProgramToShortView relatedMasterProgram)]]
 
 --- The labels of a MasterProgInfo entity, as used in HTML tables.
-masterProgInfoLabelList :: [[HtmlExp]]
+masterProgInfoLabelList :: HTML h => [[h]]
 masterProgInfoLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Studienbereiche"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Praktikum"]
@@ -555,7 +555,7 @@ masterProgInfoLabelList =
 
 --- The list view of a UnivisInfo entity in HTML format.
 --- This view is used in a row of a table of all entities.
-univisInfoToListView :: UnivisInfo -> [[HtmlExp]]
+univisInfoToListView :: HTML h => UnivisInfo -> [[h]]
 univisInfoToListView univisInfo =
   [[stringToHtml (univisInfoCode univisInfo)]
   ,[stringToHtml (univisInfoTerm univisInfo)]
@@ -568,7 +568,7 @@ univisInfoToShortView :: UnivisInfo -> String
 univisInfoToShortView univisInfo = univisInfoCode univisInfo
 
 --- The detailed view of a UnivisInfo entity in HTML format.
-univisInfoToDetailsView :: UnivisInfo -> [HtmlExp]
+univisInfoToDetailsView :: HTML h => UnivisInfo -> [h]
 univisInfoToDetailsView univisInfo =
   [spTable
     (map (\(label,value) -> [label,value])
@@ -581,7 +581,7 @@ univisInfoToDetailsView univisInfo =
       ,[stringToHtml (univisInfoURL univisInfo)]]
 
 --- The labels of a UnivisInfo entity, as used in HTML tables.
-univisInfoLabelList :: [[HtmlExp]]
+univisInfoLabelList :: HTML h => [[h]]
 univisInfoLabelList =
   [[textstyle "spicey_label spicey_label_for_type_string" "Code"]
   ,[textstyle "spicey_label spicey_label_for_type_string" "Term"]
@@ -598,8 +598,8 @@ showStudyProgCategories sinfo sprogs cats =
 -----------------------------------------------------------------------------
 -- Show the short name of each category and its study program
 -- with a HTML link for a given list of categories:
-showStudyProgCategoriesAsHtml :: UserSessionInfo -> [StudyProgram]
-                              -> [Category] -> HtmlExp
+showStudyProgCategoriesAsHtml :: HTML h => UserSessionInfo -> [StudyProgram]
+                              -> [Category] -> h
 showStudyProgCategoriesAsHtml sinfo sprogs cats =
   inline
     (intersperse nbsp --(stringToHtml " ")
@@ -624,7 +624,7 @@ showStudyProgCategory sinfo short sprogs cat =
 
 -----------------------------------------------------------------------------
 -- Shows a list of modules as HTML links to the module description:
-showModDatasAsLinks :: UserSessionInfo -> [ModData] -> HtmlExp
+showModDatasAsLinks :: HTML h => UserSessionInfo -> [ModData] -> h
 showModDatasAsLinks _ mods =
   inline
     (intersperse nbsp
@@ -635,7 +635,7 @@ showModDatasAsLinks _ mods =
 
 --- The list view of a Student entity in HTML format.
 --- This view is used in a row of a table of all entities.
-studentToListView :: Student -> [[HtmlExp]]
+studentToListView :: HTML h => Student -> [[h]]
 studentToListView student =
   [[stringToHtml (studentEmail student)]
   ,[stringToHtml (studentName student)]
@@ -650,7 +650,7 @@ studentToShortView :: Student -> String
 studentToShortView student = studentEmail student
 
 --- The detailed view of a Student entity in HTML format.
-studentToDetailsView :: UserSessionInfo -> Student -> [HtmlExp]
+studentToDetailsView :: HTML h => UserSessionInfo -> Student -> [h]
 studentToDetailsView sinfo student =
   [spTable
     (map (\(label,value) -> [label,value])
@@ -664,7 +664,7 @@ studentToDetailsView sinfo student =
       ,[dateToHtml (studentLastLogin student)]]
 
 --- The labels of a Student entity, as used in HTML tables.
-studentLabelList :: UserSessionInfo -> [[HtmlExp]]
+studentLabelList :: HTML h => UserSessionInfo -> [[h]]
 studentLabelList sinfo =
   [[textstyle "spicey_label spicey_label_for_type_string" "Email"]
   ,[textstyle "spicey_label spicey_label_for_type_string" (t "Last name")]
@@ -676,7 +676,7 @@ studentLabelList sinfo =
 
 --- The list view of a StudentCourse entity in HTML format.
 --- This view is used in a row of a table of all entities.
-studentCourseToListView :: StudentCourse -> [[HtmlExp]]
+studentCourseToListView :: HTML h => StudentCourse -> [[h]]
 studentCourseToListView studentCourse =
   [[dateToHtml (studentCourseSelectDate studentCourse)]]
 
@@ -688,7 +688,7 @@ studentCourseToShortView studentCourse =
 
 --- The detailed view of a StudentCourse entity in HTML format.
 --- It also takes associated entities for every associated entity type.
-studentCourseToDetailsView :: StudentCourse -> ModInst -> Student -> [HtmlExp]
+studentCourseToDetailsView :: HTML h => StudentCourse -> ModInst -> Student -> [h]
 studentCourseToDetailsView studentCourse relatedModInst relatedStudent =
   [spTable
     (map (\(label,value) -> [label,value])
@@ -700,7 +700,7 @@ studentCourseToDetailsView studentCourse relatedModInst relatedStudent =
       ,[htxt (studentToShortView relatedStudent)]]
 
 --- The labels of a StudentCourse entity, as used in HTML tables.
-studentCourseLabelList :: [[HtmlExp]]
+studentCourseLabelList :: HTML h => [[h]]
 studentCourseLabelList =
   [[textstyle "spicey_label spicey_label_for_type_date" "SelectDate"]
   ,[textstyle "spicey_label spicey_label_for_type_relation" "ModInst"]

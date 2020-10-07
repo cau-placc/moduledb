@@ -241,7 +241,7 @@ editAdvisorModuleView
 --- Supplies a view to show the details of a AdvisorModule.
 showAdvisorModuleView
   :: UserSessionInfo
-  -> AdvisorModule -> ModInst -> Category -> AdvisorStudyProgram -> [HtmlExp]
+  -> AdvisorModule -> ModInst -> Category -> AdvisorStudyProgram -> [BaseHtml]
 showAdvisorModuleView
     _
     advisorModule
@@ -261,13 +261,11 @@ leqAdvisorModule x1 x2 =
 --- Supplies a list view for a given list of AdvisorModule entities.
 --- Shows also show/edit/delete buttons if the user is logged in.
 --- The arguments are the session info and the list of AdvisorModule entities.
-listAdvisorModuleView :: UserSessionInfo -> [AdvisorModule] -> [HtmlExp]
+listAdvisorModuleView :: UserSessionInfo -> [AdvisorModule] -> [BaseHtml]
 listAdvisorModuleView sinfo advisorModules =
-  [h1 [htxt "AdvisorModule list"],spTable
-                                   ([take 1 advisorModuleLabelList]
-                                     ++ map listAdvisorModule
-                                         (sortBy leqAdvisorModule
-                                           advisorModules))]
+  [h1 [htxt "AdvisorModule list"],
+   spTable ([take 1 advisorModuleLabelList] ++
+            map listAdvisorModule (sortBy leqAdvisorModule advisorModules))]
   where
     listAdvisorModule advisorModule =
       advisorModuleToListView advisorModule

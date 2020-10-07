@@ -69,7 +69,7 @@ wStudentType sinfo student =
 
 -----------------------------------------------------------------------------
 --- Supplies a view to show the details of a Student.
-showStudentView :: UserSessionInfo -> Student -> [HtmlExp]
+showStudentView :: UserSessionInfo -> Student -> [BaseHtml]
 showStudentView sinfo student =
   studentToDetailsView sinfo student
    ++ [hrefScndSmButton "?Student/list" [htxt "Zur Studierendenliste"]]
@@ -83,7 +83,7 @@ leqStudent x1 x2 =
 --- Supplies a list view for a given list of Student entities.
 --- Shows also show/edit/delete buttons if the user is logged in.
 --- The arguments are the session info and the list of Student entities.
-listStudentView :: UserSessionInfo -> [Student] -> [HtmlExp]
+listStudentView :: UserSessionInfo -> [Student] -> [BaseHtml]
 listStudentView sinfo students =
   [h1 [htxt "Liste der registrierten Studierenden"]
   ,spTable
@@ -106,7 +106,7 @@ listStudentView sinfo students =
 
 -----------------------------------------------------------------------------
 --- View to login as a student.
-studentLoginView :: UserSessionInfo -> HtmlExp -> [HtmlExp]
+studentLoginView :: UserSessionInfo -> BaseHtml -> [BaseHtml]
 studentLoginView sinfo loginform =
   [par $ studentLoginExplanation sinfo,
    h3 [htxt $ t "Login as student"],
@@ -147,7 +147,7 @@ studentLoginFormView dfltcontroller landingcontroller sinfo =
 
 ------------------------------------------------------------------------
 -- send new login code to student
-sendLoginCodeView :: UserSessionInfo -> HtmlExp -> [HtmlExp]
+sendLoginCodeView :: UserSessionInfo -> BaseHtml -> [BaseHtml]
 sendLoginCodeView sinfo sendlogincodeform =
   [h1 [htxt $ t "Send new login code"],
    par [htxt $ sendCodeCmt sinfo],
@@ -196,7 +196,7 @@ sendNewTAN sinfo student = do
 -- view to show selected modules
 showSelectionView :: UserSessionInfo
                   -> [(ModDataID,String,String,String,String,Int)]
-                  -> [HtmlExp]
+                  -> [BaseHtml]
 showSelectionView sinfo mis =
   [par (studentExplanation sinfo),
    hrule,

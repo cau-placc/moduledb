@@ -21,11 +21,11 @@ import System.MultiLang
 
 --- Supplies a view to show the details of a MasterProgram.
 showMasterProgramView
- :: MasterProgram -> MasterCoreArea -> User -> Controller -> [HtmlExp]
+ :: MasterProgram -> MasterCoreArea -> User -> Controller -> [BaseHtml]
 showMasterProgramView masterProgram relatedMasterCoreArea relatedUser
                       controller =
   masterProgramToDetailsView masterProgram relatedMasterCoreArea relatedUser
-   ++ [spPrimButton "back to MasterProgram list" (nextController controller)]
+  -- ++ [spPrimButton "back to MasterProgram list" (nextController controller)]
 
 --- Compares two MasterProgram entities. This order is used in the list view.
 leqMasterProgram :: MasterProgram -> MasterProgram -> Bool
@@ -40,7 +40,7 @@ leqMasterProgram x1 x2 =
 listMasterProgramView
   :: UserSessionInfo -> Bool
   -> [(MasterProgramID,String,String,Int,Bool,MasterCoreAreaID)]
-  -> [MasterCoreArea] -> [HtmlExp]
+  -> [MasterCoreArea] -> [BaseHtml]
 listMasterProgramView sinfo listall mpinfos allcoreareas =
   [h1 [htxt $ t "Master programs in computer science"]] ++
   categorizeMasterProgs mpListView sortedmpinfos
@@ -92,12 +92,9 @@ listMasterProgramView sinfo listall mpinfos allcoreareas =
 singleMasterProgramView
  :: Bool -> Bool -> User -> MasterProgram -> MasterProgInfo
   -> [(String,Bool,ModData,String,Int)] -> MasterCoreArea -> String
-  -> (MasterProgram -> Controller)
-  -> (MasterProgram -> Controller) -> (MasterProgram -> Bool -> Controller)
-  -> (MasterProgInfo -> Controller) -> [HtmlExp]
+  -> [BaseHtml]
 singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
-   xmlurl _
-   editMasterProgramController _ editMasterProgInfoController =
+   xmlurl =
   [h1 [htxt (masterProgramName mprog)
   ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]
   ]] ++
@@ -106,21 +103,13 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
   [h3 [htxt ("Masterprogramm im Schwerpunktbereich: "++masterCoreAreaName mcarea)],
    h3 [htxt $ "Beginn: " ++ showSemester (startSem,startYear) ++
               " / Research advisor: " ++ userToShortView advisor],
-   par $ (if admin || editallowed
-          then [spPrimButton "Beschreibung/Sichtbarkeit ändern"
-                  (nextController (editMasterProgramController mprog))]
-          else [])] ++
-  [h4 [htxt "Beschreibung:"],
-   par [HtmlText (docText2html (masterProgramDesc mprog))],
+   h4 [htxt "Beschreibung:"],
+   par [htmlText (docText2html (masterProgramDesc mprog))],
    h4 [htxt "Voraussetzungen:"],
-   par [HtmlText (docText2html (masterProgramPrereq mprog))],
+   par [htmlText (docText2html (masterProgramPrereq mprog))],
    h4 [htxt "Kommentare:"],
-   par [HtmlText (docText2html (masterProgramComments mprog))],
+   par [htmlText (docText2html (masterProgramComments mprog))],
    h3 [htxt "Masterprogrammübersicht"],
-   par $ if admin || editallowed
-         then [spPrimButton "Modulempfehlungen ändern"
-                 (nextController (editMasterProgInfoController mpinfo))]
-         else [],
    semTable,
    h3 [htxt "Masterprogrammübersicht nach Studienbereichen"]
   ] ++
@@ -130,7 +119,7 @@ singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
                   else [ulist (map (\m -> formatMods m) mods)])
             masterStudienbereiche ++
   concatMap (\ (title,cnt) -> [h4 [htxt $ title++":"],
-                               par [HtmlText (docText2html cnt)]])
+                               par [htmlText (docText2html cnt)]])
             (zip descTitles
                  (map (\sel -> sel mpinfo)
                    [masterProgInfoPraktikum,

@@ -80,10 +80,10 @@ wModInstsType curyear someyear insts userList =
 
 
 --- Supplies a view to show the details of a ModInst.
-showModInstView :: ModInst -> ModData -> User -> Controller -> [HtmlExp]
+showModInstView :: ModInst -> ModData -> User -> Controller -> [BaseHtml]
 showModInstView modInst relatedModData relatedUser controller =
-  modInstToDetailsView modInst relatedModData relatedUser ++
-   [spButton "back to ModInst list" (nextController controller)]
+  modInstToDetailsView modInst relatedModData relatedUser
+  -- ++ [spButton "back to ModInst list" (nextController controller)]
 
 --- Compares two ModInst entities. This order is used in the list view.
 leqModInst :: ModInst -> ModInst -> Bool
@@ -94,20 +94,20 @@ leqModInst x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of ModInst entities
 --- and the controller functions to show, delete and edit entities.
-listModInstView :: [ModInst] -> [HtmlExp]
+listModInstView :: [ModInst] -> [BaseHtml]
 listModInstView modInsts =
   [h1 [htxt "ModInst list"]
   ,spTable
     ([take 2 modInstLabelList] ++
      map listModInst (sortBy leqModInst modInsts))]
-  where listModInst :: ModInst -> [[HtmlExp]]
+  where listModInst :: ModInst -> [[BaseHtml]]
         listModInst modInst = modInstToListView modInst
 
 --- Supplies a view for a single ModInst entity.
 --- Shows also the master programs and AdvisorStudyPrograms
 --- where this instance is used.
 singleModInstView :: UserSessionInfo -> ModInst -> ModData -> User
-                  -> [MasterProgram] -> [AdvisorStudyProgram] -> [HtmlExp]
+                  -> [MasterProgram] -> [AdvisorStudyProgram] -> [BaseHtml]
 singleModInstView sinfo modinst moddata lecturer mprogs sprogs =
   [h1 [htxt $ "Modul \""++ modDataNameG moddata ++ "\" im " ++
               showSemester modinstsem],

@@ -54,7 +54,7 @@ wMasterCoreAreaType masterCoreArea =
 
 -----------------------------------------------------------------------
 --- Supplies a view to show the details of a MasterCoreArea.
-showMasterCoreAreaView :: MasterCoreArea -> [HtmlExp]
+showMasterCoreAreaView :: MasterCoreArea -> [BaseHtml]
 showMasterCoreAreaView masterCoreArea =
   masterCoreAreaToDetailsView masterCoreArea ++
    [hrefPrimSmButton "?MCA/list" [htxt "back to MasterCoreArea list"]]
@@ -67,7 +67,7 @@ leqMasterCoreArea x1 x2 =
 --- Supplies a list view for a given list of MasterCoreArea entities.
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of MasterCoreArea entities.
-listMasterCoreAreaView :: Bool -> [MasterCoreArea] -> [HtmlExp]
+listMasterCoreAreaView :: Bool -> [MasterCoreArea] -> [BaseHtml]
 listMasterCoreAreaView admin masterCoreAreas =
   [h1 [htxt "Schwerpunktbereiche im Masterstudiengang Informatik"]] ++
   if admin
@@ -76,10 +76,10 @@ listMasterCoreAreaView admin masterCoreAreas =
                      (sortBy leqMasterCoreArea masterCoreAreas))]
   else concatMap (\mca -> [h2 [htxt (masterCoreAreaName mca ++ " (" ++
                                      masterCoreAreaShortName mca ++ ")")],
-                           par [HtmlText
+                           par [htmlText
                                 (docText2html (masterCoreAreaDescription mca))]])
                  (sortBy leqMasterCoreArea masterCoreAreas)
-  where listMasterCoreArea :: MasterCoreArea -> [[HtmlExp]]
+  where listMasterCoreArea :: MasterCoreArea -> [[BaseHtml]]
         listMasterCoreArea mca =
           masterCoreAreaToListView mca ++
            [[hrefPrimBadge ("?MCA/show/"++showMasterCoreAreaKey mca)

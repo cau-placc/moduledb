@@ -1,5 +1,6 @@
 module Controller.UnivisInfo (
- mainUnivisInfoController, loadUnivisDataForm
+ mainUnivisInfoController, loadUnivisDataForm,
+ newUnivisInfoForm, editUnivisInfoWuiForm
  ) where
 
 import Global
@@ -42,7 +43,7 @@ newUnivisInfoController :: Controller
 newUnivisInfoController =
   checkAuthorization (univisInfoOperationAllowed NewEntity) $ \sinfo -> do
     setParWuiStore newUnivisInfoStore sinfo ("", "", 0, "")
-    return [formExp newUnivisInfoForm]
+    return [formElem newUnivisInfoForm]
 
 type NewUnivisInfo = (String,String,Int,String)
 
@@ -79,7 +80,7 @@ editUnivisInfoController univisInfo =
   checkAuthorization
    (univisInfoOperationAllowed (UpdateEntity univisInfo)) $ \sinfo -> do
      setParWuiStore editUnivisInfoWuiStore (sinfo,univisInfo) univisInfo
-     return [formExp editUnivisInfoWuiForm]
+     return [formElem editUnivisInfoWuiForm]
 
 --- A WUI form to edit UnivisInfo entity.
 --- The default values for the fields are stored in the
@@ -158,8 +159,8 @@ emailModDataUnivisInfoController terms years mdata =
     let msg = if null urls
                 then missingUnivISMessage mdata sem
                 else missingMDBMessage mdata sem
-    putSessionData emailModuleStore (mdata, msg)
-    return [formExp emailModuleMessageForm]
+    writeSessionData emailModuleStore (mdata, msg)
+    return [formElem emailModuleMessageForm]
 
 --- Shows a UnivisInfo entity.
 showUnivisInfoController :: UnivisInfo -> Controller
@@ -172,12 +173,13 @@ showUnivisInfoController univisInfo =
 loadUnivisController :: Controller
 loadUnivisController =
   checkAuthorization (univisInfoOperationAllowed NewEntity) $ \_ ->
-    return [formExp loadUnivisDataForm]
+    return [formElem loadUnivisDataForm]
 
 --- A form to load data from UnivisInfo for a selectable term.
 loadUnivisDataForm :: HtmlFormDef (String,Int)
 loadUnivisDataForm = formDefWithID "Controller.UnivisInfo.loadUnivisDataForm"
-  getCurrentSemester (loadUnivisView loadUnivisDataController)
+  (toFormReader $ getCurrentSemester)
+  (loadUnivisView loadUnivisDataController)
 
 loadUnivisDataController :: (String,Int) -> Controller
 loadUnivisDataController sem =

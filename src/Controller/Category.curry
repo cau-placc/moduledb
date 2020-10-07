@@ -1,6 +1,6 @@
 module Controller.Category
  ( categoryController, newCategoryWuiForm, editCategoryForm, semSelectForm
- , listCategoryController
+ , listCategoryController, emailCorrectionForm
  ) where
 
 import Global
@@ -63,7 +63,7 @@ newCategoryController =
     allStudyPrograms <- runQ queryAllStudyPrograms
     setParWuiStore newCategoryWuiStore (sinfo, allStudyPrograms)
                    ("", "", "", "", 0, 180, 0, head allStudyPrograms)
-    return [formExp newCategoryWuiForm]
+    return [formElem newCategoryWuiForm]
 
 type NewCategory = (String,String,String,String,Int,Int,Int,StudyProgram)
 
@@ -114,7 +114,7 @@ editCategoryController category =
     setParWuiStore wuiEditCategoryStore
       (sinfo, category, programCategoriesStudyProgram, allStudyPrograms)
       category
-    return [formExp editCategoryForm]
+    return [formElem editCategoryForm]
 
 --- A form to edit the given Category entity.
 editCategoryForm ::
@@ -169,29 +169,29 @@ destroyCategoryController category =
 --- in this period.
 
 semSelectStore ::
-  Global (SessionStore (Maybe User, Either StudyProgram [HtmlExp],
+  Global (SessionStore (Maybe User, Either StudyProgram [BaseHtml],
                         [(Either Category String, [ModData])],[(String,Int)]))
 semSelectStore =
   global emptySessionStore (Persistent (inSessionDataDir "semSelectStore"))
 
 --- An operation to store the data required for this view.
 storeCategoryListData :: Maybe User
-  -> Either StudyProgram [HtmlExp] -> [(Either Category String, [ModData])]
+  -> Either StudyProgram [BaseHtml] -> [(Either Category String, [ModData])]
   -> [(String,Int)]
   -> IO ()
 storeCategoryListData mbuser sproghtml catmods semperiod =
-  putSessionData semSelectStore (mbuser,sproghtml,catmods,semperiod)
+  writeSessionData semSelectStore (mbuser,sproghtml,catmods,semperiod)
 
 --- An operation to read the data required for this view.
 readCategoryListData ::
-  IO ( Maybe User, Either StudyProgram [HtmlExp]
+  IO ( Maybe User, Either StudyProgram [BaseHtml]
      , [(Either Category String, [ModData])], [(String,Int)])
-readCategoryListData =
+readCategoryListData = fromFormReader $
    getSessionData semSelectStore (Nothing, Right [], [], [])
 
 --- The actual form to select a semester period.
 semSelectForm ::
-  HtmlFormDef ( UserSessionInfo, Maybe User, Either StudyProgram [HtmlExp]
+  HtmlFormDef ( UserSessionInfo, Maybe User, Either StudyProgram [BaseHtml]
               , [(Either Category String, [ModData])]
               , (String,Int), [(String,Int)])
 semSelectForm =
@@ -200,7 +200,7 @@ semSelectForm =
                              showEmailCorrectionController
                              formatCatModulesForm)
  where
-  readData = do
+  readData = toFormReader $ do
     sinfo  <- getUserSessionInfo
     cursem <- getCurrentSemester
     (mbuser,sproghtml,catmods,semperiod) <- readCategoryListData
@@ -208,13 +208,14 @@ semSelectForm =
 
 --------------------------------------------------------------------------
 --- Lists a given list of categoy/module entities.
-listCategoryController :: UserSessionInfo -> Either StudyProgram [HtmlExp]
-                       -> [(Either Category String, [ModData])] -> Controller
-listCategoryController sinfo sproghtml catmods = do
-  storeCategoryListData Nothing sproghtml catmods []
+listCategoryController :: UserSessionInfo -> Either StudyProgram [BaseHtml]
+                       -> [(Either Category String, [ModData])]
+                       -> [(String,Int)] -> Controller
+listCategoryController sinfo sproghtml catmods semperiod = do
+  storeCategoryListData Nothing sproghtml catmods semperiod
   return $ listCategoryView sinfo sproghtml
              (map (\ (cat,mods) -> (cat, map (\m -> (m,[],[])) mods)) catmods)
-             [] [] (formExp semSelectForm)
+             [] [] (formElem semSelectForm)
 
 --------------------------------------------------------------------------
 --- Lists all Category entities with buttons to show, delete,
@@ -225,7 +226,7 @@ listAllCategoryController =
     do let t = translate sinfo
        categorys <- runQ queryAllCategorys
        listCategoryController sinfo (Right [htxt $ t "All categories"])
-         (map (\c -> (Left c,[])) (mergeSortBy leqCategory categorys))
+         (map (\c -> (Left c,[])) (mergeSortBy leqCategory categorys)) []
 
 --- Controller to list all modules of the current user.
 --- If the first argument is true, the modules taught by the user are shown.
@@ -255,7 +256,7 @@ listUserModulesController aslecturer listall =
            return $ listCategoryView sinfo
              (Right $ listCatHeader t)
              [(Right "",map (\m->(m,[],[])) showmods)]
-             [] [] (formExp semSelectForm)
+             [] [] (formElem semSelectForm)
  where
    listCatHeader t =
      if listall
@@ -286,19 +287,19 @@ listStudyProgramCategoryController listall studyprog =
                                            (studyProgramKey studyprog)
        catmods <- runJustT $
         if listall
-        then mapM (\c -> do
-                     mods <- getModDataOfCategory c
-                     returnT (Left c, maybe (filter modDataVisible mods)
-                                            (const mods)
-                                            (userLoginOfSession sinfo)))
-                  categorys
-        else mapM (\c -> return (Left c,[])) categorys
-       listCategoryController sinfo (Left studyprog) catmods
+          then mapM (\c -> do
+                       mods <- getModDataOfCategory c
+                       returnT (Left c, maybe (filter modDataVisible mods)
+                                              (const mods)
+                                              (userLoginOfSession sinfo)))
+                    categorys
+          else mapM (\c -> return (Left c,[])) categorys
+       listCategoryController sinfo (Left studyprog) catmods []
 
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
 showCategoryPlanController
-  :: Maybe User -> Either StudyProgram [HtmlExp]
+  :: Maybe User -> Either StudyProgram [BaseHtml]
   -> [(Either Category String, [ModData])]
   -> (String,Int) -> (String,Int) -> Bool -> Bool -> Bool -> Controller
 showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
@@ -316,7 +317,7 @@ showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
     (map (\ (cat,modinsts) -> (cat, map (\ (m,_,_) -> m) modinsts)) catmodinsts)
     semPeriod
   return (listCategoryView sinfo mbstudyprog
-             catmodinsts semPeriod users (formExp semSelectForm))
+             catmodinsts semPeriod users (formElem semSelectForm))
  where
    getModInsts md =
     let queryinsts = maybe
@@ -351,14 +352,36 @@ showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
    semPeriod = takeWhile (\s -> leqSemester s stopsem)
                          (iterate nextSemester startsem)
 
+------------------------------------------------------------------------------
+--- A controller to list categories, modules, instances, combined
+--- with their UnivIS instances, in order to send emails to the
+--- responsible person to correct their entries.
+
+emailCorrectionStore ::
+  Global (SessionStore ([(ModData,[Maybe ModInst],[Bool])], [(String,Int)]))
+emailCorrectionStore =
+ global emptySessionStore (Persistent (inSessionDataDir "emailCorrectionStore"))
+
+--- The actual form to send email corrections.
+emailCorrectionForm ::
+  HtmlFormDef ( [(ModData,[Maybe ModInst],[Bool])], [(String,Int)], [User] )
+emailCorrectionForm =
+  formDefWithID "Controller.Category.emailCorrectionForm" readData
+    (\ (modinsts,semperiod,users) ->
+      listEmailCorrectionView modinsts semperiod users)
+ where
+  readData = do
+    (modinsts,semperiod) <- getSessionData emailCorrectionStore ([], [])
+    users <- toFormReader $ runQ queryAllUsers
+    return (modinsts,semperiod,users)
+
 --- Lists all Categories and their modules together with their instances
 --- in the given period.
 showEmailCorrectionController
-  :: Either StudyProgram [HtmlExp] -> [(Either Category String,[ModData])]
+  :: Either StudyProgram [BaseHtml] -> [(Either Category String,[ModData])]
   -> (String,Int) -> (String,Int) -> Controller
-showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
+showEmailCorrectionController mbsprog catmods startsem stopsem = do
   sinfo <- getUserSessionInfo
-  users <- runQ queryAllUsers
   modinsts <- runJustT $
                    mapM (\ (_,mods) ->
                                mapM getModInsts
@@ -366,8 +389,9 @@ showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
                                            (const mods)
                                            (userLoginOfSession sinfo)))
                         catmods
-  return (listEmailCorrectionView mbstudyprog
-                                  (concat modinsts) semPeriod users)
+  writeSessionData emailCorrectionStore (concat modinsts, semPeriod)
+  return [h1 $ either (\sp -> [htxt $ studyProgramName sp]) id mbsprog,
+          formElem emailCorrectionForm]
  where
    getModInsts md = do
      mis <- queryInstancesOfMod (modDataKey md)
@@ -379,6 +403,7 @@ showEmailCorrectionController mbstudyprog catmods startsem stopsem = do
 
    semPeriod = takeWhile (\s -> leqSemester s stopsem)
                          (iterate nextSemester startsem)
+
 
 --- Shows a Category entity.
 showCategoryController :: Category -> Controller
@@ -392,7 +417,7 @@ showCategoryController cat =
       (maybe (Right [htxt "???"]) Left mbsprog)
       [(Left cat, maybe (filter modDataVisible mods)
                         (const mods)
-                        (userLoginOfSession sinfo))]
+                        (userLoginOfSession sinfo))] []
 
 --- Gets the associated StudyProgram entity for a given Category entity.
 getProgramCategoriesStudyProgram :: Category -> DBAction StudyProgram

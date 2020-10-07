@@ -51,7 +51,7 @@ newStudyProgramController :: Controller
 newStudyProgramController =
   checkAuthorization (studyProgramOperationAllowed NewEntity) $ \sinfo -> do
     setParWuiStore newStudyProgramWuiStore sinfo ("", "", "", "", 0)
-    return [formExp newStudyProgramWuiForm]
+    return [formElem newStudyProgramWuiForm]
 
 type NewStudyProgram = (String,String,String,String,Int)
 
@@ -90,7 +90,7 @@ editStudyProgramController studyprog =
   checkAuthorization (studyProgramOperationAllowed (UpdateEntity studyprog))
    $ \sinfo -> do
     setParWuiStore wuiEditStudyProgramStore (sinfo,studyprog) studyprog
-    return [formExp editStudyProgramForm]
+    return [formElem editStudyProgramForm]
 
 --- A form to edit the given StudyProgram entity.
 editStudyProgramForm ::
@@ -180,7 +180,7 @@ showPrereqsStudyProgramController sprog =
                 , studyProgramToHRef sinfo sprog]
            , h2 [ htxt $ t "Module dependencies", htxt ": "
                 , href tmppdf [imageNB "images/pdf.png" "PDF"]]
-           , block [HtmlText svgtxt]
+           , block [htmlText svgtxt]
            , h3 [htxt $ t "Modules without prerequisites", htxt ":"]
            , showModDatasAsLinks sinfo basemoddatas
             ]

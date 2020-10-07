@@ -9,14 +9,14 @@
         "cdbi"        : ">= 2.0.0",
         "cryptohash"  : ">= 0.0.1",
         "graphviz"    : ">= 2.0.0",
-        "html2"       : ">= 0.0.1, < 1.0.0",
+        "html2"       : ">= 1.0.0, < 2.0.0",
         "mail-utils"  : ">= 0.0.1",
         "printf"      : ">= 0.0.1",
         "profiling"   : ">= 0.0.1",
         "searchtree"  : ">= 1.0.0",
         "setfunctions": ">= 0.0.1",
         "url"         : ">= 0.0.1",
-        "wui2"        : ">= 0.0.1, < 1.0.0",
+        "wui2"        : ">= 1.0.0, < 2.0.0",
         "xml"         : ">= 0.0.1"
     },
     "compilerCompatibility": {

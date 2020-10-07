@@ -102,7 +102,7 @@ newModuleController isimport =
     setParWuiStore wuiNewModDataWuiStore
       (sinfo,admin,isimport,allUsers,spcats)
       ("", "", "", "", "", 80, wload, 1, "", False, head allUsers, [])
-    return [formExp newModDataWuiForm]
+    return [formElem newModDataWuiForm]
  where
   wload = "60 Std. Vorlesung, 30 Std. Präsenzübung, 150 Std. Selbststudium"
 
@@ -175,7 +175,7 @@ editModDataController mdata =
     setParWuiStore wuiEditModDataStore
       (sinfo,admin,mdata,responsibleUser,allUsers,spcats)
       (mdata, categorizingCategorys)
-    return [formExp editModDataForm]
+    return [formElem editModDataForm]
 
 --- A WUI form to edit the given ModData entity.
 editModDataForm ::
@@ -287,8 +287,8 @@ studentModuleController sem mdata =
 copyModuleController :: ModData -> Controller
 copyModuleController mdata =
  checkAuthorization checkAdmin $ \_ -> do
-  putSessionData copyModuleStore mdata
-  return [formExp copyModuleForm]
+  writeSessionData copyModuleStore mdata
+  return [formElem copyModuleForm]
 
 copyModuleForm :: HtmlFormDef (ModData,ModDescr)
 copyModuleForm =
@@ -296,8 +296,8 @@ copyModuleForm =
     (\ (mdata,mdesc) -> copyModView mdata
                           (storeCopiedModController mdata mdesc))
  where
-  readData = do
-    mdata <- getSessionData copyModuleStore failed
+  readData = toFormReader $ do
+    mdata <- fromFormReader $ getSessionData copyModuleStore failed
     maybemdesc <- runQ $ queryDescriptionOfMod (modDataKey mdata)
     maybe (error "Illegal URL: cannot copy external module")
           (\mdesc -> return (mdata, mdesc))
@@ -443,9 +443,9 @@ getStudyProgramsWithCats = runQ $ do
 emailModuleController :: ModData -> Controller
 emailModuleController mdata =
  checkAuthorization checkAdmin $ \_ -> do
-  putSessionData emailModuleStore
+  writeSessionData emailModuleStore
     (mdata,"Lieber Modulverantwortlicher,\n\n\nViele Gruesse\n\n")
-  return [formExp emailModuleMessageForm]
+  return [formElem emailModuleMessageForm]
 
 --- A form to send an email to the person responsible for the module
 --- stored in `emailModuleStore` (which also contains the initial message).
@@ -453,8 +453,8 @@ emailModuleMessageForm :: HtmlFormDef (ModData,User,String)
 emailModuleMessageForm =
   formDefWithID "Controller.ModData.emailModuleMessageForm" readData formView
  where
-  readData = do
-    (mdata,msg) <- getSessionData emailModuleStore (failed,"")
+  readData = toFormReader $ do
+    (mdata,msg) <- fromFormReader $ getSessionData emailModuleStore (failed,"")
     user <- runJustT (getResponsibleUser mdata)
     return (mdata,user,msg)
 
@@ -498,7 +498,7 @@ emailModuleStore =
 
 ----------------------------------------------------------------------
 -- Show the permanent URL of a module
-moduleUrlForm :: ModData -> IO [HtmlExp]
+moduleUrlForm :: ModData -> IO [BaseHtml]
 moduleUrlForm md = do
   sinfo <- getUserSessionInfo
   let t   = translate sinfo
@@ -511,7 +511,7 @@ moduleUrlForm md = do
 ----------------------------------------------------------------------
 -- Format a module as PDF
 formatModuleForm :: ModData -> [ModInst] -> User -> [StudyProgram] -> [Category]
-                 -> Maybe ModDescr -> IO [HtmlExp]
+                 -> Maybe ModDescr -> IO [BaseHtml]
 formatModuleForm md mis respuser sprogs categorys mbdesc = do
   sinfo <- getUserSessionInfo
   pid <- getPID
@@ -521,7 +521,7 @@ formatModuleForm md mis respuser sprogs categorys mbdesc = do
   latexFormatForm sinfo 2.0 tmp "Formatted module description"
 
 -- Format a list of categories containing modules as PDF
-formatCatModulesForm :: [(String,[ModData])] -> IO [HtmlExp]
+formatCatModulesForm :: [(String,[ModData])] -> IO [BaseHtml]
 formatCatModulesForm catmods = do
   sprogs <- runQ queryAllStudyPrograms
   sinfo <- getUserSessionInfo
@@ -548,7 +548,7 @@ formatCatModulesForm catmods = do
 -- otherwise the formatting process is killed (via timeout).
 -- The timout is used to avoid a long blocking of the system
 -- by bad latex sources.
-latexFormatForm :: UserSessionInfo -> Float -> String -> String -> IO [HtmlExp]
+latexFormatForm :: UserSessionInfo -> Float -> String -> String -> IO [BaseHtml]
 latexFormatForm sinfo tlimit tmp title = do
   let t = translate sinfo
   system $ "/usr/bin/timeout " ++ show tlimit ++ "s " ++
@@ -745,7 +745,7 @@ addInstToModDataController mdata =
    setParWuiStore wuiAddModInstStore
                   (sinfo,curyear,allUsers,mdata)
                   (curterm,curyear+1,responsibleUser)
-   return [formExp addModInstForm]
+   return [formElem addModInstForm]
 
 --- A WUI form to create a new ModInst entity.
 addModInstForm :: HtmlFormDef ((UserSessionInfo, Int, [User], ModData),
@@ -792,7 +792,7 @@ editInstOfModDataController mdata =
                   (sinfo, snd cursem, admin, editinsts, allUsers, mdata)
                   (map (\ (b,i) -> if b then Left (i,False) else Right i)
                        editinsts)
-   return [formExp editModInstForm]
+   return [formElem editModInstForm]
  where
   filterModInsts admin cursem =
    -- the next semester in the future where we changes are allowed:
@@ -850,7 +850,7 @@ editDescrOfModDataController mdata =
    moddesc <- runQ $ queryDescriptionOfMod (modDataKey mdata)
    maybe displayUrlError
          (\md -> do setParWuiStore wuiEditModDescrStore (sinfo,mdata,md) md
-                    return [formExp editModDescrForm])
+                    return [formElem editModDescrForm])
          moddesc
 
 --- A WUI form to edit the given ModDescr entity.
@@ -885,7 +885,7 @@ wuiEditModDescrStore =
 newPreqModDataController :: ModData -> Controller
 newPreqModDataController mdata =
  checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
-  return [formExp newPreqModDataForm]
+  return [formElem newPreqModDataForm]
 
 -- A form to add a new prerequisite to module.
 newPreqModDataForm :: HtmlFormDef
@@ -894,7 +894,7 @@ newPreqModDataForm =
   formDefWithID "Controller.ModData.newPreqModDataForm" readData
     selectPreqModuleFormView
  where
-  readData = do
+  readData = toFormReader $ do
     mdata <- getModDataFromURL
     allmods <- runJustT queryAllModDataShortInfo
     let selmods = mergeSortBy (\m1 m2 -> snd m1 <= snd m2)
@@ -933,7 +933,7 @@ editPreqModDataController mdata =
     setParWuiStore wuiDeletePreqModulStore
                    (sinfo,mdata)
                    (map (\ (k,s) -> (k,s,False)) preqmods)
-    return [formExp deletePreqModDataForm]
+    return [formElem deletePreqModDataForm]
  where
   mod2KeyShortView md =
     (modDataKey md, modDataCode md ++ ": " ++ modDataNameG md)

@@ -172,7 +172,7 @@ hrefs2markdown s =
 -- translate a document text (containing some standard latex markups
 -- as well as markdown markups) into HTML:
 docText2html :: String -> String
-docText2html = showHtmlExps . markdownText2HTML  . latex2MD
+docText2html = showBaseHtmls . markdownText2HTML  . latex2MD
 
 -- Translate a string containing some standard latex markups into
 -- markdown syntax (i.e., also HTML markups with UTF-8 encoding):
@@ -321,7 +321,7 @@ findSemesterSelection cursem sem =
 
 -----------------------------------------------------------------------------
 --- An image without borders.
-imageNB :: String -> String -> HtmlExp
+imageNB :: HTML h => String -> String -> h
 imageNB r a = image r a `addAttr` ("border","0")
 
 
@@ -356,16 +356,16 @@ wMediumRequiredString :: WuiSpec String
 wMediumRequiredString = wRequiredStringSize 70
                          `withRendering` mediumtextinputRendering
 
-largetextinputRendering :: [HtmlExp] -> HtmlExp
+largetextinputRendering :: HTML h => [h] -> h
 largetextinputRendering [s] = inline [s `addClass` "largetextinput"]
 
-mediumtextinputRendering :: [HtmlExp] -> HtmlExp
+mediumtextinputRendering :: HTML h => [h] -> h
 mediumtextinputRendering [s] = inline [s `addClass` "mediumtextinput"]
 
-shorttextinputRendering :: [HtmlExp] -> HtmlExp
+shorttextinputRendering :: HTML h => [h] -> h
 shorttextinputRendering [s] = inline [s `addClass` "shorttextinput"]
 
-renderWithFormControl :: [HtmlExp] -> HtmlExp
+renderWithFormControl :: HTML h => [h] -> h
 renderWithFormControl = inline . map (`addClass` "form-control")
 
 -----------------------------------------------------------------------------

@@ -19,7 +19,7 @@ import System.MultiLang
 
 -----------------------------------------------------------------------------
 --- A view for the main page.
-mainPageView :: UserSessionInfo -> [StudyProgram] -> [HtmlExp]
+mainPageView :: UserSessionInfo -> [StudyProgram] -> [BaseHtml]
 mainPageView sinfo studyPrograms =
   [h1 [htxt $ mainTitle sinfo],
    par $ mainExplanation sinfo,

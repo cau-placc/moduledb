@@ -164,7 +164,7 @@ showConflictsController = do
     then return [h3 [htxt $ "Operation not allowed!"]]
     else
       return [h2 [htxt $ t "Select semester:"],
-              par [formExp selectSemesterConflictForm]]
+              par [formElem selectSemesterConflictForm]]
 
 --- A form to select modules for a semester.
 selectSemesterConflictForm :: HtmlFormDef (UserSessionInfo, (String,Int))
@@ -173,7 +173,7 @@ selectSemesterConflictForm =
    (selectSemesterFormView semesterConflictController
       "Zeige Modulbelegungskonflikte")
  where
-  readData = do
+  readData = toFormReader $ do
     sinfo <- getUserSessionInfo
     csem <- getCurrentSemester >>= return . nextSemester
     return (sinfo,csem)

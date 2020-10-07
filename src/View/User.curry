@@ -70,7 +70,7 @@ wUserType user = transformWSpec (tuple2User user,user2Tuple) wUser
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of User entities
 --- and the controller functions to show, delete and edit entities.
-showUserView :: User -> [HtmlExp]
+showUserView :: User -> [BaseHtml]
 showUserView user =
   [h1 [htxt $ "Benutzer " ++ userLogin user]] ++
   userToDetailsView user ++
@@ -90,13 +90,13 @@ leqUser x1 x2 =
    (userName x2,userFirst x2,userLogin x2,userTitle x2,userEmail x2)
 
 --- Supplies a list view for a given list of User entities.
-listUserView :: [User] -> [HtmlExp]
+listUserView :: [User] -> [BaseHtml]
 listUserView users =
   [h1 [htxt "Liste aller Benutzer"]
   ,spTable ([take 3 userLabelList ++ [userLabelList!!7]] ++
             map listUser (sortBy leqUser users))]
   where
-   listUser :: User -> [[HtmlExp]]
+   listUser :: User -> [[BaseHtml]]
    listUser user =
       userToListView user ++
       [[hrefPrimBadge ("?User/show/" ++ showUserKey user) [htxt "Anzeigen"]],
@@ -107,7 +107,7 @@ listUserView users =
 
 -----------------------------------------------------------------------------
 --- View to login.
-loginView :: UserSessionInfo -> HtmlExp -> [HtmlExp]
+loginView :: UserSessionInfo -> BaseHtml -> [BaseHtml]
 loginView sinfo loginform =
   [h3 [htxt $ t "Login as lecturer"],
    loginform,
@@ -147,7 +147,7 @@ loginFormView controller sinfo =
 
 ------------------------------------------------------------------------
 -- A view to send login data to a new user.
-sendLoginDataView :: UserSessionInfo -> HtmlExp -> [HtmlExp]
+sendLoginDataView :: UserSessionInfo -> BaseHtml -> [BaseHtml]
 sendLoginDataView sinfo sendlogindataform =
   [h1 [htxt $ t "Send login data"],
    sendlogindataform]

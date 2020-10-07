@@ -62,7 +62,7 @@ newStudentController =
     ctime <- getClockTime
     setParWuiStore wuiNewStudentStore sinfo
       ("stu...@mail.uni-kiel.de", "", "", "123456", ctime)
-    return [formExp newStudentForm]
+    return [formElem newStudentForm]
 
 type NewStudent = (String,String,String,String,ClockTime)
 
@@ -119,7 +119,7 @@ editStudentController student =
   checkAuthorization
     (studentOperationAllowed (UpdateEntity student)) $ \sinfo -> do
      setParWuiStore wuiEditStudentWuiStore (sinfo,student) student
-     return [formExp editStudentWuiForm]
+     return [formElem editStudentWuiForm]
 
 --- A WUI form to edit Student entity.
 --- The default values for the fields are stored in the
@@ -205,11 +205,12 @@ showStudentController student =
 sendLoginCodeController :: Controller
 sendLoginCodeController = do
   sinfo <- getUserSessionInfo
-  return $ sendLoginCodeView sinfo (formExp sendLoginCodeForm)
+  return $ sendLoginCodeView sinfo (formElem sendLoginCodeForm)
 
 sendLoginCodeForm :: HtmlFormDef UserSessionInfo
 sendLoginCodeForm =
-  formDefWithID "Controller.Student.sendLoginCodeForm" getUserSessionInfo
+  formDefWithID "Controller.Student.sendLoginCodeForm"
+    (toFormReader $ getUserSessionInfo)
     (sendLoginCodeFormView redirectToDefaultController)
 
 --- Login to the system.
@@ -218,11 +219,12 @@ loginController = do
   sinfo <- getUserSessionInfo
   case studentLoginOfSession sinfo of
     Just _  -> return [h3 [htxt $ "Operation not allowed!"]]
-    Nothing -> return $ studentLoginView sinfo (formExp loginForm)
+    Nothing -> return $ studentLoginView sinfo (formElem loginForm)
 
 loginForm :: HtmlFormDef UserSessionInfo
 loginForm =
-  formDefWithID "Controller.Student.loginForm" getUserSessionInfo
+  formDefWithID "Controller.Student.loginForm"
+    (toFormReader $ getUserSessionInfo)
     (studentLoginFormView redirectToDefaultController
        (redirectController "?Student/showcourses"))
 
@@ -258,7 +260,7 @@ selectSemesterController = do
     Nothing -> return [h3 [htxt $ "Operation not allowed!"]]
     Just _  ->
       return [h2 [htxt $ t "Select semester:"],
-              par [formExp selectSemesterForm]]
+              par [formElem selectSemesterForm]]
 
 --- A form to select modules for a semester.
 selectSemesterForm :: HtmlFormDef (UserSessionInfo, (String,Int))
@@ -266,7 +268,7 @@ selectSemesterForm = formDefWithID "Controller.Student.selectSemesterForm"
   readData (selectSemesterFormView selectCourseController
               "select/change modules in semester")
  where
-  readData = do
+  readData = toFormReader $ do
     sinfo <- getUserSessionInfo
     csem <- getCurrentSemester >>= return . nextSemester
     return (sinfo,csem)
@@ -279,8 +281,8 @@ selectCourseController sem = do
   case studentLoginOfSession sinfo of
     Nothing    -> return [h3 [htxt $ "Operation not allowed!"]]
     Just email -> do
-      putSessionData selectCoursesFormStore (sem,email)
-      return [formExp selectCourseSelectionForm]
+      writeSessionData selectCoursesFormStore (sem,email)
+      return [formElem selectCourseSelectionForm]
 
 selectCourseSelectionForm ::
   HtmlFormDef (UserSessionInfo, (String,Int), [ModInstID],
@@ -290,9 +292,10 @@ selectCourseSelectionForm =
     (selectCoursesView redirectToDefaultController
                        storeCourseSelectionController)
  where
-  readData = do
+  readData = toFormReader $ do
     sinfo <- getUserSessionInfo
-    (sem,email) <- getSessionData selectCoursesFormStore (("WS",2020),"")
+    (sem,email) <- fromFormReader $
+                     getSessionData selectCoursesFormStore (("WS",2020),"")
     mimods <- runQ $ queryModInstsOfSemester sem
     stmis  <- runQ $ queryModInstsOfStudentInSem email sem
     return (sinfo,sem,stmis,mimods)

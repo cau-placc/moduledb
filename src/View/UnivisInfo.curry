@@ -44,10 +44,10 @@ wUnivisInfoType univisInfo =
 
 ------------------------------------------------------------------------
 --- Supplies a view to show the details of a UnivisInfo.
-showUnivisInfoView :: UnivisInfo -> Controller -> [HtmlExp]
+showUnivisInfoView :: UnivisInfo -> Controller -> [BaseHtml]
 showUnivisInfoView univisInfo controller =
-  univisInfoToDetailsView univisInfo ++
-   [spButton "back to UnivisInfo list" (nextController controller)]
+  univisInfoToDetailsView univisInfo
+   -- ++ [spButton "back to UnivisInfo list" (nextController controller)]
 
 --- Compares two UnivisInfo entities. This order is used in the list view.
 leqUnivisInfo :: UnivisInfo -> UnivisInfo -> Bool
@@ -59,13 +59,13 @@ leqUnivisInfo x1 x2 =
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of UnivisInfo entities
 --- and the controller functions to show, delete and edit entities.
-listUnivisInfoView :: [UnivisInfo] -> [HtmlExp]
+listUnivisInfoView :: [UnivisInfo] -> [BaseHtml]
 listUnivisInfoView univisInfos =
   [h1 [htxt "UnivisInfo list"]
   ,spTable
     ([take 4 univisInfoLabelList] ++
      map listUnivisInfo (mergeSortBy leqUnivisInfo univisInfos))]
-  where listUnivisInfo :: UnivisInfo -> [[HtmlExp]]
+  where listUnivisInfo :: UnivisInfo -> [[BaseHtml]]
         listUnivisInfo univisInfo = univisInfoToListView univisInfo
 
 
@@ -73,7 +73,7 @@ listUnivisInfoView univisInfos =
 -- Show a web page with the UnivIS links of a module in a given semester.
 
 showUnivisLinks :: ModData -> (String,Int) -> Maybe User -> [String] -> Bool
-                -> [HtmlExp]
+                -> [BaseHtml]
 showUnivisLinks md sem@(term,year) lecturer urls admin =
   [h1 [htxt $ "Modul "++modDataCode md++" im "++showSemester sem]] ++
   maybe [] (\u -> [par [htxt "Dozent: ", userToHtmlView u]]) lecturer ++

@@ -114,11 +114,11 @@ wAdvisorStudyProgramType sinfo curyear
 --- Supplies a view to show the details of a AdvisorStudyProgram.
 showAdvisorStudyProgramView
   :: UserSessionInfo -> Bool -> Bool
-  -> (Category -> HtmlExp)
-  -> (AdvisorModule -> HtmlExp)
+  -> (Category -> BaseHtml)
+  -> (AdvisorModule -> BaseHtml)
   -> AdvisorStudyProgram -> String -> StudyProgram
   -> [(AdvisorModule,ModInst,ModData)] -> [Category] -> User
-  -> [HtmlExp]
+  -> [BaseHtml]
 showAdvisorStudyProgramView
     sinfo admin editallowed
     addcatmodrefbutton delmodrefbutton
@@ -148,11 +148,11 @@ showAdvisorStudyProgramView
                                           [htxt "Studienprogramm löschen"]]
                    else [])] ++
   [h4 [htxt $ t "Description"++":"],
-   par [HtmlText (docText2html (advisorStudyProgramDesc asprog))],
+   par [htmlText (docText2html (advisorStudyProgramDesc asprog))],
    h4 [htxt $ t "Prerequisites"++":"],
-   par [HtmlText (docText2html (advisorStudyProgramPrereq asprog))],
+   par [htmlText (docText2html (advisorStudyProgramPrereq asprog))],
    h4 [htxt $ t "Comments"++":"],
-   par [HtmlText (docText2html (advisorStudyProgramComments asprog))],
+   par [htmlText (docText2html (advisorStudyProgramComments asprog))],
    h3 [htxt $ t "Program overview by terms:"],
    spTable $ map (\sem -> [htxt (showSemester sem)] :
                     let semmods = filter (isAdvisorModuleOfSem sem) amdatas
@@ -227,7 +227,7 @@ leqAdvisorStudyProgram (x1,sp1) (x2,sp2) =
 --- Shows also show/edit/delete buttons if the user is logged in.
 --- The arguments are the session info and the list of AdvisorStudyProgram entities.
 listAdvisorStudyProgramView
-  :: UserSessionInfo -> [(AdvisorStudyProgram,StudyProgram)] -> [HtmlExp]
+  :: UserSessionInfo -> [(AdvisorStudyProgram,StudyProgram)] -> [BaseHtml]
 listAdvisorStudyProgramView sinfo advisorStudyPrograms =
   [h1 [htxt $ t "Master programs at the department of computer science"]] ++
   masterStudyOldNote sinfo ++
