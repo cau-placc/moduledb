@@ -107,10 +107,9 @@ wModDescrType sinfo modDescr =
 --    in wuiframe hexp handler
 
 --- Supplies a view to show the details of a ModDescr.
-showModDescrView :: ModDescr -> ModData -> Controller -> [BaseHtml]
-showModDescrView modDescr relatedModData controller =
+showModDescrView :: ModDescr -> ModData -> [BaseHtml]
+showModDescrView modDescr relatedModData =
   modDescrToDetailsView modDescr relatedModData
-  -- ++ [spButton "back to ModDescr list" (nextController controller)]
 
 --- Compares two ModDescr entities. This order is used in the list view.
 leqModDescr :: ModDescr -> ModDescr -> Bool

@@ -166,7 +166,7 @@ emailModDataUnivisInfoController terms years mdata =
 showUnivisInfoController :: UnivisInfo -> Controller
 showUnivisInfoController univisInfo =
  checkAuthorization (univisInfoOperationAllowed (ShowEntity univisInfo)) $ \_ ->
-   (return (showUnivisInfoView univisInfo listUnivisInfoController))
+   (return (showUnivisInfoView univisInfo))
 
 ------------------------------------------------------------------------
 --- Shows a form to load data from UnivisInfo for a selectable term.

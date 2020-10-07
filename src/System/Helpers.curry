@@ -109,18 +109,23 @@ getHostnameForIP ipaddr = (flip catch) (\_ -> return "") $ do
 
 -------------------------------------------------------------------------------
 -- name of LaTeX include with infos for all modules:
+modInfoLatexFile :: String
 modInfoLatexFile = "include_modinfo.tex"
 
 -- name of LaTeX include with short info for all modules:
+shortModInfoLatexFile :: String
 shortModInfoLatexFile = "include_shortinfo.tex"
 
 -- name of LaTeX include which contains the catalogue table:
+modTableLatexFile :: String
 modTableLatexFile = "include_moduletable.tex"
 
 -- name of LaTeX include which contains the semester table:
+semTableLatexFile :: String
 semTableLatexFile = "include_semestertable.tex"
 
 -- name of LaTeX include which contains all master programs:
+masterProgsLatexFile :: String
 masterProgsLatexFile = "include_mscprograms.tex"
 
 -------------------------------------------------------------------------------
@@ -230,6 +235,7 @@ escapeLaTeXSpecials (c:cs)
 -- commands that are not explicitly allowed are quoted, e.g.,
 -- "\input{/etc/passwd}" is translated into
 -- "{\textbackslash}input{/etc/passwd}"
+quoteUnknownLatexCmd :: String -> String
 quoteUnknownLatexCmd [] = []
 quoteUnknownLatexCmd (c:cs) | c=='\\'   = tryQuote cs allowedLatexCommands
                             | otherwise = c : quoteUnknownLatexCmd cs
@@ -241,6 +247,7 @@ quoteUnknownLatexCmd (c:cs) | c=='\\'   = tryQuote cs allowedLatexCommands
     then '\\' : cmd ++ quoteUnknownLatexCmd (drop (length cmd) xs)
     else tryQuote xs cmds
 
+allowedLatexCommands :: [String]
 allowedLatexCommands =
   ["\\","#","$","%","{","}","&","\"","ss","begin","end","item",
    "textbackslash",
@@ -249,6 +256,7 @@ allowedLatexCommands =
    "leftarrow","rightarrow"]
 
 -- logging for development:
+logUnknownLatex :: String -> ()
 logUnknownLatex cmd = unsafePerformIO $
   appendFile (storageDir ++ "LATEX.LOG") ('\\':take 20 cmd ++ "\n")
 
@@ -266,12 +274,14 @@ getCurrentSemester = do
                             | otherwise      = ("WS",yr-1)
                             
 -- show a semester:
+showSemester :: (String,Int) -> String
 showSemester (sem,year) =
   let yr2 = year `mod` 100
    in if sem=="SS" then "SS" ++ showDigit2 yr2
                    else "WS" ++ showDigit2 yr2 ++ "/" ++ showDigit2 (yr2+1)
 
 -- show a semester in long format:
+showLongSemester :: (String,Int) -> String
 showLongSemester (sem,year) =
   if sem=="SS"
     then "Sommersemester 20" ++ showDigit2 yr2
@@ -357,13 +367,13 @@ wMediumRequiredString = wRequiredStringSize 70
                          `withRendering` mediumtextinputRendering
 
 largetextinputRendering :: HTML h => [h] -> h
-largetextinputRendering [s] = inline [s `addClass` "largetextinput"]
+largetextinputRendering = inline . map (`addClass` "largetextinput")
 
 mediumtextinputRendering :: HTML h => [h] -> h
-mediumtextinputRendering [s] = inline [s `addClass` "mediumtextinput"]
+mediumtextinputRendering = inline . map (`addClass` "mediumtextinput")
 
 shorttextinputRendering :: HTML h => [h] -> h
-shorttextinputRendering [s] = inline [s `addClass` "shorttextinput"]
+shorttextinputRendering = inline . map (`addClass` "shorttextinput")
 
 renderWithFormControl :: HTML h => [h] -> h
 renderWithFormControl = inline . map (`addClass` "form-control")

@@ -78,11 +78,10 @@ getMCodeForInfo (c,b,mk,t,y) = do
 showMasterProgramController :: MasterProgram -> Controller
 showMasterProgramController mprog =
   checkAuthorization
-   (masterProgramOperationAllowed (ShowEntity mprog)) $ \sinfo -> do
+   (masterProgramOperationAllowed (ShowEntity mprog)) $ \_ -> do
       runQ (queryInfoOfMasterProgram (masterProgramKey mprog)) >>=
        maybe (displayError "Illegal Master Program")
         (\mpinfo -> do
-          admin <- isAdmin
           let modinfo = progModsOfMasterProgInfo mpinfo
           tmodinfo <- runJustT $ mapM getMCodeForInfo modinfo
           mcarea <- runJustT $ getMasterCoreArea
@@ -90,10 +89,7 @@ showMasterProgramController mprog =
           responsibleUser <- runJustT (getAdvisingUser mprog)
           --let semyr = (masterProgramTerm mprog,masterProgramYear mprog)
           return
-            (singleMasterProgramView admin
-               (Just (userLogin responsibleUser)
-                   == userLoginOfSession sinfo)
-               responsibleUser
+            (singleMasterProgramView responsibleUser
                mprog mpinfo tmodinfo mcarea (xmlURL mprog))
         )
 

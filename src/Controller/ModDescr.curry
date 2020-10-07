@@ -63,10 +63,9 @@ listModDescrController =
 --- Shows a ModDescr entity.
 showModDescrController :: ModDescr -> Controller
 showModDescrController modDescr =
-  checkAuthorization (modDescrOperationAllowed (ShowEntity modDescr)) $ \_ ->
-   (do dataDescModData <- runJustT (getDataDescModData modDescr)
-       return
-        (showModDescrView modDescr dataDescModData listModDescrController))
+  checkAuthorization (modDescrOperationAllowed (ShowEntity modDescr)) $ \_ -> do
+    dataDescModData <- runJustT (getDataDescModData modDescr)
+    return (showModDescrView modDescr dataDescModData)
 
 --- Gets the associated ModData entity for a given ModDescr entity.
 getDataDescModData :: ModDescr -> DBAction ModData

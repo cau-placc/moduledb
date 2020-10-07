@@ -52,6 +52,7 @@ wPresence =
       in case presnums of
            [v,u,pue,s]   -> (v,u,pue,0,s) -- old format
            [v,u,pue,p,s] -> (v,u,pue,p,s) -- new format
+           _             -> error "View.ModData.wPresence: illegal presence!"
 
 -- a WUI to select a set of category keys from a given list of categories:
 wCatList :: UserSessionInfo -> [(StudyProgram,[Category])] -> WuiSpec [Category]
@@ -121,7 +122,7 @@ wModData sinfo admin allowchangemcode userList spcats =
   wResp = if admin then wSelect userToShortView (sortBy leqUser userList)
                    else wConstant (stringToHtml . userToShortView)
 
-  numwidthRendering [s] = inline [s `addClass` "numwidth"]
+  numwidthRendering = inline . map (`addClass` "numwidth")
 
 --- Transformation from data of a WUI form to entity type ModData.
 tuple2ModData

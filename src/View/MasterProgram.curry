@@ -20,12 +20,9 @@ import System.MultiLang
 
 
 --- Supplies a view to show the details of a MasterProgram.
-showMasterProgramView
- :: MasterProgram -> MasterCoreArea -> User -> Controller -> [BaseHtml]
-showMasterProgramView masterProgram relatedMasterCoreArea relatedUser
-                      controller =
+showMasterProgramView :: MasterProgram -> MasterCoreArea -> User -> [BaseHtml]
+showMasterProgramView masterProgram relatedMasterCoreArea relatedUser =
   masterProgramToDetailsView masterProgram relatedMasterCoreArea relatedUser
-  -- ++ [spPrimButton "back to MasterProgram list" (nextController controller)]
 
 --- Compares two MasterProgram entities. This order is used in the list view.
 leqMasterProgram :: MasterProgram -> MasterProgram -> Bool
@@ -90,10 +87,10 @@ listMasterProgramView sinfo listall mpinfos allcoreareas =
 
 --- Supplies a view for a given MasterProgram entity.
 singleMasterProgramView
- :: Bool -> Bool -> User -> MasterProgram -> MasterProgInfo
+  :: User -> MasterProgram -> MasterProgInfo
   -> [(String,Bool,ModData,String,Int)] -> MasterCoreArea -> String
   -> [BaseHtml]
-singleMasterProgramView admin editallowed advisor mprog mpinfo modinfo mcarea
+singleMasterProgramView advisor mprog mpinfo modinfo mcarea
    xmlurl =
   [h1 [htxt (masterProgramName mprog)
   ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]

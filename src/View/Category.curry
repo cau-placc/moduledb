@@ -49,7 +49,7 @@ wCategory studyProgramList =
   wECTS = wSelect showDiv10 [0,5..1800]
              `withRendering` numwidthRendering
 
-  numwidthRendering [s] = inline [s `addClass` "numwidth"]
+  numwidthRendering = inline . map (`addClass` "numwidth")
 
 --- Transformation from data of a WUI form to entity type Category.
 tuple2Category

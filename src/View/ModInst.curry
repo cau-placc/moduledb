@@ -80,10 +80,9 @@ wModInstsType curyear someyear insts userList =
 
 
 --- Supplies a view to show the details of a ModInst.
-showModInstView :: ModInst -> ModData -> User -> Controller -> [BaseHtml]
-showModInstView modInst relatedModData relatedUser controller =
+showModInstView :: ModInst -> ModData -> User -> [BaseHtml]
+showModInstView modInst relatedModData relatedUser =
   modInstToDetailsView modInst relatedModData relatedUser
-  -- ++ [spButton "back to ModInst list" (nextController controller)]
 
 --- Compares two ModInst entities. This order is used in the list view.
 leqModInst :: ModInst -> ModInst -> Bool

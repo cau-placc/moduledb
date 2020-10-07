@@ -44,10 +44,9 @@ wUnivisInfoType univisInfo =
 
 ------------------------------------------------------------------------
 --- Supplies a view to show the details of a UnivisInfo.
-showUnivisInfoView :: UnivisInfo -> Controller -> [BaseHtml]
-showUnivisInfoView univisInfo controller =
+showUnivisInfoView :: UnivisInfo -> [BaseHtml]
+showUnivisInfoView univisInfo =
   univisInfoToDetailsView univisInfo
-   -- ++ [spButton "back to UnivisInfo list" (nextController controller)]
 
 --- Compares two UnivisInfo entities. This order is used in the list view.
 leqUnivisInfo :: UnivisInfo -> UnivisInfo -> Bool
