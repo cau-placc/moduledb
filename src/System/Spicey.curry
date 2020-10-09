@@ -236,7 +236,7 @@ showControllerURL ctrlurl params = '?' : ctrlurl ++ concatMap ('/':) params
 --- @param hexp       - the HTML expression representing the WUI form
 --- @param handler    - the handler for submitting data
 renderWUI :: UserSessionInfo -> String -> String -> String
-          -> a -> HtmlExp -> (CgiEnv -> Controller) -> [HtmlExp]
+          -> a -> HtmlExp -> (HtmlEnv -> Controller) -> [HtmlExp]
 renderWUI sinfo title buttontag cancelurl _ hexp handler =
   [h1 [htxt $ t title],
    blockstyle "editform" [hexp],
@@ -256,7 +256,7 @@ renderWUI sinfo title buttontag cancelurl _ hexp handler =
 --- @param hexp       - the HTML expression representing the WUI form
 --- @param handler    - the handler for submitting data
 renderWUIWithText :: UserSessionInfo -> String -> String -> [HtmlExp]
-  -> String -> a -> HtmlExp -> (CgiEnv -> Controller) -> [HtmlExp]
+  -> String -> a -> HtmlExp -> (HtmlEnv -> Controller) -> [HtmlExp]
 renderWUIWithText sinfo title buttontag cmts cancelurl _ hexp handler =
   [h1 [htxt $ t title]] ++ cmts ++
   [blockstyle "editform" [hexp],
@@ -693,7 +693,7 @@ spSmallPrimaryButton label handler =
   button label handler `addClass` "btn btn-sm btn-primary"
 
 --- Short selectionInitial input field:
-spShortSelectionInitial :: CgiRef -> [(String,String)] -> Int -> HtmlExp
+spShortSelectionInitial :: HtmlRef -> [(String,String)] -> Int -> HtmlExp
 spShortSelectionInitial cref sellist sel =
   selectionInitial cref sellist sel `addClass` "shorttextinput"
 
