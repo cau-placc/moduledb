@@ -163,8 +163,8 @@ listCategoryView sinfo mbsprog catmods semperiod users semselectform =
      else
       concatMap
         (\ (mbcat,mods) ->
-           (either (\c->[style "category" (head (listCategory c))])
-                   (\s->[style "category" [htxt s]])
+           (either (\c -> [style "category" (head (listCategory c))])
+                   (\s -> [style "category" [htxt s]])
                    mbcat
             : if null mods
               then []

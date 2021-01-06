@@ -13,13 +13,13 @@ else ifeq ($(TARGET),IFIPAKCS)
 # directory with all data:
 DATADIR=/srv/sites/ps.informatik.uni-kiel.de/mdb/mdb
 # Definition of the Curry installation bin directory to be used:
-CURRYHOME=/opt/pakcs/pakcs
+CURRYHOME=/opt/pakcs/pakcs-2.3.0
 else ifeq ($(TARGET),TEST)
 # directory with all data:
 DATADIR=$(HOME)/home/data/mdbtest
 # Definition of the Curry installation directory to be used:
 #CURRYHOME=/opt/kics2/kics2
-CURRYHOME=$(HOME)/pakcs
+CURRYHOME=$(HOME)/pakcs2
 else
 error:
 	echo "ERROR: invalid definition of variable TARGET!"

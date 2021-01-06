@@ -303,7 +303,7 @@ standardMenu sinfo =
   [[hrefNav "?StudyProgram/list" [htxt $ t "Degree programs"]],
    [hrefNav "?AdvisorStudyProgram/list" [htxt $ t "Master programs"]],
    [rawSearchForm sinfo],
-   [hrefNav "?search" [searchIcon, htxt $ t " Search modules"]]
+   [hrefNav "?search" [searchIcon, nbsp, htxt $ t "Search modules"]]
   ]
  where t = translate sinfo
 
@@ -366,7 +366,7 @@ spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 --- The standard footer of the Spicey page.
 spiceyFooter :: [BaseHtml]
 spiceyFooter =
-  [par [htxt "Version of October 7, 2020, powered by",
+  [par [htxt "Version of January 4, 2021, powered by",
         href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
@@ -608,12 +608,12 @@ maybeUserDefinedToHtml ud = textstyle "type_string" (maybe "" show ud)
 --- Hypertext reference to a study program:
 hrefStudyProgram :: HTML h => String -> [h] -> h
 hrefStudyProgram ref hexps =
-  href ref hexps `addClass` "btn btn-info btn-block btn-left"
+  href ref hexps `addClass` "btn btn-primary btn-block btn-left"
 
 --- Hypertext reference to a category:
 hrefCategory :: HTML h => String -> [h] -> h
 hrefCategory ref hexps =
-  href ref hexps `addClass` "btn btn-info btn-block btn-left"
+  href ref hexps `addClass` "btn btn-primary btn-block btn-left"
 
 --- Small hypertext reference to a category:
 smallHrefCategory :: HTML h => String -> [h] -> h
@@ -621,7 +621,7 @@ smallHrefCategory = ehrefInfoBadge
 
 --- Hypertext reference to a module:
 hrefModule :: HTML h => String -> [h] -> h
-hrefModule ref hexps = hrefInfoSmButton ref hexps
+hrefModule ref hexps = hrefScndSmButton ref hexps
 
 --- Small hypertext reference to a module:
 smallHrefModule :: HTML h => String -> [h] -> h
