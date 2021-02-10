@@ -13,6 +13,7 @@ import Time
 
 import HTML.Base
 import HTML.Session
+import HTML.Styles.Bootstrap4 ( ehrefScndBadge )
 import HTML.WUI
 import ShowDotGraph ( showDotGraph )
 
@@ -179,7 +180,7 @@ showPrereqsStudyProgramController sprog =
     return [ h1 [ htxt $ t "Module dependencies", htxt ": "
                 , studyProgramToHRef sinfo sprog]
            , h2 [ htxt $ t "Module dependencies", htxt ": "
-                , href tmppdf [imageNB "images/pdf.png" "PDF"]]
+                , ehrefScndBadge tmppdf [htxt "PDF"]]
            , block [htmlText svgtxt]
            , h3 [htxt $ t "Modules without prerequisites", htxt ":"]
            , showModDatasAsLinks sinfo basemoddatas

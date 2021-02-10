@@ -142,6 +142,7 @@ english2german =
  ,("Module dependencies","Modulabhängigkeiten")
  ,("Module dependencies","Modulabhängigkeiten")
  ,("Module Information System","Modulinformationssystem Informatik")
+ ,("Modules"            ,"Module")
  ,("Modules of"         ,"Module von")
  ,("Modules without prerequisites","Module ohne Voraussetzungen")
  ,("My modules"         ,"Eigene Module")

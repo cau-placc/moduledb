@@ -92,9 +92,8 @@ singleMasterProgramView
   -> [BaseHtml]
 singleMasterProgramView advisor mprog mpinfo modinfo mcarea
    xmlurl =
-  [h1 [htxt (masterProgramName mprog)
-  ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]
-  ]] ++
+  [h1 [htxt (masterProgramName mprog), nbsp,
+       ehrefScndBadge xmlurl [htxt "XML"]]] ++
   (if masterProgramVisible mprog then []
    else [h4 [htxt "(nicht öffentlich sichtbar)"]]) ++
   [h3 [htxt ("Masterprogramm im Schwerpunktbereich: "++masterCoreAreaName mcarea)],

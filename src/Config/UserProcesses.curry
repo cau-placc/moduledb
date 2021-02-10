@@ -4,7 +4,7 @@
 --------------------------------------------------------------------------
 
 module Config.UserProcesses
-  (Processes(..), ControllerResult, availableProcesses)
+  ( Processes(..), ControllerResult, availableProcesses )
  where
 
 import Config.RoutesData

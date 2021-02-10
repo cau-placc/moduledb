@@ -123,8 +123,8 @@ showAdvisorStudyProgramView
     sinfo admin editallowed
     addcatmodrefbutton delmodrefbutton
     asprog xmlurl relatedsprog amdatas cats advisor =
-  [h1 [htxt (advisorStudyProgramName asprog)
-      ,ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
+  [h1 [htxt (advisorStudyProgramName asprog), nbsp
+      ,ehrefScndBadge xmlurl [htxt "XML"]]] ++
   (if advisorStudyProgramVisible asprog then []
      else [h4 [htxt "(nicht öffentlich sichtbar)"]]) ++
   [h2 [htxt (t "Degree program" ++ ": "),

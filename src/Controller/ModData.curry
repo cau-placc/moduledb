@@ -382,12 +382,14 @@ pdfModDataController :: ModData -> Controller
 pdfModDataController modData =
   checkAuthorization (modDataOperationAllowed (ShowEntity modData)) $ \_ -> do
     responsibleUser <- runJustT (getResponsibleUser modData)
-    categories <- runJustT (getModDataCategories modData)
+    categories      <- runJustT (getModDataCategories modData)
+    prerequisites   <- runJustT (getModDataModDatas modData)
     sprogs <- runQ queryAllStudyPrograms
     let mdkey = modDataKey modData
     moddesc <- runQ $ queryDescriptionOfMod mdkey
     modinsts <- runQ $ queryInstancesOfMod mdkey
-    formatModuleForm modData modinsts responsibleUser sprogs categories moddesc
+    formatModuleForm modData modinsts responsibleUser sprogs categories
+                     prerequisites moddesc
 
 --- Controller to show a module with a given module code.
 showModDataWithCode :: String -> Controller
@@ -501,23 +503,24 @@ emailModuleStore =
 moduleUrlForm :: ModData -> IO [BaseHtml]
 moduleUrlForm md = do
   sinfo <- getUserSessionInfo
-  let t   = translate sinfo
-      url = baseURL ++ "?mod=" ++ string2urlencoded (modDataCode md)
+  let t     = translate sinfo
+      title = (langSelect sinfo modDataNameE modDataNameG) md
+      url   = baseURL ++ "?mod=" ++ string2urlencoded (modDataCode md)
   return
-    [h1 [htxt (t "External URL for module"++" \""++modDataNameG md++"\"")],
+    [h1 [htxt (t "External URL for module" ++ " \"" ++ title ++ "\"")],
      par [htxt (useURLText sinfo)],
      h3 [ehref url [htxt url]]]
 
 ----------------------------------------------------------------------
 -- Format a module as PDF
 formatModuleForm :: ModData -> [ModInst] -> User -> [StudyProgram] -> [Category]
-                 -> Maybe ModDescr -> IO [BaseHtml]
-formatModuleForm md mis respuser sprogs categorys mbdesc = do
+                 -> [ModData] -> Maybe ModDescr -> IO [BaseHtml]
+formatModuleForm md mis respuser sprogs categorys prerequisites mbdesc = do
   sinfo <- getUserSessionInfo
   pid <- getPID
   let tmp = "tmp_"++show pid
   writeModulesLatexFile sinfo (tmp++".tex")
-                        md mis respuser sprogs categorys mbdesc
+                        md mis respuser sprogs categorys prerequisites mbdesc
   latexFormatForm sinfo 2.0 tmp "Formatted module description"
 
 -- Format a list of categories containing modules as PDF
@@ -538,10 +541,11 @@ formatCatModulesForm catmods = do
   formatModData sinfo sprogs md = do
     respuser   <- runJustT (getResponsibleUser md)
     categories <- runJustT (getModDataCategories md)
+    prereqs    <- runJustT (getModDataModDatas md)
     mbdesc     <- runQ $ queryDescriptionOfMod (modDataKey md)
     modinsts   <- runQ $ queryInstancesOfMod (modDataKey md)
-    return (quoteUnknownLatexCmd
-              (mod2latex sinfo md modinsts respuser sprogs categories mbdesc))
+    return $ quoteUnknownLatexCmd $
+      mod2latex sinfo md modinsts respuser sprogs categories prereqs mbdesc
 
 -- Form to format a file tmp.tex with pdflatex and show the result.
 -- The second argument is the maximum formatting time in seconds,
@@ -562,8 +566,7 @@ latexFormatForm sinfo tlimit tmp title = do
   --system ("/bin/rm -f "++tmp++".tex "++tmp++".aux "++tmp++".log")
   system ("/bin/rm -f "++tmp++".aux "++tmp++".log")
   return
-    [h1 [htxt $ t title],
-     par [href (tmp++".pdf") [htxt (t title ++ " (PDF)")]],
+    [par [hrefPrimButton (tmp ++ ".pdf") [htxt (t title ++ " (PDF)")]],
      hrule,
      h3 [htxt $ t "LaTeX output" ++":"],
      verbatim output]
@@ -574,11 +577,12 @@ latexFormatForm sinfo tlimit tmp title = do
 -- Generate LaTeX document containing a detailed description of a module:
 writeModulesLatexFile :: UserSessionInfo -> String -> ModData
                       -> [ModInst] -> User -> [StudyProgram]
-                      -> [Category] -> Maybe ModDescr -> IO ()
-writeModulesLatexFile sinfo fname md mis respuser sprogs categorys mbdesc =
+                      -> [Category] -> [ModData] -> Maybe ModDescr -> IO ()
+writeModulesLatexFile sinfo fname md mis respuser sprogs categorys
+                      prerequisites mbdesc =
   writeStandaloneLatexFile fname
    (quoteUnknownLatexCmd
-      (mod2latex sinfo md mis respuser sprogs categorys mbdesc))
+      (mod2latex sinfo md mis respuser sprogs categorys prerequisites mbdesc))
 
 -- Put a latex string into a file with headers and footers
 writeStandaloneLatexFile :: String -> String -> IO ()
@@ -589,42 +593,52 @@ writeStandaloneLatexFile fname latexstring = do
                    "\\end{document}\n")
 
 mod2latex :: UserSessionInfo -> ModData -> [ModInst] -> User
-          -> [StudyProgram] -> [Category]
+          -> [StudyProgram] -> [Category] -> [ModData]
           -> Maybe ModDescr -> String
 
-mod2latex _ md _ _ _ _ Nothing =
-    "%%%%%%%%%% "++modDataCode md++" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"++
-    "\\importmodule{"++modDataCode md++"}{"++
-    escapeLaTeXSpecials (modDataNameG md)++"}{"++
-    modDataURL md++"}{"++baseName (modDataURL md)++"}\n\n"
+mod2latex _ md _ _ _ _ _ Nothing =
+  "%%%%%%%%%% "++modDataCode md++" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"++
+  "\\importmodule{" ++ modDataCode md ++ "}{" ++
+  escapeLaTeXSpecials (modDataNameG md) ++ "}{" ++
+  modDataURL md ++ "}{" ++baseName (modDataURL md) ++ "}\n\n"
 
-mod2latex sinfo md mis responsibleUser sprogs categorys (Just desc) =
-    "%%%%%%%%%% "++modDataCode md++" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"++
-    "\\module{"++modDataCode md++"}{"++
-    escapeLaTeXSpecials (modDataNameG md)++"}{"++
-    userToShortView responsibleUser++"}{"++
-    improveCycle md mis++"}{"++
-    formatPresence (modDataPresence md)++"}{"++
-    showDiv10 (modDataECTS md)++"}{"++
-    escapeLaTeXSpecials (modDataWorkload md)++"}{"++
-    showLen (modDataLength md)++" Semester}{"++
-    (showStudyProgCategories sinfo sprogs categorys)++
-    "}\n\\descmain{"++
-    modDescrLanguage desc++"}{"++
-    docText2latex (modDescrShortDesc desc)++"}{"++
-    docText2latex (modDescrObjectives desc)++"}{"++
-    docText2latex (modDescrContents desc)++"}{"++
-    docText2latex (modDescrPrereq desc)++"}{"++
-    docText2latex (modDescrExam desc)++"}{"++
-    docText2latex (modDescrMethods desc)++"}{"++
-    docText2latex (modDescrUse desc)++"}\n\\descrest{"++
-    docText2latex (modDescrLiterature desc)++"}{"++
-    docText2latex (modDescrLinks desc)++"}{"++
-    docText2latex (modDescrComments desc)++"}\n\n"
+mod2latex sinfo md mis responsibleUser sprogs categorys prerequisites
+          (Just desc) =
+  "%%%%%%%%%% " ++ modDataCode md ++ " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" ++
+  "\\module" ++ langSelect sinfo "E" "G" ++ "{" ++ modDataCode md ++ "}{" ++
+  escapeLaTeXSpecials ((langSelect sinfo modDataNameE modDataNameG) md) ++
+  "}{" ++
+  userToShortView responsibleUser ++ "}{" ++
+  t (toEnglish (improveCycle md mis)) ++ "}{" ++
+  formatPresence (modDataPresence md) ++ "}{" ++
+  showDiv10 (modDataECTS md) ++ "}{" ++
+  escapeLaTeXSpecials (modDataWorkload md) ++ "}{" ++
+  showLen (modDataLength md) ++ " " ++ t "semester" ++ "}{" ++
+  (showStudyProgCategories sinfo sprogs categorys)++
+  "}\n\\descmain" ++ langSelect sinfo "E" "G" ++ "{"++
+  modDescrLanguage desc ++ "}{" ++
+  docText2latex (modDescrShortDesc desc) ++ "}{" ++
+  docText2latex (modDescrObjectives desc) ++ "}{" ++
+  docText2latex (modDescrContents desc) ++ "}{" ++
+  docText2latex
+    ((if null prerequisites
+        then ""
+        else t "Modules" ++ ": " ++
+             intercalate ", " (map modDataNameG prerequisites) ++ "\n\n") ++
+     modDescrPrereq desc) ++ "}{" ++
+  docText2latex (modDescrExam desc) ++ "}{" ++
+  docText2latex (modDescrMethods desc) ++ "}{" ++
+  docText2latex (modDescrUse desc) ++
+  "}\n\\descrest" ++ langSelect sinfo "E" "G" ++ "{" ++
+  docText2latex (modDescrLiterature desc) ++ "}{" ++
+  docText2latex (modDescrLinks desc) ++ "}{" ++
+  docText2latex (modDescrComments desc) ++ "}\n\n"
  where
-   showLen l | l==1 = "ein"
-             | l==2 = "zwei"
-             | otherwise = show l
+  t = translate sinfo
+
+  showLen l | l==1      = t "one"
+            | l==2      = t "two"
+            | otherwise = show l
 
 
 -----------------------------------------------------------------------------

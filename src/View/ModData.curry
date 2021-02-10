@@ -285,12 +285,10 @@ singleModDataView :: UserSessionInfo -> Bool -> ModData -> User
 singleModDataView sinfo editallowed modData responsibleUser
      sprogs categorys prerequisites modinsts maybedesc xmlurl =
   [h1 [htxt ((langSelect sinfo modDataNameE modDataNameG) modData), nbsp,
-       ehref ("?ModData/url/" ++ modKeyString)
-             [imageNB "images/url.png" "Show URL"], nbsp,
-       ehref ("?ModData/pdf/" ++ modKeyString)
-             [imageNB "images/pdf.png" "Convert to PDF"], nbsp,
-       ehref xmlurl [imageNB "images/xml.png" "XML representation"]]] ++
-  [par $ (if admin || editallowed
+       ehrefScndBadge ("?ModData/url/" ++ modKeyString) [htxt "URL"], nbsp,
+       ehrefScndBadge ("?ModData/pdf/" ++ modKeyString) [htxt "PDF"], nbsp,
+       ehrefScndBadge xmlurl [htxt "XML"]],
+   par $ (if admin || editallowed
           then [modDataEditButton "edit" "Change basic data", nbsp ] ++
                (maybe []
                   (\_ ->

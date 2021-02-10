@@ -6,7 +6,7 @@
 --------------------------------------------------------------------------
 
 module Controller.SpiceySystem
-  (loginController,processListController,historyController)
+  ( loginController, processListController, historyController )
  where
 
 import System.Spicey

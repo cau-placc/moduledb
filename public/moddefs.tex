@@ -27,7 +27,22 @@
 }
 
 
-\newcommand{\module}[9]{\typeout{Formatiere Modul #1...}
+\newcommand{\moduleE}[9]{\typeout{Formatiere Modul #1...}
+\subsection*{Module #1: #2}
+\begin{longtable}{|ll|ll|ll|}
+\hline
+\textbf{Person in charge:} & \multicolumn{5}{l|}{#3}\\[0.5ex]
+\hline
+\textbf{Presence:} & #5 & \textbf{ECTS:} & #6 \hspace{0.5cm} & \textbf{Cycle:} & #4\\[0.5ex]
+\hline
+\textbf{Workload:} & \multicolumn{5}{p{11cm}|}{#7}\\[0.5ex]
+\hline
+\textbf{Module categories:} & \multicolumn{5}{p{11cm}|}{#9}\\[0.5ex]
+\hline
+\textbf{Duration:} & #8 \hspace{0.5cm} &
+}
+
+\newcommand{\moduleG}[9]{\typeout{Formatiere Modul #1...}
 \subsection*{Modul #1: #2}
 \begin{longtable}{|ll|ll|ll|}
 \hline
@@ -37,7 +52,7 @@
 \hline
 \textbf{Workload:} & \multicolumn{5}{p{11cm}|}{#7}\\[0.5ex]
 \hline
-\textbf{Art:} & \multicolumn{5}{p{11cm}|}{#9}\\[0.5ex]
+\textbf{Modulkategorien:} & \multicolumn{5}{p{11cm}|}{#9}\\[0.5ex]
 \hline
 \textbf{Dauer:} & #8 \hspace{0.5cm} &
 }
@@ -46,7 +61,25 @@
 %  \textbf{#1}\par\vspace{0.5ex}\begin{minipage}[b]{15.8cm}#2\end{minipage}}}
   \par\vspace{-1.5ex}\begin{minipage}[b]{15.8cm}\textbf{#1}~#2\end{minipage}}}
 
-\newcommand{\descmain}[8]{
+
+\newcommand{\descmainE}[8]{
+\textbf{Teaching language:} & \multicolumn{3}{l|}{#1} \\[0.5ex]
+\hline
+\descitem{Abstract:}{#2} \\[0.5ex]
+\hline
+\descitem{Objectives:}{#3} \\[0.5ex]
+\hline
+\descitem{Contents:}{#4} \\[0.5ex]
+\hline
+\descitem{Prerequisites:}{#5} \\[0.5ex]
+\hline
+\descitem{Examination:}{#6} \\[0.5ex]
+\hline
+\descitem{Learnings methods:}{#7} \\[0.5ex]
+\hline
+\descitem{Usage:}{#8}\\[0.5ex]\hline}
+
+\newcommand{\descmainG}[8]{
 \textbf{Lehrsprache:} & \multicolumn{3}{l|}{#1} \\[0.5ex]
 \hline
 \descitem{Kurzfassung:}{#2} \\[0.5ex]
@@ -63,7 +96,18 @@
 \hline
 \descitem{Verwendbarkeit:}{#8}\\[0.5ex]\hline}
 
-\newcommand{\descrest}[3]{
+
+\newcommand{\descrestE}[3]{
+\descitem{Literature:}{#1} \\[0.5ex]
+\hline
+\descitem{Links:}{#2}\\[0.5ex]
+\hline
+\descitem{Comments:}{#3}\\[0.5ex]
+\hline
+\end{longtable}
+\newpage}
+
+\newcommand{\descrestG}[3]{
 \descitem{Literatur:}{#1} \\[0.5ex]
 \hline
 \descitem{Verweise:}{#2}\\[0.5ex]
