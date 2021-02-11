@@ -227,9 +227,9 @@ modDataToCompactListView sinfo modData =
  where
    withHref hexp =
      let txtelem = [if modDataVisible modData then hexp else italic [hexp]]
-      in if null (modDataURL modData)
-         then hrefModule ("?ModData/show/" ++ showModDataKey modData) txtelem
-         else hrefExtModule (modDataURL modData) txtelem
+     in if null (modDataURL modData) || isAdminSession sinfo
+          then hrefModule ("?ModData/show/" ++ showModDataKey modData) txtelem
+          else hrefExtModule (modDataURL modData) txtelem
 
 
 --- The short view of a ModData entity as a string.

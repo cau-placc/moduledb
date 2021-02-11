@@ -84,6 +84,7 @@ english2german =
  ,("Email address:"     ,"Email-Adresse:")
  ,("Email address already registered!","Email-Adresse im System schon registriert!")
  ,("Email address not allowed!","Unzulässige Email-Adresse!")
+ ,("Examination requirements","Prüfungsanforderungen")
  ,("External URL for module","Externe URL für das Modul")
  ,("English"            ,"Englisch")
  ,("every year"         ,"jedes Jahr")

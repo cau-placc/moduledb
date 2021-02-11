@@ -229,7 +229,7 @@ escapeLaTeXSpecials = concatMap escChar
             | c=='&'    = "\\&"
             | otherwise = [c]
 
-         
+
 -----------------------------------------------------------------------------
 -- Transform a latex string into a latex string where all latex
 -- commands that are not explicitly allowed are quoted, e.g.,

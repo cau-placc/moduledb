@@ -10,6 +10,7 @@ import HTML.Base
 import HTML.Styles.Bootstrap4
 import Char
 import System.Helpers
+import ConfigMDB      ( baseURL, baseCGI )
 import MDB
 import View.MDBEntitiesToHtml
 import View.StudyProgram
@@ -28,7 +29,10 @@ mainPageView sinfo studyPrograms =
    studyProgramHtmlTable sinfo studyPrograms,
    h3 [htxt $ t "Further information:"],
    ulist
-    [[htxt $ t "Master studies in computer science:", nbsp,
+    [[ehrefPrimBadge
+        (take (length baseURL - length baseCGI) baseURL ++ "examreqs/")
+        [htxt $ t "Examination requirements"]],
+     [htxt $ t "Master studies in computer science:", nbsp,
       hrefPrimBadge "?MCA/list" [htxt $ t "Core areas"], nbsp
       --spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"
       --        [htxt $ t "Study planner"]
