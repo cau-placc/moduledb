@@ -213,21 +213,21 @@ docText2latex = markdownText2LaTeX . latex2MD
 --- Escape all characters with a special meaning in LaTeX into quoted
 --- LaTeX characters.
 escapeLaTeXSpecials :: String -> String
-escapeLaTeXSpecials [] = []
-escapeLaTeXSpecials (c:cs)
-  | c=='^'      = "{\\tt\\char94}" ++ escapeLaTeXSpecials cs
-  | c=='~'      = "{\\tt\\char126}" ++ escapeLaTeXSpecials cs
-  | c=='\\'     = "{\\textbackslash}" ++ escapeLaTeXSpecials cs
-  | c=='<'      = "{\\tt\\char60}" ++ escapeLaTeXSpecials cs
-  | c=='>'      = "{\\tt\\char62}" ++ escapeLaTeXSpecials cs
-  | c=='_'      = "\\_" ++ escapeLaTeXSpecials cs
-  | c=='#'      = "\\#" ++ escapeLaTeXSpecials cs
-  | c=='$'      = "\\$" ++ escapeLaTeXSpecials cs
-  | c=='%'      = "\\%" ++ escapeLaTeXSpecials cs
-  | c=='{'      = "\\{" ++ escapeLaTeXSpecials cs
-  | c=='}'      = "\\}" ++ escapeLaTeXSpecials cs
-  | c=='&'      = "\\&" ++ escapeLaTeXSpecials cs
-  | otherwise   = c : escapeLaTeXSpecials cs
+escapeLaTeXSpecials = concatMap escChar
+ where
+  escChar c | c=='^'    = "{\\tt\\char94}"
+            | c=='~'    = "{\\tt\\char126}"
+            | c=='\\'   = "{\\textbackslash}"
+            | c=='<'    = "{\\tt\\char60}"
+            | c=='>'    = "{\\tt\\char62}"
+            | c=='_'    = "\\_"
+            | c=='#'    = "\\#"
+            | c=='$'    = "\\$"
+            | c=='%'    = "\\%"
+            | c=='{'    = "\\{"
+            | c=='}'    = "\\}"
+            | c=='&'    = "\\&"
+            | otherwise = [c]
 
          
 -----------------------------------------------------------------------------
@@ -249,7 +249,7 @@ quoteUnknownLatexCmd (c:cs) | c=='\\'   = tryQuote cs allowedLatexCommands
 
 allowedLatexCommands :: [String]
 allowedLatexCommands =
-  ["\\","#","$","%","{","}","&","\"","ss","begin","end","item",
+  ["\\","_","#","$","%","{","}","&","\"","ss","begin","end","item",
    "textbackslash",
    "module","descmain","descrest","importmodule",
    "ite","url","em","texttt","textbf","par","bf","href","mbox",

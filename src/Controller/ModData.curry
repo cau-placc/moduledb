@@ -614,8 +614,8 @@ mod2latex sinfo md mis responsibleUser sprogs categorys prerequisites
   showDiv10 (modDataECTS md) ++ "}{" ++
   escapeLaTeXSpecials (modDataWorkload md) ++ "}{" ++
   showLen (modDataLength md) ++ " " ++ t "semester" ++ "}{" ++
-  (showStudyProgCategories sinfo sprogs categorys)++
-  "}\n\\descmain" ++ langSelect sinfo "E" "G" ++ "{"++
+  escapeLaTeXSpecials (showStudyProgCategories sinfo sprogs categorys) ++
+  "}\n\\descmain" ++ langSelect sinfo "E" "G" ++ "{" ++
   modDescrLanguage desc ++ "}{" ++
   docText2latex (modDescrShortDesc desc) ++ "}{" ++
   docText2latex (modDescrObjectives desc) ++ "}{" ++
@@ -624,7 +624,9 @@ mod2latex sinfo md mis responsibleUser sprogs categorys prerequisites
     ((if null prerequisites
         then ""
         else t "Modules" ++ ": " ++
-             intercalate ", " (map modDataNameG prerequisites) ++ "\n\n") ++
+             intercalate ", "
+               (map (langSelect sinfo modDataNameE modDataNameG)
+                    prerequisites) ++ "\n\n") ++
      modDescrPrereq desc) ++ "}{" ++
   docText2latex (modDescrExam desc) ++ "}{" ++
   docText2latex (modDescrMethods desc) ++ "}{" ++
@@ -639,7 +641,6 @@ mod2latex sinfo md mis responsibleUser sprogs categorys prerequisites
   showLen l | l==1      = t "one"
             | l==2      = t "two"
             | otherwise = show l
-
 
 -----------------------------------------------------------------------------
 -- Formatting modules as XML documents:
