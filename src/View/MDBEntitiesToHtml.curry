@@ -592,35 +592,53 @@ univisInfoLabelList =
 -- for a given list of categories:
 showStudyProgCategories :: UserSessionInfo -> [StudyProgram] -> [Category]
                         -> String
-showStudyProgCategories sinfo sprogs cats =
-  concat (intersperse ", " (map (showStudyProgCategory sinfo True sprogs) cats))
+showStudyProgCategories sinfo sprogs =
+  intercalate ", " . map (showStudyProgCategory sinfo True sprogs)
 
 -----------------------------------------------------------------------------
--- Show the short name of each category and its study program
--- with a HTML link for a given list of categories:
+-- Shows the short name of each category and its study program
+-- with a HTML link for a given list of categories.
+-- The list of categories is sorted by the position of the corresponding
+-- study program and the position of the category in the study program.
 showStudyProgCategoriesAsHtml :: HTML h => UserSessionInfo -> [StudyProgram]
                               -> [Category] -> h
-showStudyProgCategoriesAsHtml sinfo sprogs cats =
-  inline
-    (intersperse nbsp --(stringToHtml " ")
-       (map (\c -> smallHrefCategory ("?Category/show/" ++ showCategoryKey c)
-                     [stringToHtml (showStudyProgCategory sinfo True sprogs c)]
-                    `addTitle` (showStudyProgCategory sinfo False sprogs c))
-            cats))
+showStudyProgCategoriesAsHtml sinfo sprogs cats = inline $
+  intersperse nbsp
+    (map (\ (c,mbsp) ->
+           smallHrefCategory ("?Category/show/" ++ showCategoryKey c)
+             [stringToHtml (showCategoryWithStudyProg sinfo True (c,mbsp))]
+             `addTitle` (showCategoryWithStudyProg sinfo False (c,mbsp)))
+       (sortBy leqCatSP
+          (map addStProg cats)))
+ where
+  leqCatSP (_ , Nothing)  _              = False
+  leqCatSP (_ , Just _)   (_ , Nothing)  = True
+  leqCatSP (c1, Just sp1) (c2, Just sp2) =
+    (studyProgramPosition sp1, categoryPosition c1) <=
+    (studyProgramPosition sp2, categoryPosition c2)
+
+  addStProg cat =
+    let spkey = categoryStudyProgramProgramCategoriesKey cat
+    in (cat, find (\p -> studyProgramKey p == spkey) sprogs)
+
+showCategoryWithStudyProg :: UserSessionInfo -> Bool
+                          -> (Category, Maybe StudyProgram) -> String
+showCategoryWithStudyProg sinfo short (cat, mbsprog) =
+  (if short then categoryShortName
+            else langSelect sinfo categoryNameE categoryName) cat ++
+  " (" ++
+  maybe "?"
+        (if short then studyProgramShortName
+                  else langSelect sinfo studyProgramNameE studyProgramName)
+        mbsprog ++
+  ")"
 
 showStudyProgCategory :: UserSessionInfo -> Bool -> [StudyProgram] -> Category
                       -> String
 showStudyProgCategory sinfo short sprogs cat =
-    let pkey = categoryStudyProgramProgramCategoriesKey cat
-     in (if short then categoryShortName
-                  else langSelect sinfo categoryNameE categoryName) cat ++
-        " (" ++ showShortStudyProgramWithKey pkey ++ ")"
- where
-  showShortStudyProgramWithKey spk = 
-    maybe "?"
-          (if short then studyProgramShortName
-                    else langSelect sinfo studyProgramNameE studyProgramName)
-          (find (\p -> studyProgramKey p == spk) sprogs)
+  let spkey = categoryStudyProgramProgramCategoriesKey cat
+  in showCategoryWithStudyProg sinfo short
+       (cat, find (\p -> studyProgramKey p == spkey) sprogs)
 
 -----------------------------------------------------------------------------
 -- Shows a list of modules as HTML links to the module description:
