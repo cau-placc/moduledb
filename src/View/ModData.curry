@@ -56,12 +56,16 @@ wPresence =
 
 -- a WUI to select a set of category keys from a given list of categories:
 wCatList :: UserSessionInfo -> [(StudyProgram,[Category])] -> WuiSpec [Category]
-wCatList sinfo spcats =
-  wMultiCheckSelect (\c->[catref c, nbsp]) allcats
+wCatList sinfo spcats_unsorted =
+  wMultiCheckSelect (\c -> [catref c, nbsp]) allcats
     `withCondition` (not . null)
     `withError` "Es muss mindestens eine Kategorie angegeben werden!"
     `withRendering` renderCats
  where
+  spcats = map (\ (sp,cats) -> (sp, sortBy leqCat cats)) spcats_unsorted
+
+  leqCat c1 c2 = categoryPosition c1 <= categoryPosition c2
+
   allcats = concatMap snd spcats
 
   catref c = ehref ("?Category/show/" ++ showCategoryKey c)
@@ -113,8 +117,8 @@ wModData sinfo admin allowchangemcode userList spcats =
              `withRendering` numwidthRendering
 
   wCats = if admin
-          then wCatList sinfo spcats
-          else wConstant (htxt . unwords . map categoryToShortView)
+            then wCatList sinfo spcats
+            else wConstant (htxt . unwords . map categoryToShortView)
 
 
   wURL = if admin then wLargeString else wConstant htxt
