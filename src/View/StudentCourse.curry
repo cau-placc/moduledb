@@ -9,6 +9,8 @@ import HTML.Base
 import Time
 import Sort
 import HTML.Styles.Bootstrap4
+import Text.CSV ( showCSV )
+
 import System.Helpers
 import System.Spicey
 import System.SessionInfo
@@ -168,18 +170,24 @@ listStudentCourseView sinfo studentCourses =
                       [htxt "delete"]]])
 
 -----------------------------------------------------------------------
---- Supplies a list view for a given list of StudentCourse entities.
---- Shows also show/edit/delete buttons if the user is logged in.
---- The arguments are the session info and the list of StudentCourse entities.
-semesterConflictView :: UserSessionInfo -> (String,Int)
+--- Supplies a list view to show the conflicts (student selections
+--- for two modules) for a given semester in a given output format
+--- (currently: `txt` or `csv`).
+semesterConflictView :: UserSessionInfo -> (String,Int) -> String
                      -> [(String,String,Int)] -> [BaseHtml]
-semesterConflictView sinfo sem conflicts =
-  [ h2 [htxt $ t "Modulbelegungskonflikte im " ++ showLongSemester sem]
-  , spTable $
-      [[htxt $ t "Modul"], [htxt $ t "Modul"],
-       [htxt $ t "Belegt von...Studierenden"]] :
-      map conflict2row conflicts
-  ]
+semesterConflictView sinfo sem outformat conflicts
+  | outformat == "csv"
+  = [ verbatim $ showCSV $
+        [t "Modul", t "Modul", t "Belegt von...Studierenden"] :
+        map (\ (m1,m2,n) -> [m1, m2, show n]) conflicts
+    ]
+  | otherwise
+  = [ h2 [htxt $ t "Modulbelegungskonflikte im " ++ showLongSemester sem]
+    , spTable $
+        [[htxt $ t "Modul"], [htxt $ t "Modul"],
+         [htxt $ t "Belegt von...Studierenden"]] :
+        map conflict2row conflicts
+    ]
  where
   t = translate sinfo
 

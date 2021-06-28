@@ -2,6 +2,7 @@ module Controller.StudentCourse
   ( mainStudentCourseController, selectSemesterConflictForm )
  where
 
+import List ( findIndex )
 import System.Spicey
 import HTML.Base
 import Time
@@ -153,6 +154,7 @@ getStudentCoursesStudent sStudent =
   getStudent (studentCourseStudentStudentCoursesKey sStudent)
 
 -----------------------------------------------------------------------
+-- Showing conflicts w.r.t. student selections:
 
 --- A controller to show the conflicts (student selections for two modules)
 --- for a semester.
@@ -162,28 +164,44 @@ showConflictsController = do
   let t = translate sinfo
   if not (isAdminSession sinfo)
     then return [h3 [htxt $ "Operation not allowed!"]]
-    else
-      return [h2 [htxt $ t "Select semester:"],
-              par [formElem selectSemesterConflictForm]]
+    else return [h2 [htxt $ t "Select semester:"],
+                 par [formElem selectSemesterConflictForm]]
 
 --- A form to select modules for a semester.
 selectSemesterConflictForm :: HtmlFormDef (UserSessionInfo, (String,Int))
 selectSemesterConflictForm =
-  formDefWithID "Controller.StudentCourse.selectSemesterConflictForm" readData
-   (selectSemesterFormView semesterConflictController
-      "Zeige Modulbelegungskonflikte")
+  formDefWithID "Controller.StudentCourse.selectSemesterConflictForm"
+    readData selectSemesterView
  where
   readData = toFormReader $ do
     sinfo <- getUserSessionInfo
     csem <- getCurrentSemester >>= return . nextSemester
     return (sinfo,csem)
 
+  selectSemesterView (sinfo,cursem) =
+    [ spShortSelectionInitial insem semSelection
+                              (findSemesterSelection cursem cursem)
+    , spShortSelectionInitial outformat [("Text", "txt"), ("CSV", "csv")] 0
+    , spPrimButton (t "Zeige Modulbelegungskonflikte") selectHandler ]
+   where
+    insem, outformat free
+  
+    t = translate sinfo
+  
+    semSelection = map (\(s,i) -> (showSemester s,show i))
+                       (zip (semesterSelection cursem) [0..])
+  
+    selectHandler env =
+      let semi = maybe 0 id (findIndex (\(_,i) -> i==(env insem)) semSelection)
+      in semesterConflictController (semesterSelection cursem !! semi)
+                                    (env outformat) >>= getPage
+
 --- A controller to show the conflicts (student selections for two modules)
 --- for a given semester.
-semesterConflictController :: (String,Int) -> Controller
-semesterConflictController sem = do
+semesterConflictController :: (String,Int) -> String -> Controller
+semesterConflictController sem outformat = do
   sinfo <- getUserSessionInfo
   conflicts <- getModuleConflictList sem
-  return $ semesterConflictView sinfo sem conflicts
+  return $ semesterConflictView sinfo sem outformat conflicts
 
 -----------------------------------------------------------------------
