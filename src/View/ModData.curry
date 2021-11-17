@@ -1,7 +1,8 @@
 module View.ModData
   ( wModData, tuple2ModData, modData2Tuple, wModDataType
   , showModDataView, listModDataView
-  , singleModDataView, numberModuleView, studentModuleView
+  , singleModDataView
+  , numberModuleView, studentModuleView, studentModuleEmailView
   , leqModData, copyModView, improveCycle
   , selectPreqModuleFormView
  ) where
@@ -200,15 +201,39 @@ numberModuleView semcode modData mdbnums =
 
 --- A view to show the students registered for a module in a semester.
 studentModuleView :: String -> ModData -> [(String,String,String)] -> [BaseHtml]
-studentModuleView semcode modData studs =
-  [h1 [htxt $ "Modul \"" ++ modDataNameG modData ++ "\""],
+studentModuleView semcode moddata studs =
+  [h1 [htxt $ "Modul \"" ++ modDataNameG moddata ++ "\""],
    par [htxt "Studierende, die dieses Modul für das Semester '",
         htxt semcode, htxt "' in der Moduldatenbank eingeplant haben: "],
-   spTable ([[htxt "Email"], [htxt "Vorname"], [htxt "Nachname"]] :
-            map stud2row studs)
+   spTable ([[htxt "Vorname"], [htxt "Nachname"], [htxt "Email"]] :
+            map stud2row studs),
+   hrefPrimBadge
+     ("?ModData/studmails/" ++ showModDataKey moddata ++ "/" ++ semcode)
+     [htxt $ "...im Email-Adressenformat"]
   ]
  where
-  stud2row (email,name,first) = [[htxt email], [htxt first], [htxt name]]
+  stud2row (email,name,first) = [[htxt first], [htxt name], [htxt email]]
+
+--- A view to show the email addresses of the students registered
+--- for a module in a semester.
+studentModuleEmailView :: String -> ModData -> [(String,String,String)]
+                       -> [BaseHtml]
+studentModuleEmailView semcode moddata studs =
+  [h1 [htxt $ "Modul \"" ++ modDataNameG moddata ++ "\""],
+   par [htxt $ "Email-Adressen der Studierenden, die dieses Modul " ++
+               "für das Semester '" ++ semcode ++
+               "' in der Moduldatenbank eingeplant haben: "],
+   hrule,
+   verbatim (unlines (map stud2email studs)),
+   hrule,
+   htxt "Email-Adressenliste ohne Namen:",
+   hrule,
+   verbatim (intercalate ", " (map (\ (email,_,_) -> email) studs))
+  ]
+ where
+  stud2email (email,name,first) =
+    "\"" ++ first ++ " " ++ name ++ "\" <" ++ email ++ ">"
+
 
 --- A view for searching modules.
 copyModView :: ModData -> (String -> Controller) -> [HtmlExp]

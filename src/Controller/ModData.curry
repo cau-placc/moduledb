@@ -72,6 +72,8 @@ mainModDataController =
       ["copy" ,s] -> controllerOnKey s copyModuleController
       ["number",s,sem] -> controllerOnKey s (numberModuleController sem)
       ["studs",s,sem] -> controllerOnKey s (studentModuleController sem)
+      ["studmails",s,sem] -> controllerOnKey s
+                               (studentModuleEmailController sem)
       ["addinst",  s] -> controllerOnKey s addInstToModDataController
       ["editinst", s] -> controllerOnKey s editInstOfModDataController
       ["editdesc", s] -> controllerOnKey s editDescrOfModDataController
@@ -281,6 +283,14 @@ studentModuleController sem mdata =
  checkAuthorization checkAdmin $ \_ -> do
    studs <- runQ $ queryStudentsOfModSemester mdata (readSemesterCode sem)
    return $ studentModuleView sem mdata studs
+
+--- Controller to show the students of a module registered in MDB
+--- in a semester with their email adresses:
+studentModuleEmailController :: String -> ModData -> Controller
+studentModuleEmailController sem mdata =
+ checkAuthorization checkAdmin $ \_ -> do
+   studs <- runQ $ queryStudentsOfModSemester mdata (readSemesterCode sem)
+   return $ studentModuleEmailView sem mdata studs
 
 -------------------------------------------------------------------------
 --- Controller for copying a module with a new code:
