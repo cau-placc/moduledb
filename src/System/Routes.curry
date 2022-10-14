@@ -8,11 +8,12 @@ module System.Routes(
   getRouteMenus
 ) where
 
+import Data.List ( isPrefixOf, partition )
+
 import HTML.Base
 import HTML.Styles.Bootstrap4 ( hrefNav )
 
 import Config.RoutesData
-import List
 
 --generated in RoutesData
 --type Route = (String, UrlMatch, ControllerReference)

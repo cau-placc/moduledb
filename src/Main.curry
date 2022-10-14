@@ -4,9 +4,7 @@
 
 module Main where
 
-import List
-import Sort
-import System     ( setEnviron )
+import Data.List
 import HTML.WUI
 import HTML.Base
 import Text.CSV
@@ -124,7 +122,7 @@ modules2CSV studyprogs mods = do
              (find (\p -> studyProgramKey p == pkey) studyprogs)
 
   -- Sorting categories according to a wish of Corinna Ohlsen:
-  sortCats = mergeSortBy leqCat
+  sortCats = sortBy leqCat
     where leqCat c1 c2 = c1=="G" || (c1=="A" && c2/="G") ||
                          (c1/="G" && c1/="A" && c1 <= c2)
 

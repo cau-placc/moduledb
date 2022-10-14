@@ -7,21 +7,18 @@ module View.ModData
   , selectPreqModuleFormView
  ) where
 
-import Time
-import Sort
-
-import HTML.WUI
+import Data.List
+import Data.Time
 import HTML.Base
 import HTML.Styles.Bootstrap4
+import HTML.WUI
 
 import System.Spicey
 import MDB
 import View.MDBEntitiesToHtml
 import System.Helpers
-import List hiding (sortBy)
 import View.ModInst
-import Read
-import Mail
+import System.Mail
 import ConfigMDB
 import View.User(leqUser)
 import System.SessionInfo
@@ -49,7 +46,7 @@ wPresence =
     show prk ++ "P " ++ show sem ++ "S"
 
    readPresence ps =
-     let presnums = if null ps then [0,0,0,0] else map Read.readNat (words ps)
+     let presnums = if null ps then [0,0,0,0] else map read (words ps)
       in case presnums of
            [v,u,pue,s]   -> (v,u,pue,0,s) -- old format
            [v,u,pue,p,s] -> (v,u,pue,p,s) -- new format

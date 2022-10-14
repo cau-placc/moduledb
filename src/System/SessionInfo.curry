@@ -17,16 +17,13 @@ module System.SessionInfo (
   getUserSessionInfo, updateUserSessionInfo
  ) where
 
-import FilePath       ( (</>) )
-import Global
-
 import HTML.Base
 import HTML.Session
 
 --------------------------------------------------------------------------
 --- The languages which are currently supported.
 data Language = German | English
- deriving Eq
+ deriving (Eq,Read,Show)
 
 --------------------------------------------------------------------------
 --- The data associated to a user session.
@@ -35,6 +32,7 @@ data Language = German | English
 --- in, or `Maybe ln` where `ln` is the login name of the user)
 --- and the language preferred in this sesion
 data UserSessionInfo = SD (Maybe String) (Maybe String) Language
+ deriving (Read,Show)
 
 --- The initial (empty) session data
 emptySessionInfo :: UserSessionInfo
@@ -77,9 +75,8 @@ setLanguageOfSession lang (SD login slogin _) = SD login slogin lang
 
 --------------------------------------------------------------------------
 --- Definition of the session state to store the login name (as a string).
-userSessionInfo :: Global (SessionStore UserSessionInfo)
-userSessionInfo =
-  global emptySessionStore (Persistent (inSessionDataDir "userSessionInfo"))
+userSessionInfo :: SessionStore UserSessionInfo
+userSessionInfo = sessionStore "userSessionInfo"
 
 --- Gets the data of the current user session.
 getUserSessionInfo :: IO UserSessionInfo

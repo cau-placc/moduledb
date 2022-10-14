@@ -4,7 +4,7 @@
 
 module MDB.Queries where
 
-import Maybe ( listToMaybe )
+import Data.Maybe ( listToMaybe )
 
 import Database.CDBI.ER
 
@@ -13,7 +13,7 @@ import MDB
 -----------------------------------------------------------------------
 --- Gets a user entity with a given login name.
 queryUserWithLogin :: String -> DBAction (Maybe User)
-queryUserWithLogin login = liftM listToMaybe
+queryUserWithLogin login = fmap listToMaybe
   ``sql* Select * From User As u
          Where u.Login = {login};''
 

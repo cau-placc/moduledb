@@ -14,7 +14,7 @@
 --- [documented in this page](http://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
 ---
 --- @author Michael Hanus
---- @version September 2020
+--- @version Octtember 2022
 ------------------------------------------------------------------------------
 
 module Markdown(MarkdownDoc,MarkdownElem(..),fromMarkdownText,
@@ -25,10 +25,10 @@ module Markdown(MarkdownDoc,MarkdownElem(..),fromMarkdownText,
                 formatMarkdownFileAsPDF,formatMarkdownInputAsPDF)
  where
 
-import Char
-import IO   ( getContents )
-import List
-import System
+import Data.Char
+import System.IO      ( getContents )
+import Data.List
+import System.Process ( getPID, system )
 
 import HTML.Base
 import HTML.LaTeX
@@ -487,6 +487,6 @@ pdflatexFile tmp = do
   system $ "/bin/rm -f "++tmp++".tex "++tmp++".aux "++tmp++".log "++tmp++".out"
   system $ "evince "++tmp++".pdf"
   system $ "/bin/rm -f "++tmp++".pdf"
-  done
+  return ()
 
 -----------------------------------------------------------------------

@@ -4,10 +4,11 @@ module View.StudentCourse
   , semesterConflictView )
 where
 
+import Data.List (sortBy)
+import Data.Time
+
 import HTML.WUI
 import HTML.Base
-import Time
-import Sort
 import HTML.Styles.Bootstrap4
 import Text.CSV ( showCSV )
 
@@ -150,7 +151,7 @@ listStudentCourseView sinfo studentCourses =
   [h1 [htxt "StudentCourse list"]
   ,spTable
     ([take 1 studentCourseLabelList]
-      ++ map listStudentCourse (mergeSortBy leqStudentCourse studentCourses))]
+      ++ map listStudentCourse (sortBy leqStudentCourse studentCourses))]
   where
     listStudentCourse studentCourse =
       studentCourseToListView studentCourse

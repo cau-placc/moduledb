@@ -5,11 +5,10 @@ module View.MasterCoreArea (
  leqMasterCoreArea, listMasterCoreAreaView
  ) where
 
+import Data.List ( sortBy )
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.WUI
-import Time
-import Sort
 import System.Spicey
 import MDB
 import View.MDBEntitiesToHtml

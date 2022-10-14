@@ -4,9 +4,8 @@ module View.StudyProgram
    leqStudyProgram
  ) where
 
-import List ( groupBy, maximum, transpose )
-import Sort
-import Time
+import Data.List ( groupBy, maximum, sortBy, transpose )
+import Data.Time
 
 import HTML.Base
 import HTML.Styles.Bootstrap4

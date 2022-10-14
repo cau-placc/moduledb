@@ -3,10 +3,7 @@ module Controller.User
   , loginForm, sendLoginDataForm, changePasswordForm )
  where
 
-import Global
-import Maybe
-import Time
-
+import Data.Time
 import Config.EntityRoutes
 import System.Helpers
 import System.Spicey
@@ -68,10 +65,8 @@ newUserWuiForm =
                          "?" ())
 
 ---- The data stored for executing the WUI form.
-wuiNewUserWuiStore ::
-  Global (SessionStore (UserSessionInfo, WuiStore NewUser))
-wuiNewUserWuiStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiNewUserWuiStore"))
+wuiNewUserWuiStore :: SessionStore (UserSessionInfo, WuiStore NewUser)
+wuiNewUserWuiStore = sessionStore "wuiNewUserWuiStore"
 
 
 --- Persists a new User entity to the database.
@@ -110,10 +105,8 @@ editUserWuiForm =
                     ("?User/show/" ++ showUserKey user) ())
 
 ---- The data stored for executing the WUI form.
-wuiEditUserWuiStore ::
-  Global (SessionStore ((UserSessionInfo,User), WuiStore User))
-wuiEditUserWuiStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiEditUserWuiStore"))
+wuiEditUserWuiStore :: SessionStore ((UserSessionInfo,User), WuiStore User)
+wuiEditUserWuiStore = sessionStore "wuiEditUserWuiStore"
 
 
 --- Persists modifications of a given User entity to the

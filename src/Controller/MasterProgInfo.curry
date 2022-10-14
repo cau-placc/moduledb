@@ -3,19 +3,17 @@ module Controller.MasterProgInfo (
  progModsOfMasterProgInfo, reasonableMasterProgInfo
  ) where
 
+import Data.List
+import Data.Maybe
 import System.Spicey
 import HTML.Base
-import Time
 import MDB
 import MDBExts
 import View.MasterProgInfo
-import Maybe
 import System.Authorization
 import System.AuthorizedActions
 import Config.UserProcesses
 import System.Helpers
-import List
-import ReadShowTerm
 
 -- --- Shows a form to edit the given MasterProgInfo entity.
 -- editMasterProgInfoController :: (String,Int) -> Controller
@@ -38,7 +36,7 @@ updateMasterProgInfoController cntcontroller True mpinfo =
   runT (let progmods = progModsOfMasterProgInfo mpinfo
          in cleanProgMods progmods |>>= \exprogmods ->
             let newmpinfo = setMasterProgInfoProgModules mpinfo
-                                                         (showQTerm exprogmods)
+                                                         (show exprogmods)
              in updateMasterProgInfo newmpinfo |>>
                 reasonableMasterProgInfo newmpinfo |>>= \reas ->
                 (if null reas
@@ -56,7 +54,7 @@ updateMasterProgInfoController cntcontroller True mpinfo =
   flip either (\ (cmt,exall) ->
               logEvent (UpdateMasterProgInfo mpinfo) >>
               (if exall
-                then if null cmt then done else setPageMessage cmt
+                then if null cmt then return () else setPageMessage cmt
                 else setPageMessage notExistMsg) >>
               nextInProcessOr cntcontroller Nothing)
          (\ error -> displayError (showTError error))
@@ -135,7 +133,7 @@ getMasterModInstInSemesters semyear n =
 --- Reads the string-encoded module instances of a master program
 --- and return them as a list of the form [(catkey,mand.?,moddatakey,term,year)]
 progModsOfMasterProgInfo :: MasterProgInfo -> [(String,Bool,String,String,Int)]
-progModsOfMasterProgInfo mpi = readQTerm (masterProgInfoProgModules mpi)
+progModsOfMasterProgInfo mpi = read (masterProgInfoProgModules mpi)
 
 --- Deletes non-existing module instances in a list.
 cleanProgMods :: [(String,Bool,String,String,Int)]

@@ -3,11 +3,11 @@ module View.MDBEntitiesToHtml where
 import HTML.WUI
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import Time
+import Data.Time
 import System.Spicey
 import MDB
 import System.Helpers
-import List
+import Data.List
 import System.MultiLang
 import System.SessionInfo
 

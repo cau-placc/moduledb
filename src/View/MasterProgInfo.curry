@@ -4,17 +4,15 @@ module View.MasterProgInfo (
  showMasterProgInfoView, listMasterProgInfoView
  ) where
 
+import Data.List
 import HTML.WUI
 import HTML.Base
-import Time
-import Sort
 import System.Spicey
 import MDB
 import View.MDBEntitiesToHtml
 import ConfigMDB
 import ReadShowTerm
 import System.Helpers
-import List
 
 --- Reads the string-encoded module instances and return them as a
 --- list of the form [(catkey,recommended,moddatakey,term,year)]
@@ -25,7 +23,7 @@ readAndExtendProgMods :: (String,Int) -> String
 readAndExtendProgMods (curterm,curyear) s =
   [filterTag "IG",filterTag "TG",filterTag "IS",filterTag "MV"]
  where
-   xs = readQTerm s
+   xs = read s
    filterTag ct = let mis = filter (\ (t,_,_,_,_) -> ct==t) xs
                    in if length mis == 0 then mis++[emptyMI ct,emptyMI ct]
                                          else mis++[emptyMI ct]
@@ -42,8 +40,8 @@ wMasterProgInfo cursem@(curterm,curyear) modinsts =
  where
   wProgMods :: WuiSpec String
   wProgMods =
-     transformWSpec (\ (e1,e2,e3,e4) -> showQTerm (filterCodes
-                                                    (concat [e1,e2,e3,e4])),
+     transformWSpec (\ (e1,e2,e3,e4) -> show (filterCodes
+                                                (concat [e1,e2,e3,e4])),
                      \ s -> let (e1:e2:e3:e4:_) = readAndExtendProgMods cursem s
                             in (e1,e2,e3,e4))
     (w4Tuple (wList (modsems2wSelect "IG" igmods))
@@ -87,7 +85,7 @@ wMasterProgInfo cursem@(curterm,curyear) modinsts =
         sem2  = (modInstYear mi2, modInstTerm mi2)
      in code1 < code2 || (code1 == code2 && sem1 <= sem2)
 
-  sortModSem ms = mergeSortBy leqModSem ms
+  sortModSem ms = sortBy leqModSem ms
 
   transModInst c (mi,md,_) = (c,showModDataKey md,modInstTerm mi,modInstYear mi)
 
@@ -190,7 +188,7 @@ listMasterProgInfoView masterProgInfos =
   [h1 [htxt "MasterProgInfo list"]
   ,spTable
     ([take 6 masterProgInfoLabelList] ++
-     map listMasterProgInfo (mergeSortBy leqMasterProgInfo masterProgInfos))]
+     map listMasterProgInfo (sortBy leqMasterProgInfo masterProgInfos))]
   where listMasterProgInfo :: MasterProgInfo -> [[BaseHtml]]
         listMasterProgInfo masterProgInfo =
           masterProgInfoToListView masterProgInfo

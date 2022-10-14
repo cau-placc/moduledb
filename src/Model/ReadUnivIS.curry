@@ -18,7 +18,7 @@ import ConfigMDB(storageDir)
 getRunTime :: IO Int
 getRunTime = getProcessInfos >>= \i -> return (maybe 0 id (lookup RunTime i))
 
-runBench :: String -> (XmlExp -> IO _) -> IO ()
+runBench :: Data a => String -> (XmlExp -> IO a) -> IO ()
 runBench xmlfile xmlaction = do
   t0 <- getRunTime
   xexp <- readXmlFile xmlfile
@@ -28,7 +28,7 @@ runBench xmlfile xmlaction = do
   t2 <- getRunTime
   putStrLn $ "XML action executed in " ++ show (t2-t1) ++ " msecs"
 
-runBenchComp :: String -> (XmlExp -> a) -> IO a
+runBenchComp :: Data a => String -> (XmlExp -> a) -> IO a
 runBenchComp xmlfile xmlcomp = do
   t0 <- getRunTime
   xexp <- readXmlFile xmlfile
@@ -86,8 +86,9 @@ loadLectures sem = do
     if not (null (tail xexps))
     then return (Right "More than one XML document!")
     else do
-     writeQTermListFile termfile
-                        (sortValues (set2 findLectureURL univissem (head xexps)))
+     writeFile termfile
+       (unlines (map show
+                     (sortValues (set2 findLectureURL univissem (head xexps)))))
      return (Left $ "...and written into file " ++ termfile)
 
 -- ...with benchmarking

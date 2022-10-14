@@ -2,15 +2,14 @@ module Controller.StudentCourse
   ( mainStudentCourseController, selectSemesterConflictForm )
  where
 
-import List ( findIndex )
+import Data.List ( findIndex )
+import Data.Time
 import System.Spicey
 import HTML.Base
-import Time
 
 import MDB
 import Config.EntityRoutes
 import View.StudentCourse
-import Maybe
 import System.SessionInfo
 import System.Authorization
 import System.AuthorizedActions

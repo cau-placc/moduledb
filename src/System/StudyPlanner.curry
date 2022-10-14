@@ -8,7 +8,7 @@ module System.StudyPlanner
   ( getModuleInstancesStudents, getTakenModuleInstances
   ) where
 
-import ReadNumeric    ( readInt )
+import Numeric    ( readInt )
 
 import HTML.Base
 import System.URL     ( getContentsOfUrl )
@@ -24,13 +24,15 @@ import System.Helpers ( showSemesterCode )
 getModuleStudents :: ModData -> String -> IO Int
 getModuleStudents mdata sem = do
   nums <- getContentsOfUrl (studyPlannerURL++"student_count?offers="++sem++":"++modDataCode mdata)
-  return (maybe (-2) fst (readInt nums))
+  return $ case readInt nums of
+    [(n,"")] -> n
+    _        -> -2
 
 --- Retrieve the number of students of a module for a given list
 --- of module instances.
 getModuleInstancesStudents :: ModData -> [ModInst] -> IO [Int]
 getModuleInstancesStudents mdata minsts = do
-  mapIO getModInstStudents minsts
+  mapM getModInstStudents minsts
  where
   getModInstStudents mi = do
     --spnum  <- getModuleStudents mdata (showSemesterCode (modInstSemester mi))
@@ -41,7 +43,7 @@ getModuleInstancesStudents mdata minsts = do
 --- either in the study planner or in the module database.
 getTakenModuleInstances :: [ModInst] -> IO [ModInst]
 getTakenModuleInstances modinsts = do
-  mapIO getTakenModuleInstance modinsts >>= return . concat
+  mapM getTakenModuleInstance modinsts >>= return . concat
  where
   getTakenModuleInstance mi = do
     mdata <- runJustT (getModData (modInstModDataModuleInstancesKey mi))

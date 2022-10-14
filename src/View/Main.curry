@@ -8,13 +8,11 @@ module View.Main(mainPageView)
 import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import Char
 import System.Helpers
 import ConfigMDB      ( baseURL, baseCGI )
 import MDB
 import View.MDBEntitiesToHtml
 import View.StudyProgram
-import Sort
 import System.SessionInfo
 import System.MultiLang
 

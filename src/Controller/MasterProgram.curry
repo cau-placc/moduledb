@@ -2,23 +2,23 @@ module Controller.MasterProgram (
  mainMasterProgramController,
  showAllXmlMasterPrograms,showXmlMasterProgram) where
 
+import Data.List
+import Data.Maybe
+
 import Database.CDBI.ER
 
 import System.Spicey
 import HTML.Base
-import Time
 import ConfigMDB
 import MDB
 import MDBExts
 import View.MDBEntitiesToHtml
 import View.MasterProgram
-import Maybe
 import System.Authorization
 import System.AuthorizedActions
 import Config.UserProcesses
 import System.Authentication
 import Controller.MasterProgInfo
-import List
 import System.Helpers
 import XML
 import System.SessionInfo
@@ -154,8 +154,8 @@ masterProgURL mp =
 -- Show XML document containing all visible master programs
 showAllXmlMasterPrograms :: IO HtmlPage
 showAllXmlMasterPrograms = do
-  allmprogs <- runQ $ liftM (filter masterProgramVisible) queryAllMasterPrograms
-  mpxmls <- mapIO getMasterProgramXML allmprogs
+  allmprogs <- runQ $ fmap (filter masterProgramVisible) queryAllMasterPrograms
+  mpxmls <- mapM getMasterProgramXML allmprogs
   return (HtmlAnswer "text/xml"
                      (showXmlDoc (xml "studyprograms" (catMaybes mpxmls))))
 

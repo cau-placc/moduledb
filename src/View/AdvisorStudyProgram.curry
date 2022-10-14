@@ -3,13 +3,12 @@ module View.AdvisorStudyProgram
   , wAdvisorStudyProgramType
   , showAdvisorStudyProgramView, listAdvisorStudyProgramView ) where
 
+import Data.List
+import Data.Time
 import HTML.WUI
 import System.Helpers
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import List
-import Time
-import Sort
 import System.Spicey
 import View.Category
 import System.SessionInfo
@@ -242,7 +241,7 @@ listAdvisorStudyProgramView sinfo advisorStudyPrograms =
   where
    advisorprogramgroups =
      groupBy sameSemester
-             (mergeSortBy leqAdvisorStudyProgram advisorStudyPrograms)
+             (sortBy leqAdvisorStudyProgram advisorStudyPrograms)
 
    sameSemester (p1,_) (p2,_) =
         advisorStudyProgramYear p1 == advisorStudyProgramYear p2

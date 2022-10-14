@@ -7,7 +7,7 @@
 
 module MDB where
 
-import qualified Time
+import qualified Data.Time
 import qualified Database.CDBI.ER
 import qualified Database.CDBI.Criteria
 import qualified Database.CDBI.Connection
@@ -45,7 +45,7 @@ data MasterCoreArea = MasterCoreArea MasterCoreAreaID String String String Strin
 data MasterCoreAreaID = MasterCoreAreaID Int
  deriving (Eq,Show,Read)
 
-data User = User UserID String String String String String String String Time.ClockTime
+data User = User UserID String String String String String String String Data.Time.ClockTime
  deriving (Eq,Show,Read)
 
 data UserID = UserID Int
@@ -99,13 +99,13 @@ data UnivisInfo = UnivisInfo UnivisInfoID String String Int String
 data UnivisInfoID = UnivisInfoID Int
  deriving (Eq,Show,Read)
 
-data Student = Student StudentID String String String String Time.ClockTime
+data Student = Student StudentID String String String String Data.Time.ClockTime
  deriving (Eq,Show,Read)
 
 data StudentID = StudentID Int
  deriving (Eq,Show,Read)
 
-data StudentCourse = StudentCourse StudentCourseID Time.ClockTime StudentID ModInstID
+data StudentCourse = StudentCourse StudentCourseID Data.Time.ClockTime StudentID ModInstID
  deriving (Eq,Show,Read)
 
 data StudentCourseID = StudentCourseID Int
@@ -1272,7 +1272,7 @@ userColumnPassword =
   Database.CDBI.Description.Column "\"Password\"" "\"User\".\"Password\""
 
 --- The database column `LastLogin` of the `User` entity.
-userColumnLastLogin :: Database.CDBI.Description.Column Time.ClockTime
+userColumnLastLogin :: Database.CDBI.Description.Column Data.Time.ClockTime
 userColumnLastLogin =
   Database.CDBI.Description.Column "\"LastLogin\"" "\"User\".\"LastLogin\""
 
@@ -1342,7 +1342,7 @@ userPasswordColDesc =
 
 --- The description of the database column `LastLogin` of the `User` entity.
 userLastLoginColDesc
-  :: Database.CDBI.Description.ColumnDescription Time.ClockTime
+  :: Database.CDBI.Description.ColumnDescription Data.Time.ClockTime
 userLastLoginColDesc =
   Database.CDBI.Description.ColDesc "\"User\".\"LastLogin\""
    Database.CDBI.Connection.SQLTypeDate
@@ -1382,7 +1382,7 @@ userPassword :: User -> String
 userPassword (User _ _ _ _ _ _ _ a _) = a
 
 --- Gets the attribute `LastLogin` of the `User` entity.
-userLastLogin :: User -> Time.ClockTime
+userLastLogin :: User -> Data.Time.ClockTime
 userLastLogin (User _ _ _ _ _ _ _ _ a) = a
 
 --- Sets the attribute `Key` of the `User` entity.
@@ -1419,7 +1419,7 @@ setUserPassword (User a8 a7 a6 a5 a4 a3 a2 _ b1) a =
   User a8 a7 a6 a5 a4 a3 a2 a b1
 
 --- Sets the attribute `LastLogin` of the `User` entity.
-setUserLastLogin :: User -> Time.ClockTime -> User
+setUserLastLogin :: User -> Data.Time.ClockTime -> User
 setUserLastLogin (User a9 a8 a7 a6 a5 a4 a3 a2 _) a =
   User a9 a8 a7 a6 a5 a4 a3 a2 a
 
@@ -1465,7 +1465,7 @@ newUser
   -> String
   -> String
   -> String
-  -> String -> Time.ClockTime -> Database.CDBI.Connection.DBAction User
+  -> String -> Data.Time.ClockTime -> Database.CDBI.Connection.DBAction User
 newUser login_p name_p first_p title_p email_p url_p password_p lastLogin_p =
   Database.CDBI.ER.insertNewEntry user_CDBI_Description setUserKey UserID
    (User (UserID 0) login_p name_p first_p title_p email_p url_p password_p
@@ -4337,7 +4337,7 @@ studentColumnTAN =
   Database.CDBI.Description.Column "\"TAN\"" "\"Student\".\"TAN\""
 
 --- The database column `LastLogin` of the `Student` entity.
-studentColumnLastLogin :: Database.CDBI.Description.Column Time.ClockTime
+studentColumnLastLogin :: Database.CDBI.Description.Column Data.Time.ClockTime
 studentColumnLastLogin =
   Database.CDBI.Description.Column "\"LastLogin\"" "\"Student\".\"LastLogin\""
 
@@ -4383,7 +4383,7 @@ studentTANColDesc =
 
 --- The description of the database column `LastLogin` of the `Student` entity.
 studentLastLoginColDesc
-  :: Database.CDBI.Description.ColumnDescription Time.ClockTime
+  :: Database.CDBI.Description.ColumnDescription Data.Time.ClockTime
 studentLastLoginColDesc =
   Database.CDBI.Description.ColDesc "\"Student\".\"LastLogin\""
    Database.CDBI.Connection.SQLTypeDate
@@ -4411,7 +4411,7 @@ studentTAN :: Student -> String
 studentTAN (Student _ _ _ _ a _) = a
 
 --- Gets the attribute `LastLogin` of the `Student` entity.
-studentLastLogin :: Student -> Time.ClockTime
+studentLastLogin :: Student -> Data.Time.ClockTime
 studentLastLogin (Student _ _ _ _ _ a) = a
 
 --- Sets the attribute `Key` of the `Student` entity.
@@ -4435,7 +4435,7 @@ setStudentTAN :: Student -> String -> Student
 setStudentTAN (Student a5 a4 a3 a2 _ b1) a = Student a5 a4 a3 a2 a b1
 
 --- Sets the attribute `LastLogin` of the `Student` entity.
-setStudentLastLogin :: Student -> Time.ClockTime -> Student
+setStudentLastLogin :: Student -> Data.Time.ClockTime -> Student
 setStudentLastLogin (Student a6 a5 a4 a3 a2 _) a = Student a6 a5 a4 a3 a2 a
 
 --- id-to-value function for entity `Student`.
@@ -4479,7 +4479,7 @@ newStudent
   :: String
   -> String
   -> String
-  -> String -> Time.ClockTime -> Database.CDBI.Connection.DBAction Student
+  -> String -> Data.Time.ClockTime -> Database.CDBI.Connection.DBAction Student
 newStudent email_p name_p first_p tAN_p lastLogin_p =
   Database.CDBI.ER.insertNewEntry student_CDBI_Description setStudentKey
    StudentID
@@ -4540,7 +4540,7 @@ studentCourseColumnKey =
   Database.CDBI.Description.Column "\"Key\"" "\"StudentCourse\".\"Key\""
 
 --- The database column `SelectDate` of the `StudentCourse` entity.
-studentCourseColumnSelectDate :: Database.CDBI.Description.Column Time.ClockTime
+studentCourseColumnSelectDate :: Database.CDBI.Description.Column Data.Time.ClockTime
 studentCourseColumnSelectDate =
   Database.CDBI.Description.Column "\"SelectDate\""
    "\"StudentCourse\".\"SelectDate\""
@@ -4570,7 +4570,7 @@ studentCourseKeyColDesc =
 
 --- The description of the database column `SelectDate` of the `StudentCourse` entity.
 studentCourseSelectDateColDesc
-  :: Database.CDBI.Description.ColumnDescription Time.ClockTime
+  :: Database.CDBI.Description.ColumnDescription Data.Time.ClockTime
 studentCourseSelectDateColDesc =
   Database.CDBI.Description.ColDesc "\"StudentCourse\".\"SelectDate\""
    Database.CDBI.Connection.SQLTypeDate
@@ -4606,7 +4606,7 @@ studentCourseKey :: StudentCourse -> StudentCourseID
 studentCourseKey (StudentCourse a _ _ _) = a
 
 --- Gets the attribute `SelectDate` of the `StudentCourse` entity.
-studentCourseSelectDate :: StudentCourse -> Time.ClockTime
+studentCourseSelectDate :: StudentCourse -> Data.Time.ClockTime
 studentCourseSelectDate (StudentCourse _ a _ _) = a
 
 --- Gets the attribute `StudentStudentCoursesKey` of the `StudentCourse` entity.
@@ -4622,7 +4622,7 @@ setStudentCourseKey :: StudentCourse -> StudentCourseID -> StudentCourse
 setStudentCourseKey (StudentCourse _ b3 b2 b1) a = StudentCourse a b3 b2 b1
 
 --- Sets the attribute `SelectDate` of the `StudentCourse` entity.
-setStudentCourseSelectDate :: StudentCourse -> Time.ClockTime -> StudentCourse
+setStudentCourseSelectDate :: StudentCourse -> Data.Time.ClockTime -> StudentCourse
 setStudentCourseSelectDate (StudentCourse a2 _ b2 b1) a =
   StudentCourse a2 a b2 b1
 
@@ -4684,7 +4684,7 @@ getStudentCourse =
 
 --- Inserts a new `StudentCourse` entity.
 newStudentCourseWithStudentStudentCoursesKeyWithModInstStudentCourseInstancesKey
-  :: Time.ClockTime
+  :: Data.Time.ClockTime
   -> StudentID -> ModInstID -> Database.CDBI.Connection.DBAction StudentCourse
 newStudentCourseWithStudentStudentCoursesKeyWithModInstStudentCourseInstancesKey
     selectDate_p studentStudentCoursesKey_p modInstStudentCourseInstancesKey_p =

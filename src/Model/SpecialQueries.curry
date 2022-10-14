@@ -4,7 +4,7 @@
 
 module SpecialQueries where
 
-import List ( intersect, nub )
+import Data.List ( intersect, nub )
 
 import Database.CDBI.ER
 import ShowDotGraph
@@ -137,7 +137,7 @@ queryStudentsOfModSemester md (term,year) =
 queryStudentNumberOfModSemester :: ModData -> (String,Int)
                                 -> DBAction Int
 queryStudentNumberOfModSemester md (term,year) =
-  liftM (\xs -> if null xs then 0 else head xs)
+  fmap (\xs -> if null xs then 0 else head xs)
   ``sql* Select Count(s.Email)
          From ModData as md, ModInst as mi, Student as s, StudentCourse as sc
          Where md.Code = {modDataCode md} And

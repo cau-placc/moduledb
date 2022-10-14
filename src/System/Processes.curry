@@ -2,30 +2,25 @@
 --- This module implements the management to execute user processes.
 --------------------------------------------------------------------------
 
-module System.Processes(
-  processNames,
-  isInProcess, startProcess, removeCurrentProcess, advanceInProcess,
-  nextControllerRefInProcessOrForUrl
- ) where
+module System.Processes
+  ( processNames
+  , isInProcess, startProcess, removeCurrentProcess, advanceInProcess
+  , nextControllerRefInProcessOrForUrl
+  ) where
 
-import Config.UserProcesses
-
-import Global
-import Maybe
+import Control.AllSolutions ( getOneValue )
 import HTML.Base
-
-import System.Routes
-import Config.RoutesData
 import HTML.Session
 
-import ReadShowTerm
-import Control.AllSolutions
+import Config.RoutesData
+import Config.UserProcesses
+import System.Routes
 
 --------------------------------------------------------------------------
 -- A operations on the datatype for process systems.
 
-processesOf :: Processes a -> [(String,a)]
-processesOf (ProcSpec procs _ _) = procs
+processesOf :: Processes a -> [(String, a)]
+processesOf  (ProcSpec procs _ _) = procs
 
 --- The names of the processes in a process system.
 processNames :: Processes _ -> [String]
@@ -37,20 +32,20 @@ getControllerForState sid (ProcSpec _ ctrlof _) = ctrlof sid
 --- Is a state a final state, i.e., without successors, in a process system?
 isFinalState :: a -> Processes a -> IO Bool
 isFinalState sid (ProcSpec _ _ trans) = do
-  succs <- getOneSolution (\x -> let p free in x =:= trans sid p)
+  succs <- getOneValue (trans sid _)
   return (maybe True (const False) succs)
 
 --------------------------------------------------------------------------
 -- The current processes are stored in a persistent entity.
-currentProcess :: Global (SessionStore String)
-currentProcess = global emptySessionStore Temporary
+currentProcess :: SessionStore String
+currentProcess = sessionStore "currentProcess"
 
 --- Returns the process state stored in the user session.
-getCurrentProcess :: IO (Maybe _)
+getCurrentProcess :: Read a => IO (Maybe a)
 getCurrentProcess = do
   curProc <- fromFormReader $ getSessionMaybeData currentProcess
   case curProc of
-    Just sids -> return $ Just (readQTerm sids)
+    Just sids -> return $ Just (read sids)
     Nothing -> return Nothing
 
 --- Is the current user session in a process interaction?
@@ -60,8 +55,8 @@ isInProcess = fromFormReader $
 
 --- Saves the state of a process, i.e., a node in the process graph,
 --- in the user session.
-saveCurrentProcess :: _ -> IO ()
-saveCurrentProcess sid = writeSessionData currentProcess (showQTerm sid)
+saveCurrentProcess :: Show a => a -> IO ()
+saveCurrentProcess sid = putSessionData currentProcess (show sid)
 
 --- Deletes the process in the user session.
 removeCurrentProcess :: IO ()
@@ -84,13 +79,13 @@ advanceInProcess :: Maybe ControllerResult -> IO ()
 advanceInProcess ctrlinfo = do
   curprocess <- getCurrentProcess
   case curprocess of
-    Nothing  -> done -- no active process, do nothing
+    Nothing  -> return () -- no active process, do nothing
     Just sid -> do
      let (ProcSpec _ _ trans) = availableProcesses
      nextsid <- getOneValue (trans sid ctrlinfo)
      case nextsid of
         Just sid' -> saveCurrentProcess sid'
-        Nothing   -> done -- this case should not occur in a good spec.
+        Nothing   -> return () -- this case should not occur in a good spec.
 
 --- Returns the next controller in the current process or,
 --- if there is no current process, the controller associated to the given URL.
@@ -102,5 +97,5 @@ nextControllerRefInProcessOrForUrl url = do
     Nothing  -> getControllerReference url -- no current process
     Just sid -> do isfinal <- isFinalState sid availableProcesses
                    if isfinal then removeCurrentProcess
-                              else done
+                              else return ()
                    return (Just (getControllerForState sid availableProcesses))

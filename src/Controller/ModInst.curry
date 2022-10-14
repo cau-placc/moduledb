@@ -3,20 +3,18 @@ module Controller.ModInst
   , updateAllModInstController, createModInstController
   ) where
 
+import Data.List (find)
+import Data.Maybe (isJust)
 import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import Time
 import MDB
 import MDBExts
 import View.ModInst
 import View.User
-import Maybe
 import System.Authorization
 import System.AuthorizedActions
 import Config.UserProcesses
-import List
-import Sort
 import System.Authentication
 import System.Helpers
 import ConfigMDB
@@ -91,8 +89,8 @@ updateAllModInstController mdata oldinsts cntcontroller modinsts =
                     else updateModInst ni |>> returnT [Just (UpdateModInst ni)])
              oldnewinsts) >>=
     flip either (\ upds  -> do
-               mapIO_ (maybe done logEvent) (concat upds)
-               if all isJust (concat upds) then done
+               mapM_ (maybe (return ()) logEvent) (concat upds)
+               if all isJust (concat upds) then return ()
                                            else setPageMessage useMsg
                nextInProcessOr cntcontroller Nothing )
            (\ error -> displayError (showTError error))

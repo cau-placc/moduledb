@@ -8,13 +8,10 @@ module Controller.ModData
   , newPreqModDataForm, deletePreqModDataForm
   ) where
 
-import Directory
-import Global
-import List
-import Maybe
-import Sort
-import System
-import Time
+import System.PreludeHelpers
+
+import Control.Monad ( unless )
+import Data.List
 
 import ConfigMDB
 import System.Spicey
@@ -40,8 +37,10 @@ import View.MDBEntitiesToHtml
 import View.ModDescr ( wModDescrType )
 import View.ModInst
 import View.User    ( leqUser )
-import FileGoodies  ( baseName )
-import Mail
+import System.Directory ( doesFileExist )
+import System.FilePath  ( takeBaseName )
+import System.Mail
+import System.Process ( getPID, system )
 import System.SessionInfo
 import System.MultiLang
 import System.StudyPlanner
@@ -132,11 +131,10 @@ newModDataWuiForm =
 
 ---- The data stored for executing the WUI form.
 wuiNewModDataWuiStore ::
-  Global (SessionStore
+  SessionStore
             ((UserSessionInfo, Bool, Bool, [User], [(StudyProgram,[Category])]),
-             WuiStore NewModData))
-wuiNewModDataWuiStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiNewModDataWuiStore"))
+             WuiStore NewModData)
+wuiNewModDataWuiStore = sessionStore "wuiNewModDataWuiStore"
 
 
 --- Persists a new ModData entity to the database.
@@ -159,7 +157,7 @@ createModDataController isimport
               returnT (md,Just mi)) >>=
   either (\ error -> displayError (showTError error))
          (\ (md,mi) -> logEvent (NewModData md) >>
-                       maybe done (logEvent . NewModDescr) mi >>
+                       maybe (return ()) (logEvent . NewModDescr) mi >>
                        nextInProcessOr redirectToDefaultController Nothing)
 
 
@@ -200,11 +198,10 @@ editModDataForm =
 
 --- The data stored for executing the WUI form.
 wuiEditModDataStore ::
-  Global (SessionStore
+  SessionStore
      ((UserSessionInfo,Bool,ModData,User,[User],[(StudyProgram,[Category])]),
-      WuiStore (ModData,[Category])))
-wuiEditModDataStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiEditModDataStore"))
+      WuiStore (ModData,[Category]))
+wuiEditModDataStore = sessionStore "wuiEditModDataStore"
 
 
 --- Persists modifications of a given ModData entity.
@@ -260,8 +257,8 @@ destroyModDataController modData =
           deleteModData modData |>>
           returnT mbdescr) >>=
     flip either (\ mbdescr -> logEvent (DeleteModData modData) >>
-                         maybe done (logEvent . DeleteModDescr) mbdescr >>
-                         redirectToDefaultController)
+                       maybe (return ()) (logEvent . DeleteModDescr) mbdescr >>
+                       redirectToDefaultController)
            (\ error -> displayError (showTError error))
  where
   killCategorizing categorys =
@@ -297,7 +294,7 @@ studentModuleEmailController sem mdata =
 copyModuleController :: ModData -> Controller
 copyModuleController mdata =
  checkAuthorization checkAdmin $ \_ -> do
-  writeSessionData copyModuleStore mdata
+  putSessionData copyModuleStore mdata
   return [formElem copyModuleForm]
 
 copyModuleForm :: HtmlFormDef (ModData,ModDescr)
@@ -314,9 +311,8 @@ copyModuleForm =
           maybemdesc
 
 ---- The data stored for executing the WUI form.
-copyModuleStore :: Global (SessionStore ModData)
-copyModuleStore =
-  global emptySessionStore (Persistent (inSessionDataDir "copyModuleStore"))
+copyModuleStore :: SessionStore ModData
+copyModuleStore = sessionStore "copyModuleStore"
 
 --- Controller for copying a module with a new code:
 storeCopiedModController :: ModData -> ModDescr -> String -> Controller
@@ -445,7 +441,7 @@ removeCategorizing categorys modData =
 -- Get all study programs with their categories:
 getStudyProgramsWithCats :: IO [(StudyProgram,[Category])]
 getStudyProgramsWithCats = runQ $ do
-  sps <- liftM (mergeSortBy leqStudyProgram) queryAllStudyPrograms
+  sps <- fmap (sortBy leqStudyProgram) queryAllStudyPrograms
   mapM (\sp -> do cs <- queryCategorysOfStudyProgram (studyProgramKey sp)
                   return (sp,cs))
        sps
@@ -455,7 +451,7 @@ getStudyProgramsWithCats = runQ $ do
 emailModuleController :: ModData -> Controller
 emailModuleController mdata =
  checkAuthorization checkAdmin $ \_ -> do
-  writeSessionData emailModuleStore
+  putSessionData emailModuleStore
     (mdata,"Lieber Modulverantwortlicher,\n\n\nViele Gruesse\n\n")
   return [formElem emailModuleMessageForm]
 
@@ -503,9 +499,8 @@ emailModuleMessageForm =
     cntcontroller = showModDataController mdata
 
 ---- The data stored for executing the WUI form.
-emailModuleStore :: Global (SessionStore (ModData,String))
-emailModuleStore =
-  global emptySessionStore (Persistent (inSessionDataDir "emailModuleStore"))
+emailModuleStore :: SessionStore (ModData,String)
+emailModuleStore = sessionStore "emailModuleStore"
 
 
 ----------------------------------------------------------------------
@@ -540,12 +535,12 @@ formatCatModulesForm catmods = do
   sinfo <- getUserSessionInfo
   pid <- getPID
   let tmp = "tmp_"++show pid
-  mstr <- mapIO (formatCatMods sinfo sprogs) catmods
+  mstr <- mapM (formatCatMods sinfo sprogs) catmods
   writeStandaloneLatexFile (tmp++".tex") (concat mstr)
   latexFormatForm sinfo 10.0 tmp "Formatted module descriptions"
  where
   formatCatMods sinfo sprogs (catname,mods) = do
-    mstr <- mapIO (formatModData sinfo sprogs) mods
+    mstr <- mapM (formatModData sinfo sprogs) mods
     return ("\\modulecategory{"++catname++"}\n\n"++concat mstr)
     
   formatModData sinfo sprogs md = do
@@ -610,7 +605,7 @@ mod2latex _ md _ _ _ _ _ Nothing =
   "%%%%%%%%%% "++modDataCode md++" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n"++
   "\\importmodule{" ++ modDataCode md ++ "}{" ++
   escapeLaTeXSpecials (modDataNameG md) ++ "}{" ++
-  modDataURL md ++ "}{" ++baseName (modDataURL md) ++ "}\n\n"
+  modDataURL md ++ "}{" ++ takeBaseName (modDataURL md) ++ "}\n\n"
 
 mod2latex sinfo md mis responsibleUser sprogs categorys prerequisites
           (Just desc) =
@@ -718,7 +713,7 @@ mod2xml md responsibleUser users sprogs categorys modinsts (Just desc) =
       ([xml "praesenz" [xtxt (modDataPresence md)],
         xml "dauer"    [xtxt (show (modDataLength md))],
         xml "turnus"   [xtxt (modDataCycle md)]] ++
-       map modinst2xml (mergeSortBy leqModInst modinsts))])
+       map modinst2xml (sortBy leqModInst modinsts))])
  where
    showStudyProgramKey spk =
      maybe "?" studyProgramProgKey
@@ -765,7 +760,7 @@ addInstToModDataController :: ModData -> Controller
 addInstToModDataController mdata =
  checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \sinfo-> do
    responsibleUser <- runJustT (getResponsibleUser mdata)
-   allUsers <- runQ (liftM (mergeSortBy leqUser) queryAllUsers)
+   allUsers <- runQ (fmap (sortBy leqUser) queryAllUsers)
    (curterm,curyear) <- getCurrentSemester
    setParWuiStore wuiAddModInstStore
                   (sinfo,curyear,allUsers,mdata)
@@ -787,10 +782,9 @@ addModInstForm =
 
 --- The data stored for executing the WUI form.
 wuiAddModInstStore ::
-  Global (SessionStore ((UserSessionInfo, Int, [User], ModData),
-                        WuiStore (String,Int,User)))
-wuiAddModInstStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiAddModInstStore"))
+  SessionStore ((UserSessionInfo, Int, [User], ModData),
+                WuiStore (String,Int,User))
+wuiAddModInstStore = sessionStore "wuiAddModInstStore"
 
 -----------------------------------------------------------------------------
 -- A controller to edit all module instances of the given module.
@@ -799,14 +793,14 @@ editInstOfModDataController mdata =
  checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \sinfo-> do
    admin <- isAdmin
    cursem   <- getCurrentSemester
-   allinsts <- runQ $ liftM
-                        (mergeSortBy leqModInst . filterModInsts admin cursem)
+   allinsts <- runQ $ fmap
+                        (sortBy leqModInst . filterModInsts admin cursem)
                         (queryInstancesOfMod (modDataKey mdata))
    allmpkeys <- runQ $ getMasterProgramKeysOfModInst allinsts
    allspkeys <- runJustT $
                  mapM (\mi -> getAdvisorStudyProgramKeysOfModInst mi)
                       allinsts
-   allUsers <- runQ (liftM (mergeSortBy leqUser) queryAllUsers)
+   allUsers <- runQ (fmap (sortBy leqUser) queryAllUsers)
    -- select instances not used in master programs:
    let editinsts = concatMap
                        (\ (mi,mks,sks) -> if (null mks && null sks) || admin
@@ -860,11 +854,10 @@ editModInstForm =
 
 --- The data stored for executing the WUI form.
 wuiEditModInstStore ::
-  Global (SessionStore
+  SessionStore
             ((UserSessionInfo, Int, Bool, [(Bool,ModInst)],[User], ModData),
-             WuiStore [Either (ModInst,Bool) ModInst]))
-wuiEditModInstStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiEditModInstStore"))
+             WuiStore [Either (ModInst,Bool) ModInst])
+wuiEditModInstStore = sessionStore "wuiEditModInstStore"
 
 
 -----------------------------------------------------------------------------
@@ -900,9 +893,8 @@ editModDescrForm =
 
 --- The data stored for executing the WUI form.
 wuiEditModDescrStore ::
-  Global (SessionStore ((UserSessionInfo,ModData,ModDescr), WuiStore ModDescr))
-wuiEditModDescrStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiEditModDescrStore"))
+  SessionStore ((UserSessionInfo,ModData,ModDescr), WuiStore ModDescr)
+wuiEditModDescrStore = sessionStore "wuiEditModDescrStore"
 
 
 -----------------------------------------------------------------------------
@@ -922,7 +914,7 @@ newPreqModDataForm =
   readData = toFormReader $ do
     mdata <- getModDataFromURL
     allmods <- runJustT queryAllModDataShortInfo
-    let selmods = mergeSortBy (\m1 m2 -> snd m1 <= snd m2)
+    let selmods = sortBy (\m1 m2 -> snd m1 <= snd m2)
                               (map mod2KeyShortView allmods)
     sinfo <- getUserSessionInfo
     return (sinfo, selmods, addPreqModDataController mdata)
@@ -953,7 +945,7 @@ editPreqModDataController mdata =
  checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $
   \sinfo -> do
     prerequisites <- runQ $ getModDataModDatas mdata
-    let preqmods = mergeSortBy (\m1 m2 -> snd m1 <= snd m2)
+    let preqmods = sortBy (\m1 m2 -> snd m1 <= snd m2)
                                (map mod2KeyShortView prerequisites)
     setParWuiStore wuiDeletePreqModulStore
                    (sinfo,mdata)
@@ -985,10 +977,9 @@ deletePreqModDataForm =
 
 ---- The data stored for executing the WUI form.
 wuiDeletePreqModulStore ::
-  Global (SessionStore ((UserSessionInfo, ModData),
-                        WuiStore [(ModDataID,String,Bool)]))
-wuiDeletePreqModulStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiDeletePreqModulStore"))
+  SessionStore ((UserSessionInfo, ModData),
+                WuiStore [(ModDataID,String,Bool)])
+wuiDeletePreqModulStore = sessionStore "wuiDeletePreqModulStore"
 
 deletePreqModDataController :: ModData -> [(ModDataID,String,Bool)]
                             -> Controller

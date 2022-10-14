@@ -5,20 +5,18 @@ module Controller.Student
   , selectSemesterForm, selectCourseSelectionForm
   ) where
 
-import Char ( isDigit, toLower )
-import Global
-import List ( (\\), isSuffixOf )
+import Data.Char ( isDigit, toLower )
+import Data.List ( (\\), isSuffixOf )
+import Data.Time
 import System.Helpers
 import System.Spicey
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import Time
 
 import Config.EntityRoutes
 import MDB
 import View.Student
-import Maybe
 import System.SessionInfo
 import System.Authentication
 import System.Authorization
@@ -93,10 +91,8 @@ newStudentForm =
                                " (" ++ t "only" ++ " stu...@mail.uni-kiel.de)!"
 
 ---- The data stored for executing the WUI form.
-wuiNewStudentStore ::
-  Global (SessionStore (UserSessionInfo, WuiStore NewStudent))
-wuiNewStudentStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiNewStudentStore"))
+wuiNewStudentStore :: SessionStore (UserSessionInfo, WuiStore NewStudent)
+wuiNewStudentStore = sessionStore "wuiNewStudentStore"
 
 --- Is the email address allowed to register?
 emailAllowed :: String -> Bool
@@ -140,9 +136,8 @@ editStudentWuiForm =
 
 ---- The data stored for executing the WUI form.
 wuiEditStudentWuiStore ::
-  Global (SessionStore ((UserSessionInfo,Student), WuiStore Student))
-wuiEditStudentWuiStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiEditStudentWuiStore"))
+  SessionStore ((UserSessionInfo,Student), WuiStore Student)
+wuiEditStudentWuiStore = sessionStore "wuiEditStudentWuiStore"
 
 
 --- Transaction to persist modifications of a given Student entity
@@ -281,7 +276,7 @@ selectCourseController sem = do
   case studentLoginOfSession sinfo of
     Nothing    -> return [h3 [htxt $ "Operation not allowed!"]]
     Just email -> do
-      writeSessionData selectCoursesFormStore (sem,email)
+      putSessionData selectCoursesFormStore (sem,email)
       return [formElem selectCourseSelectionForm]
 
 selectCourseSelectionForm ::
@@ -300,9 +295,8 @@ selectCourseSelectionForm =
     stmis  <- runQ $ queryModInstsOfStudentInSem email sem
     return (sinfo,sem,stmis,mimods)
 
-selectCoursesFormStore :: Global (SessionStore ((String,Int), String))
-selectCoursesFormStore =
-  global emptySessionStore (Persistent (inSessionDataDir "selectCourseFormStore"))
+selectCoursesFormStore :: SessionStore ((String,Int), String)
+selectCoursesFormStore = sessionStore "selectCourseFormStore"
 
 
 --- Store selected modules for a student.

@@ -3,10 +3,6 @@ module Controller.UnivisInfo (
  newUnivisInfoForm, editUnivisInfoWuiForm
  ) where
 
-import Global
-import Read
-import Maybe
-import Time
 
 import Controller.ModData
 import System.Helpers
@@ -61,10 +57,8 @@ newUnivisInfoForm =
                          "?UnivisInfo/list" ())
 
 ---- The data stored for executing the WUI form.
-newUnivisInfoStore ::
-  Global (SessionStore (UserSessionInfo, WuiStore NewUnivisInfo))
-newUnivisInfoStore =
-  global emptySessionStore (Persistent (inSessionDataDir "newUnivisInfoStore"))
+newUnivisInfoStore :: SessionStore (UserSessionInfo, WuiStore NewUnivisInfo)
+newUnivisInfoStore = sessionStore "newUnivisInfoStore"
 
 --- Persists a new UnivisInfo entity to the database.
 createUnivisInfoController :: NewUnivisInfo -> Controller
@@ -101,10 +95,8 @@ editUnivisInfoWuiForm =
 
 ---- The data stored for executing the WUI form.
 editUnivisInfoWuiStore ::
-  Global (SessionStore ((UserSessionInfo,UnivisInfo), WuiStore UnivisInfo))
-editUnivisInfoWuiStore =
-  global emptySessionStore
-         (Persistent (inSessionDataDir "editUnivisInfoWuiStore"))
+  SessionStore ((UserSessionInfo,UnivisInfo), WuiStore UnivisInfo)
+editUnivisInfoWuiStore = sessionStore "editUnivisInfoWuiStore"
 
 
 --- Persists modifications of a given UnivisInfo entity to the
@@ -139,7 +131,7 @@ showModDataUnivisInfoController :: String -> String -> ModData -> Controller
 showModDataUnivisInfoController terms years mdata =
   checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ \_ -> do
     admin <- isAdmin
-    let sem = (terms, Read.readNat years)
+    let sem = (terms, read years)
     urls <- runQ $ queryUnivisURL (modDataCode mdata) sem
     mis <- runQ $ queryInstancesOfMod (modDataKey mdata)
     let semmis = filter (\mi -> (modInstTerm mi,modInstYear mi) == sem)
@@ -154,12 +146,12 @@ showModDataUnivisInfoController terms years mdata =
 emailModDataUnivisInfoController :: String -> String -> ModData -> Controller
 emailModDataUnivisInfoController terms years mdata =
   checkAuthorization checkAdmin $ \_ -> do
-    let sem = (terms, Read.readNat years)
+    let sem = (terms, read years)
     urls <- runQ $ queryUnivisURL (modDataCode mdata) sem
     let msg = if null urls
                 then missingUnivISMessage mdata sem
                 else missingMDBMessage mdata sem
-    writeSessionData emailModuleStore (mdata, msg)
+    putSessionData emailModuleStore (mdata, msg)
     return [formElem emailModuleMessageForm]
 
 --- Shows a UnivisInfo entity.

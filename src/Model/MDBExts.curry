@@ -4,8 +4,6 @@
 
 module MDBExts where
 
-import ReadShowTerm ( readQTerm )
-
 import Database.CDBI.ER
 
 import System.Helpers
@@ -22,7 +20,7 @@ readTermDB = restoreDBFrom storageDir
 
 --- Transforms an SQL list result into a maybe result (of first element).
 sqlToMaybe :: DBAction [a] -> DBAction (Maybe a)
-sqlToMaybe = liftM (\xs -> if null xs then Nothing else Just (head xs))
+sqlToMaybe = fmap (\xs -> if null xs then Nothing else Just (head xs))
 
 -----------------------------------------------------------------------
 --- Shows the key of a MasterProgram entity as a string.
@@ -94,7 +92,7 @@ queryMasterProgramOfUser ukey =
 --- Gets all MasterProgram (keys) for each ModInst of a given ModInst list.
 getMasterProgramKeysOfModInst :: [ModInst] -> DBAction [[MasterProgramID]]
 getMasterProgramKeysOfModInst mis =
- liftM
+ fmap
    (\mpis ->
      map (\mi -> let mdk = modInstModDataModuleInstancesKey mi in
            map snd
@@ -110,7 +108,7 @@ getMasterProgramKeysOfModInst mis =
 
 -- to avoid typing problem with kics2
 readProgModules :: String -> [(String,Bool,String,String,Int)]
-readProgModules s = readQTerm s
+readProgModules s = read s
 
 
 --- Query to get the AdvisorModules where a module instance is used.
@@ -164,7 +162,7 @@ getModDataKeyCategories mdk =
 
 --- query whether a module has a UnivIS instance in a semester:
 queryHasUnivisEntry :: String -> (String,Int) -> DBAction Bool
-queryHasUnivisEntry mcode (term,year) = liftM (not . null) $
+queryHasUnivisEntry mcode (term,year) = fmap (not . null) $
   ``sql* Select * From UnivisInfo As uv
          Where uv.Code = {mcode} And uv.Term = {term} And uv.Year = {year};''
 

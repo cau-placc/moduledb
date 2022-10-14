@@ -8,10 +8,8 @@ module Controller.Search
   , selectUserModulesForm )
  where
 
-import Char
-import List
-import Maybe
-import Sort (mergeSortBy)
+import Data.List
+import Data.Maybe
 
 import HTML.Base
 import System.Spicey
@@ -111,7 +109,7 @@ selectUserModulesForm = formDefWithID "Controller.Search.selectUserModulesForm"
   readData = toFormReader $ do
     sinfo <- getUserSessionInfo
     allUsers <- runQ queryAllUsers
-    return (sinfo, mergeSortBy leqUser allUsers)
+    return (sinfo, sortBy leqUser allUsers)
 
 --- Controller to list all modules of a user.
 searchUserModules :: User -> Controller
@@ -126,13 +124,13 @@ searchUserModules user = do
 --- Controller to list all (visible) modules.
 showAllModulesController :: Controller
 showAllModulesController = do
-  mods  <- runQ $ liftM (filter modDataVisible) queryAllModDatas
+  mods  <- runQ $ fmap (filter modDataVisible) queryAllModDatas
   showModulesController mods []
 
 --- Controller to list all responsible persons of all modules.
 showAllModuleResponsibleController :: Controller
 showAllModuleResponsibleController = do
-  mods  <- runQ $ liftM (filter modDataVisible) queryAllModDatas
+  mods  <- runQ $ fmap (filter modDataVisible) queryAllModDatas
   let respkeys = nub (map modDataUserResponsibleKey mods)
   respusers <- runJustT (mapM getUser respkeys)
   return (showAllModuleResponsibleView "Alle Modulverantwortlichen" respusers)
@@ -151,8 +149,8 @@ showModSemResponsibleController sem = do
 --- Controller to list all (visible) modules taught in English.
 showAllEnglishModulesController :: Controller
 showAllEnglishModulesController = do
-  mods  <- runQ $ liftM (filter modDataVisible) queryAllModDatas
-  emods <- mapIO checkEnglishMod mods
+  mods  <- runQ $ fmap (filter modDataVisible) queryAllModDatas
+  emods <- mapM checkEnglishMod mods
   showModulesController (concat emods) []
  where
   checkEnglishMod md = do

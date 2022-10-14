@@ -3,10 +3,11 @@ module View.ModDescr (
  showModDescrView, listModDescrView
  ) where
 
-import HTML.WUI
+import Data.List
+import Data.Time
 import HTML.Base
-import Time
-import Sort
+import HTML.Styles.Bootstrap4
+import HTML.WUI
 import System.Spicey
 import MDB
 import View.MDBEntitiesToHtml

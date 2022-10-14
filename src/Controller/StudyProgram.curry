@@ -2,14 +2,11 @@ module Controller.StudyProgram
   ( mainStudyProgramController, newStudyProgramWuiForm, editStudyProgramForm )
  where
 
-import Directory
-import Global
-import IO     ( hPutStr, hClose )
-import IOExts ( connectToCommand, evalCmd, readCompleteFile )
-import List   ( (\\), nub )
-import Maybe
-import System
-import Time
+import Data.List        ( nub )
+import System.Directory ( doesFileExist )
+import System.IO        ( hPutStr, hClose )
+import System.IOExts    ( connectToCommand, evalCmd )
+import System.Process   ( getPID, system )
 
 import HTML.Base
 import HTML.Session
@@ -75,9 +72,8 @@ newStudyProgramWuiForm =
 
 ---- The data stored for executing the WUI form.
 newStudyProgramWuiStore ::
-  Global (SessionStore (UserSessionInfo, WuiStore NewStudyProgram))
-newStudyProgramWuiStore =
-  global emptySessionStore (Persistent (inSessionDataDir "newStudyProgramWuiStore"))
+  SessionStore (UserSessionInfo, WuiStore NewStudyProgram)
+newStudyProgramWuiStore = sessionStore "newStudyProgramWuiStore"
 
 --- Transaction to persist a new StudyProgram entity to the database.
 createStudyProgramT :: (String,String,String,String,Int) -> DBAction ()
@@ -108,10 +104,8 @@ editStudyProgramForm = pwui2FormDef "Controller.StudyProgram.editStudyProgramFor
 
 --- The data stored for executing the WUI form.
 wuiEditStudyProgramStore ::
-  Global (SessionStore ((UserSessionInfo,StudyProgram), WuiStore StudyProgram))
-wuiEditStudyProgramStore =
-  global emptySessionStore
-         (Persistent (inSessionDataDir "wuiEditStudyProgramStore"))
+  SessionStore ((UserSessionInfo,StudyProgram), WuiStore StudyProgram)
+wuiEditStudyProgramStore = sessionStore "wuiEditStudyProgramStore"
 
 --- Persists modifications of a given StudyProgram entity.
 updateStudyProgramController :: StudyProgram -> Controller

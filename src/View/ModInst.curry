@@ -4,11 +4,11 @@ module View.ModInst (
  singleModInstView
  ) where
 
+import Data.List
+import Data.Time
 import HTML.WUI
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import Time
-import Sort
 import System.SessionInfo
 import System.Spicey
 import MDB

@@ -5,10 +5,8 @@ module Controller.ModDescr (
 
 import System.Spicey
 import HTML.Base
-import Time
 import MDB
 import View.ModDescr
-import Maybe
 import System.Authorization
 import System.AuthorizedActions
 import Config.UserProcesses

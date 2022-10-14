@@ -4,12 +4,12 @@ module View.AdvisorModule
   , showAdvisorModuleView, listAdvisorModuleView )
 where
 
+import Data.List
+import Data.Time
 import System.Helpers
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.WUI
-import Time
-import Sort
 import System.Spicey
 import System.SessionInfo
 import MDB

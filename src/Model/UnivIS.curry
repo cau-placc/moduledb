@@ -22,8 +22,8 @@ initUnivisDB = do
 processUnivisFile :: (String,Int) -> IO [(String,String,Int,String)]
 processUnivisFile (term,year) = do
   let fname = storageDir++"UnivisLectureURL_"++showSemUnivis++".terms"
-  allmcodes <- runQ (liftM (map modDataCode) queryAllModDatas)
-  infos <- readQTermListFile fname
+  allmcodes <- runQ (fmap (map modDataCode) queryAllModDatas)
+  infos <- readFile fname >>= return . map read . lines
   return $ process allmcodes infos
  where
   process mcodes info =

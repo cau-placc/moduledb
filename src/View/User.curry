@@ -6,12 +6,12 @@ module View.User (
  , changePasswordFormView
  ) where
 
-import Mail ( sendMail )
+import Data.List   ( sortBy )
+import Data.Time
 import HTML.WUI
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import Time
-import Sort
+import System.Mail ( sendMail )
 import System.Authentication
 import System.MultiLang
 import System.SessionInfo

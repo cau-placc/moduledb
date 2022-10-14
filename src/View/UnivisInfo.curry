@@ -4,16 +4,15 @@ module View.UnivisInfo (
  loadUnivisView, missingMDBMessage, missingUnivISMessage
  ) where
 
+import Data.List
+import Data.Time
 import HTML.WUI
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import Time
-import Sort
 import System.Spicey
 import MDB
 import View.MDBEntitiesToHtml
 import System.Helpers
-import List
 
 --- The WUI specification for the entity type UnivisInfo.
 wUnivisInfo :: WuiSpec (String,String,Int,String)
@@ -63,7 +62,7 @@ listUnivisInfoView univisInfos =
   [h1 [htxt "UnivisInfo list"]
   ,spTable
     ([take 4 univisInfoLabelList] ++
-     map listUnivisInfo (mergeSortBy leqUnivisInfo univisInfos))]
+     map listUnivisInfo (sortBy leqUnivisInfo univisInfos))]
   where listUnivisInfo :: UnivisInfo -> [[BaseHtml]]
         listUnivisInfo univisInfo = univisInfoToListView univisInfo
 

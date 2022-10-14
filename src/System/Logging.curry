@@ -6,10 +6,10 @@
 module System.Logging
  where
 
-import IOExts   ( exclusiveIO )
-import FilePath ( (</>) )
-import System   ( getEnviron )
-import Time
+import Data.Time
+import System.IOExts   ( exclusiveIO )
+import System.FilePath ( (</>) )
+import System.Environment ( getEnv )
 
 import ConfigMDB
 import Data.Format -- required in the pre-processed program
@@ -28,7 +28,7 @@ logUrlParameter = logEntity (storageDir </> "URLPARAMS.log")
 logEntity :: Show a => String -> a -> IO ()
 logEntity logfile entity = do
   ltime <- getLocalTime
-  raddr <- getEnviron "REMOTE_ADDR"
+  raddr <- getEnv "REMOTE_ADDR"
   -- Usually, appendFile should not be subject to race conditions.
   -- In practice, it happened in the written log files so that
   -- we write the file exclusively:

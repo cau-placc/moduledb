@@ -6,11 +6,10 @@ module View.Student
   , showSelectionView, selectCoursesView )
  where
 
-import List ( groupBy, transpose )
-import Sort
-import Time
+import Data.List ( groupBy, sortBy, transpose )
+import Data.Time
 
-import Mail ( sendMail )
+import System.Mail ( sendMail )
 import HTML.WUI
 import HTML.Base
 import HTML.Styles.Bootstrap4
@@ -88,7 +87,7 @@ listStudentView sinfo students =
   [h1 [htxt "Liste der registrierten Studierenden"]
   ,spTable
     ([take 3 labels ++ [labels!!4]] ++
-     map listStudent (mergeSortBy leqStudent students))
+     map listStudent (sortBy leqStudent students))
   ,emphasize [htxt $ "Anzahl der Studierenden: " ++ show (length students)]
   ]
   where
@@ -212,7 +211,7 @@ showSelectionView sinfo mis =
  where
   t = translate sinfo
 
-  semgroups = groupBy sameSem (mergeSortBy leqCourse mis)
+  semgroups = groupBy sameSem (sortBy leqCourse mis)
 
   leqCourse (_,c1,g1,e1,t1,y1) (_,c2,g2,e2,t2,y2) =
     (y1,t1,langSelect sinfo e1 g1,c1) <= (y2,t2,langSelect sinfo e2 g2,c2)
@@ -247,7 +246,7 @@ selectCoursesView cancelcontroller storecontroller (sinfo,sem,stmis,mititles) =
   leqMIT (_,_,c1,g1,e1) (_,_,c2,g2,e2) =
     (langSelect sinfo e1 g1, c1) <= (langSelect sinfo e2 g2, c2)
 
-  selList = map (\x -> (x,unknown)) (mergeSortBy leqMIT mititles)
+  selList = map (\x -> (x,unknown)) (sortBy leqMIT mititles)
   selMatrix =
     if n <= 20
       then map (\x -> [x]) selList

@@ -3,13 +3,13 @@ module Controller.AdvisorModule
    , createAdvisorModuleT, deleteAdvisorModuleController
    , deleteAdvisorModuleT ) where
 
+import Data.Maybe
+import Data.Time
 import System.Helpers
 import System.Spicey
 import HTML.Base
-import Time
 import MDB
 import View.AdvisorModule
-import Maybe
 import Config.EntityRoutes
 import System.SessionInfo
 import System.Authorization

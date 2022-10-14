@@ -35,9 +35,9 @@ module System.Spicey (
   continueOrError
   ) where
 
-import FilePath         ( (</>) )
-import List             ( findIndex, init, last )
-import Time
+import Data.List             ( findIndex, init, last )
+import Data.Time
+import System.FilePath       ( (</>) )
 
 import ConfigMDB        ( baseCGI )
 import Config.UserProcesses
@@ -45,7 +45,6 @@ import HTML.Base
 import HTML.WUI
 import HTML.Session
 import HTML.Styles.Bootstrap4
-import Global
 import System.Authentication
 import System.Helpers
 import System.MultiLang
@@ -366,7 +365,7 @@ spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 --- The standard footer of the Spicey page.
 spiceyFooter :: [BaseHtml]
 spiceyFooter =
-  [par [htxt "Version of Oct 17, 2021, powered by",
+  [par [htxt "Version of Oct 13, 2022, powered by",
         href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
@@ -530,7 +529,7 @@ selectSemesterFormView selcontroller buttontxt (sinfo,cursem) =
 cancelOperation :: IO ()
 cancelOperation = do
   inproc <- isInProcess
-  if inproc then removeCurrentProcess else done
+  if inproc then removeCurrentProcess else return ()
   setPageMessage $ (if inproc then "Process" else "Operation") ++ " cancelled"
 
 -- A controller to display an URL error.
@@ -541,7 +540,7 @@ displayUrlError = displayError "Illegal URL"
 displayError :: String -> Controller
 displayError msg = do
   inproc <- isInProcess
-  if inproc then removeCurrentProcess else done
+  if inproc then removeCurrentProcess else return ()
   setPageMessage ("Error occurred!" ++
                   if inproc then " Process terminated!" else "")
   return
@@ -553,7 +552,7 @@ displayError msg = do
 displayHtmlError :: [BaseHtml] -> Controller
 displayHtmlError hexps = do
   inproc <- isInProcess
-  if inproc then removeCurrentProcess else done
+  if inproc then removeCurrentProcess else return ()
   setPageMessage ("Error occurred!" ++
                   if inproc then " Process terminated!" else "")
   return hexps
@@ -751,9 +750,8 @@ textWithInfoIcon s = infoIcon `addTitle` s
 -- in the next HTML page of a session.
 
 --- Definition of the session state to store the page message (a string).
-pageMessage :: Global (SessionStore String)
-pageMessage =
-  global emptySessionStore (Persistent (inSessionDataDir "pageMessage"))
+pageMessage :: SessionStore String
+pageMessage = sessionStore "pageMessage"
 
 --- Gets the page message and delete it.
 getPageMessage :: IO String
@@ -764,7 +762,7 @@ getPageMessage = do
 
 --- Set the page message of the current session.
 setPageMessage :: String -> IO ()
-setPageMessage msg = writeSessionData pageMessage msg
+setPageMessage msg = putSessionData pageMessage msg
 
 --------------------------------------------------------------------------
 -- Another example for using sessions.
@@ -772,9 +770,8 @@ setPageMessage msg = writeSessionData pageMessage msg
 -- into  the current session.
 
 --- Definition of the session state to store the last URL (as a string).
-lastUrls :: Global (SessionStore [String])
-lastUrls =
-  global emptySessionStore (Persistent (inSessionDataDir "sessionUrls"))
+lastUrls :: SessionStore [String]
+lastUrls = sessionStore "lastUrls"
 
 --- Gets the list of URLs of the current session.
 getLastUrls :: IO [String]
@@ -797,7 +794,7 @@ getLastUrlParameters = do
 saveLastUrl :: String -> IO ()
 saveLastUrl url = do
   urls <- getLastUrls
-  writeSessionData lastUrls (url : take 2 urls)
+  putSessionData lastUrls (url : take 2 urls)
 
 --------------------------------------------------------------------------
 --- If the SQLResult is an error, display it, otherwise apply the

@@ -8,7 +8,7 @@ module ConfigMDB
   )
  where
 
-import FilePath ( (</>) )
+import System.FilePath ( (</>) )
 
 -- Email address of administrator:
 adminEmail :: String

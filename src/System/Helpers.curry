@@ -25,15 +25,15 @@ module System.Helpers
     shorttextinputRendering, renderWithFormControl )
   where
 
-import Char
-import IO
-import IOExts
-import List
-import ReadNumeric ( readNat )
-import ReadShowTerm
-import System(getEnviron,getHostname)
-import Time
-import Unsafe(unsafePerformIO)
+import Data.Char
+import System.IO
+import System.IOExts
+import Data.List
+import Numeric ( readNat )
+--import ReadShowTerm
+import System.Environment (getEnv, getHostname )
+import Data.Time
+import System.IO.Unsafe ( unsafePerformIO )
 import HTML.WUI
 
 import Database.CDBI.Connection
@@ -83,21 +83,23 @@ data LogEvent =
   | NewAdvisorStudyProgram AdvisorStudyProgram
   | UpdateAdvisorStudyProgram AdvisorStudyProgram
   | DeleteAdvisorStudyProgram AdvisorStudyProgram
+ deriving Show
 
 -- An information in the log file consists of info about the time,
 -- the current user, the remote host, and a log event.
 data LogInfo = LogInfo String String String LogEvent
+ deriving Show
 
 -- Adds an event with some info string to the global log file.
 logEvent :: LogEvent -> IO ()
 logEvent event = exclusiveIO (logFile ++ ".lock") $ do
   time  <- getLocalTime
   login <- getSessionLogin
-  raddr <- getEnviron "REMOTE_ADDR"
+  raddr <- getEnv "REMOTE_ADDR"
   rhost <- if null raddr then getHostname else getHostnameForIP raddr
   appendFile logFile
-     (showQTerm (LogInfo (calendarTimeToString time) (maybe "???" id login)
-                         (rhost ++ "/" ++ raddr) event) ++ "\n")
+     (show (LogInfo (calendarTimeToString time) (maybe "???" id login)
+                    (rhost ++ "/" ++ raddr) event) ++ "\n")
 
 --- Get symbolic name of ip address:
 getHostnameForIP :: String -> IO String
@@ -298,9 +300,9 @@ showSemesterCode (sem,year) =
 readSemesterCode :: String -> (String,Int)
 readSemesterCode s =
   let sem  = if take 2 s == "ss" then "SS" else "WS"
-      year = case readNat (drop 2 s) of Just (n,"") -> n
-                                        _           -> 0
-  in (sem,2000+year)
+      year = case readNat (drop 2 s) of [(n,"")] -> n
+                                        _        -> 0
+  in (sem, 2000+year)
 
 -- compute following semester:
 nextSemester :: (String,Int) -> (String,Int)

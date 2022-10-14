@@ -5,11 +5,10 @@ module View.Category
  , leqCategory, showCategoryInfo, listEmailCorrectionView
  ) where
 
-import Either
-import List
-import Maybe ( isJust )
-import Time
-import Sort
+import Data.List
+import Data.Either
+import Data.Maybe ( isJust )
+import Data.Time
 
 import HTML.Base
 import HTML.Styles.Bootstrap4
@@ -22,8 +21,8 @@ import System.Helpers
 import View.ModData
 import ConfigMDB
 import View.UnivisInfo
-import Mail
-import System(sleep)
+import System.Mail
+import System.Process (sleep)
 import System.SessionInfo
 import System.MultiLang
 
@@ -158,7 +157,7 @@ listCategoryView sinfo mbsprog catmods semperiod users semselectform =
     (if isAdminSession sinfo && null (concatMap snd catmods)
      then map (categoryLabelList!!) [0,2,6] :
           map listCategory
-              (mergeSortBy leqCategory
+              (sortBy leqCategory
                (concatMap (\ (c,_) -> either (:[]) (const []) c) catmods))
      else
       concatMap
@@ -175,7 +174,7 @@ listCategoryView sinfo mbsprog catmods semperiod users semselectform =
                   then map (maybe [] showModInst) mis
                   else map (showUnivisInst md)
                            (zip3 semperiod mis univs))
-               (mergeSortBy (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2)
+               (sortBy (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2)
                   -- if a semester planning is shown, show only modules
                   -- having an instance or a UnivIS instance in the plan
                   (filter (\ (_,mis,univs) -> null semperiod || any isJust mis
@@ -333,7 +332,7 @@ listEmailCorrectionView modinsts semperiod users =
       [htxt ("TO: "++ getResponsibleEmail md)]]
 
    sendMails _ = do
-     mailresults <- mapIO sendSingleMail problemmods
+     mailresults <- mapM sendSingleMail problemmods
      getPage ([h1 [htxt "Mails gesendet!"]] ++
               map (\t -> par [verbatim t]) mailresults)
 

@@ -5,10 +5,10 @@ module Controller.AdvisorStudyProgram
   )
  where
 
-import Global
-import List(find)
-import Time
+import System.PreludeHelpers
 
+import Data.List
+import Data.Time
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.Session
@@ -24,9 +24,7 @@ import MDBExts
 import View.AdvisorModule
 import View.AdvisorStudyProgram
 import View.StudyProgram
-import Maybe
 import System.SessionInfo
-import Sort(sortBy)
 import System.Authorization
 import System.AuthorizedActions
 import System.MultiLang
@@ -110,11 +108,10 @@ createAdvisorStudyProgramWuiForm =
 
 ---- The data stored for executing the WUI form.
 wuiCreateAdvisorStudyProgramStore ::
-  Global (SessionStore ((UserSessionInfo,Int,[StudyProgram],[User]),
-                        WuiStore NewAdvisorStudyProgram))
+  SessionStore ((UserSessionInfo,Int,[StudyProgram],[User]),
+                        WuiStore NewAdvisorStudyProgram)
 wuiCreateAdvisorStudyProgramStore =
-  global emptySessionStore
-         (Persistent (inSessionDataDir "wuiCreateAdvisorStudyProgramStore"))
+  sessionStore "wuiCreateAdvisorStudyProgramStore"
 
 --- Transaction to persist a new AdvisorStudyProgram entity to the database.
 createAdvisorStudyProgramT ::
@@ -179,12 +176,10 @@ editAdvisorStudyProgramWuiForm =
 
 ---- The data stored for executing the WUI form.
 wuiEditAdvisorStudyProgramStore ::
-  Global (SessionStore ((UserSessionInfo,Int,AdvisorStudyProgram,
+  SessionStore ((UserSessionInfo,Int,AdvisorStudyProgram,
                          StudyProgram,[StudyProgram],User,[User]),
-                        WuiStore AdvisorStudyProgram))
-wuiEditAdvisorStudyProgramStore =
-  global emptySessionStore
-         (Persistent (inSessionDataDir "wuiEditAdvisorStudyProgramStore"))
+                        WuiStore AdvisorStudyProgram)
+wuiEditAdvisorStudyProgramStore = sessionStore "wuiEditAdvisorStudyProgramStore"
 
 
 --- Transaction to persist modifications of a given AdvisorStudyProgram entity
@@ -292,11 +287,10 @@ addCatModForm =
 
 ---- The data stored for executing the WUI form.
 wuiAddCatModFormStore ::
-  Global (SessionStore
+  SessionStore
             ((UserSessionInfo,AdvisorStudyProgram,[(ModInst,ModData)]),
-             WuiStore (Bool,(ModInst,ModData),Category)))
-wuiAddCatModFormStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiAddCatModFormStore"))
+             WuiStore (Bool,(ModInst,ModData),Category))
+wuiAddCatModFormStore = sessionStore "wuiAddCatModFormStore"
 
 -------------------------------------------------------------------------
 --- Deletes an advisor module from a given AdvisorStudyProgram entity
@@ -341,7 +335,7 @@ showAdvisorStudyProgramController asprog =
    (advisorStudyProgramOperationAllowed (ShowEntity asprog))
    $ (\sinfo ->
      do studyprog <- runJustT (getStudyProgramsAdvisedStudyProgram asprog)
-        categories <- runQ $ liftM (sortBy leqCategory) $
+        categories <- runQ $ fmap (sortBy leqCategory) $
                                queryCategorysOfStudyProgram (studyProgramKey studyprog)
         amods <- runQ $ queryCondAdvisorModule
            (\am -> advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey am
@@ -400,9 +394,9 @@ advisorProgURL asp =
 -- Show XML document containing all visible master programs
 showAllXmlAdvisorStudyPrograms :: IO HtmlPage
 showAllXmlAdvisorStudyPrograms = do
-  allasprogs <- runQ $ liftM (filter advisorStudyProgramVisible)
+  allasprogs <- runQ $ fmap (filter advisorStudyProgramVisible)
                              queryAllAdvisorStudyPrograms
-  aspxmls <- mapIO getAdvisorStudyProgramAsXML allasprogs
+  aspxmls <- mapM getAdvisorStudyProgramAsXML allasprogs
   return (HtmlAnswer "text/xml"
                      (showXmlDoc (xml "studyprograms" aspxmls)))
 
@@ -415,7 +409,7 @@ showXmlAdvisorStudyProgram aspkey = do
 getAdvisorStudyProgramAsXML :: AdvisorStudyProgram -> IO XmlExp
 getAdvisorStudyProgramAsXML asprog = do
   studyprog <- runJustT (getStudyProgramsAdvisedStudyProgram asprog)
-  categories <- runQ $ liftM (sortBy leqCategory) $
+  categories <- runQ $ fmap (sortBy leqCategory) $
                          queryCategorysOfStudyProgram (studyProgramKey studyprog)
   amods <- runQ $ queryCondAdvisorModule
                        (\am -> advisorModuleAdvisorStudyProgramAdvisorProgramModulesKey am

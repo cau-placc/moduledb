@@ -3,17 +3,13 @@ module Controller.MasterCoreArea (
  listMasterCoreAreaController
  ) where
 
-import Global
-
 import System.Helpers
 import System.Spicey
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import Time
 import MDB
 import View.MasterCoreArea
-import Maybe
 import System.Authorization
 import System.AuthorizedActions
 import System.SessionInfo
@@ -64,9 +60,8 @@ newMasterCoreAreaForm =
 
 ---- The data stored for executing the WUI form.
 newMasterCoreAreaStore ::
-  Global (SessionStore (UserSessionInfo, WuiStore NewMasterCoreArea))
-newMasterCoreAreaStore =
-  global emptySessionStore (Persistent (inSessionDataDir "newMasterCoreAreaStore"))
+  SessionStore (UserSessionInfo, WuiStore NewMasterCoreArea)
+newMasterCoreAreaStore = sessionStore "newMasterCoreAreaStore"
 
 --- Persists a new MasterCoreArea entity to the database.
 createMasterCoreAreaController :: NewMasterCoreArea -> Controller
@@ -106,11 +101,8 @@ editMasterCoreAreaForm =
 
 ---- The data stored for executing the WUI form.
 editMasterCoreAreaWuiStore ::
-  Global (SessionStore ((UserSessionInfo,MasterCoreArea),
-          WuiStore MasterCoreArea))
-editMasterCoreAreaWuiStore =
-  global emptySessionStore
-         (Persistent (inSessionDataDir "editMasterCoreAreaWuiStore"))
+  SessionStore ((UserSessionInfo,MasterCoreArea), WuiStore MasterCoreArea)
+editMasterCoreAreaWuiStore = sessionStore "editMasterCoreAreaWuiStore"
 
 --- Persists modifications of a given MasterCoreArea entity.
 updateMasterCoreAreaController :: MasterCoreArea -> Controller

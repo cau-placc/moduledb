@@ -8,15 +8,15 @@ module View.Search
   , showExamOverview, showAllModuleResponsibleView
   ) where
 
+import Data.Char
+import Data.List
+
 import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import Char
-import List
 import System.Helpers
 import MDB
 import View.MDBEntitiesToHtml
-import Sort
 import View.ModData
 import System.MultiLang
 import System.SessionInfo
@@ -129,7 +129,7 @@ showExamOverview sem mods =
      [[htxt "Modul:"],[htxt "Prüfungsanforderungen:"]] :
      map (\ (m,e) -> [[htxt (modDataCode m ++": "++ modDataNameG m)],
                      [htmlText (docText2html e)]])
-         (mergeSortBy (\ (m1,_) (m2,_) -> leqModData m1 m2) mods)]
+         (sortBy (\ (m1,_) (m2,_) -> leqModData m1 m2) mods)]
 
 -----------------------------------------------------------------------------
 --- Supplies a view for the examination requirements of a given list of modules.

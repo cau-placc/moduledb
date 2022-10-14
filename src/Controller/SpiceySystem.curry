@@ -9,12 +9,12 @@ module Controller.SpiceySystem
   ( loginController, processListController, historyController )
  where
 
+import Numeric
 import System.Spicey
 import HTML.Session
 import Config.UserProcesses
 import System.Processes
 import View.SpiceySystem
-import ReadNumeric
 import System.Authentication
 import System.SessionInfo
 
@@ -33,10 +33,9 @@ processListController = do
   if null args
    then return $ processListView availableProcesses
    else case (readInt (head args)) of
-          Just (idInt, _) -> do
-            startProcess (processNames availableProcesses !! (idInt - 1))
-          Nothing ->
-            displayError "could not read process id"
+          [(idInt, _)] -> startProcess
+                            (processNames availableProcesses !! (idInt - 1))
+          _            -> displayError "could not read process id"
 
 -----------------------------------------------------------------------------
 --- Controller for the URL history.

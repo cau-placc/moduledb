@@ -3,13 +3,10 @@ module Controller.Category
  , listCategoryController, emailCorrectionForm
  ) where
 
-import Global
-import Maybe
-import List
-import Sort
-import Time
 
+import Data.List ( find, intersect, sortBy )
 import HTML.Base
+import HTML.Parser ( parseHtmlString )
 import HTML.Session
 import HTML.Styles.Bootstrap4
 import HTML.WUI
@@ -85,9 +82,8 @@ newCategoryWuiForm =
 
 ---- The data stored for executing the WUI form.
 newCategoryWuiStore ::
-  Global (SessionStore ((UserSessionInfo,[StudyProgram]), WuiStore NewCategory))
-newCategoryWuiStore =
-  global emptySessionStore (Persistent (inSessionDataDir "newCategoryWuiStore"))
+  SessionStore ((UserSessionInfo,[StudyProgram]), WuiStore NewCategory)
+newCategoryWuiStore = sessionStore "newCategoryWuiStore"
 
 
 --- Transaction to persist a new Category entity to the database.
@@ -132,10 +128,9 @@ editCategoryForm = pwui2FormDef "Controller.Category.editCategoryForm"
 
 --- The data stored for executing the WUI form.
 wuiEditCategoryStore ::
-  Global (SessionStore ((UserSessionInfo,Category,StudyProgram,[StudyProgram]),
-                        WuiStore Category))
-wuiEditCategoryStore =
-  global emptySessionStore (Persistent (inSessionDataDir "wuiEditCategoryStore"))
+  SessionStore ((UserSessionInfo,Category,StudyProgram,[StudyProgram]),
+                WuiStore Category)
+wuiEditCategoryStore = sessionStore "wuiEditCategoryStore"
 
 
 --- Persists modifications of a given Category entity to the
@@ -168,11 +163,35 @@ destroyCategoryController category =
 --- A form to select a semester period to show the module instances
 --- in this period.
 
+-- Since the semSelectStore stores also [BaseHtml] elements, a Read/Show
+-- instance is needed. Since BaseHtml has no direct Read/Show instance
+-- (due to the `BaseAction` constructor), we use an auxiliary type
+-- for Read/Show.
+
+data StaticHtml = HText String | HStruct String [(String,String)] [StaticHtml]
+  deriving (Read,Show)
+
+toStaticHtml :: BaseHtml -> StaticHtml
+toStaticHtml (BaseText s)           = HText s
+toStaticHtml (BaseStruct t atts hs) = HStruct t atts (map toStaticHtml hs)
+toStaticHtml (BaseAction _)         =
+  error "BaseAction occurred in base HTML expression"
+
+fromStaticHtml :: StaticHtml -> BaseHtml
+fromStaticHtml (HText s)           = BaseText s
+fromStaticHtml (HStruct t atts hs) = BaseStruct t atts (map fromStaticHtml hs)
+
+-- Show/Read instance for BaseHtml (required for semSelectStore):
+instance Show BaseHtml where
+  show h = show (toStaticHtml h)
+
+instance Read BaseHtml where
+  readsPrec i s = map (\ (v,r) -> (fromStaticHtml v, r)) (readsPrec i s)
+
 semSelectStore ::
-  Global (SessionStore (Maybe User, Either StudyProgram [BaseHtml],
-                        [(Either Category String, [ModData])],[(String,Int)]))
-semSelectStore =
-  global emptySessionStore (Persistent (inSessionDataDir "semSelectStore"))
+  SessionStore (Maybe User, Either StudyProgram [BaseHtml],
+                [(Either Category String, [ModData])],[(String,Int)])
+semSelectStore = sessionStore "semSelectStore"
 
 --- An operation to store the data required for this view.
 storeCategoryListData :: Maybe User
@@ -180,7 +199,7 @@ storeCategoryListData :: Maybe User
   -> [(String,Int)]
   -> IO ()
 storeCategoryListData mbuser sproghtml catmods semperiod =
-  writeSessionData semSelectStore (mbuser,sproghtml,catmods,semperiod)
+  putSessionData semSelectStore (mbuser,sproghtml,catmods,semperiod)
 
 --- An operation to read the data required for this view.
 readCategoryListData ::
@@ -226,7 +245,7 @@ listAllCategoryController =
     do let t = translate sinfo
        categorys <- runQ queryAllCategorys
        listCategoryController sinfo (Right [htxt $ t "All categories"])
-         (map (\c -> (Left c,[])) (mergeSortBy leqCategory categorys)) []
+         (map (\c -> (Left c,[])) (sortBy leqCategory categorys)) []
 
 --- Controller to list all modules of the current user.
 --- If the first argument is true, the modules taught by the user are shown.
@@ -247,7 +266,7 @@ listUserModulesController aslecturer listall =
            csem  <- getCurrentSemester
            showmods <- if listall
                          then return usermods
-                         else mapIO addModInsts usermods >>=
+                         else mapM addModInsts usermods >>=
                               return . map fst . filter (isCurrentModInst csem)
            let t = translate sinfo
            storeCategoryListData (if aslecturer then Just user else Nothing)
@@ -282,7 +301,7 @@ listUserModulesController aslecturer listall =
 listStudyProgramCategoryController :: Bool -> StudyProgram -> Controller
 listStudyProgramCategoryController listall studyprog =
   checkAuthorization (categoryOperationAllowed ListEntities) $ \sinfo ->
-    do categorys <- runQ $ liftM (mergeSortBy leqCategory) $
+    do categorys <- runQ $ fmap (sortBy leqCategory) $
                              queryCategorysOfStudyProgram
                                            (studyProgramKey studyprog)
        catmods <- runJustT $
@@ -309,8 +328,8 @@ showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
                             (const ms)
                             (userLoginOfSession sinfo)
   users <- runQ queryAllUsers
-  catmodinsts <- mapIO (\ (c,mods) ->
-                               mapIO getModInsts (filterMods mods) >>= \mmis ->
+  catmodinsts <- mapM (\ (c,mods) ->
+                               mapM getModInsts (filterMods mods) >>= \mmis ->
                                return (c,mmis))
                        catmods
   storeCategoryListData mblecturer mbstudyprog
@@ -333,12 +352,12 @@ showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
            mis <- queryinsts
            -- compute usages in old master programs (unnecessary in the future):
            nummps <- if withmprogs
-                     then liftM (map length) (getMasterProgramKeysOfModInst mis)
+                     then fmap (map length) (getMasterProgramKeysOfModInst mis)
                      else return (repeat 0)
            -- compute usages in AdvisorStudyPrograms:
            numaps <- if withmprogs
-                       then liftM (map length)
-                                  (mapM getAdvisorStudyProgramKeysOfModInst mis)
+                       then fmap (map length)
+                                 (mapM getAdvisorStudyProgramKeysOfModInst mis)
                        else return (repeat 0)
            let numbermprogs = map (uncurry (+)) (zip nummps numaps)
            univs <- if withunivis
@@ -358,9 +377,8 @@ showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
 --- responsible person to correct their entries.
 
 emailCorrectionStore ::
-  Global (SessionStore ([(ModData,[Maybe ModInst],[Bool])], [(String,Int)]))
-emailCorrectionStore =
- global emptySessionStore (Persistent (inSessionDataDir "emailCorrectionStore"))
+  SessionStore ([(ModData,[Maybe ModInst],[Bool])], [(String,Int)])
+emailCorrectionStore = sessionStore "emailCorrectionStore"
 
 --- The actual form to send email corrections.
 emailCorrectionForm ::
@@ -389,7 +407,7 @@ showEmailCorrectionController mbsprog catmods startsem stopsem = do
                                            (const mods)
                                            (userLoginOfSession sinfo)))
                         catmods
-  writeSessionData emailCorrectionStore (concat modinsts, semPeriod)
+  putSessionData emailCorrectionStore (concat modinsts, semPeriod)
   return [h1 $ either (\sp -> [htxt $ studyProgramName sp]) id mbsprog,
           formElem emailCorrectionForm]
  where
