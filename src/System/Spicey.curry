@@ -365,7 +365,7 @@ spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 --- The standard footer of the Spicey page.
 spiceyFooter :: [BaseHtml]
 spiceyFooter =
-  [par [htxt "Version of Oct 13, 2022, powered by",
+  [par [htxt "Version of Oct 14, 2022, powered by",
         href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
@@ -468,7 +468,8 @@ getPage viewblock = case viewblock of
        `addAttr` ("area-labelledby", "dropdowngoto")])
 
   extUrls t =
-   [ toEHref "http://www.inf.uni-kiel.de"
+   [ toHref "?about" [htxt $ t "About the module information system"]
+   , toEHref "http://www.inf.uni-kiel.de"
              [htxt $ t "Department of Computer Science"]
    , toEHref "http://www.uni-kiel.de" [htxt "CAU Kiel"]
    , toEHref "http://univis.uni-kiel.de/" [htxt "UnivIS"]
@@ -487,7 +488,9 @@ getPage viewblock = case viewblock of
               htxt " Bootstrap (Style Sheets)"]
    ]
 
-  toEHref url he = ehref url he `addClass` "dropdown-item"
+  asDropdownItem = (`addClass` "dropdown-item")
+  toHref  url he = asDropdownItem $ href url he
+  toEHref url he = asDropdownItem $ ehref url he
 
 
 favIcon :: String

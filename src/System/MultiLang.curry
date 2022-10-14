@@ -47,6 +47,7 @@ english2german :: [(String, String)]
 english2german =
  [("...as lecturer"     ,"...als Modulverwalter")
  ,("...as student"      ,"...als Studierender")
+ ,("About the module information system","Über die Moduldatenbank")
  ,("Acknowledgment"     ,"Bestätigung")
  ,("Add"                ,"Hinzufügen")
  ,("Add semester"       ,"Semester hinzufügen")
