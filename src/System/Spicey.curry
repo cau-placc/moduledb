@@ -435,7 +435,8 @@ getPage viewblock = case viewblock of
      ("nav-item",
       [if languageOfSession sinfo == English
          then hrefNav "?langDE" [htxt "[Deutsch]"]
-         else hrefNav "?langEN" [htxt "[English]"]])]
+         else hrefNav "?langEN" [htxt "[English]"]]),
+     ("nav-item", [hrefNav "?about" [htxt $ "About"]])]
    where t = translate sinfo
 
   -- A dropdown menu (represented as a HTML list item).
@@ -463,12 +464,12 @@ getPage viewblock = case viewblock of
                   ("aria-haspopup", "true"),
                   ("aria-expanded", "false")],
       blockstyle "dropdown-menu dropdown-menu-right"
-       ((href "?main" [htxt $ t "Main page of the module information system"]
+       ((href "?about" [htxt $ t "About the module information system"]
           `addClass` "dropdown-item") : extUrls t)
        `addAttr` ("area-labelledby", "dropdowngoto")])
 
   extUrls t =
-   [ toHref "?about" [htxt $ t "About the module information system"]
+   [ toHref "?main" [htxt $ t "Main page of the module information system"]
    , toEHref "http://www.inf.uni-kiel.de"
              [htxt $ t "Department of Computer Science"]
    , toEHref "http://www.uni-kiel.de" [htxt "CAU Kiel"]

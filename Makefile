@@ -10,7 +10,7 @@ CURRYHOME=/opt/kics2/kics3
 else ifeq ($(TARGET),IFIPAKCS)
 CURRYHOME=/opt/pakcs/pakcs-3.5.0
 else ifeq ($(TARGET),TEST)
-#CURRYHOME=/opt/kics2/kics2
+#CURRYHOME=/opt/kics2/kics3
 CURRYHOME=$(HOME)/pakcs3
 else
 error:
