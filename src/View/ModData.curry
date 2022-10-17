@@ -9,6 +9,7 @@ module View.ModData
 
 import Data.List
 import Data.Time
+import Numeric    ( readNat )
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.WUI
@@ -46,11 +47,15 @@ wPresence =
     show prk ++ "P " ++ show sem ++ "S"
 
    readPresence ps =
-     let presnums = if null ps then [0,0,0,0] else map read (words ps)
+     let presnums = if null ps then [0,0,0,0] else map readNatPrefix (words ps)
       in case presnums of
            [v,u,pue,s]   -> (v,u,pue,0,s) -- old format
            [v,u,pue,p,s] -> (v,u,pue,p,s) -- new format
-           _             -> error "View.ModData.wPresence: illegal presence!"
+           _             -> presError ps
+    where
+     readNatPrefix s = case readNat s of [(n,_)] -> n
+                                         _       -> presError ps
+     presError s = error $ "View.ModData.wPresence: illegal presence: " ++ s
 
 -- a WUI to select a set of category keys from a given list of categories:
 wCatList :: UserSessionInfo -> [(StudyProgram,[Category])] -> WuiSpec [Category]

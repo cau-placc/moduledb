@@ -131,7 +131,7 @@ showModDataUnivisInfoController :: String -> String -> ModData -> Controller
 showModDataUnivisInfoController terms years mdata =
   checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ \_ -> do
     admin <- isAdmin
-    let sem = (terms, read years)
+    let sem = (terms, readNat years)
     urls <- runQ $ queryUnivisURL (modDataCode mdata) sem
     mis <- runQ $ queryInstancesOfMod (modDataKey mdata)
     let semmis = filter (\mi -> (modInstTerm mi,modInstYear mi) == sem)
@@ -146,13 +146,18 @@ showModDataUnivisInfoController terms years mdata =
 emailModDataUnivisInfoController :: String -> String -> ModData -> Controller
 emailModDataUnivisInfoController terms years mdata =
   checkAuthorization checkAdmin $ \_ -> do
-    let sem = (terms, read years)
+    let sem = (terms, readNat years)
     urls <- runQ $ queryUnivisURL (modDataCode mdata) sem
     let msg = if null urls
                 then missingUnivISMessage mdata sem
                 else missingMDBMessage mdata sem
     putSessionData emailModuleStore (mdata, msg)
     return [formElem emailModuleMessageForm]
+
+-- Safe reading of natural numbers.
+readNat :: String -> Int
+readNat s = case reads s of [(n,_)] | n>=0 -> n
+                            _              -> 0
 
 --- Shows a UnivisInfo entity.
 showUnivisInfoController :: UnivisInfo -> Controller
