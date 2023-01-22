@@ -138,16 +138,17 @@ showCategoryInfo sinfo cat =
 --- * a list of Booleans indicating whether the corresponding module instance
 ---   has a UnivIS entry (if this list is empty, UnivIS entries should not
 ---   be shown).
---- The further arguments are the semesters in the selected period,
+--- The further arguments are the current semester,
+--- the semesters in the selected period,
 --- the list of all users (to show them in the module instances), and
 --- the HTML expression of the form to select a semester period to show
 --- the module instances in this period.
 listCategoryView
   :: UserSessionInfo -> Either StudyProgram [BaseHtml]
   -> [(Either Category String, [(ModData,[Maybe (ModInst,Int)],[Bool])])]
-  -> [(String,Int)] -> [User] -> BaseHtml
+  -> (String,Int) -> [(String,Int)] -> [User] -> BaseHtml
   -> [BaseHtml]
-listCategoryView sinfo mbsprog catmods semperiod users semselectform =
+listCategoryView sinfo mbsprog catmods cursem semperiod users semselectform =
   [h1 $ either (\sp -> [studyProgramToHRef sinfo sp]) id mbsprog] ++
   (if length catmods == 1 && isLeft (fst (head catmods))
    then let cat = fromLeft (fst (head catmods))
@@ -162,18 +163,28 @@ listCategoryView sinfo mbsprog catmods semperiod users semselectform =
      else
       concatMap
         (\ (mbcat,mods) ->
-           (either (\c -> [style "category" (head (listCategory c))])
+           (either (\c -> if null semperiod
+                            then
+                              [let (showref,cname) = categoryToShowHRef sinfo c
+                               in style "category"
+                                        [href showref [stringToHtml cname]
+                                    `addClass` "btn btn-primary"], nbsp,
+                               style "category"
+                                     [href (semPlanURL $ showCategoryKey c)
+                                           [stringToHtml showSemPlanTitle]
+                                  `addClass` "btn btn-info"]]
+                            else [style "category" (head (listCategory c))])
                    (\s -> [style "category" [htxt s]])
                    mbcat
             : if null mods
-              then []
-              else map (\s -> [style "category" [stringToHtml s]])
-                       ("ECTS" : map showSemester semperiod)) :
+                then []
+                else map (\s -> [style "category" [stringToHtml s]])
+                         ("ECTS" : map showSemester semperiod)) :
            map (\ (md,mis,univs) -> modDataToCompactListView sinfo md ++
                   if null univs
-                  then map (maybe [] showModInst) mis
-                  else map (showUnivisInst md)
-                           (zip3 semperiod mis univs))
+                    then map (maybe [] showModInst) mis
+                    else map (showUnivisInst md)
+                             (zip3 semperiod mis univs))
                (sortBy (\ (m1,_,_) (m2,_,_) -> leqModData m1 m2)
                   -- if a semester planning is shown, show only modules
                   -- having an instance or a UnivIS instance in the plan
@@ -198,6 +209,13 @@ listCategoryView sinfo mbsprog catmods semperiod users semselectform =
      else [par [semselectform]])
   where
    t = translate sinfo
+
+   fromSemPlan      = nextSemester cursem
+   toSemPlan        = iterate nextSemester fromSemPlan !! 3
+   showSemPlanTitle = t "Planning" ++ " " ++ showSemester fromSemPlan ++
+                      " - " ++ showSemester toSemPlan
+   semPlanURL ckey  = "?Category/showplan/" ++ showSemesterCode fromSemPlan ++
+                      "/" ++ showSemesterCode toSemPlan ++ "/" ++ ckey
 
    -- show UnivIS instance of a semester
    showUnivisInst md ((term,year),mbmi,hasinst)
@@ -310,7 +328,7 @@ selSemesterPlanningView showCategoryPlanController showEmailCorrectionController
     let start = maybe 0 id (findIndex (\(_,i) -> i==(env fromsem)) semSelection)
         stop  = maybe 0 id (findIndex (\(_,i) -> i==(env tosem  )) semSelection)
     showEmailCorrectionController sprog catmods
-     (semesterSelection cursem !!start) (semesterSelection cursem !! stop)
+     (semesterSelection cursem !! start) (semesterSelection cursem !! stop)
         >>= getPage
 
 --- Supplies a form view for a given list of module instances combined

@@ -168,6 +168,7 @@ english2german =
  ,("Password changed"   ,"Passwort geändert")
  ,("persons in charge"  ,"Modulverantwortliche")
  ,("Person in charge:"  ,"Modulverantwortliche(r):")
+ ,("Planning"           ,"Planung")
  ,("planning instruments of the institute","Lehrplanungsinstrumente des Instituts")
  ,("Prerequisites"      ,"Voraussetzungen")
  ,("Prerequisite selection","Voraussetzungen bearbeiten")

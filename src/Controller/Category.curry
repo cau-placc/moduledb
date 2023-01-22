@@ -50,6 +50,8 @@ categoryController = do
     ["edit",s] -> controllerOnKey s editCategoryController
     ["delete",s] -> controllerOnKey s askAndDeleteCategoryController
     ["destroy",s] -> controllerOnKey s destroyCategoryController
+    ["showplan",from,to,s] ->
+       controllerOnKey s (showPlanCategoryController from to)
     _ -> displayUrlError
 
 ------------------------------------------------------------------------------
@@ -165,23 +167,8 @@ destroyCategoryController category =
 
 -- Since the semSelectStore stores also [BaseHtml] elements, a Read/Show
 -- instance is needed. Since BaseHtml has no direct Read/Show instance
--- (due to the `BaseAction` constructor), we use an auxiliary type
--- for Read/Show.
-
-data StaticHtml = HText String | HStruct String [(String,String)] [StaticHtml]
-  deriving (Read,Show)
-
-toStaticHtml :: BaseHtml -> StaticHtml
-toStaticHtml (BaseText s)           = HText s
-toStaticHtml (BaseStruct t atts hs) = HStruct t atts (map toStaticHtml hs)
-toStaticHtml (BaseAction _)         =
-  error "BaseAction occurred in base HTML expression"
-
-fromStaticHtml :: StaticHtml -> BaseHtml
-fromStaticHtml (HText s)           = BaseText s
-fromStaticHtml (HStruct t atts hs) = BaseStruct t atts (map fromStaticHtml hs)
-
--- Show/Read instance for BaseHtml (required for semSelectStore):
+-- (due to the `BaseAction` constructor), it is transformed into `StaticHtml`
+-- to implement Read/Show instances.
 instance Show BaseHtml where
   show h = show (toStaticHtml h)
 
@@ -232,9 +219,10 @@ listCategoryController :: UserSessionInfo -> Either StudyProgram [BaseHtml]
                        -> [(String,Int)] -> Controller
 listCategoryController sinfo sproghtml catmods semperiod = do
   storeCategoryListData Nothing sproghtml catmods semperiod
+  cursem <- getCurrentSemester
   return $ listCategoryView sinfo sproghtml
              (map (\ (cat,mods) -> (cat, map (\m -> (m,[],[])) mods)) catmods)
-             [] [] (formElem semSelectForm)
+             cursem [] [] (formElem semSelectForm)
 
 --------------------------------------------------------------------------
 --- Lists all Category entities with buttons to show, delete,
@@ -272,10 +260,11 @@ listUserModulesController aslecturer listall =
            storeCategoryListData (if aslecturer then Just user else Nothing)
                                  (Right $ listCatHeader t)
                                  [(Right "", showmods)] []
+           cursem <- getCurrentSemester
            return $ listCategoryView sinfo
              (Right $ listCatHeader t)
              [(Right "",map (\m->(m,[],[])) showmods)]
-             [] [] (formElem semSelectForm)
+             cursem [] [] (formElem semSelectForm)
  where
    listCatHeader t =
      if listall
@@ -327,6 +316,7 @@ showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
   let filterMods ms = maybe (filter modDataVisible ms)
                             (const ms)
                             (userLoginOfSession sinfo)
+  cursem <- getCurrentSemester
   users <- runQ queryAllUsers
   catmodinsts <- mapM (\ (c,mods) ->
                                mapM getModInsts (filterMods mods) >>= \mmis ->
@@ -336,7 +326,7 @@ showCategoryPlanController mblecturer mbstudyprog catmods startsem stopsem
     (map (\ (cat,modinsts) -> (cat, map (\ (m,_,_) -> m) modinsts)) catmodinsts)
     semPeriod
   return (listCategoryView sinfo mbstudyprog
-             catmodinsts semPeriod users (formElem semSelectForm))
+             catmodinsts cursem semPeriod users (formElem semSelectForm))
  where
    getModInsts md =
     let queryinsts = maybe
@@ -436,6 +426,26 @@ showCategoryController cat =
       [(Left cat, maybe (filter modDataVisible mods)
                         (const mods)
                         (userLoginOfSession sinfo))] []
+
+--- Shows a Category entity and their planning for the given period
+--- (encoded as strings).
+showPlanCategoryController :: String -> String -> Category -> Controller
+showPlanCategoryController fromsem tosem cat =
+  checkAuthorization (categoryOperationAllowed (ShowEntity cat)) $ \sinfo -> do
+    let lname = maybe "" id (userLoginOfSession sinfo)
+    -- get user entry with a given login name
+    mbuser <- runQ $ queryUserWithLogin lname
+    sprogs <- runQ queryAllStudyPrograms
+    let spk     = categoryStudyProgramProgramCategoriesKey cat
+        mbsprog = find (\p -> studyProgramKey p == spk) sprogs
+    mods <- runJustT $ getModDataOfCategory cat
+    showCategoryPlanController mbuser
+      (maybe (Right [htxt "???"]) Left mbsprog)
+      [(Left cat, maybe (filter modDataVisible mods)
+                        (const mods)
+                        (userLoginOfSession sinfo))]
+      (readSemesterCode fromsem) (readSemesterCode tosem)
+      False False False
 
 --- Gets the associated StudyProgram entity for a given Category entity.
 getProgramCategoriesStudyProgram :: Category -> DBAction StudyProgram

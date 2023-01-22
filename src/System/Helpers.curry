@@ -143,7 +143,7 @@ showDigit2 i = if abs i < 10 then '0':show i else show i
 -- show an integer divided by 10:
 showDiv10 :: Int -> String
 showDiv10 i = let m = mod i 10
-               in show (div i 10) ++ (if m==0 then "" else ',' : show m)
+              in show (div i 10) ++ (if m==0 then "" else ',' : show m)
 
 -----------------------------------------------------------------------------
 -- format the presence field string of ModData entities
@@ -167,19 +167,19 @@ hrefs2markdown :: String -> String
 hrefs2markdown s =
   let (sps,s1) = break (not . isSpace) s
       (w,s2)   = break isSpace s1
-   in if w==""
-      then s -- there is no word
-      else sps ++ toHref w ++ hrefs2markdown s2
+  in if w==""
+       then s -- there is no word
+       else sps ++ toHref w ++ hrefs2markdown s2
  where
   toHref w = if take 7 w == "http://" || take 8 w == "https://"
-             then "<" ++ w ++ ">"
-             else w
+               then "<" ++ w ++ ">"
+               else w
 
 -----------------------------------------------------------------------------
 -- translate a document text (containing some standard latex markups
 -- as well as markdown markups) into HTML:
 docText2html :: String -> String
-docText2html = showBaseHtmls . markdownText2HTML  . latex2MD
+docText2html = showStaticHtmls . markdownText2HTML  . latex2MD
 
 -- Translate a string containing some standard latex markups into
 -- markdown syntax (i.e., also HTML markups with UTF-8 encoding):
@@ -193,8 +193,8 @@ latex2MD (c:cs) | c=='\\' = tryTrans cs slashtrans
   tryTrans [] [] = "\\\\" -- quote backslash
   tryTrans (x:xs) [] = -- no translatable LaTeX element found:
     if x `elem` markdownEscapeChars
-    then '\\' : x : latex2MD xs
-    else '\\' : '\\' : x: latex2MD xs -- quote backslash
+      then '\\' : x : latex2MD xs
+      else '\\' : '\\' : x: latex2MD xs -- quote backslash
   tryTrans xs ((lmacro,hmacro) : ms) = let l = length lmacro in
     if take l xs == lmacro then hmacro ++ latex2MD (drop l xs)
                            else tryTrans xs ms

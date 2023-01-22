@@ -65,12 +65,18 @@ studyProgramLabelList =
 --- This view is used in a row of a table of all entities.
 categoryToListView :: HTML h => UserSessionInfo -> Category -> [[h]]
 categoryToListView sinfo category =
-  [name2href ((langSelect sinfo categoryNameE categoryName) category)
+  [[hrefCategory showref [stringToHtml catname]]
   ,[stringToHtml (categoryShortName category)]
   ,[intToHtml (categoryPosition category)]]
  where
-   name2href n = [hrefCategory ("?Category/show/" ++ showCategoryKey category)
-                               [stringToHtml n]]
+   (showref,catname) = categoryToShowHRef sinfo category
+
+--- The list view of a Category entity in HTML format.
+--- This view is used in a row of a table of all entities.
+categoryToShowHRef :: UserSessionInfo -> Category -> (String,String)
+categoryToShowHRef sinfo category =
+  ("?Category/show/" ++ showCategoryKey category,
+   (langSelect sinfo categoryNameE categoryName) category)
 
 --- The HTML view of a Category entity.
 categoryToHtmlView :: HTML h => Category -> h
