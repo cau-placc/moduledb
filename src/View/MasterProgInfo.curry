@@ -10,8 +10,6 @@ import HTML.Base
 import System.Spicey
 import MDB
 import View.MDBEntitiesToHtml
-import ConfigMDB
-import ReadShowTerm
 import System.Helpers
 
 --- Reads the string-encoded module instances and return them as a

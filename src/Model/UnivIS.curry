@@ -1,11 +1,7 @@
 -- Operations to connect UnivIS data to module database
 
-import ReadShowTerm
-import Database.CDBI.ER
-
 import ConfigMDB
 import MDB
-import MDBExts
 import System.Helpers
 import ReadUnivIS
 

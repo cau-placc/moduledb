@@ -2,8 +2,6 @@
 
 module ReadUnivIS(loadLectures) where
 
-import ReadShowTerm
-
 import Control.SetFunctions
 import Debug.Profile
 import System.URL
@@ -57,7 +55,8 @@ testPerson name = do
 
 testPersonBench :: String -> IO [(String,String,String)]
 testPersonBench name =
-  runBenchComp "univis_persons.xml" (sortValues . set2 findPerson name)
+  runBenchComp "univis_persons.xml"
+    (\xe -> sortValues (set2 findPerson name xe))
 
 -- find the IDs of each lecture in a given semester:
 findLectureURL :: String -> XmlExp -> (String,String)
@@ -96,7 +95,7 @@ loadLecturesBench :: (String,Int) -> IO [(String,String)]
 loadLecturesBench sem =
   let univissem = showSemUnivis sem
    in runBenchComp ("univis_lectures_"++univissem++".xml")
-                   (sortValues . set2 findLectureURL univissem)
+                   (\xe -> sortValues (set2 findLectureURL univissem xe))
 
 -- show semester in UnivIS string format:
 showSemUnivis :: (String,Int) -> String
