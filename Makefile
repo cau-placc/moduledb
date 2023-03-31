@@ -11,7 +11,7 @@ else ifeq ($(TARGET),IFIPAKCS)
 CURRYHOME=/opt/pakcs/pakcs-3.5.0
 else ifeq ($(TARGET),TEST)
 #CURRYHOME=/opt/kics2/kics3
-CURRYHOME=$(HOME)/pakcs3
+CURRYHOME=$(HOME)/pakcs
 else
 error:
 	echo "ERROR: invalid definition of variable TARGET!"

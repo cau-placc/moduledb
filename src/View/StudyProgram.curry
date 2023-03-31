@@ -96,14 +96,13 @@ listStudyProgramView sinfo studyPrograms =
          ("?StudyProgram/delete/" ++ showStudyProgramKey studyProgram)
          [htxt "delete"]]]
 
--- Generates a table of all StudyProgram entities.
+-- Generates a Bootstrap row/col table structures of all StudyProgram entities.
 studyProgramHtmlTable :: UserSessionInfo -> [StudyProgram] -> BaseHtml
 studyProgramHtmlTable sinfo studyPrograms =
-  table
+  table3colContainer
     (transposeProgs
        (map (map (\sp -> head (studyProgramToListView sinfo sp)))
             (groupStudyPrograms (sortBy leqStudyProgram studyPrograms))))
-    `addClass` "table table-condensed"
  where
   transposeProgs = map stripEmptySuffix . transpose . makeEqualRows
    where
@@ -116,3 +115,12 @@ studyProgramHtmlTable sinfo studyPrograms =
   groupStudyPrograms =
     groupBy (\sp1 sp2 -> studyProgramPosition sp1 `div` 10 ==
                          studyProgramPosition sp2 `div` 10)
+
+-- Renders a matrix of list of HTML elements containing maximal 3 columns
+-- as a Bootstrap row/col table structure.
+table3colContainer :: [[[BaseHtml]]] -> BaseHtml
+table3colContainer entries =
+  blockstyle "container-fluid" $
+    map (\rs -> blockstyle "row"
+                            (map (blockstyle "col-sm-4 col-md-4 tcdata") rs))
+        entries
