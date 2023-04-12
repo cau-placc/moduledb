@@ -510,7 +510,7 @@ moduleUrlForm md = do
   sinfo <- getUserSessionInfo
   let t     = translate sinfo
       title = (langSelect sinfo modDataNameE modDataNameG) md
-      url   = baseURL ++ "?mod=" ++ string2urlencoded (modDataCode md)
+      url   = moduleCodeURL (modDataCode md)
   return
     [h1 [htxt (t "External URL for module" ++ " \"" ++ title ++ "\"")],
      par [htxt (useURLText sinfo)],

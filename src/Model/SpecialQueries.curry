@@ -10,6 +10,7 @@ import Database.CDBI.ER
 import ShowDotGraph
 
 import MDB
+import System.Helpers ( moduleCodeURL )
 
 -----------------------------------------------------------------------
 -- Gets the module codes together with the text of all non-empty
@@ -72,7 +73,8 @@ showPrerequisites prereqs = do
 depsToGraph :: [(String,String)] -> DotGraph
 depsToGraph cpmdeps =
   dgraph "Module prerequisites"
-         (map (\s -> Node s []) (nub (map fst cpmdeps ++ map snd cpmdeps)))
+         (map (\s -> Node s [("URL", moduleCodeURL s)])
+              (nub (map fst cpmdeps ++ map snd cpmdeps)))
          (map (\ (s,t) -> Edge s t []) cpmdeps)
 
 -----------------------------------------------------------------------

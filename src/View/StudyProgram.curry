@@ -122,5 +122,5 @@ table3colContainer :: [[[BaseHtml]]] -> BaseHtml
 table3colContainer entries =
   blockstyle "container-fluid" $
     map (\rs -> blockstyle "row"
-                            (map (blockstyle "col-sm-4 col-md-4 tcdata") rs))
+                  (map (blockstyle "col-sm-4 col-md-4 tcdata") rs))
         entries

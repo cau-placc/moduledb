@@ -6,6 +6,7 @@ module System.Helpers
   ( returnT, (|>>), (|>>=), showTError, -- compatibilities
     Database.CDBI.Connection.DBAction,
     LogEvent(..),logEvent,
+    moduleCodeURL,
     masterProgsLatexFile,
     modInfoLatexFile,modTableLatexFile,semTableLatexFile,
     shortModInfoLatexFile,
@@ -108,6 +109,11 @@ getHostnameForIP ipaddr = (flip catch) (\_ -> return "") $ do
   b <- hIsEOF h
   if b then return ""
        else hGetLine h >>= return . last . words
+
+-------------------------------------------------------------------------------
+-- The permanent URL of a description of a module with a given code:
+moduleCodeURL :: String -> String
+moduleCodeURL mcode = baseURL ++ "?mod=" ++ string2urlencoded mcode
 
 -------------------------------------------------------------------------------
 -- name of LaTeX include with infos for all modules:
