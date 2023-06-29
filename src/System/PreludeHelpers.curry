@@ -47,6 +47,13 @@ instance (Show a, Show b, Show c, Show d, Show e, Show f, Show g, Show h,
     showTuple [ shows a, shows b, shows c, shows d, shows e, shows f
               , shows g, shows h, shows i, shows j, shows k, shows l]
 
+instance (Show a, Show b, Show c, Show d, Show e, Show f, Show g, Show h,
+          Show i, Show j, Show k, Show l, Show m) =>
+         Show (a, b, c, d, e, f, g, h, i, j, k, l, m) where
+  showsPrec _ (a, b, c, d, e, f, g, h, i, j, k, l, m) =
+    showTuple [ shows a, shows b, shows c, shows d, shows e, shows f
+              , shows g, shows h, shows i, shows j, shows k, shows l, shows m]
+
 
 instance (Read a, Read b, Read c, Read d, Read e, Read f, Read g) =>
     Read (a, b, c, d, e, f, g) where
@@ -195,5 +202,37 @@ instance (Read a, Read b, Read c, Read d, Read e, Read f, Read g, Read h,
                                                    , (",", z13) <- lex z12
                                                    , (l, z14) <- reads z13
                                                    , (")", z) <- lex z14 ])
+
+instance (Read a, Read b, Read c, Read d, Read e, Read f, Read g, Read h,
+          Read i, Read j, Read k, Read l, Read m) =>
+    Read (a, b, c, d, e, f, g, h, i, j, k, l, m) where
+  readsPrec _ = readParen False
+   (\o -> [ ((a, b, c, d, e, f, g, h, i, j, k, l, m), z) | ("(", p) <- lex o
+                                                   , (a, q) <- reads p
+                                                   , (",", r) <- lex q
+                                                   , (b, s) <- reads r
+                                                   , (",", t) <- lex s
+                                                   , (c, u) <- reads t
+                                                   , (",", v) <- lex u
+                                                   , (d, w) <- reads v
+                                                   , (",", x) <- lex w
+                                                   , (e, y) <- reads x
+                                                   , (",", z1) <- lex y
+                                                   , (f, z2) <- reads z1
+                                                   , (",", z3) <- lex z2
+                                                   , (g, z4) <- reads z3
+                                                   , (",", z5) <- lex z4
+                                                   , (h, z6) <- reads z5
+                                                   , (",", z7) <- lex z6
+                                                   , (i, z8) <- reads z7
+                                                   , (",", z9) <- lex z8
+                                                   , (j, z10) <- reads z9
+                                                   , (",", z11) <- lex z10
+                                                   , (k, z12) <- reads z11
+                                                   , (",", z13) <- lex z12
+                                                   , (l, z14) <- reads z13
+                                                   , (",", z15) <- lex z14
+                                                   , (m, z16) <- reads z15
+                                                   , (")", z) <- lex z16 ])
 
 ------------------------------------------------------------------------------
