@@ -8,7 +8,7 @@ import Data.Maybe
 import System.Spicey
 import HTML.Base
 import MDB
-import MDBExts
+import MDB.Queries
 import View.MasterProgInfo
 import System.Authorization
 import System.AuthorizedActions

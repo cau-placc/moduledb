@@ -15,7 +15,6 @@ import HTML.Base
 import System.Spicey
 import System.Authentication
 import MDB
-import MDBExts
 import MDB.Queries
 import Database.CDBI.ER 
 

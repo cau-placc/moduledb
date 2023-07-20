@@ -23,11 +23,11 @@ import System.Spicey
 import System.SessionInfo
 import ConfigMDB ( adminEmail )
 import MDB
-import MDBExts ( showModDataID )
+import MDB.Exts    ( showModDataID )
+import MDB.Queries ( queryStudentByEmail )
 import View.MDBEntitiesToHtml
 import Database.CDBI.Connection ( DBAction )
 
-import SpecialQueries ( queryStudentByEmail )
 
 --- The WUI specification for the entity type Student.
 wStudent :: UserSessionInfo -> Bool

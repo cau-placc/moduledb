@@ -21,7 +21,6 @@ import HTML.Session
 import HTML.WUI
 import XML
 import MDB
-import MDBExts
 import MDB.Queries
 import View.ModData
 import Config.EntityRoutes
@@ -44,9 +43,6 @@ import System.Process ( getPID, system )
 import System.SessionInfo
 import System.MultiLang
 import System.StudyPlanner
-
-import SpecialQueries ( queryStudentsOfModSemester
-                      , queryStudentNumberOfModSemester )
 
 ------------------------------------------------------------------------------
 -- Routing

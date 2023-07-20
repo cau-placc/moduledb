@@ -11,7 +11,7 @@ import System.Spicey
 import HTML.Base
 import ConfigMDB
 import MDB
-import MDBExts
+import MDB.Queries
 import View.MDBEntitiesToHtml
 import View.MasterProgram
 import System.Authorization

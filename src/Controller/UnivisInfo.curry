@@ -11,7 +11,7 @@ import HTML.Base
 import HTML.Session
 import HTML.WUI
 import MDB
-import MDBExts
+import MDB.Queries
 import View.UnivisInfo
 import System.Authorization
 import System.AuthorizedActions

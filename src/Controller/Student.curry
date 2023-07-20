@@ -27,10 +27,10 @@ import Config.UserProcesses
 import View.MDBEntitiesToHtml
 import Database.CDBI.Connection
 
-import SpecialQueries ( queryModInstsOfSemester, queryStudentByEmail
-                      , queryModInstsOfStudentInSem
-                      , queryStudentCoursesOfStudent
-                      , queryCoursesOfStudent )
+import MDB.Queries ( queryModInstsOfSemester, queryStudentByEmail
+                   , queryModInstsOfStudentInSem
+                   , queryStudentCoursesOfStudent
+                   , queryCoursesOfStudent )
 
 --- Choose the controller for a Student entity according to the URL parameter.
 mainStudentController :: Controller

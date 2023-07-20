@@ -15,7 +15,7 @@ import System.SessionInfo
 import MDB
 import View.MDBEntitiesToHtml
 import View.ModInst (leqModInst)
-import MDBExts (modInstSemester)
+import MDB.Queries   (modInstSemester)
 
 --- The WUI specification for the entity type AdvisorModule.
 --- It also includes fields for associated entities.

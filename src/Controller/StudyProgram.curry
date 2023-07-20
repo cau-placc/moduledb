@@ -16,7 +16,7 @@ import ShowDotGraph ( showDotGraph )
 
 import Config.EntityRoutes
 import MDB
-import SpecialQueries
+import MDB.Queries
 import System.Helpers
 import System.Spicey
 import View.StudyProgram

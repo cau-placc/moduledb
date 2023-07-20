@@ -9,7 +9,7 @@ import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import MDB
-import MDBExts
+import MDB.Queries
 import View.ModInst
 import View.User
 import System.Authorization

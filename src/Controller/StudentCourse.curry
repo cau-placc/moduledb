@@ -8,6 +8,7 @@ import System.Spicey
 import HTML.Base
 
 import MDB
+import MDB.Queries ( getModuleConflictList )
 import Config.EntityRoutes
 import View.StudentCourse
 import System.SessionInfo
@@ -18,8 +19,6 @@ import System.MultiLang
 import Config.UserProcesses
 import View.MDBEntitiesToHtml
 import Database.CDBI.Connection
-
-import SpecialQueries ( getModuleConflictList )
 
 --- Choose the controller for a StudentCourse entity according to the URL parameter.
 mainStudentCourseController :: Controller

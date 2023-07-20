@@ -10,7 +10,7 @@ import HTML.Styles.Bootstrap4
 
 import System.Spicey
 import MDB
-import MDBExts
+import MDB.Exts ( masterProgramKeyToString )
 import View.MDBEntitiesToHtml
 import System.Helpers
 import View.MasterCoreArea
@@ -44,7 +44,7 @@ listMasterProgramView sinfo listall mpinfos allcoreareas =
    t = translate sinfo
 
    mpListView (mpkey,name,_,_,vis,_) =
-     [href ("?MasterProgram/show/"++masterProgramKeyToString mpkey)
+     [href ("?MasterProgram/show/" ++ masterProgramKeyToString mpkey)
            [if vis then stringToHtml name
                    else italic [stringToHtml name]]]
 

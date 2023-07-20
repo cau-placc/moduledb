@@ -7,8 +7,8 @@ module System.Logging
  where
 
 import Data.Time
-import System.IOExts   ( exclusiveIO )
-import System.FilePath ( (</>) )
+import System.IOExts      ( exclusiveIO )
+import System.FilePath    ( (</>) )
 import System.Environment ( getEnv )
 
 import ConfigMDB

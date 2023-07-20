@@ -13,7 +13,7 @@ import System.Spicey
 import View.Category
 import System.SessionInfo
 import MDB
-import MDBExts (modInstSemester)
+import MDB.Queries (modInstSemester)
 
 import View.MDBEntitiesToHtml
 import System.MultiLang

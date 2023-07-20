@@ -15,7 +15,6 @@ import Config.UserProcesses
 import Config.EntityRoutes
 import MDB
 import MDB.Queries
-import MDBExts
 import View.Category
 import View.ModData
 import System.Authorization

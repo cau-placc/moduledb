@@ -20,7 +20,7 @@ import Controller.AdvisorModule
 import System.Helpers
 import System.Spicey
 import MDB
-import MDBExts
+import MDB.Queries
 import View.AdvisorModule
 import View.AdvisorStudyProgram
 import View.StudyProgram

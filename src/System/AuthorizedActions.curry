@@ -2,7 +2,7 @@ module System.AuthorizedActions where
 
 import System.Authorization
 import MDB
-import MDBExts
+import MDB.Queries
 import System.Authentication
 import System.SessionInfo
 
