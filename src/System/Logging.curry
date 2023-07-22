@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------
 --- This module contains operations to log some data.
 --------------------------------------------------------------------------
-{-# OPTIONS_CYMAKE -F --pgmF=currypp --optF=foreigncode #-}
+{-# OPTIONS_FRONTEND -F --pgmF=currypp --optF=foreigncode #-}
 
 module System.Logging
  where

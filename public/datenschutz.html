@@ -14,7 +14,7 @@
 <body>
 
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-  <a href="https://moduldb.informatik.uni-kiel.de/show.cgi?" class="navbar-brand">Hauptseite der Moduldatenbank</a>
+  <a href="show.cgi?" class="navbar-brand">Hauptseite der Moduldatenbank</a>
   <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#topnavbar" aria-expanded="false" aria-controls="topnavbar" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
   <div id="topnavbar" class="collapse navbar-collapse">
         
@@ -46,12 +46,10 @@
 <div class="row">
 
 <div class="col-sm-3 col-md-3">
-  <div class="well sidebar-nav">
-    <ul class="nav nav-sidebar">
-      <li><a href="show.cgi?main">Moduldatenbank</a></li>
-      <li><a href="http://www.uni-kiel.de/suchen/impressum.shtml#datenschutz">Datenschutz an der CAU</a></li>
-    </ul>
-  </div><!--/.well -->
+  <ul class="nav flex-column">
+    <li class="nav-item"><a href="show.cgi?main" class="nav-link">Moduldatenbank</a></li>
+    <li class="nav-item"><a href="http://www.uni-kiel.de/suchen/impressum.shtml#datenschutz" class="nav-link">Datenschutz an der CAU</a></li>
+  </ul>
 </div><!--/span-->
 
 <div class="col-sm-9 col-md-9">

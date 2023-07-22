@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------
 --- This module contains a controller for search modules.
 --------------------------------------------------------------------------
-{-# OPTIONS_CYMAKE -F --pgmF=currypp --optF=foreigncode #-}
+{-# OPTIONS_FRONTEND -F --pgmF=currypp --optF=foreigncode #-}
 
 module Controller.Search
   ( searchController, searchModuleForm, showSemModsForm, searchUserModules
