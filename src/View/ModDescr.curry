@@ -96,7 +96,7 @@ wModDescrType sinfo modDescr =
 --       wuiframe = wuiEditFormWithText
 --                    "Modulbeschreibung ändern" "Änderungen speichern"
 --                    [par [htxt "Bitte auch die allgemeinen ",
---                          ehref "edit_infos.html"
+--                          ehref "?modinfos"
 --                                [htxt "Hinweise zu Modulbeschreibungen"],
 --                          htxt " beachten!"]]
 --                    (controller False initdata)

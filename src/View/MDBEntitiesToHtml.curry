@@ -343,7 +343,7 @@ modDescrLabelList =
 
 -- Reference to markdown syntax description:
 markdownRef :: HTML h => h
-markdownRef = ehref "edit_infos.html#markdown" [htxt "(mit Markdown-Syntax)"]
+markdownRef = ehref "?modinfos#markdown" [htxt "(mit Markdown-Syntax)"]
 
 --- The list view of a ModInst entity in HTML format.
 --- This view is used in a row of a table of all entities.

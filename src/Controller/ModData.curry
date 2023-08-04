@@ -189,7 +189,7 @@ editModDataForm =
            [par cmts] (showRoute mdata) ())
  where
   cmts = [htxt "Bitte auch die allgemeinen ",
-          ehref "edit_infos.html" [htxt "Hinweise zu Modulbeschreibungen"],
+          ehrefPrimBadge "?modinfos" [htxt "Hinweise zu Modulbeschreibungen"],
           htxt " beachten!"]
 
 --- The data stored for executing the WUI form.
@@ -884,7 +884,7 @@ editModDescrForm =
            (showRoute mdata) ())
  where
   cmts = [htxt "Bitte auch die allgemeinen ",
-          ehref "edit_infos.html" [htxt "Hinweise zu Modulbeschreibungen"],
+          ehrefPrimBadge "?modinfos" [htxt "Hinweise zu Modulbeschreibungen"],
           htxt " beachten!"]
 
 --- The data stored for executing the WUI form.

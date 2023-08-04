@@ -365,7 +365,7 @@ spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 --- The standard footer of the Spicey page.
 spiceyFooter :: [BaseHtml]
 spiceyFooter =
-  [par [htxt "Version of July 20, 2023, powered by",
+  [par [htxt "Version of August 04, 2023, powered by",
         href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),

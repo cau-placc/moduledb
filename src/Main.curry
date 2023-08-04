@@ -69,12 +69,16 @@ main = do
                       showXmlAdvisorStudyProgram
                       (readAdvisorStudyProgramKey (urlencoded2string code))
     ['l','a','n','g',l1,l2] -> setLanguage [l1,l2]
-    "about"  -> readHtmlFile "about.html" >>= getPage
-    "csv"    -> allModuleCSV
-    "saveDB" -> storeTermDB >>
-                return (answerEncText "iso-8859-1" "DB saved to term files")
-    "ping"   -> pingAnswer -- to check whether the MDB server is alive
-    _        -> dispatcher
+    "about"    -> showHtmlFile "about.html"
+    "privacy"  -> showHtmlFile "datenschutz.html"
+    "modinfos" -> showHtmlFile "modinfos.html"
+    "csv"      -> allModuleCSV
+    "saveDB"   -> storeTermDB >>
+                 return (answerEncText "iso-8859-1" "DB saved to term files")
+    "ping"     -> pingAnswer -- to check whether the MDB server is alive
+    _          -> dispatcher
+ where
+  showHtmlFile f = readFile f >>= \s -> getPage [BaseText s]
 
 setLanguage :: String -> IO HtmlPage
 setLanguage langcode = do

@@ -346,12 +346,14 @@ privacyCookieCmt sinfo = langSelect sinfo
          [htxt $ "generelle Informationen zum Datenschutz für Webseiten " ++
                  "an dieser Universität"],
    htxt " und ",
-   ehref dataProtectMDB
-         [htxt "spezielle Informationen zum Datenschutz für diese Webseite"],
+   href dataProtectMDB
+        [htxt "spezielle Informationen zum Datenschutz für diese Webseite"],
    htxt "."]
  where
-  dataProtectCAU = "http://www.uni-kiel.de/suchen/impressum.shtml#datenschutz"
-  dataProtectMDB = "datenschutz.html"
+  dataProtectCAU = langSelect sinfo
+                     "https://www.uni-kiel.de/en/imprint/#datenschutz"
+                     "https://www.uni-kiel.de/de/impressum/#datenschutz"
+  dataProtectMDB = "?privacy"
 
 searchToolTip :: UserSessionInfo -> String
 searchToolTip sinfo = langSelect sinfo

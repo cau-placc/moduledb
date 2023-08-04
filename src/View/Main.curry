@@ -40,7 +40,7 @@ mainPageView sinfo studyPrograms =
             [htxt $ t "planning instruments of the institute"]],
      [bold [htxt $ t "For persons in charge for modules: "],
       htxt $ t "General ",
-      ehref "edit_infos.html"
+      hrefPrimBadge "?modinfos"
         [htxt $ t "notes on module descriptions and their preparation"]],
      [bold [htxt $ t "For programmers:"], nbsp,
       ehrefPrimBadge "?xml" [htxt $ t "XML index to all modules"],
