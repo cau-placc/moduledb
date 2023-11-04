@@ -2,7 +2,7 @@
 
 module ReadUnivIS(loadLectures) where
 
-import Control.SetFunctions
+import Control.Search.SetFunctions
 import Debug.Profile
 import System.URL
 import XML

@@ -211,7 +211,8 @@ listCategoryView sinfo mbsprog catmods cursem semperiod users semselectform =
    t = translate sinfo
 
    fromSemPlan      = nextSemester cursem
-   toSemPlan        = iterate nextSemester fromSemPlan !! 3
+   toSemPlan        = last (filter isValidSemester
+                                   (take 4 (iterate nextSemester fromSemPlan)))
    showSemPlanTitle = t "Planning" ++ " " ++ showSemester fromSemPlan ++
                       " - " ++ showSemester toSemPlan
    semPlanURL ckey  = "?Category/showplan/" ++ showSemesterCode fromSemPlan ++

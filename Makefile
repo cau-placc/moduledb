@@ -6,9 +6,9 @@ TARGET=TEST
 # check setting of TARGET variable and
 # set Curry installation directory to be used::
 ifeq ($(TARGET),IFI)
-CURRYHOME=/opt/kics2/kics3
+CURRYHOME=/opt/kics2/kics2
 else ifeq ($(TARGET),IFIPAKCS)
-CURRYHOME=/opt/pakcs/pakcs-3.5.0
+CURRYHOME=/opt/pakcs/pakcs-3.6.0
 else ifeq ($(TARGET),TEST)
 #CURRYHOME=/opt/kics2/kics3
 CURRYHOME=$(HOME)/pakcs
