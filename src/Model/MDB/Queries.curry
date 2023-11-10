@@ -14,7 +14,7 @@ import MDB
 import System.Helpers ( moduleCodeURL, nextSemester )
 
 ------------------------------------------------------------------------------
---- Gets the pair of term and year of a ModInst entity.
+--- Gets the term/year pair of a ModInst entity.
 modInstSemester :: ModInst -> (String,Int)
 modInstSemester (ModInst _ t y _ _) = (t,y)
 
@@ -52,6 +52,14 @@ queryModDataOfLecturer ukey = do
                          Satisfies mi withLecturer u And
                          Satisfies mi withModule md;''
   mapM getModData mdkeys
+
+--- Gets all ModData entities having a given pattern in its code or name.
+queryModDataSearch :: String -> DBAction [ModData]
+queryModDataSearch pattern =
+  ``sql* Select *
+         From ModData as md
+         Where md.Code like {pattern} Or md.NameG like {pattern}
+                                      Or md.NameE like {pattern};''
 
 --- Gets all module instances for a given module (key) taught by the
 --- given lecturer (key).
@@ -314,6 +322,13 @@ queryStudentByEmail email =
   ``sql* Select * From Student as s Where s.Email = {email};''
 
 -----------------------------------------------------------------------
+--- Gets the ModData keys of all module instances in a given semester.
+queryModKeysOfSem :: (String,Int) -> DBAction [ModDataID]
+queryModKeysOfSem (term,year) =
+  ``sql* Select Distinct mi.ModDataModuleInstancesKey
+         From   ModInst As mi
+         Where  mi.Term = {term} And mi.Year = {year};''
+
 --- Queries all module instances of a given semester.
 queryModInstsOfSemester :: (String,Int)
                         -> DBAction [(ModInstID,ModDataID,String,String,String)]

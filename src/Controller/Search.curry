@@ -1,7 +1,6 @@
 --------------------------------------------------------------------------
 --- This module contains a controller for search modules.
 --------------------------------------------------------------------------
-{-# OPTIONS_FRONTEND -F --pgmF=currypp --optF=foreigncode #-}
 
 module Controller.Search
   ( searchController, searchModuleForm, showSemModsForm, searchUserModules
@@ -70,11 +69,7 @@ searchModules pat = do
   sinfo <- getUserSessionInfo
   let t = translate sinfo
       pattern = "%" ++ filter (`notElem` "%_") pat ++ "%"
-  mods <- runQ $
-           ``sql* Select *
-                  From ModData as md
-                  Where md.Code like {pattern} Or md.NameG like {pattern}
-                                               Or md.NameE like {pattern};''
+  mods <- runQ $ queryModDataSearch pattern
   let vismods = maybe (filter modDataVisible mods) (const mods)
                       (userLoginOfSession sinfo)
   listCategoryController sinfo
@@ -210,12 +205,5 @@ showHandbookController sem = do
   modkeys <- runQ $ queryModKeysOfSem sem
   mods    <- runJustT $ mapM getModData modkeys
   formatCatModulesForm [("Alle Module im " ++ showLongSemester sem, mods)]
-
---- Gets the ModData keys of all module instances in a given semester.
-queryModKeysOfSem :: (String,Int) -> DBAction [ModDataID]
-queryModKeysOfSem (term,year) =
-  ``sql* Select Distinct mi.ModDataModuleInstancesKey
-         From   ModInst As mi
-         Where  mi.Term = {term} And mi.Year = {year};''
 
 -----------------------------------------------------------------------------
