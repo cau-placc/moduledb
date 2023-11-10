@@ -51,8 +51,19 @@ PKGDIR := $(CURDIR)
 # The root directory of the model sources of the Spicey application:
 MODELDIR := $(PKGDIR)/src/Model
 
+# Executable of CurryPP (require to compile SQL queries):
+CURRYPP := $(shell which currypp)
+ifeq ("$(CURRYPP)","")
+$(error Executable 'currypp' not found! Install it by 'cypm install currypp' and add '~/.cpm/bin' to your PATH)
+endif
+
 # Executable of the makecgi:
 CURRY2CGI := $(shell which curry2cgi)
+
+# all Curry source files used by the implementation
+SOURCES := $(shell find src -name "*.curry") src/Model/MDB/Queries.curry
+
+##############################################################################
 
 .PHONY: all
 all:
@@ -76,21 +87,27 @@ checkdeploy:
 repl:
 	$(CPM) exec $(CURRYBIN)/curry --nocypm $(CURRYOPTIONS)
 
+# Generate pure Curry module MDB.Queries with CurryPP:
+src/Model/MDB/Queries.curry: src/Model/MDB/Queries.curry.pp
+	rm -f $@ && cd src/Model/MDB && ln -s Queries.curry.pp Queries.curry
+	$(CURRYBIN)/curry $(CURRYOPTIONS) :load MDB.Queries :quit
+	rm $@ && mv src/Model/MDB/Queries.curry.CURRYPP $@
+
 # Compile the generated Spicey application:
 .PHONY: compile
-compile:
+compile: $(SOURCES)
 	$(CPM) exec $(CURRYBIN)/curry --nocypm $(CURRYOPTIONS) :load Main :quit
 
 # Load the generated Spicey application into the Curry system so that
 # one can evaluate some expressions:
 .PHONY: load
-load:
+load: $(SOURCES)
 	$(CPM) exec $(CURRYBIN)/curry --nocypm $(CURRYOPTIONS) :load Main
 
 # Runs the generated Spicey application by evaluating the main expression.
 # This might be useful to test only the initial web page without a web server
 .PHONY: run
-run:
+run: $(SOURCES)
 	$(CPM) exec $(CURRYBIN)/curry --nocypm $(CURRYOPTIONS) :load Main :eval main :quit
 
 # save DB in term file
@@ -127,7 +144,7 @@ else
 	 /bin/rm -f ConfigMDB.curry && ln -s ConfigMDB_TEST.curry ConfigMDB.curry
 endif
 
-$(CGIPROGRAM): src/*.curry src/*/*.curry
+$(CGIPROGRAM): $(SOURCES)
 	$(CPM) exec $(CURRY2CGI) --cpmexec \"$(CPM) exec\" \
 	  --system="$(CURRYHOME)" \
 	  -i Controller.AdvisorStudyProgram \

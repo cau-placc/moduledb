@@ -1,4 +1,5 @@
 -- Operations to connect UnivIS data to module database
+module UnivIS where
 
 import ConfigMDB
 import MDB

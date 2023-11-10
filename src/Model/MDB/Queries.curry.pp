@@ -1,4 +1,4 @@
-{-# OPTIONS_FRONTEND -F --pgmF=currypp --optF=foreigncode #-}
+{-# OPTIONS_FRONTEND -F --pgmF=currypp --optF=foreigncode --optF=-o #-}
 
 --- A collection of SQL queries for the module database.
 
