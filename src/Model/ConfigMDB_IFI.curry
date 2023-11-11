@@ -31,7 +31,7 @@ storageDir = "/var/www/mdb/mdb/"
 
 --- The base URL of the study planner
 studyPlannerURL :: String
-studyPlannerURL = "http://www-ps.informatik.uni-kiel.de/studienplaner/"
+studyPlannerURL = "https://www-ps.informatik.uni-kiel.de/studienplaner/"
 
 --- The system hash key used to encode passwords
 --- (compare `System.Authentication`).

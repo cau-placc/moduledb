@@ -365,8 +365,8 @@ spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 --- The standard footer of the Spicey page.
 spiceyFooter :: [BaseHtml]
 spiceyFooter =
-  [par [htxt "Version of November 04, 2023, powered by",
-        href "http://www.informatik.uni-kiel.de/~pakcs/spicey"
+  [par [htxt "Version of November 11, 2023, powered by",
+        href "https://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
         htxt "Framework"]]
@@ -470,21 +470,21 @@ getPage viewblock = case viewblock of
 
   extUrls t =
    [ toHref "?main" [htxt $ t "Main page of the module information system"]
-   , toEHref "http://www.inf.uni-kiel.de"
+   , toEHref "https://www.inf.uni-kiel.de"
              [htxt $ t "Department of Computer Science"]
-   , toEHref "http://www.uni-kiel.de" [htxt "CAU Kiel"]
-   , toEHref "http://univis.uni-kiel.de/" [htxt "UnivIS"]
+   , toEHref "https://www.uni-kiel.de" [htxt "CAU Kiel"]
+   , toEHref "https://univis.uni-kiel.de/" [htxt "UnivIS"]
    , blockstyle "dropdown-divider" []
    , h5 [htxt $ t "Supported by:"] `addClass` "dropdown-header"
-   , toEHref "http://www.curry-lang.org"
+   , toEHref "https://www.curry-lang.org"
              [image "bt4/img/curry.svg" "Curry"
                 `addAttrs` [("width","24"), ("height","24")],
               htxt $ " Curry (" ++ t "programming language" ++ ")"]
-   , toEHref "http://www.informatik.uni-kiel.de/~pakcs/spicey"
+   , toEHref "https://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"
                 `addAttrs` [("height","24")],
               htxt $ t " Spicey (Web Framework)"]
-   , toEHref "http://getbootstrap.com/"
+   , toEHref "https://getbootstrap.com/"
              [image "bt4/img/bootstrap.svg" "Bootstrap",
               htxt " Bootstrap (Style Sheets)"]
    ]

@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------
 --- This module supports the retrieval of data from the
 --- Study Planner tool
---- (running at http://www-ps.informatik.uni-kiel.de/studienplaner/)
+--- (running at https://www-ps.informatik.uni-kiel.de/studienplaner/)
 ---------------------------------------------------------------------------
 
 module System.StudyPlanner

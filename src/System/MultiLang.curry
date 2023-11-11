@@ -3,7 +3,7 @@
 --- and the translation of texts shown in the application.
 ---
 --- @author Michael Hanus
---- @version October 2020
+--- @version November 2023
 ----------------------------------------------------------------------------
 
 module System.MultiLang (
@@ -297,7 +297,7 @@ mainExplanation sinfo = langSelect sinfo
    ehrefScndBadge univisURL [htxt "UnivIS"],
    htxt $ " finden."]
  where
-  univisURL = "http://univis.uni-kiel.de/"
+  univisURL = "https://univis.uni-kiel.de/"
 
 masterStudyOldNote :: HTML h => UserSessionInfo -> [h]
 masterStudyOldNote sinfo = langSelect sinfo
@@ -319,7 +319,7 @@ minorSubjectNote sinfo = langSelect sinfo
    htxt "Informatik sowie die dazugehörigen Module findet man ",
    ehrefScndBadge minorURL [htxt "auf dieser Seite."]]
  where
-  minorURL = "http://www.inf.uni-kiel.de/de/studium/studiengaenge/inf-1-fach/bachelorstudiengang/nebenfaecher_anwendungsgebiete"
+  minorURL = "https://www.inf.uni-kiel.de/de/studium/studiengaenge/informatik-1-fach-bachelorstudiengang/nebenfaecher_anwendungsgebiete"
 
 privacyCookieCmt :: HTML h => UserSessionInfo -> [h]
 privacyCookieCmt sinfo = langSelect sinfo

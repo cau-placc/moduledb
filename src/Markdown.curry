@@ -7,11 +7,11 @@
 --- for backward compatibility only.
 ------------------------------------------------------------------------------
 --- Library to translate
---- [markdown documents](http://en.wikipedia.org/wiki/Markdown)
+--- [markdown documents](https://en.wikipedia.org/wiki/Markdown)
 --- into HTML or LaTeX.
 --- The slightly restricted subset of the markdown syntax recognized by
 --- this implementation is
---- [documented in this page](http://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
+--- [documented in this page](https://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
 ---
 --- @author Michael Hanus
 --- @version Octtember 2022
