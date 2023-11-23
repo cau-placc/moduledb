@@ -4,9 +4,11 @@
     "author": "Michael Hanus <mh@informatik.uni-kiel.de>",
     "synopsis": "Module database web application of IfI, Kiel University",
     "category": [ "Web" ],
+    "license": "BSD-3-Clause",
+    "licenseFile": "LICENSE",
     "dependencies": {
-        "base"        : ">= 3.2.0, < 4.0.0",
-        "cdbi"        : ">= 3.2.0, < 4.0.0",
+        "base"        : "^ 3.2.0",
+        "cdbi"        : "^ 3.2.0",
         "csv"         : ">= 3.0.0, < 4.0.0",
         "cryptohash"  : ">= 3.0.0, < 4.0.0",
         "directory"   : ">= 3.0.0, < 4.0.0",
@@ -21,7 +23,7 @@
         "time"        : ">= 3.0.0, < 4.0.0",
         "url"         : ">= 3.0.0, < 4.0.0",
         "xml"         : ">= 3.0.0, < 4.0.0",
-        "wui2"        : ">= 3.1.0, < 4.0.0"
+        "wui2"        : "^ 3.1.0"
     },
     "sourceDirs": [ "src", "src/Model" ]
 }
