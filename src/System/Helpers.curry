@@ -41,8 +41,8 @@ import Database.CDBI.Connection
 import HTML.Base
 import Markdown
 
-import ConfigMDB
-import MDB
+import Model.ConfigMDB
+import Model.MDB
 import System.Authentication
 
 -----------------------------------------------------------------------------

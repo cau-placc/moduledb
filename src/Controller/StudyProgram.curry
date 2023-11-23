@@ -15,8 +15,8 @@ import HTML.WUI
 import ShowDotGraph ( showDotGraph )
 
 import Config.EntityRoutes
-import MDB
-import MDB.Queries
+import Model.MDB
+import Model.MDB.Queries
 import System.Helpers
 import System.Spicey
 import View.StudyProgram

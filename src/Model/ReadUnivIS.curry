@@ -1,6 +1,7 @@
 -- Reading data from UnivIS and storing it in a term file.
 
-module ReadUnivIS(loadLectures) where
+module Model.ReadUnivIS ( loadLectures )
+ where
 
 import Control.Search.SetFunctions
 import Debug.Profile
@@ -8,7 +9,7 @@ import System.URL
 import XML
 import XCuery
 
-import ConfigMDB(storageDir)
+import Model.ConfigMDB(storageDir)
 
 -------------------------------------------------------------------------
 -- Benchmark definitions:

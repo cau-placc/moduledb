@@ -13,7 +13,7 @@ module System.Authentication (
   isAdmin
  ) where
 
-import ConfigMDB          ( systemHashKey )
+import Model.ConfigMDB          ( systemHashKey )
 import System.SessionInfo
 import Crypto.Hash
 

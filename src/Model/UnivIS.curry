@@ -1,10 +1,10 @@
 -- Operations to connect UnivIS data to module database
-module UnivIS where
+module Model.UnivIS where
 
-import ConfigMDB
-import MDB
+import Model.ConfigMDB
+import Model.MDB
 import System.Helpers
-import ReadUnivIS
+import Model.ReadUnivIS
 
 -- Initialize Univis DB:
 initUnivisDB :: IO String

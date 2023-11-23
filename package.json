@@ -1,6 +1,6 @@
 {
     "name": "mdb",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "author": "Michael Hanus <mh@informatik.uni-kiel.de>",
     "synopsis": "Module database web application of IfI, Kiel University",
     "category": [ "Web" ],
@@ -24,6 +24,5 @@
         "url"         : ">= 3.0.0, < 4.0.0",
         "xml"         : ">= 3.0.0, < 4.0.0",
         "wui2"        : "^ 3.1.0"
-    },
-    "sourceDirs": [ "src", "src/Model" ]
+    }
 }

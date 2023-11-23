@@ -10,14 +10,14 @@ import System.Spicey
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import MDB
-import MDB.Queries
+import Model.MDB
+import Model.MDB.Queries
 import View.UnivisInfo
 import System.Authorization
 import System.AuthorizedActions
 import System.SessionInfo
 import Config.UserProcesses
-import UnivIS
+import Model.UnivIS
 import System.Authentication
 
 --- Choose the controller for a UnivisInfo entity according to the URL parameter.

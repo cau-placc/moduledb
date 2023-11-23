@@ -39,7 +39,7 @@ import Data.List             ( findIndex, init, last )
 import Data.Time
 import System.FilePath       ( (</>) )
 
-import ConfigMDB        ( baseCGI )
+import Model.ConfigMDB        ( baseCGI )
 import Config.UserProcesses
 import HTML.Base
 import HTML.WUI
@@ -53,7 +53,7 @@ import System.Routes
 import System.Processes
 
 import Database.CDBI.ER
-import MDB              ( runT, runJustT )
+import Model.MDB              ( runT, runJustT )
 
 --------------------------------------------------------------------------
 

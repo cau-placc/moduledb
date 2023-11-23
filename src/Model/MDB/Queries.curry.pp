@@ -2,7 +2,7 @@
 
 --- A collection of SQL queries for the module database.
 
-module MDB.Queries where
+module Model.MDB.Queries where
 
 import Data.List  ( intersect, nub )
 import Data.Maybe ( listToMaybe )
@@ -10,7 +10,7 @@ import Data.Maybe ( listToMaybe )
 import Database.CDBI.ER
 import ShowDotGraph
 
-import MDB
+import Model.MDB
 import System.Helpers ( moduleCodeURL, nextSemester )
 
 ------------------------------------------------------------------------------

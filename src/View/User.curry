@@ -17,8 +17,8 @@ import System.MultiLang
 import System.SessionInfo
 import System.Spicey
 import System.Helpers
-import MDB
-import ConfigMDB ( adminEmail )
+import Model.MDB
+import Model.ConfigMDB ( adminEmail )
 import View.MDBEntitiesToHtml
 
 --- The WUI specification for the entity type User.

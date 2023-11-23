@@ -8,7 +8,7 @@ module Controller.Main
 
 import System.Spicey
 import View.Main
-import MDB
+import Model.MDB
 import System.SessionInfo
 
 -----------------------------------------------------------------------------

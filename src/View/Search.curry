@@ -15,7 +15,7 @@ import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import System.Helpers
-import MDB
+import Model.MDB
 import View.MDBEntitiesToHtml
 import View.ModData
 import System.MultiLang

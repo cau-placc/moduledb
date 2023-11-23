@@ -5,7 +5,7 @@ import HTML.Base
 import HTML.Styles.Bootstrap4
 import Data.Time
 import System.Spicey
-import MDB
+import Model.MDB
 import System.Helpers
 import Data.List
 import System.MultiLang

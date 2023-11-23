@@ -15,12 +15,12 @@ import HTML.Styles.Bootstrap4
 import HTML.WUI
 
 import System.Spicey
-import MDB
+import Model.MDB
 import View.MDBEntitiesToHtml
 import System.Helpers
 import View.ModInst
 import System.Mail
-import ConfigMDB
+import Model.ConfigMDB
 import View.User(leqUser)
 import System.SessionInfo
 import System.MultiLang

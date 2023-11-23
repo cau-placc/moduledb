@@ -15,7 +15,7 @@ import HTML.Session
 import HTML.WUI
 
 import Config.EntityRoutes
-import MDB
+import Model.MDB
 import View.Student
 import System.SessionInfo
 import System.Authentication
@@ -27,7 +27,7 @@ import Config.UserProcesses
 import View.MDBEntitiesToHtml
 import Database.CDBI.Connection
 
-import MDB.Queries ( queryModInstsOfSemester, queryStudentByEmail
+import Model.MDB.Queries ( queryModInstsOfSemester, queryStudentByEmail
                    , queryModInstsOfStudentInSem
                    , queryStudentCoursesOfStudent
                    , queryCoursesOfStudent )

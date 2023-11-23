@@ -13,8 +13,8 @@ import HTML.WUI
 
 import Config.UserProcesses
 import Config.EntityRoutes
-import MDB
-import MDB.Queries
+import Model.MDB
+import Model.MDB.Queries
 import View.Category
 import View.ModData
 import System.Authorization

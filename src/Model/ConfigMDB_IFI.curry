@@ -2,7 +2,7 @@
 -- Global configurations for the module data base
 -------------------------------------------------------------------------------
 
-module ConfigMDB
+module Model.ConfigMDB
   ( adminEmail, baseCGI, baseURL, storageDir
   , studyPlannerURL, systemHashKey
   )

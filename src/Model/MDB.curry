@@ -5,7 +5,7 @@
 --- and contains definitions for all entities and relations
 --- specified in this model.
 
-module MDB where
+module Model.MDB where
 
 import qualified Data.Time
 import qualified Database.CDBI.ER
@@ -13,7 +13,7 @@ import qualified Database.CDBI.Criteria
 import qualified Database.CDBI.Connection
 import qualified Database.CDBI.Description
 
-import ConfigMDB
+import Model.ConfigMDB
 
 data Prerequisites = Prerequisites ModDataID ModDataID
  deriving (Eq,Show,Read)

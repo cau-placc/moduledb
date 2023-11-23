@@ -7,8 +7,8 @@ import Data.Time
 import System.Spicey
 import HTML.Base
 
-import MDB
-import MDB.Queries ( getModuleConflictList )
+import Model.MDB
+import Model.MDB.Queries ( getModuleConflictList )
 import Config.EntityRoutes
 import View.StudentCourse
 import System.SessionInfo

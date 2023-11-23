@@ -11,9 +11,9 @@ import HTML.Base
 import HTML.Styles.Bootstrap4
 import System.SessionInfo
 import System.Spicey
-import MDB
+import Model.MDB
 import View.MDBEntitiesToHtml
-import ConfigMDB
+import Model.ConfigMDB
 import System.Helpers
 import View.User(leqUser)
 

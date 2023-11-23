@@ -13,9 +13,9 @@ import Numeric    ( readInt )
 import HTML.Base
 import System.URL     ( getContentsOfUrl )
 
-import ConfigMDB      ( studyPlannerURL )
-import MDB
-import MDB.Queries    ( modInstSemester, queryStudentNumberOfModSemester )
+import Model.ConfigMDB      ( studyPlannerURL )
+import Model.MDB
+import Model.MDB.Queries    ( modInstSemester, queryStudentNumberOfModSemester )
 import System.Helpers ( showSemesterCode )
 
 --- Retrieve the number of students of a module in a given semester

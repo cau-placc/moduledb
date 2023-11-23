@@ -12,8 +12,8 @@ import HTML.Styles.Bootstrap4
 import System.Spicey
 import View.Category
 import System.SessionInfo
-import MDB
-import MDB.Queries (modInstSemester)
+import Model.MDB
+import Model.MDB.Queries (modInstSemester)
 
 import View.MDBEntitiesToHtml
 import System.MultiLang

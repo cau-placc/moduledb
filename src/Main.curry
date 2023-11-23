@@ -17,9 +17,9 @@ import Controller.AdvisorStudyProgram ( showXmlAdvisorStudyProgram
                                       , showAllXmlAdvisorStudyPrograms)
 import Controller.MasterProgram       ( showXmlMasterProgram
                                       , showAllXmlMasterPrograms)
-import MDB
-import MDB.Exts             ( storeTermDB )
-import MDB.Queries
+import Model.MDB
+import Model.MDB.Exts             ( storeTermDB )
+import Model.MDB.Queries
 import System.Helpers
 import System.MultiLang
 import System.Logging       ( logUrlParameter )

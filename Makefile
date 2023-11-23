@@ -90,7 +90,7 @@ repl:
 # Generate pure Curry module MDB.Queries with CurryPP:
 src/Model/MDB/Queries.curry: src/Model/MDB/Queries.curry.pp
 	rm -f $@ && cd src/Model/MDB && ln -s Queries.curry.pp Queries.curry
-	$(CURRYBIN)/curry $(CURRYOPTIONS) :load MDB.Queries :quit
+	$(CURRYBIN)/curry $(CURRYOPTIONS) :load Model.MDB.Queries :quit
 	rm $@ && mv src/Model/MDB/Queries.curry.CURRYPP $@
 
 # Compile the generated Spicey application:

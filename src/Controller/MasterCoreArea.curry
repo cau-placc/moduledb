@@ -8,7 +8,7 @@ import System.Spicey
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import MDB
+import Model.MDB
 import View.MasterCoreArea
 import System.Authorization
 import System.AuthorizedActions

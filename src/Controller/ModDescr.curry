@@ -5,7 +5,7 @@ module Controller.ModDescr (
 
 import System.Spicey
 import HTML.Base
-import MDB
+import Model.MDB
 import View.ModDescr
 import System.Authorization
 import System.AuthorizedActions

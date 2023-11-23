@@ -1,4 +1,4 @@
-PInfo "/net/medoc/home/mh/home/data/mdbtest/MDB.db" "MDB"
+PInfo "/net/medoc/home/mh/home/data/mdbtest/MDB.db" "Model.MDB"
  [(("StudentCourse","withModInst","ModInst"),NtoOne "StudentCourseInstances")
  ,(("ModInst","instOfModule","StudentCourse"),OnetoN "StudentCourseInstances")
  ,(("StudentCourse","withStudent","Student"),NtoOne "StudentCourses")

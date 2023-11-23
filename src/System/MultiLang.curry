@@ -19,7 +19,7 @@ module System.MultiLang (
 import System.SessionInfo
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import ConfigMDB              ( baseURL, studyPlannerURL )
+import Model.ConfigMDB              ( baseURL, studyPlannerURL )
 
 --------------------------------------------------------------------------
 --- Translates a string w.r.t. given user session info.

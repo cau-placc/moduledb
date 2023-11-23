@@ -8,8 +8,8 @@ import Data.Maybe (isJust)
 import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import MDB
-import MDB.Queries
+import Model.MDB
+import Model.MDB.Queries
 import View.ModInst
 import View.User
 import System.Authorization
@@ -17,7 +17,7 @@ import System.AuthorizedActions
 import Config.UserProcesses
 import System.Authentication
 import System.Helpers
-import ConfigMDB
+import Model.ConfigMDB
 import System.StudyPlanner
 
 --- Choose the controller for a ModInst entity according to the URL parameter.

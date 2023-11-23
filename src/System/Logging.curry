@@ -11,7 +11,7 @@ import System.IOExts      ( exclusiveIO )
 import System.FilePath    ( (</>) )
 import System.Environment ( getEnv )
 
-import ConfigMDB
+import Model.ConfigMDB
 import Data.Format -- required in the pre-processed program
 
 --------------------------------------------------------------------------

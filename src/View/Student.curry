@@ -21,10 +21,10 @@ import System.Helpers
 import System.MultiLang
 import System.Spicey
 import System.SessionInfo
-import ConfigMDB ( adminEmail )
-import MDB
-import MDB.Exts    ( showModDataID )
-import MDB.Queries ( queryStudentByEmail )
+import Model.ConfigMDB ( adminEmail )
+import Model.MDB
+import Model.MDB.Exts    ( showModDataID )
+import Model.MDB.Queries ( queryStudentByEmail )
 import View.MDBEntitiesToHtml
 import Database.CDBI.Connection ( DBAction )
 

@@ -9,8 +9,8 @@ import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import System.Helpers
-import ConfigMDB      ( baseURL, baseCGI )
-import MDB
+import Model.ConfigMDB      ( baseURL, baseCGI )
+import Model.MDB
 import View.MDBEntitiesToHtml
 import View.StudyProgram
 import System.SessionInfo

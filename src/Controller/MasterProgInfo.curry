@@ -7,8 +7,8 @@ import Data.List
 import Data.Maybe
 import System.Spicey
 import HTML.Base
-import MDB
-import MDB.Queries
+import Model.MDB
+import Model.MDB.Queries
 import View.MasterProgInfo
 import System.Authorization
 import System.AuthorizedActions

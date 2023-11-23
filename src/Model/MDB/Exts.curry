@@ -1,12 +1,12 @@
 --- Some extensions to the generated MDB module.
 
-module MDB.Exts where
+module Model.MDB.Exts where
 
 import Database.CDBI.ER
 
 import System.Helpers
-import MDB
-import ConfigMDB ( storageDir )
+import Model.MDB
+import Model.ConfigMDB ( storageDir )
 
 -- store DBs in term files:
 storeTermDB :: IO ()

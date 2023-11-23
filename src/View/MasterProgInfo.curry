@@ -8,7 +8,7 @@ import Data.List
 import HTML.WUI
 import HTML.Base
 import System.Spicey
-import MDB
+import Model.MDB
 import View.MDBEntitiesToHtml
 import System.Helpers
 

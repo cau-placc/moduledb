@@ -13,15 +13,15 @@ import System.PreludeHelpers
 import Control.Monad ( unless )
 import Data.List
 
-import ConfigMDB
+import Model.ConfigMDB
 import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.Session
 import HTML.WUI
 import XML
-import MDB
-import MDB.Queries
+import Model.MDB
+import Model.MDB.Queries
 import View.ModData
 import Config.EntityRoutes
 import Controller.ModDescr

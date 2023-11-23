@@ -12,10 +12,10 @@ import HTML.Styles.Bootstrap4
 import HTML.WUI
 import System.Spicey
 import System.SessionInfo
-import MDB
+import Model.MDB
 import View.MDBEntitiesToHtml
 import View.ModInst (leqModInst)
-import MDB.Queries   (modInstSemester)
+import Model.MDB.Queries   (modInstSemester)
 
 --- The WUI specification for the entity type AdvisorModule.
 --- It also includes fields for associated entities.

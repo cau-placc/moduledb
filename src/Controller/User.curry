@@ -10,7 +10,7 @@ import System.Spicey
 import HTML.Base
 import HTML.Session
 import HTML.WUI
-import MDB
+import Model.MDB
 import View.User
 import System.Authorization
 import System.AuthorizedActions

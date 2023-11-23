@@ -8,7 +8,7 @@ import Data.Time
 import System.Helpers
 import System.Spicey
 import HTML.Base
-import MDB
+import Model.MDB
 import View.AdvisorModule
 import Config.EntityRoutes
 import System.SessionInfo

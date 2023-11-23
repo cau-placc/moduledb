@@ -15,7 +15,7 @@ import Text.CSV ( showCSV )
 import System.Helpers
 import System.Spicey
 import System.SessionInfo
-import MDB
+import Model.MDB
 import System.MultiLang
 import View.MDBEntitiesToHtml
 

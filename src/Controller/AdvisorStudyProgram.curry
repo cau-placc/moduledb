@@ -14,13 +14,13 @@ import HTML.Styles.Bootstrap4
 import HTML.Session
 import HTML.WUI
 
-import ConfigMDB ( baseURL )
+import Model.ConfigMDB ( baseURL )
 import Config.EntityRoutes
 import Controller.AdvisorModule
 import System.Helpers
 import System.Spicey
-import MDB
-import MDB.Queries
+import Model.MDB
+import Model.MDB.Queries
 import View.AdvisorModule
 import View.AdvisorStudyProgram
 import View.StudyProgram

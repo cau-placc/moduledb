@@ -9,9 +9,9 @@ import Database.CDBI.ER
 
 import System.Spicey
 import HTML.Base
-import ConfigMDB
-import MDB
-import MDB.Queries
+import Model.ConfigMDB
+import Model.MDB
+import Model.MDB.Queries
 import View.MDBEntitiesToHtml
 import View.MasterProgram
 import System.Authorization

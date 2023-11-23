@@ -9,8 +9,8 @@ import HTML.Base
 import HTML.Styles.Bootstrap4
 
 import System.Spicey
-import MDB
-import MDB.Exts ( masterProgramKeyToString )
+import Model.MDB
+import Model.MDB.Exts ( masterProgramKeyToString )
 import View.MDBEntitiesToHtml
 import System.Helpers
 import View.MasterCoreArea

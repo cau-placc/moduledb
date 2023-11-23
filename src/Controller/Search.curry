@@ -13,8 +13,8 @@ import Data.Maybe
 import HTML.Base
 import System.Spicey
 import System.Authentication
-import MDB
-import MDB.Queries
+import Model.MDB
+import Model.MDB.Queries
 import Database.CDBI.ER 
 
 import Controller.ModData

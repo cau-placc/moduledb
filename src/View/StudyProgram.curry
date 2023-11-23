@@ -11,7 +11,7 @@ import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.WUI
 
-import MDB
+import Model.MDB
 import System.Spicey
 import System.SessionInfo
 import System.MultiLang

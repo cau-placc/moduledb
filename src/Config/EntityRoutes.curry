@@ -3,7 +3,7 @@ module Config.EntityRoutes
 
 import System.Spicey
 
-import MDB
+import Model.MDB
 
 ------------------------------------------------------------------------------
 

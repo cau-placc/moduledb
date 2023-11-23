@@ -1,8 +1,8 @@
 module System.AuthorizedActions where
 
 import System.Authorization
-import MDB
-import MDB.Queries
+import Model.MDB
+import Model.MDB.Queries
 import System.Authentication
 import System.SessionInfo
 
