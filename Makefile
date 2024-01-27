@@ -145,8 +145,7 @@ else
 endif
 
 $(CGIPROGRAM): $(SOURCES)
-	$(CPM) exec $(CURRY2CGI) --cpmexec \"$(CPM) exec\" \
-	  --system="$(CURRYHOME)" \
+	$(CURRY2CGI) --cpm="$(CPM)" --system="$(CURRYHOME)" \
 	  -i Controller.AdvisorStudyProgram \
 	  -i Controller.Category \
 	  -i Controller.MasterCoreArea \

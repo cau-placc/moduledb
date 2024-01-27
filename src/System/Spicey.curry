@@ -365,7 +365,7 @@ spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 --- The standard footer of the Spicey page.
 spiceyFooter :: [BaseHtml]
 spiceyFooter =
-  [par [htxt "Version of November 11, 2023, powered by",
+  [par [htxt "Version of January 27, 2024, powered by",
         href "https://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
@@ -385,7 +385,6 @@ getPage viewblock = case viewblock of
   [BaseText ('?':route)] -> return $ redirectPage ('?':route)
   _ -> do
     hassession <- doesSessionExist
-    urlparam   <- getUrlParameter
     sinfo      <- getUserSessionInfo
     msg        <- getPageMessage
     lasturl    <- getLastUrl
@@ -397,15 +396,16 @@ getPage viewblock = case viewblock of
                                [htxt "Zeige Studienkonflikte"]]) ++
                     [blockstyle "dropdown-divider" []] ++
                     map addDropDownItemClass routemenunews
-        body      = if hassession then viewblock
-                                  else cookieInfo urlparam
         title     = translate sinfo spiceyTitle
     withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
       title spiceyHomeBrand
       (addNavItemClass $ standardMenu sinfo)
       (rightTopMenu sinfo admin adminmenu)
       0 []  [h1 [htxt title]]
-      (messageLine msg lasturl : body) spiceyFooter
+      (messageLine msg lasturl :
+       (if hassession then [] else [cookieModal]) ++ viewblock)
+      spiceyFooter
+       `addPageBody` (if hassession then [] else scriptShowModal cookieModalID)
  where
   addNavItemClass = map (\i -> ("nav-item", i))
   addDropDownItemClass he = he `addClass` "dropdown-item"
@@ -415,12 +415,18 @@ getPage viewblock = case viewblock of
       then htmlStruct "header" [("class","pagemessage pagemessage-empty")]
                       [nbsp] --[htxt ("Last page: "++lasturl)]
       else htmlStruct "header" [("class","pagemessage")] [htxt msg]
-        
-  cookieInfo urlparam =
-    [ par [ htxt $ "This web site uses cookies for navigation and user " ++
-                   "inputs and preferences. In order to proceed, "
-          , hrefPrimButton ('?' : urlparam) [htxt "please click here."]] ]
-        
+
+  cookieModalID = "cookieModal"
+
+  -- Modal dialog used when there is no session and cookies must be set:
+  cookieModal =  stdModal True cookieModalID
+    [htxt "Cookie Information"]
+    [htxt $ "This web site uses technical cookies for navigation, user " ++
+            "inputs, and preferences. ",
+     href "?privacy" [htxt "Further privacy and data protection information"],
+     htxt " is available."]
+    [htxt "Close to proceed: ", modalClosePrimButton "Close"]
+
   rightTopMenu sinfo admin adminmenu =
     [dropDownMenu
        (maybe [htxt $ t "Login" ++ " ", dropDownIcon]
@@ -436,7 +442,7 @@ getPage viewblock = case viewblock of
       [if languageOfSession sinfo == English
          then hrefNav "?langDE" [htxt "[Deutsch]"]
          else hrefNav "?langEN" [htxt "[English]"]]),
-     ("nav-item", [hrefNav "?about" [htxt $ "About"]])]
+     ("nav-item", [hrefNav "?about" [htxt "About"]])]
    where t = translate sinfo
 
   -- A dropdown menu (represented as a HTML list item).
