@@ -292,7 +292,7 @@ mainExplanation sinfo = langSelect sinfo
      "des Instituts für Informatik sowie alle vom Institut " ++
      "angebotenen Module sowie deren Planung in den kommmenden Semestern " ++
      "beschrieben. Außerdem befindet sich hier eine Übersicht über alle " ++
-     "angebotenen Masterprogramme in Informatik und Wirtschaftsinformatik.",
+     "angebotenen Masterprogramme in Informatik und Wirtschaftsinformatik. ",
    htxt $ "Aktuelle Informationen zu den Lehrveranstaltungen kann man auch im ",
    ehrefScndBadge univisURL [htxt "UnivIS"],
    htxt $ " finden."]
