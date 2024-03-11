@@ -3,8 +3,9 @@ module Controller.ModInst
   , updateAllModInstController, createModInstController
   ) where
 
-import Data.List (find)
-import Data.Maybe (isJust)
+import Data.List    ( (\\), find, nub )
+import Data.Maybe   ( isJust )
+
 import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
@@ -57,44 +58,54 @@ updateAllModInstController :: ModData -> [ModInst] -> Controller
                            -> [(ModInst,Bool)] -> Controller
 updateAllModInstController mdata oldinsts cntcontroller modinsts =
  checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $ \_ -> do
-  takenmodinsts <- getTakenModuleInstances removedModInsts
-  if not (null takenmodinsts)
-   then -- some module instances to be deleted already taken in study planner:
-    do md <- runJustT
-               (getModData (modInstModDataModuleInstancesKey (head oldinsts)))
-       displayHtmlError
-         [h1 [htxt "Fehler: Einige Instanzen nicht veränderbar!"],
-          par [htxt "Die folgenden Instanzen können nicht geändert werden, ",
-               htxt "da einige Studierende diese schon eingeplant haben ",
-               htxt "(vgl. ",
-               ehrefPrimBadge studyPlannerURL [htxt "Studienplaner"],
-               htxt "):"],
-          par [htxt (unwords
-                      (map (showSemester . modInstSemester) takenmodinsts))],
-          hrefPrimSmButton ("?ModData/show/" ++ showModDataKey md)
-                           [htxt "Zurück zum Modul"]]
-   else
-    runT (mapM (\ (oi,(ni,del)) ->
-                 if del
-                 then inUse oi |>>= \useoi ->
-                   if useoi
-                   then returnT [Nothing]
-                   else deleteModInst oi |>> returnT [Just (DeleteModInst oi)]
-                 else
-                  if oi==ni
-                  then returnT []
-                  else inUse oi |>>= \useoi ->
-                    if useoi
-                    then returnT [Nothing]
-                    else updateModInst ni |>> returnT [Just (UpdateModInst ni)])
-             oldnewinsts) >>=
-    flip either (\ upds  -> do
-               mapM_ (maybe (return ()) logEvent) (concat upds)
-               if all isJust (concat upds) then return ()
-                                           else setPageMessage useMsg
-               nextInProcessOr cntcontroller Nothing )
-           (\ error -> displayError (showTError error))
+  if not (null multipleSems)
+    then showSelectionError
+           [h1 [htxt "Fehler: Doppelte Semester"],
+            par [htxt "Die folgenden Semester sind doppelt vorhanden:"],
+            par [htxt $ unwords $ map showSemester multipleSems]]
+    else do  
+      takenmodinsts <- getTakenModuleInstances removedModInsts
+      if not (null takenmodinsts)
+        then -- some module instances to be deleted already taken in planner:
+          showSelectionError
+            [h1 [htxt "Fehler: Einige Instanzen nicht veränderbar!"],
+             par [htxt "Die folgenden Instanzen können nicht geändert werden, ",
+                  htxt "da einige Studierende diese schon eingeplant haben:"],
+             par [htxt $ unwords $
+                    map (showSemester . modInstSemester) takenmodinsts]]
+        else
+          runT (mapM (\ (oi,(ni,del)) ->
+                      if del
+                        then do useoi <- inUse oi
+                                if useoi then return [Nothing]
+                                         else deleteModInst oi >>
+                                              return [Just (DeleteModInst oi)]
+                        else if oi==ni
+                               then return []
+                               else do useoi <- inUse oi
+                                       if useoi
+                                         then return [Nothing]
+                                         else updateModInst ni >>
+                                              return [Just (UpdateModInst ni)])
+                  oldnewinsts) >>=
+          flip either (\ upds  -> do
+                    mapM_ (maybe (return ()) logEvent) (concat upds)
+                    if all isJust (concat upds) then return ()
+                                                else setPageMessage useMsg
+                    nextInProcessOr cntcontroller Nothing )
+                (\ error -> displayError (showTError error))
  where
+  showSelectionError herror = do
+    md <- runJustT $
+            getModData (modInstModDataModuleInstancesKey (head oldinsts))
+    displayHtmlError $ herror ++ 
+      [hrefPrimSmButton ("?ModData/show/" ++ showModDataKey md)
+                        [htxt "Zurück zum Modul"]]
+
+  -- check whether there are multiple instances with the same term:
+  multipleSems = let sems = map (modInstSemester . fst) modinsts
+                 in sems \\ nub sems
+
   oldnewinsts = zip oldinsts modinsts
 
   -- compute module instances where a semester should be deleted or moved
