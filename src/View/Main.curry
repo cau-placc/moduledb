@@ -22,7 +22,7 @@ mainPageView :: UserSessionInfo -> [StudyProgram] -> [BaseHtml]
 mainPageView sinfo studyPrograms =
   [h1 [htxt $ mainTitle sinfo],
    par $ mainExplanation sinfo,
-   par $ minorSubjectNote sinfo,
+   par $ minorNotes sinfo,
    h2 [htxt $ t "Degree programs"],
    studyProgramHtmlTable sinfo studyPrograms,
    h3 [htxt $ t "Further information:"],

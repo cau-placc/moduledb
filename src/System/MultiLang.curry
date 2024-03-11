@@ -10,7 +10,7 @@ module System.MultiLang (
   toEnglish,
   translate, langSelect,
   loginEmailText, mainTitle, mainExplanation,
-  masterStudyOldNote, minorSubjectNote,
+  masterStudyOldNote, minorNotes,
   privacyCookieCmt, searchToolTip, sendCodeCmt, sendPasswordCmt, ssComment,
   studentExplanation, studentLoginEmailText,studentLoginExplanation,
   timeoutText, unknownUser, useURLText, prereqExplainText
@@ -282,16 +282,16 @@ mainTitle sinfo = langSelect sinfo
 mainExplanation :: HTML h => UserSessionInfo -> [h]
 mainExplanation sinfo = langSelect sinfo
   [htxt $
-    "This web site provides an overview on all modules and "++
-    "degree programs offered by the Department of Computer Science. "++
-    "Additionally, it contains an overiew on all master programs "++
-    "in computer science and business information technology. "++
-    "A list of all modules offered in English "++
+    "This web site provides an overview on all modules and " ++
+    "degree programs offered by the Department of Computer Science. " ++
+    "Additionally, it contains an overiew on all master programs " ++
+    "in computer science and business information technology. " ++
+    "A list of all modules offered in English " ++
     "can be found in the category \"Search modules\"."]
-  [htxt $ "Auf diesen Webseiten sind die Module aller Studiengänge "++
-    "des Instituts für Informatik sowie alle vom Institut "++
-     "angebotenen Module beschrieben. "++
-     "Außerdem befindet sich hier eine Übersicht über alle "++
+  [htxt $ "Auf diesen Webseiten sind die Module aller Studiengänge " ++
+     "des Instituts für Informatik sowie alle vom Institut " ++
+     "angebotenen Module sowie deren Planung in den kommmenden Semestern " ++
+     "beschrieben. Außerdem befindet sich hier eine Übersicht über alle " ++
      "angebotenen Masterprogramme in Informatik und Wirtschaftsinformatik.",
    htxt $ "Aktuelle Informationen zu den Lehrveranstaltungen kann man auch im ",
    ehrefScndBadge univisURL [htxt "UnivIS"],
@@ -309,15 +309,26 @@ masterStudyOldNote sinfo = langSelect sinfo
  where
   oldMasterProgURL = "?MasterProgram/listall"
    
-minorSubjectNote :: HTML h => UserSessionInfo -> [h]
-minorSubjectNote sinfo = langSelect sinfo
-  [italic [htxt "Note: "],
-   htxt "The possible minor/application subjects and their modules are listed ",
-   ehrefScndBadge minorURL [htxt "on this page."]]
-  [italic [htxt "Hinweis: "],
-   htxt "Die möglichen Anwendungsgebiete im Bachelor- und Masterstudiengang ",
-   htxt "Informatik sowie die dazugehörigen Module findet man ",
-   ehrefScndBadge minorURL [htxt "auf dieser Seite."]]
+minorNotes :: HTML h => UserSessionInfo -> [h]
+minorNotes sinfo = langSelect sinfo
+  [italic [htxt "Important notes: "],
+   ulist
+     [[htxt "The Department of Computer Science has decided to terminate ",
+       htxt "the use of this Module Information System by the end of 2025. ",
+       htxt "Due to this reason, the plannung of modules is shown only ",
+       htxt "until the summer term 2025."],
+      [htxt "The possible minor/application subjects and their modules are listed ",
+       ehrefScndBadge minorURL [htxt "on this page."]]]]
+  [italic [htxt "Wichtige Hinweise: "],
+   ulist
+     [[htxt "Das Institut für Informatik hat beschlossen, dieses ",
+       htxt "Moduleinformationssystem ab dem WS25/26 nicht mehr ",
+       htxt "weiterzuführen. Aus diesem Grund endet die Langfristplanung der ",
+       htxt "Module im Sommersemester 2025."],
+      [htxt "Die möglichen Anwendungsgebiete im Bachelor- und Masterstudiengang ",
+       htxt "Informatik sowie die dazugehörigen Module findet man ",
+       ehrefScndBadge minorURL [htxt "auf dieser Seite."]]
+     ]]
  where
   minorURL = "https://www.inf.uni-kiel.de/de/studium/studiengaenge/informatik-1-fach-bachelorstudiengang/nebenfaecher_anwendungsgebiete"
 
