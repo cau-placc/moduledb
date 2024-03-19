@@ -98,9 +98,12 @@ deleteRoute = entityRoute "delete"
 --- Reads an entity for a given key and applies a controller to it.
 applyControllerOn :: Maybe enkey -> (enkey -> DBAction en)
                   -> (en -> Controller) -> Controller
-applyControllerOn Nothing _ _ = displayError "Illegal URL"
-applyControllerOn (Just userkey) getuser usercontroller =
-  runJustT (getuser userkey) >>= usercontroller
+applyControllerOn Nothing      _         _                = displayUrlError
+applyControllerOn (Just enkey) getentity entitycontroller =
+  -- enforce evaluation of entity to catch "unknown entity" error
+  catch (runJustT (getentity enkey) >>= \en -> (return . Just) $! en)
+        (\_ -> return Nothing) >>=
+  maybe (displayError "Illegal URL (unknown entity)") entitycontroller
 
 --- A controller to redirect to an URL starting with "?"
 --- (see implementation of `getPage`).
@@ -365,7 +368,7 @@ spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 --- The standard footer of the Spicey page.
 spiceyFooter :: [BaseHtml]
 spiceyFooter =
-  [par [htxt "Version of March 11, 2024, powered by",
+  [par [htxt "Version of March 19, 2024, powered by",
         href "https://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
