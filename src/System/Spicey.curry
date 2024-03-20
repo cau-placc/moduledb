@@ -37,9 +37,9 @@ module System.Spicey (
 
 import Data.List             ( findIndex, init, last )
 import Data.Time
+import System.Directory      ( doesFileExist, getModificationTime )
 import System.FilePath       ( (</>) )
 
-import Model.ConfigMDB        ( baseCGI )
 import Config.UserProcesses
 import HTML.Base
 import HTML.WUI
@@ -53,6 +53,7 @@ import System.Routes
 import System.Processes
 
 import Database.CDBI.ER
+import Model.ConfigMDB        ( isTestSystem )
 import Model.MDB              ( runT, runJustT )
 
 --------------------------------------------------------------------------
@@ -366,13 +367,18 @@ spiceyHomeBrand :: (String, [BaseHtml])
 spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 
 --- The standard footer of the Spicey page.
-spiceyFooter :: [BaseHtml]
-spiceyFooter =
-  [par [htxt "Version of March 19, 2024, powered by",
+spiceyFooter :: Maybe ClockTime -> [BaseHtml]
+spiceyFooter mbitime =
+  [par [htxt $ installinfo ++ "powered by",
         href "https://www.informatik.uni-kiel.de/~pakcs/spicey"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
         htxt "Framework"]]
+ where
+  installinfo =
+    maybe ""
+          (\t -> "Version of " ++ toDayString (toUTCTime t) ++ ", ")
+          mbitime
 
 --- Create contents in the main page area with a side menu.
 mainContentsWithSideMenu :: [[BaseHtml]] -> [BaseHtml] -> [BaseHtml]
@@ -384,7 +390,7 @@ mainContentsWithSideMenu menuitems contents =
 
 getPage :: ViewBlock -> IO HtmlPage
 getPage viewblock = case viewblock of
-  [BaseText ""]          -> return $ redirectPage baseCGI
+  [BaseText ""]          -> return $ redirectPage "?" --baseCGI
   [BaseText ('?':route)] -> return $ redirectPage ('?':route)
   _ -> do
     hassession <- doesSessionExist
@@ -393,13 +399,19 @@ getPage viewblock = case viewblock of
     lasturl    <- getLastUrl
     admin      <- isAdmin
     (routemenunews,routemenuothers) <- getRouteMenus
+    let execfile = "show.cgi.bin"
+    installtime <- do exif <- doesFileExist execfile
+                      if exif then fmap Just $ getModificationTime execfile
+                              else return Nothing
+    testsystem <- isTestSystem
     let adminmenu = map addDropDownItemClass
                         (routemenuothers ++
                          [href "?StudentCourse/conflicts"
                                [htxt "Zeige Studienkonflikte"]]) ++
                     [blockstyle "dropdown-divider" []] ++
                     map addDropDownItemClass routemenunews
-        title     = translate sinfo spiceyTitle
+        title     = translate sinfo spiceyTitle ++
+                    (if testsystem then " (TEST SYSTEM)" else "")
     withSessionCookie $ bootstrapPage2 favIcon cssIncludes jsIncludes
       title spiceyHomeBrand
       (addNavItemClass $ standardMenu sinfo)
@@ -407,7 +419,7 @@ getPage viewblock = case viewblock of
       0 []  [h1 [htxt title]]
       (messageLine msg lasturl :
        (if hassession then [] else [cookieModal]) ++ viewblock)
-      spiceyFooter
+      (spiceyFooter installtime)
        `addPageBody` (if hassession then [] else scriptShowModal cookieModalID)
  where
   addNavItemClass = map (\i -> ("nav-item", i))

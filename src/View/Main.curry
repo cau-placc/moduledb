@@ -9,7 +9,6 @@ import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import System.Helpers
-import Model.ConfigMDB      ( baseURL, baseCGI )
 import Model.MDB
 import View.MDBEntitiesToHtml
 import View.StudyProgram
@@ -18,8 +17,8 @@ import System.MultiLang
 
 -----------------------------------------------------------------------------
 --- A view for the main page.
-mainPageView :: UserSessionInfo -> [StudyProgram] -> [BaseHtml]
-mainPageView sinfo studyPrograms =
+mainPageView :: UserSessionInfo -> String -> [StudyProgram] -> [BaseHtml]
+mainPageView sinfo examreqsurl studyPrograms =
   [h1 [htxt $ mainTitle sinfo],
    par $ mainExplanation sinfo,
    par $ minorNotes sinfo,
@@ -27,9 +26,7 @@ mainPageView sinfo studyPrograms =
    studyProgramHtmlTable sinfo studyPrograms,
    h3 [htxt $ t "Further information:"],
    ulist
-    [[ehrefPrimBadge
-        (take (length baseURL - length baseCGI) baseURL ++ "examreqs/")
-        [htxt $ t "Examination requirements"]],
+    [[ehrefPrimBadge examreqsurl [htxt $ t "Examination requirements"]],
      [htxt $ t "Master studies in computer science:", nbsp,
       hrefPrimBadge "?MCA/list" [htxt $ t "Core areas"], nbsp
       --spEHref "http://www-ps.informatik.uni-kiel.de/studienplaner/"

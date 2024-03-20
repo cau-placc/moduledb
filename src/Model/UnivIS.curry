@@ -18,7 +18,8 @@ initUnivisDB = do
 -- Parse a file containing the data extracted from Univis
 processUnivisFile :: (String,Int) -> IO [(String,String,Int,String)]
 processUnivisFile (term,year) = do
-  let fname = storageDir++"UnivisLectureURL_"++showSemUnivis++".terms"
+  storagedir <- getStorageDir
+  let fname = storagedir ++ "UnivisLectureURL_" ++ showSemUnivis ++ ".terms"
   allmcodes <- runQ (fmap (map modDataCode) queryAllModDatas)
   infos <- readFile fname >>= return . map read . lines
   return $ process allmcodes infos

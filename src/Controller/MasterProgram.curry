@@ -76,7 +76,8 @@ getMCodeForInfo (c,b,mk,t,y) = do
 
 --- Shows a MasterProgram entity.
 showMasterProgramController :: MasterProgram -> Controller
-showMasterProgramController mprog =
+showMasterProgramController mprog = do
+  baseurl <- getBaseURL
   checkAuthorization
    (masterProgramOperationAllowed (ShowEntity mprog)) $ \_ -> do
       runQ (queryInfoOfMasterProgram (masterProgramKey mprog)) >>=
@@ -90,7 +91,7 @@ showMasterProgramController mprog =
           --let semyr = (masterProgramTerm mprog,masterProgramYear mprog)
           return
             (singleMasterProgramView responsibleUser
-               mprog mpinfo tmodinfo mcarea (xmlURL mprog))
+               mprog mpinfo tmodinfo mcarea (xmlURL baseurl mprog))
         )
 
 --- Gets the associated MasterCoreArea entity for a given MasterProgram entity.
@@ -143,13 +144,14 @@ getMasterModInstInSemesters semyear n =
 -- Formatting master programs as XML documents:
 
 -- XML URL of a master program:
-xmlURL :: MasterProgram -> String
-xmlURL mp = baseURL++"?xmlprog="++string2urlencoded (showMasterProgramKey mp)
+xmlURL :: String -> MasterProgram -> String
+xmlURL baseurl mp =
+  baseurl ++ "?xmlprog=" ++ string2urlencoded (showMasterProgramKey mp)
 
 -- URL of a master program:
-masterProgURL :: MasterProgram -> String
-masterProgURL mp =
-  baseURL++"?MasterProgram/show/"++string2urlencoded (showMasterProgramKey mp)
+masterProgURL :: String -> MasterProgram -> String
+masterProgURL baseurl mp = baseurl ++
+  "?MasterProgram/show/" ++ string2urlencoded (showMasterProgramKey mp)
 
 -- Show XML document containing all visible master programs
 showAllXmlMasterPrograms :: IO HtmlPage
@@ -168,23 +170,24 @@ showXmlMasterProgram mpkey = do
         mbxml
 
 getMasterProgramXML :: MasterProgram -> IO (Maybe XmlExp)
-getMasterProgramXML mprog =
+getMasterProgramXML mprog = do
+  baseurl <- getBaseURL
   runQ (queryInfoOfMasterProgram (masterProgramKey mprog)) >>=
-  maybe (return Nothing)
-    (\mpinfo -> do
-      let modinfo = progModsOfMasterProgInfo mpinfo
-      tmodinfo <- runJustT $ mapM getMCodeForInfo modinfo
-      responsibleUser <- runJustT (getAdvisingUser mprog)
-      return (Just (mprog2xml mprog responsibleUser tmodinfo)))
+    maybe (return Nothing)
+      (\mpinfo -> do
+        let modinfo = progModsOfMasterProgInfo mpinfo
+        tmodinfo <- runJustT $ mapM getMCodeForInfo modinfo
+        responsibleUser <- runJustT (getAdvisingUser mprog)
+        return (Just (mprog2xml baseurl mprog responsibleUser tmodinfo)))
 
-mprog2xml :: MasterProgram -> User -> [(String,Bool,ModData,String,Int)]
-          -> XmlExp
-mprog2xml mprog advisor modinfo =
+mprog2xml :: String -> MasterProgram -> User
+          -> [(String,Bool,ModData,String,Int)] -> XmlExp
+mprog2xml baseurl mprog advisor modinfo =
   XElem "studyprogram" [("ID",showMasterProgramKey mprog)] $
    [xml "title"         [xtxt (masterProgramName mprog)]
    ,xml "advisor"       [xtxt (userToShortView advisor)]
    ,xml "start"         [xtxt (showSemester (startSem,startYear))]
-   ,xml "url"           [xtxt (masterProgURL mprog)]
+   ,xml "url"           [xtxt (masterProgURL baseurl mprog)]
    ,xml "description"   [xtxt (masterProgramDesc mprog)]
    ,xml "prerequisites" [xtxt (masterProgramPrereq mprog)]
    ,xml "comments"      [xtxt (masterProgramComments mprog)]

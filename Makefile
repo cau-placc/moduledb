@@ -22,11 +22,7 @@ endif
 WEBSERVERDIR=$(HOME)/public_html/mdbtest
 
 # Name of the compiled cgi program
-ifeq ($(TARGET),IFI)
 CGIPROGRAM=$(WEBSERVERDIR)/show.cgi
-else
-CGIPROGRAM=$(WEBSERVERDIR)/mdb.cgi
-endif
 
 # Curry bin directory to be used:
 export CURRYBIN=$(CURRYHOME)/bin
@@ -119,25 +115,15 @@ restoredata:
 # web directory WEBSERVERDIR:
 .PHONY: deploy
 deploy: checkdeploy
-ifeq ($(TARGET),TEST)
-else
-	cd src/Model && $(CURRYBIN)/cleancurry ConfigMDB.curry && \
-	 /bin/rm -f ConfigMDB.curry && ln -s ConfigMDB_$(TARGET).curry ConfigMDB.curry
-endif
 	mkdir -p $(WEBSERVERDIR)
 	$(MAKE) $(CGIPROGRAM)
 	# copy other files (style sheets, images,...)
 	cp -r $(PKGDIR)/public/* $(WEBSERVERDIR)
 	chmod -R go+rX $(WEBSERVERDIR)
-ifeq ($(TARGET),TEST)
 	# create directory for storing local session data:
 	#/bin/rm -r $(SESSIONDATADIR)
 	mkdir -p $(SESSIONDATADIR)
 	chmod 700 $(SESSIONDATADIR)
-else
-	cd src/Model && $(CURRYBIN)/cleancurry ConfigMDB.curry && \
-	 /bin/rm -f ConfigMDB.curry && ln -s ConfigMDB_TEST.curry ConfigMDB.curry
-endif
 
 $(CGIPROGRAM): $(SOURCES)
 	$(CURRY2CGI) --cpm="$(CPM)" --system="$(CURRYHOME)" \

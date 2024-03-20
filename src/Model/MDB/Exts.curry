@@ -6,15 +6,15 @@ import Database.CDBI.ER
 
 import System.Helpers
 import Model.MDB
-import Model.ConfigMDB ( storageDir )
+import Model.ConfigMDB ( getStorageDir )
 
 -- store DBs in term files:
 storeTermDB :: IO ()
-storeTermDB = saveDBTo storageDir
+storeTermDB = getStorageDir >>= saveDBTo
 
 -- initialize DBs from term files:
 readTermDB :: IO ()
-readTermDB = restoreDBFrom storageDir
+readTermDB = getStorageDir >>= restoreDBFrom
 
 ------------------------------------------------------------------------------
 --- Shows the key of a MasterProgram entity as a string.

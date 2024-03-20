@@ -159,13 +159,14 @@ reasonableMasterProgInfo mpi =
                       ["IG","TG","IS","MV"]
    in returnT (satisfied catpoints)
  where
-  satisfied [ig,tg,is,mv]
-    | ig<120 = msgArea "IG" ig 120
-    | tg<120 = msgArea "TG" tg 120
-    | is<120 = msgArea "IS" is 120
-    | mv<80  = msgArea "MV" mv  80
-    | ig+tg+is+mv<480 = msgAllAreas
-    | otherwise = ""
+  satisfied catpoints = case catpoints of
+    [ig,tg,is,mv] | ig<120 -> msgArea "IG" ig 120
+                  | tg<120 -> msgArea "TG" tg 120
+                  | is<120 -> msgArea "IS" is 120
+                  | mv<80  -> msgArea "MV" mv  80
+                  | ig+tg+is+mv<480 -> msgAllAreas
+                  | otherwise -> ""
+    _ -> ""
    where
      msgArea ck curr atleast =
        "der Studienbereich "++ck++" hat noch zu wenig ECTS-Punkte ("++

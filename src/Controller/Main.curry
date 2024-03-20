@@ -8,6 +8,7 @@ module Controller.Main
 
 import System.Spicey
 import View.Main
+import Model.ConfigMDB ( getExamreqsURL )
 import Model.MDB
 import System.SessionInfo
 
@@ -17,6 +18,7 @@ mainPageController :: Controller
 mainPageController = do
   sinfo <- getUserSessionInfo
   studyPrograms <- runQ queryAllStudyPrograms
-  return (mainPageView sinfo studyPrograms)
+  examreqsurl   <- getExamreqsURL
+  return (mainPageView sinfo examreqsurl studyPrograms)
 
 -----------------------------------------------------------------------------

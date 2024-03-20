@@ -15,6 +15,7 @@ import HTML.WUI
 import ShowDotGraph ( showDotGraph )
 
 import Config.EntityRoutes
+import Model.ConfigMDB     ( getBaseURL )
 import Model.MDB
 import Model.MDB.Queries
 import System.Helpers
@@ -162,9 +163,10 @@ showPrereqsStudyProgramController sprog =
                  else return 0
     mcodes  <- getModuleCodesOfStudyProg sprog
     prereqs <- getStudyProgRequirements sprog
+    baseurl <- getBaseURL
     let prereqmods = nub (concatMap (\ (x,y) -> [x,y]) prereqs)
-    let basemods  = filter ((`notElem` prereqmods) . snd) mcodes
-        dotgraph  = showDotGraph (depsToGraph prereqs)
+        basemods  = filter ((`notElem` prereqmods) . snd) mcodes
+        dotgraph  = showDotGraph (depsToGraph baseurl prereqs)
         dotpdfcmd = "/usr/bin/dot -Tpdf -o" ++ tmppdf
     dotstr <- connectToCommand dotpdfcmd
     hPutStr dotstr dotgraph

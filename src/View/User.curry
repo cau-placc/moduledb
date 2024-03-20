@@ -18,7 +18,7 @@ import System.SessionInfo
 import System.Spicey
 import System.Helpers
 import Model.MDB
-import Model.ConfigMDB ( adminEmail )
+import Model.ConfigMDB ( adminEmail, getBaseURL )
 import View.MDBEntitiesToHtml
 
 --- The WUI specification for the entity type User.
@@ -180,10 +180,11 @@ sendLoginDataFormView controller sinfo =
     runT (updateUser (setUserPassword user hashpass)) >>=
       either (\error -> displayError (show error))
         (\_ -> do
+          baseurl <- getBaseURL
           sendMail adminEmail
                    (userEmail user)
                    (t "Login data for module database")
-                   (loginEmailText sinfo (userLogin user) newpass)
+                   (loginEmailText sinfo baseurl (userLogin user) newpass)
           return [h1 [htxt $ t "Acknowledgment"],
                   h3 [htxt $ t "Your new password has been sent"]])
 

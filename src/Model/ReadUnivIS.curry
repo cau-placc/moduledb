@@ -9,7 +9,7 @@ import System.URL
 import XML
 import XCuery
 
-import Model.ConfigMDB(storageDir)
+import Model.ConfigMDB ( getStorageDir )
 
 -------------------------------------------------------------------------
 -- Benchmark definitions:
@@ -73,8 +73,9 @@ findLectureURL univissem
 -- and store the corresponding Curry terms in a file
 loadLectures :: (String,Int) -> IO (Either String String)
 loadLectures sem = do
+  storagedir <- getStorageDir
   let univissem = showSemUnivis sem
-      termfile  = storageDir++"UnivisLectureURL_"++univissem++".terms"
+      termfile  = storagedir ++ "UnivisLectureURL_" ++ univissem ++ ".terms"
   xmlstring <- getContentsOfUrl $
     "http://univis.uni-kiel.de/prg?search=lectures&department=080110000&sem="++
     univissem++"&show=xml"

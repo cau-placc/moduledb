@@ -10,8 +10,9 @@ import Data.Maybe ( listToMaybe )
 import Database.CDBI.ER
 import ShowDotGraph
 
+import Model.ConfigMDB ( getBaseURL )
 import Model.MDB
-import System.Helpers ( moduleCodeURL, nextSemester )
+import System.Helpers  ( moduleCodeURL, nextSemester )
 
 ------------------------------------------------------------------------------
 --- Gets the term/year pair of a ModInst entity.
@@ -298,20 +299,22 @@ getAllRequirements = runQ
 
 -- Show package prequesites as a dot graph.
 showAllModulePrerequisites :: IO ()
-showAllModulePrerequisites = getAllRequirements >>= showPrerequisites
+showAllModulePrerequisites = do
+  baseurl <- getBaseURL
+  getAllRequirements >>= showPrerequisites baseurl
 
 -- Show module prequesites as a dot graph.
-showPrerequisites :: [(String,String)] -> IO ()
-showPrerequisites prereqs = do
-  let dotgraph = depsToGraph prereqs
+showPrerequisites :: String -> [(String,String)] -> IO ()
+showPrerequisites baseurl prereqs = do
+  let dotgraph = depsToGraph baseurl prereqs
   putStrLn $ "Show dot graph..."
   viewDotGraph dotgraph
 
 --- Transform a list of dependencies into a dot graph.
-depsToGraph :: [(String,String)] -> DotGraph
-depsToGraph cpmdeps =
+depsToGraph :: String -> [(String,String)] -> DotGraph
+depsToGraph baseurl cpmdeps =
   dgraph "Module prerequisites"
-         (map (\s -> Node s [("URL", moduleCodeURL s)])
+         (map (\s -> Node s [("URL", moduleCodeURL baseurl s)])
               (nub (map fst cpmdeps ++ map snd cpmdeps)))
          (map (\ (s,t) -> Edge s t []) cpmdeps)
 

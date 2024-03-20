@@ -21,7 +21,7 @@ import System.Helpers
 import System.MultiLang
 import System.Spicey
 import System.SessionInfo
-import Model.ConfigMDB ( adminEmail )
+import Model.ConfigMDB ( adminEmail, getBaseURL )
 import Model.MDB
 import Model.MDB.Exts    ( showModDataID )
 import Model.MDB.Queries ( queryStudentByEmail )
@@ -181,10 +181,12 @@ sendNewTAN sinfo student = do
   runT (updateStudent (setStudentTAN student newcode)) >>=
     either (\error -> displayError (show error))
       (\_ -> do
+        baseurl <- getBaseURL
         sendMail adminEmail
                  (studentEmail student)
                  (t "Login data for module database")
-                 (studentLoginEmailText sinfo (studentEmail student) newcode)
+                 (studentLoginEmailText sinfo baseurl (studentEmail student)
+                                        newcode)
         return [h1 [htxt $ t "Acknowledgment"],
                 h3 [htxt $ t "Your new login code has been sent to:" ++ " " ++
                            studentEmail student]])

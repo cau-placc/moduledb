@@ -111,10 +111,6 @@ data StudentCourse = StudentCourse StudentCourseID Data.Time.ClockTime StudentID
 data StudentCourseID = StudentCourseID Int
  deriving (Eq,Show,Read)
 
---- The name of the SQLite database file.
-sqliteDBFile :: String
-sqliteDBFile = storageDir ++ "MDB.db"
-
 --- The ER description of the `Prerequisites` entity.
 prerequisites_CDBI_Description
   :: Database.CDBI.Description.EntityDescription Prerequisites
@@ -4735,85 +4731,70 @@ createNewDB dbfile =
 
 --- Saves complete database in storage dir.
 saveDB :: IO ()
-saveDB = saveDBTo storageDir
+saveDB = getStorageDir >>= saveDBTo
 
 --- Saves complete database as term files into an existing directory
 --- provided as a parameter.
 saveDBTo :: String -> IO ()
-saveDBTo dir =
-  do Database.CDBI.ER.saveDBTerms prerequisites_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.saveDBTerms categorizing_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.saveDBTerms studyProgram_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.saveDBTerms category_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.saveDBTerms masterCoreArea_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.saveDBTerms user_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.saveDBTerms modData_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.saveDBTerms modDescr_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.saveDBTerms modInst_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.saveDBTerms advisorStudyProgram_CDBI_Description
-      sqliteDBFile
-      dir
-     Database.CDBI.ER.saveDBTerms advisorModule_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.saveDBTerms masterProgram_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.saveDBTerms masterProgInfo_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.saveDBTerms univisInfo_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.saveDBTerms student_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.saveDBTerms studentCourse_CDBI_Description sqliteDBFile
-      dir
+saveDBTo dir = do
+  dbfile <- getDBFile
+  Database.CDBI.ER.saveDBTerms prerequisites_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms categorizing_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms studyProgram_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms category_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms masterCoreArea_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms user_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms modData_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms modDescr_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms modInst_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms advisorStudyProgram_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms advisorModule_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms masterProgram_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms masterProgInfo_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms univisInfo_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms student_CDBI_Description dbfile dir
+  Database.CDBI.ER.saveDBTerms studentCourse_CDBI_Description dbfile dir
 
 --- Restores complete database from term files in storage dir.
 restoreDB :: IO ()
-restoreDB = restoreDBFrom storageDir
+restoreDB = getStorageDir >>= restoreDBFrom
 
 --- Restores complete database from term files which are stored
 --- in a directory provided as a parameter.
 restoreDBFrom :: String -> IO ()
-restoreDBFrom dir =
-  do Database.CDBI.ER.restoreDBTerms studyProgram_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms category_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.restoreDBTerms masterCoreArea_CDBI_Description
-      sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms user_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.restoreDBTerms modData_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.restoreDBTerms modDescr_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.restoreDBTerms modInst_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.restoreDBTerms categorizing_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms advisorStudyProgram_CDBI_Description
-      sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms advisorModule_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms masterProgram_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms masterProgInfo_CDBI_Description
-      sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms univisInfo_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms prerequisites_CDBI_Description sqliteDBFile
-      dir
-     Database.CDBI.ER.restoreDBTerms student_CDBI_Description sqliteDBFile dir
-     Database.CDBI.ER.restoreDBTerms studentCourse_CDBI_Description sqliteDBFile
-      dir
+restoreDBFrom dir = do
+  dbfile <- getDBFile
+  Database.CDBI.ER.restoreDBTerms studyProgram_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms category_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms masterCoreArea_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms user_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms modData_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms modDescr_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms modInst_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms categorizing_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms advisorStudyProgram_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms advisorModule_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms masterProgram_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms masterProgInfo_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms univisInfo_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms prerequisites_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms student_CDBI_Description dbfile dir
+  Database.CDBI.ER.restoreDBTerms studentCourse_CDBI_Description dbfile dir
 
 --- Runs a DB action (typically a query).
 runQ :: Database.CDBI.Connection.DBAction a -> IO a
-runQ = Database.CDBI.ER.runQueryOnDB sqliteDBFile
+runQ dbact = getDBFile >>= \db -> Database.CDBI.ER.runQueryOnDB db dbact
 
 --- Runs a DB action as a transaction.
-runT
-  :: Database.CDBI.Connection.DBAction a
-  -> IO (Database.CDBI.Connection.SQLResult a)
-runT = Database.CDBI.ER.runTransactionOnDB sqliteDBFile
+runT :: Database.CDBI.Connection.DBAction a
+     -> IO (Database.CDBI.Connection.SQLResult a)
+runT dbact = getDBFile >>= \db ->  Database.CDBI.ER.runTransactionOnDB db dbact
 
 --- Runs a DB action as a transaction. Emits an error in case of failure.
 runJustT :: Database.CDBI.Connection.DBAction a -> IO a
-runJustT = Database.CDBI.ER.runJustTransactionOnDB sqliteDBFile
+runJustT dbact =
+  getDBFile >>= \db -> Database.CDBI.ER.runJustTransactionOnDB db dbact
+
+--- Gets the name of the SQLite database file.
+getDBFile :: IO String
+getDBFile = fmap (++ "MDB.db") getStorageDir

@@ -3,27 +3,38 @@
 -------------------------------------------------------------------------------
 
 module Model.ConfigMDB
-  ( adminEmail, getBaseURL, getExamreqsURL, getStorageDir
+  ( isTestSystem, adminEmail, getBaseURL, getExamreqsURL, getStorageDir
   , studyPlannerURL, systemHashKey
   )
  where
 
+import System.Environment ( getEnv )
+
+------------------------------------------------------------------------------
+--- Is the current installation a test system?
+--- As a default, it is a test system unless the environment variable
+--- `MDBTEST` has value `no`.
+isTestSystem :: IO Bool
+isTestSystem = do
+  mdbtest <- getEnv "MDBTEST"
+  return $ mdbtest /= "no"
+
+------------------------------------------------------------------------------
 -- Email address of administrator:
 adminEmail :: String
 adminEmail = "mh@informatik.uni-kiel.de"
 
--- The name of the main script of the module system.
-baseCGI :: String
-baseCGI = "show.cgi"
-
 -- Gets the URL of the main page of the module system (without the script part).
 getBasePage :: IO String
-getBasePage = return "https://moduldb.informatik.uni-kiel.de/"
+getBasePage = do
+  testsystem <- isTestSystem
+  return $ if testsystem then "http://localhost/~mh/mdbtest/"
+                         else "https://moduldb.informatik.uni-kiel.de/"
 
 -- Returns the URL of the main script of the module system
 -- (used to generate external URLs for modules and master programs):
 getBaseURL :: IO String
-getBaseURL = fmap (++ baseCGI) getBasePage
+getBaseURL = fmap (++ "show.cgi") getBasePage
 
 -- Returns the URL of the main script of the module system
 -- (used to generate external URLs for modules and master programs):
@@ -32,7 +43,10 @@ getExamreqsURL = fmap (++ "examreqs/") getBasePage
 
 -- Returns the directory where all data is stored:
 getStorageDir :: IO String
-getStorageDir = return "/var/www/mdb/mdb/"
+getStorageDir = do
+  testsystem <- isTestSystem
+  return $ if testsystem then "/net/medoc/home/mh/home/data/mdbtest/"
+                         else "/var/www/mdb/mdb/"
 
 --- The base URL of the study planner
 studyPlannerURL :: String

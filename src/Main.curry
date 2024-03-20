@@ -74,7 +74,7 @@ main = do
     "modinfos" -> showHtmlFile "modinfos.html"
     "csv"      -> allModuleCSV
     "saveDB"   -> storeTermDB >>
-                 return (answerEncText "iso-8859-1" "DB saved to term files")
+                  return (answerEncText "iso-8859-1" "DB saved to term files")
     "ping"     -> pingAnswer -- to check whether the MDB server is alive
     _          -> dispatcher
  where

@@ -14,7 +14,7 @@ import HTML.Styles.Bootstrap4
 import HTML.Session
 import HTML.WUI
 
-import Model.ConfigMDB ( baseURL )
+import Model.ConfigMDB ( getBaseURL )
 import Config.EntityRoutes
 import Controller.AdvisorModule
 import System.Helpers
@@ -342,18 +342,13 @@ showAdvisorStudyProgramController asprog =
                                               == advisorStudyProgramKey asprog)
         amdatas <- runJustT (getAdvisorModuleData amods)
         advisor <- runJustT (getStudyAdvisingUser asprog)
+        baseurl <- getBaseURL
         return
          (showAdvisorStudyProgramView
-           sinfo
-           (isAdminSession sinfo)
+           sinfo (isAdminSession sinfo)
            (Just (userLogin advisor) == userLoginOfSession sinfo)
-           addCatModRef
-           delAdvModRef
-           asprog (xmlURL asprog)
-           studyprog
-           amdatas
-           categories
-           advisor))
+           addCatModRef delAdvModRef asprog (xmlURL baseurl asprog)
+           studyprog amdatas categories advisor))
  where
   addCatModRef cat = hrefPrimBadge ("?AdvisorStudyProgram/addcatmod/" ++
                              showAdvisorStudyProgramKey asprog ++ "/" ++
@@ -381,14 +376,14 @@ getStudyAdvisingUser aUser =
 -- Formatting master programs as XML documents:
 
 -- XML URL of an AdvisorStudyProgram:
-xmlURL :: AdvisorStudyProgram -> String
-xmlURL asp =
-  baseURL++"?xmlaprog=" ++ string2urlencoded (showAdvisorStudyProgramKey asp)
+xmlURL :: String -> AdvisorStudyProgram -> String
+xmlURL baseurl asp =
+  baseurl ++ "?xmlaprog=" ++ string2urlencoded (showAdvisorStudyProgramKey asp)
 
 -- URL of an AdvisorStudyProgram:
-advisorProgURL :: AdvisorStudyProgram -> String
-advisorProgURL asp =
-  baseURL ++ "?AdvisorStudyProgram/show/" ++
+advisorProgURL :: String -> AdvisorStudyProgram -> String
+advisorProgURL baseurl asp =
+  baseurl ++ "?AdvisorStudyProgram/show/" ++
   string2urlencoded (showAdvisorStudyProgramKey asp)
 
 -- Show XML document containing all visible master programs
@@ -416,26 +411,27 @@ getAdvisorStudyProgramAsXML asprog = do
                                                           == advisorStudyProgramKey asprog)
   amdatas <- runJustT (getAdvisorModuleData amods)
   advisor <- runJustT (getStudyAdvisingUser asprog)
-  return (asprog2xml asprog advisor studyprog categories amdatas)
+  baseurl <- getBaseURL
+  return (asprog2xml baseurl asprog advisor studyprog categories amdatas)
 
-asprog2xml :: AdvisorStudyProgram -> User -> StudyProgram -> [Category]
-           -> [(AdvisorModule,ModInst,ModData)]
+asprog2xml :: String -> AdvisorStudyProgram -> User -> StudyProgram
+           -> [Category] -> [(AdvisorModule,ModInst,ModData)]
            -> XmlExp
-asprog2xml asprog advisor sprog cats amdatas  =
+asprog2xml baseurl asprog advisor sprog cats amdatas  =
   XElem "studyprogram" [("ID",showAdvisorStudyProgramKey asprog)] $
    [xml "title"         [xtxt (advisorStudyProgramName asprog)]
    ,xml "advisor"       [xtxt (userToShortView advisor)]
    ,xml "start"         [xtxt (showSemester (startSem,startYear))]
-   ,xml "url"           [xtxt (advisorProgURL asprog)]
+   ,xml "url"           [xtxt (advisorProgURL baseurl asprog)]
    ,xml "description"   [xtxt (advisorStudyProgramDesc asprog)]
    ,xml "prerequisites" [xtxt (advisorStudyProgramPrereq asprog)]
    ,xml "comments"      [xtxt (advisorStudyProgramComments asprog)]
    ,XElem "degreeprogram" [("key",studyProgKey)] [xtxt (studyProgramName sprog)]
    ] ++
    concatMap (\c -> let camods = filter (isAdvisorModuleOfCat c) amdatas
-                    in  if null camods then [] else map (advisorModuleData2xml c) camods)
+                    in if null camods then []
+                                      else map (advisorModuleData2xml c) camods)
              cats
-
  where
   studyProgKey = studyProgramProgKey sprog
   

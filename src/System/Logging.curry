@@ -17,11 +17,15 @@ import Data.Format -- required in the pre-processed program
 --------------------------------------------------------------------------
 --- Writes a search term into a log file.
 logSearchTerm :: String -> IO ()
-logSearchTerm = logEntity (storageDir </> "SEARCH.log")
+logSearchTerm s = do
+  dir <- getStorageDir
+  logEntity (dir </> "SEARCH.log") s
 
 --- Writes a URL parameter into a log file.
 logUrlParameter :: String -> IO ()
-logUrlParameter = logEntity (storageDir </> "URLPARAMS.log")
+logUrlParameter s = do
+  dir <- getStorageDir
+  logEntity (dir </> "URLPARAMS.log") s
 
 --------------------------------------------------------------------------
 --- Writes some entity with date and remote host info into a log file.

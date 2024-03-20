@@ -416,10 +416,12 @@ showModDataController modData = do
   moddesc <- runQ $ queryDescriptionOfMod (modDataKey modData)
   modinsts <- runQ $ queryInstancesOfMod (modDataKey modData)
   sinfo <- getUserSessionInfo
+  baseurl <- getBaseURL
   return (singleModDataView sinfo
             (Just (userLogin responsibleUser) == userLoginOfSession sinfo)
             modData responsibleUser
-            sprogs categories prerequisites modinsts moddesc (xmlURL modData))
+            sprogs categories prerequisites modinsts moddesc
+            (xmlURL baseurl modData))
 
 
 --- Associates given entities with the ModData entity.
@@ -504,9 +506,10 @@ emailModuleStore = sessionStore "emailModuleStore"
 moduleUrlForm :: ModData -> IO [BaseHtml]
 moduleUrlForm md = do
   sinfo <- getUserSessionInfo
+  baseurl <- getBaseURL
   let t     = translate sinfo
       title = (langSelect sinfo modDataNameE modDataNameG) md
-      url   = moduleCodeURL (modDataCode md)
+      url   = moduleCodeURL baseurl (modDataCode md)
   return
     [h1 [htxt (t "External URL for module" ++ " \"" ++ title ++ "\"")],
      par [htxt (useURLText sinfo)],
@@ -647,22 +650,23 @@ mod2latex sinfo md mis responsibleUser sprogs categorys prerequisites
 -- Formatting modules as XML documents:
 
 -- XML URL of a module:
-xmlURL :: ModData -> String
-xmlURL md = baseURL++"?xml="++string2urlencoded (modDataCode md)
+xmlURL :: String -> ModData -> String
+xmlURL baseurl md = baseurl ++ "?xml=" ++ string2urlencoded (modDataCode md)
 
 -- Shows XML index of all modules (also invisible ones).
 showXmlIndex :: IO HtmlPage
 showXmlIndex = do
   allmods <- runQ queryAllModDatas
-  return (HtmlAnswer "text/xml"
-           (showXmlDoc (xml "index"
-                            (map mod2index (filter isNotImported allmods)))))
+  baseurl <- getBaseURL
+  return $ HtmlAnswer "text/xml"
+    (showXmlDoc (xml "index"
+                     (map (mod2index baseurl) (filter isNotImported allmods))))
  where
   isNotImported md = modDataURL md == ""
 
-  mod2index m = let c = modDataCode m in
+  mod2index baseurl m = let c = modDataCode m in
     xml "modul" [xml "code" [xtxt c],
-                 xml "url"  [xtxt (xmlURL m)]]
+                 xml "url"  [xtxt (xmlURL baseurl m)]]
 
 showXmlModule :: String -> IO HtmlPage
 showXmlModule mcode = do

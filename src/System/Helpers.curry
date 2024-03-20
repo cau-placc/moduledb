@@ -31,7 +31,6 @@ import System.IO
 import System.IOExts
 import Data.List
 import Numeric ( readNat )
---import ReadShowTerm
 import System.Environment (getEnv, getHostname )
 import Data.Time
 import System.IO.Unsafe ( unsafePerformIO )
@@ -67,10 +66,6 @@ ta |>>= tb = ta >+= tb
 -----------------------------------------------------------------------------
 -- Logging:
 
--- logfile:
-logFile :: String
-logFile = storageDir ++ "CHANGE.LOG"
-
 -- The kind of events we want to log.
 data LogEvent =
     NewModData  ModData  | UpdateModData  ModData  | DeleteModData  ModData
@@ -93,14 +88,16 @@ data LogInfo = LogInfo String String String LogEvent
 
 -- Adds an event with some info string to the global log file.
 logEvent :: LogEvent -> IO ()
-logEvent event = exclusiveIO (logFile ++ ".lock") $ do
-  time  <- getLocalTime
-  login <- getSessionLogin
-  raddr <- getEnv "REMOTE_ADDR"
-  rhost <- if null raddr then getHostname else getHostnameForIP raddr
-  appendFile logFile
-     (show (LogInfo (calendarTimeToString time) (maybe "???" id login)
-                    (rhost ++ "/" ++ raddr) event) ++ "\n")
+logEvent event = do
+  logfile <- fmap (++ "CHANGE.LOG") getStorageDir
+  exclusiveIO (logfile ++ ".lock") $ do
+    time  <- getLocalTime
+    login <- getSessionLogin
+    raddr <- getEnv "REMOTE_ADDR"
+    rhost <- if null raddr then getHostname else getHostnameForIP raddr
+    appendFile logfile
+      (show (LogInfo (calendarTimeToString time) (maybe "???" id login)
+                      (rhost ++ "/" ++ raddr) event) ++ "\n")
 
 --- Get symbolic name of ip address:
 getHostnameForIP :: String -> IO String
@@ -112,8 +109,8 @@ getHostnameForIP ipaddr = (flip catch) (\_ -> return "") $ do
 
 -------------------------------------------------------------------------------
 -- The permanent URL of a description of a module with a given code:
-moduleCodeURL :: String -> String
-moduleCodeURL mcode = baseURL ++ "?mod=" ++ string2urlencoded mcode
+moduleCodeURL :: String -> String -> String
+moduleCodeURL baseurl mcode = baseurl ++ "?mod=" ++ string2urlencoded mcode
 
 -------------------------------------------------------------------------------
 -- name of LaTeX include with infos for all modules:
@@ -265,8 +262,9 @@ allowedLatexCommands =
 
 -- logging for development:
 logUnknownLatex :: String -> ()
-logUnknownLatex cmd = unsafePerformIO $
-  appendFile (storageDir ++ "LATEX.LOG") ('\\':take 20 cmd ++ "\n")
+logUnknownLatex cmd = unsafePerformIO $ do
+  sdir <- getStorageDir
+  appendFile (sdir ++ "LATEX.LOG") ('\\':take 20 cmd ++ "\n")
 
 -----------------------------------------------------------------------------
 -- Semester/Year management:

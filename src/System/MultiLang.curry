@@ -3,7 +3,7 @@
 --- and the translation of texts shown in the application.
 ---
 --- @author Michael Hanus
---- @version November 2023
+--- @version March 2024
 ----------------------------------------------------------------------------
 
 module System.MultiLang (
@@ -19,7 +19,7 @@ module System.MultiLang (
 import System.SessionInfo
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import Model.ConfigMDB              ( baseURL, studyPlannerURL )
+import Model.ConfigMDB              ( studyPlannerURL )
 
 --------------------------------------------------------------------------
 --- Translates a string w.r.t. given user session info.
@@ -244,34 +244,34 @@ english2german =
  ,("Your selected modules:","Ihre ausgewählten Module:")
  ]
 
-loginEmailText :: UserSessionInfo -> String -> String -> String
-loginEmailText sinfo loginname passwd = langSelect sinfo
+loginEmailText :: UserSessionInfo -> String -> String -> String -> String
+loginEmailText sinfo baseurl loginname passwd = langSelect sinfo
   ("Your login data:\n\nLogin name: " ++ loginname ++
    "\nNew password: " ++ passwd ++
    "\n\nYou can use this data to login into the module database\n\n"++
-   baseURL++"\n\n"++
+   baseurl ++ "\n\n" ++
    "and work on your modules and master programs.\n\n"++
    "You can change your password after the login by selecting\n"++
    "'Change password' in the user menu.")
   ("Ihre Zugangsdaten sind:\n\nLogin-Name: " ++ loginname ++
    "\nNeues Passwort: " ++ passwd ++
    "\n\nMit diesen Daten koennen Sie sich in der Moduldatenbank\n\n"++
-   baseURL++"\n\n"++
+   baseurl ++ "\n\n" ++
    "anmelden und Ihre Module und Masterprogramme aendern.\n\n"++
    "Sie koennen das Passwort aendern, indem Sie sich anmelden\n"++
    "und dann 'Passwort aendern' im Benutzermenu waehlen.")
 
-studentLoginEmailText :: UserSessionInfo -> String -> String -> String
-studentLoginEmailText sinfo email code = langSelect sinfo
+studentLoginEmailText :: UserSessionInfo -> String -> String -> String -> String
+studentLoginEmailText sinfo baseurl email code = langSelect sinfo
   ("Your login data:\n\nEmail address: " ++ email ++
    "\nNew code: " ++ code ++
    "\n\nYou can use this data to login as a student into the module database\n\n"++
-   baseURL++"\n\n"++
+   baseurl ++ "\n\n" ++
    "and select a plan for your modules.\n\n")
   ("Ihre Zugangsdaten sind:\n\nEmail-Adresse: " ++ email ++
    "\nNeuer Zugangscode: " ++ code ++
    "\n\nMit diesen Daten koennen Sie sich als Studierende(r) in der Moduldatenbank\n\n"++
-   baseURL++"\n\n"++
+   baseurl ++ "\n\n" ++
    "anmelden und Ihre Module planen.\n\n")
 
 mainTitle :: UserSessionInfo -> String
