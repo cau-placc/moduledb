@@ -21,12 +21,10 @@ baseCGI = "show.cgi"
 -- The URL of the main script of the module system
 -- (used to generate external URLs for modules and master programs):
 baseURL :: String
---baseURL = "https://mdb.ps.informatik.uni-kiel.de/" ++ baseCGI
 baseURL = "https://moduldb.informatik.uni-kiel.de/" ++ baseCGI
 
 -- Directory where all data is stored:
 storageDir :: String
---storageDir = "/srv/sites/ps.informatik.uni-kiel.de/mdb/mdb/"
 storageDir = "/var/www/mdb/mdb/"
 
 --- The base URL of the study planner

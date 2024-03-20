@@ -1,21 +1,19 @@
 # Generic Makefile for Spicey applications
 
-# The compilation target (IFI or IFIPAKCS for real deployment, TEST for mdbtest)
+# The compilation target (IFI for real deployment, TEST for mdbtest)
 TARGET=TEST
 
 # check setting of TARGET variable and
 # set Curry installation directory to be used::
 ifeq ($(TARGET),IFI)
 CURRYHOME=/opt/kics2/kics2
-else ifeq ($(TARGET),IFIPAKCS)
-CURRYHOME=/opt/pakcs/pakcs-3.6.0
 else ifeq ($(TARGET),TEST)
-#CURRYHOME=/opt/kics2/kics3
+#CURRYHOME=/opt/kics2/kics2
 CURRYHOME=$(HOME)/pakcs
 else
 error:
 	echo "ERROR: invalid definition of variable TARGET!"
-	echo "Please use 'TARGET=IFI', 'TARGET=IFIPAKCS' or 'TARGET=TEST'
+	echo "Please use 'TARGET=IFI' or 'TARGET=TEST'
 	exit 1
 endif
 
@@ -25,9 +23,6 @@ WEBSERVERDIR=$(HOME)/public_html/mdbtest
 
 # Name of the compiled cgi program
 ifeq ($(TARGET),IFI)
-CGIPROGRAM=$(WEBSERVERDIR)/show.cgi
-else ifeq ($(TARGET),IFIPAKCS)
-WEBSERVERDIR=$(HOME)/public_html/mdbtest/pakcs
 CGIPROGRAM=$(WEBSERVERDIR)/show.cgi
 else
 CGIPROGRAM=$(WEBSERVERDIR)/mdb.cgi
