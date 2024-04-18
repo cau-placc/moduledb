@@ -280,7 +280,8 @@ selSemesterPlanningView showCategoryPlanController showEmailCorrectionController
                htxt $ t " to ",
                spShortSelectionInitial tosem semSelection
                  (if null semperiod
-                    then findSemesterSelection cursem cursem + 3
+                    then min (findSemesterSelection cursem cursem + 3)
+                             (length semSelection - 1)
                     else findSemesterSelection cursem (last semperiod)),
                htxt ": ",
                spSmallPrimaryButton (t "Show")
