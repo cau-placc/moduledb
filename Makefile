@@ -1,21 +1,10 @@
-# Generic Makefile for Spicey applications
+# Makefile to test and deploy MDB
 
-# The compilation target (IFI for real deployment, TEST for mdbtest)
-TARGET=TEST
+# To deploy with KiCS2, run: make SYSTEM=/opt/kics2 deploy
 
-# check setting of TARGET variable and
-# set Curry installation directory to be used::
-ifeq ($(TARGET),IFI)
-CURRYHOME=/opt/kics2/kics2
-else ifeq ($(TARGET),TEST)
-#CURRYHOME=/opt/kics2/kics2
-CURRYHOME=$(HOME)/pakcs
-else
-error:
-	echo "ERROR: invalid definition of variable TARGET!"
-	echo "Please use 'TARGET=IFI' or 'TARGET=TEST'
-	exit 1
-endif
+# Definition of the root of the Curry system to be used:
+#SYSTEM=/opt/kics2
+#SYSTEM=$(HOME)/pakcs
 
 # Target directory where the compiled cgi programs, style sheets, etc
 # should be stored, e.g.: $(HOME)/public_html
@@ -25,7 +14,7 @@ WEBSERVERDIR=$(HOME)/public_html/mdbtest
 CGIPROGRAM=$(WEBSERVERDIR)/show.cgi
 
 # Curry bin directory to be used:
-export CURRYBIN=$(CURRYHOME)/bin
+export CURRYBIN=$(SYSTEM)/bin
 
 # Default options for compiling Curry programs
 CURRYOPTIONS=:set -time
@@ -126,7 +115,7 @@ deploy: checkdeploy
 	chmod 700 $(SESSIONDATADIR)
 
 $(CGIPROGRAM): $(SOURCES)
-	$(CURRY2CGI) --cpm="$(CPM)" --system="$(CURRYHOME)" \
+	$(CURRY2CGI) --cpm="$(CPM)" --system="$(SYSTEM)" \
 	  -i Controller.AdvisorStudyProgram \
 	  -i Controller.Category \
 	  -i Controller.MasterCoreArea \

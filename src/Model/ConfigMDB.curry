@@ -43,10 +43,7 @@ getExamreqsURL = fmap (++ "examreqs/") getBasePage
 
 -- Returns the directory where all data is stored:
 getStorageDir :: IO String
-getStorageDir = do
-  testsystem <- isTestSystem
-  return $ if testsystem then "/net/medoc/home/mh/home/data/mdbtest/"
-                         else "/var/www/mdb/mdb/"
+getStorageDir = return "../mdbData"
 
 --- The base URL of the study planner
 studyPlannerURL :: String

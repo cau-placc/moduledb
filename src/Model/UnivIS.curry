@@ -1,6 +1,8 @@
 -- Operations to connect UnivIS data to module database
 module Model.UnivIS where
 
+import System.FilePath ( (</>) )
+
 import Model.ConfigMDB
 import Model.MDB
 import System.Helpers
@@ -19,7 +21,7 @@ initUnivisDB = do
 processUnivisFile :: (String,Int) -> IO [(String,String,Int,String)]
 processUnivisFile (term,year) = do
   storagedir <- getStorageDir
-  let fname = storagedir ++ "UnivisLectureURL_" ++ showSemUnivis ++ ".terms"
+  let fname = storagedir </> "UnivisLectureURL_" ++ showSemUnivis ++ ".terms"
   allmcodes <- runQ (fmap (map modDataCode) queryAllModDatas)
   infos <- readFile fname >>= return . map read . lines
   return $ process allmcodes infos

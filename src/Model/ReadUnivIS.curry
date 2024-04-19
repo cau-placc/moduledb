@@ -5,6 +5,7 @@ module Model.ReadUnivIS ( loadLectures )
 
 import Control.Search.SetFunctions
 import Debug.Profile
+import System.FilePath ( (</>) )
 import System.URL
 import XML
 import XCuery
@@ -75,7 +76,7 @@ loadLectures :: (String,Int) -> IO (Either String String)
 loadLectures sem = do
   storagedir <- getStorageDir
   let univissem = showSemUnivis sem
-      termfile  = storagedir ++ "UnivisLectureURL_" ++ univissem ++ ".terms"
+      termfile  = storagedir </> "UnivisLectureURL_" ++ univissem ++ ".terms"
   xmlstring <- getContentsOfUrl $
     "http://univis.uni-kiel.de/prg?search=lectures&department=080110000&sem="++
     univissem++"&show=xml"

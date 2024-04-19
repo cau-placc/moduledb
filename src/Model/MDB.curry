@@ -4797,4 +4797,4 @@ runJustT dbact =
 
 --- Gets the name of the SQLite database file.
 getDBFile :: IO String
-getDBFile = fmap (++ "MDB.db") getStorageDir
+getDBFile = fmap (++ "/MDB.db") getStorageDir

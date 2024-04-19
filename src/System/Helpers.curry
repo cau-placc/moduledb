@@ -35,6 +35,7 @@ import System.Environment (getEnv, getHostname )
 import Data.Time
 import System.IO.Unsafe ( unsafePerformIO )
 import HTML.WUI
+import System.FilePath ( (</>) )
 
 import Database.CDBI.Connection
 import HTML.Base
@@ -89,7 +90,7 @@ data LogInfo = LogInfo String String String LogEvent
 -- Adds an event with some info string to the global log file.
 logEvent :: LogEvent -> IO ()
 logEvent event = do
-  logfile <- fmap (++ "CHANGE.LOG") getStorageDir
+  logfile <- fmap (</> "CHANGE.LOG") getStorageDir
   exclusiveIO (logfile ++ ".lock") $ do
     time  <- getLocalTime
     login <- getSessionLogin
@@ -260,11 +261,11 @@ allowedLatexCommands =
    "ite","url","em","texttt","textbf","par","bf","href","mbox",
    "leftarrow","rightarrow"]
 
--- logging for development:
+-- Logging for development:
 logUnknownLatex :: String -> ()
 logUnknownLatex cmd = unsafePerformIO $ do
-  sdir <- getStorageDir
-  appendFile (sdir ++ "LATEX.LOG") ('\\':take 20 cmd ++ "\n")
+  llogfile <- fmap (</> "LATEX.LOG") getStorageDir
+  appendFile llogfile ('\\':take 20 cmd ++ "\n")
 
 -----------------------------------------------------------------------------
 -- Semester/Year management:
