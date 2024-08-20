@@ -3,7 +3,7 @@
 --- and the translation of texts shown in the application.
 ---
 --- @author Michael Hanus
---- @version March 2024
+--- @version August 2024
 ----------------------------------------------------------------------------
 
 module System.MultiLang (
@@ -322,7 +322,7 @@ minorNotes sinfo = langSelect sinfo
   [italic [htxt "Wichtige Hinweise: "],
    ulist
      [[htxt "Das Institut für Informatik hat beschlossen, dieses ",
-       htxt "Moduleinformationssystem ab dem WS25/26 nicht mehr ",
+       htxt "Modulinformationssystem ab dem WS25/26 nicht mehr ",
        htxt "weiterzuführen. Aus diesem Grund endet die Langfristplanung der ",
        htxt "Module im Sommersemester 2025."],
       [htxt "Die möglichen Anwendungsgebiete im Bachelor- und Masterstudiengang ",
