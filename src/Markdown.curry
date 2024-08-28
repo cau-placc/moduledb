@@ -11,10 +11,10 @@
 --- into HTML or LaTeX.
 --- The slightly restricted subset of the markdown syntax recognized by
 --- this implementation is
---- [documented in this page](https://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
+--- [documented in this page](https://github.com/curry-packages/markdown/blob/main/docs/markdown-syntax.md).
 ---
 --- @author Michael Hanus
---- @version Octtember 2022
+--- @version October 2022
 ------------------------------------------------------------------------------
 
 module Markdown(MarkdownDoc,MarkdownElem(..),fromMarkdownText,

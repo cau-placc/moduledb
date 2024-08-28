@@ -370,7 +370,7 @@ spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 spiceyFooter :: Maybe ClockTime -> [BaseHtml]
 spiceyFooter mbitime =
   [par [htxt $ installinfo ++ "powered by",
-        href "https://www.informatik.uni-kiel.de/~pakcs/spicey"
+        href "https://cpm.curry-lang.org/pkgs/spicey.html"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
         htxt "Framework"]]
@@ -501,7 +501,7 @@ getPage viewblock = case viewblock of
              [image "bt4/img/curry.svg" "Curry"
                 `addAttrs` [("width","24"), ("height","24")],
               htxt $ " Curry (" ++ t "programming language" ++ ")"]
-   , toEHref "https://www.informatik.uni-kiel.de/~pakcs/spicey"
+   , toEHref "https://cpm.curry-lang.org/pkgs/spicey.html"
              [image "bt4/img/spicey-logo.png" "Spicey"
                 `addAttrs` [("height","24")],
               htxt $ t " Spicey (Web Framework)"]
