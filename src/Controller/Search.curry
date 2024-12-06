@@ -177,7 +177,10 @@ mandatoryModulCodes =
    "WInf-EinfWInf","WInf-BetrStan","WInf-EinfOR",
    "Inf-InfRecht","Inf-DatSchutz",
    "Inf-FD-DiProg", "Inf-I1-2FNF", "Inf-I2-2F", "Inf-SP-2F",
-   "infADS2F-01a", "Inf-FPKonz", "Inf-ProgTech" ]
+   "infADS2F-01a", "Inf-FPKonz", "Inf-ProgTech",
+   "infEInf-01a", "infProgOO-01a", "infEAlg-01a", "infCN-01a",
+   "infAAK-01a", "infBL-01a", "infDB-01a", "infDP-01a", "infDaSci-01a",
+   "infOS-01a", "infST-01a", "infEthik-01a" ]
 
 
 --- Controller to show all modules in the given semester.
