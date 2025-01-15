@@ -10,7 +10,7 @@ module Controller.ModData
 
 import System.PreludeHelpers
 
-import Control.Monad ( unless )
+import Control.Monad ( unless, when )
 import Data.List
 
 import Model.ConfigMDB
@@ -561,16 +561,23 @@ latexFormatForm sinfo tlimit tmp title = do
   let t = translate sinfo
   system $ "/usr/bin/timeout " ++ show tlimit ++ "s " ++
            --"/usr/bin/time -p -o /tmp/xxxMH " ++
-           "pdflatex \'\\nonstopmode\\input{"++tmp++".tex}\' 2>&1 > " ++
+           "pdflatex \'\\nonstopmode\\input{" ++ tmp ++ ".tex}\' 2>&1 > " ++
            tmp++".output"
   pdfexist <- doesFileExist (tmp++".pdf")
-  if pdfexist then system ("chmod 644 "++tmp++".pdf")
-              else return 0
+  when pdfexist $ do system $ unwords [ "chmod", "644", tmp ++ ".pdf"
+                                      , tmp ++ ".tex", "moddefs.tex"]
+                     return ()
   output <- readFile (tmp++".output")
   --system ("/bin/rm -f "++tmp++".tex "++tmp++".aux "++tmp++".log")
-  system ("/bin/rm -f "++tmp++".aux "++tmp++".log")
+  system ("/bin/rm -f " ++ tmp ++ ".aux " ++ tmp ++".log")
   return
-    [par [hrefPrimButton (tmp ++ ".pdf") [htxt (t title ++ " (PDF)")]],
+    [par $ [ hrefPrimButton (tmp ++ ".pdf") [htxt (t title ++ " (PDF)")]] ++
+       maybe
+         []
+         (const ([ nbsp
+         , hrefScndSmButton (tmp ++ ".tex") [htxt "LaTeX source"], nbsp
+         , hrefScndSmButton "moddefs.tex" [htxt "LaTeX include: moddefs.tex"]]))
+         (userLoginOfSession sinfo),
      hrule,
      h3 [htxt $ t "LaTeX output" ++":"],
      verbatim output]
