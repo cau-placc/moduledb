@@ -210,7 +210,8 @@ listCategoryView sinfo mbsprog catmods cursem semperiod users semselectform =
   where
    t = translate sinfo
 
-   fromSemPlan      = nextSemester cursem
+   fromSemPlan      = let nextsem = nextSemester cursem
+                      in if isValidSemester nextsem then nextsem else cursem
    toSemPlan        = last (filter isValidSemester
                                    (take 4 (iterate nextSemester fromSemPlan)))
    showSemPlanTitle = t "Planning" ++ " " ++ showSemester fromSemPlan ++

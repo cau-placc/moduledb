@@ -8,18 +8,22 @@ module Controller.ModData
   , newPreqModDataForm, deletePreqModDataForm
   ) where
 
-import System.PreludeHelpers
-
-import Control.Monad ( unless, when )
+import Control.Monad      ( unless, when )
 import Data.List
 
-import Model.ConfigMDB
-import System.Spicey
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.Session
 import HTML.WUI
+import System.Directory   ( doesFileExist )
+import System.FilePath    ( takeBaseName )
+import System.Mail        ( sendMailWithOptions, MailOption(..) )
+import System.Process     ( getPID, system )
+import System.SessionInfo
 import XML
+
+import Model.ConfigMDB
+import System.Spicey
 import Model.MDB
 import Model.MDB.Queries
 import View.ModData
@@ -32,15 +36,11 @@ import Config.UserProcesses
 import System.Authentication
 import View.StudyProgram
 import System.Helpers
+import System.PreludeHelpers
 import View.MDBEntitiesToHtml
-import View.ModDescr ( wModDescrType )
+import View.ModDescr      ( wModDescrType )
 import View.ModInst
-import View.User    ( leqUser )
-import System.Directory ( doesFileExist )
-import System.FilePath  ( takeBaseName )
-import System.Mail
-import System.Process ( getPID, system )
-import System.SessionInfo
+import View.User          ( leqUser )
 import System.MultiLang
 import System.StudyPlanner
 

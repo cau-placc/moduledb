@@ -19,7 +19,6 @@ import Model.MDB
 import View.MDBEntitiesToHtml
 import System.Helpers
 import View.ModInst
-import System.Mail
 import Model.ConfigMDB
 import View.User(leqUser)
 import System.SessionInfo
