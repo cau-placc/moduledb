@@ -17,7 +17,7 @@ module System.Helpers
     quoteUnknownLatexCmd,
     getCurrentSemester,
     showSemester, showLongSemester, showSemesterCode, readSemesterCode,
-    isValidSemester, nextSemester, prevSemester, leqSemester,
+    lastValidSemester, isValidSemester, nextSemester, prevSemester, leqSemester,
     semesterSelection, findSemesterSelection,
     imageNB, wTerm, wCurrentYear, wYear,
     wLargeString, wLargeRequiredString,
@@ -280,15 +280,15 @@ getCurrentSemester = do
                             | mt>=10         = ("WS",yr)
                             | otherwise      = ("WS",yr-1)
 
+--- The last semester of the support period.
+lastValidSemester :: (String,Int)
+lastValidSemester = ("SS",2025)
+
 --- Checks whether the semester is valid in the support period
 --- of the module data base, i.e., from SS06 until SS25:
 isValidSemester :: (String,Int) -> Bool
 isValidSemester semyear =
-  leqSemester ("SS",2005) semyear && leqSemester semyear ("SS",2025)
-
---- The last year of the support period.
-lastValidYear :: Int
-lastValidYear = 2025
+  leqSemester ("SS",2005) semyear && leqSemester semyear lastValidSemester
 
 -- show a semester:
 showSemester :: (String,Int) -> String
@@ -360,7 +360,7 @@ wTerm = wSelect id ["WS","SS"]
 --- The WUI specification for an almost current year.
 wCurrentYear :: Int -> WuiSpec Int
 wCurrentYear curyear =
-  wSelect show [(curyear-4) .. min (curyear+6) lastValidYear]
+  wSelect show [(curyear-4) .. min (curyear+6) (snd lastValidSemester)]
    `withRendering` shorttextinputRendering
 
 --- The WUI specification for an arbitrary year.
