@@ -15,6 +15,7 @@ import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.Session
 import HTML.WUI
+import Network.URL        ( string2urlencoded )
 import System.Directory   ( doesFileExist )
 import System.FilePath    ( takeBaseName )
 import System.Mail        ( sendMailWithOptions, MailOption(..) )

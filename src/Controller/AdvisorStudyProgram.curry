@@ -13,6 +13,7 @@ import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.Session
 import HTML.WUI
+import Network.URL ( string2urlencoded )
 
 import Model.ConfigMDB ( getBaseURL )
 import Config.EntityRoutes

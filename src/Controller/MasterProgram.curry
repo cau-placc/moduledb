@@ -6,6 +6,7 @@ import Data.List
 import Data.Maybe
 
 import Database.CDBI.ER
+import Network.URL ( string2urlencoded )
 
 import System.Spicey
 import HTML.Base

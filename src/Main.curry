@@ -8,6 +8,7 @@ import Data.List
 import HTML.WUI
 import HTML.Base
 import HTML.Parser ( readHtmlFile )
+import Network.URL ( urlencoded2string )
 import Text.CSV
 
 import Config.ControllerMapping

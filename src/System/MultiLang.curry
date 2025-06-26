@@ -3,14 +3,14 @@
 --- and the translation of texts shown in the application.
 ---
 --- @author Michael Hanus
---- @version August 2024
+--- @version June 2025
 ----------------------------------------------------------------------------
 
 module System.MultiLang (
   toEnglish,
   translate, langSelect,
   loginEmailText, mainTitle, mainExplanation,
-  masterStudyOldNote, minorNotes,
+  masterStudyOldNote, minorNotes, stopPlanNote,
   privacyCookieCmt, searchToolTip, sendCodeCmt, sendPasswordCmt, ssComment,
   studentExplanation, studentLoginEmailText,studentLoginExplanation,
   timeoutText, unknownUser, useURLText, prereqExplainText
@@ -308,29 +308,43 @@ masterStudyOldNote sinfo = langSelect sinfo
    htxt " zu finden."]
  where
   oldMasterProgURL = "?MasterProgram/listall"
-   
+
 minorNotes :: HTML h => UserSessionInfo -> [h]
 minorNotes sinfo = langSelect sinfo
-  [italic [htxt "Important notes: "],
+  [italic [htxt "Important notes: "] `addClass` "badge badge-danger",
    ulist
      [[htxt "The Department of Computer Science has decided to terminate ",
        htxt "the use of this Module Information System by the end of 2025. ",
-       htxt "Due to this reason, the plannung of modules is shown only ",
+       htxt "Due to this reason, the planning of modules is shown only ",
        htxt "until the summer term 2025."],
+      [htxt "The Department of Computer Science has decided to stop ",
+       htxt "the long-term planning of modules after the summer term 2025."],
       [htxt "The possible minor/application subjects and their modules are listed ",
        ehrefScndBadge minorURL [htxt "on this page."]]]]
-  [italic [htxt "Wichtige Hinweise: "],
+  [italic [htxt "Wichtige Hinweise: "] `addClass` "badge badge-danger",
    ulist
      [[htxt "Das Institut für Informatik hat beschlossen, dieses ",
        htxt "Modulinformationssystem ab dem WS25/26 nicht mehr ",
        htxt "weiterzuführen. Aus diesem Grund endet die Langfristplanung der ",
        htxt "Module im Sommersemester 2025."],
+      [htxt "Das Institut für Informatik hat beschlossen, zukünftig ",
+       htxt "keine Langfristplanung der Module mehr durchzuführen, sodass ",
+       htxt "eine Modulplanung nicht mehr zu finden ist."],
       [htxt "Die möglichen Anwendungsgebiete im Bachelor- und Masterstudiengang ",
        htxt "Informatik sowie die dazugehörigen Module findet man ",
        ehrefScndBadge minorURL [htxt "auf dieser Seite."]]
      ]]
  where
   minorURL = "https://www.inf.uni-kiel.de/de/studium/studiengaenge/informatik-1-fach-bachelorstudiengang/nebenfaecher_anwendungsgebiete"
+
+stopPlanNote :: HTML h => UserSessionInfo -> [h]
+stopPlanNote sinfo = langSelect sinfo
+  [italic [htxt "Important note: "] `addClass` "badge badge-danger",
+   htxt $ " The Department of Computer Science has decided to stop " ++
+          "the long-term planning of modules after the summer term 2025."]
+  [italic [htxt "Wichtiger Hinweis:"] `addClass` "badge badge-danger",
+   htxt $ " Das Institut für Informatik hat beschlossen, ab 2025 " ++
+          "keine Langfristplanung der Module mehr durchzuführen."]
 
 privacyCookieCmt :: HTML h => UserSessionInfo -> [h]
 privacyCookieCmt sinfo = langSelect sinfo

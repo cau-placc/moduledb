@@ -40,6 +40,7 @@ import System.FilePath ( (</>) )
 import Database.CDBI.Connection
 import HTML.Base
 import Markdown
+import Network.URL ( string2urlencoded )
 
 import Model.ConfigMDB
 import Model.MDB

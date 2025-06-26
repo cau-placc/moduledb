@@ -303,7 +303,7 @@ getUniqueTerm mis
   | all (\mi -> modInstTerm mi == "WS" ) mis = "WS"
   | all (\mi -> modInstTerm mi == "SS" ) mis = "SS"
   | otherwise = ""
-  
+
 --- Supplies a view for a given ModData entity.
 --- Shows also buttons to show, delete, or edit entries.
 --- The arguments are the list of ModData entities
@@ -314,7 +314,8 @@ singleModDataView :: UserSessionInfo -> Bool -> ModData -> User
                   -> [BaseHtml]
 singleModDataView sinfo editallowed modData responsibleUser
      sprogs categorys prerequisites modinsts maybedesc xmlurl =
-  [h1 [htxt ((langSelect sinfo modDataNameE modDataNameG) modData), nbsp,
+  [par $ stopPlanNote sinfo,
+   h1 [htxt ((langSelect sinfo modDataNameE modDataNameG) modData), nbsp,
        ehrefScndBadge ("?ModData/url/" ++ modKeyString) [htxt "URL"], nbsp,
        ehrefScndBadge ("?ModData/pdf/" ++ modKeyString) [htxt "PDF"], nbsp,
        ehrefScndBadge xmlurl [htxt "XML"]],
