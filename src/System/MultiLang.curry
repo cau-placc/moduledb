@@ -344,7 +344,9 @@ stopPlanNote sinfo = langSelect sinfo
           "the long-term planning of modules after the summer term 2025."]
   [italic [htxt "Wichtiger Hinweis:"] `addClass` "badge badge-danger",
    htxt $ " Das Institut für Informatik hat beschlossen, ab 2025 " ++
-          "keine Langfristplanung der Module mehr durchzuführen."]
+          "keine Langfristplanung der Module mehr durchzuführen. " ++
+          "Aus diesem Grund werden hier ab dem WS25/26 keine " ++
+          "Veranstaltungstermine mehr angegeben."]
 
 privacyCookieCmt :: HTML h => UserSessionInfo -> [h]
 privacyCookieCmt sinfo = langSelect sinfo
