@@ -4,7 +4,7 @@
 
 module Model.ConfigMDB
   ( isTestSystem, adminEmail, getBaseURL, getExamreqsURL, getStorageDir
-  , studyPlannerURL, systemHashKey
+  , systemHashKey
   )
  where
 
@@ -44,10 +44,6 @@ getExamreqsURL = fmap (++ "examreqs/") getBasePage
 -- Returns the directory where all data is stored:
 getStorageDir :: IO String
 getStorageDir = return "../mdbData"
-
---- The base URL of the study planner
-studyPlannerURL :: String
-studyPlannerURL = "https://www-ps.informatik.uni-kiel.de/studienplaner/"
 
 --- The system hash key used to encode passwords
 --- (compare `System.Authentication`).

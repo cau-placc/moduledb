@@ -267,7 +267,6 @@ destroyModDataController modData =
 numberModuleController :: String -> ModData -> Controller
 numberModuleController sem mdata =
  checkAuthorization (modDataOperationAllowed (ShowEntity mdata)) $ \_ -> do
-  --spnum  <- getModuleStudents mdata sem
   mdbnum <- runQ $ queryStudentNumberOfModSemester mdata (readSemesterCode sem)
   return $ numberModuleView sem mdata mdbnum
 

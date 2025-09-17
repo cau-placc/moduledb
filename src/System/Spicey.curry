@@ -369,11 +369,20 @@ spiceyHomeBrand = ("?", [mdbHomeIcon, htxt " MDB"])
 --- The standard footer of the Spicey page.
 spiceyFooter :: Maybe ClockTime -> [BaseHtml]
 spiceyFooter mbitime =
-  [par [htxt $ installinfo ++ "powered by",
+  [par [htxt $ installinfo ++ "designed and developed by ",
+        href "https://www.michaelhanus.de"
+             [htxt "Michael Hanus"] `addAttr` ("target","_blank"),
+        htxt ", powered by ",
+        href "https://www.curry-lang.org/"
+             [image "bt4/img/curry.svg" "Curry"
+                `addAttrs` [("width","24"), ("height","24")],
+              htxt $ " Curry"]
+          `addAttr` ("target","_blank"),
+        htxt " and the ",
         href "https://cpm.curry-lang.org/pkgs/spicey.html"
              [image "bt4/img/spicey-logo.png" "Spicey"]
           `addAttr` ("target","_blank"),
-        htxt "Framework"]]
+        htxt "web framework"]]
  where
   installinfo =
     maybe ""
@@ -491,7 +500,7 @@ getPage viewblock = case viewblock of
 
   extUrls t =
    [ toHref "?main" [htxt $ t "Main page of the module information system"]
-   , toEHref "https://www.inf.uni-kiel.de"
+   , toEHref "https://www.uni-kiel.de/de/tf/fakultaet/institute/informatik"
              [htxt $ t "Department of Computer Science"]
    , toEHref "https://www.uni-kiel.de" [htxt "CAU Kiel"]
    , toEHref "https://univis.uni-kiel.de/" [htxt "UnivIS"]

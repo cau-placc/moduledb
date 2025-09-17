@@ -3,7 +3,7 @@
 --- and the translation of texts shown in the application.
 ---
 --- @author Michael Hanus
---- @version June 2025
+--- @version September 2025
 ----------------------------------------------------------------------------
 
 module System.MultiLang (
@@ -19,7 +19,6 @@ module System.MultiLang (
 import System.SessionInfo
 import HTML.Base
 import HTML.Styles.Bootstrap4
-import Model.ConfigMDB              ( studyPlannerURL )
 
 --------------------------------------------------------------------------
 --- Translates a string w.r.t. given user session info.
