@@ -107,7 +107,7 @@ deploy: checkdeploy
 	mkdir -p $(WEBSERVERDIR)
 	$(MAKE) $(CGIPROGRAM)
 	# copy other files (style sheets, images,...)
-	cp -r $(PKGDIR)/public/* $(WEBSERVERDIR)
+	cp -a $(PKGDIR)/public/* $(WEBSERVERDIR)
 	chmod -R go+rX $(WEBSERVERDIR)
 	# create directory for storing local session data:
 	#/bin/rm -r $(SESSIONDATADIR)
