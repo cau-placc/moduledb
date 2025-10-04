@@ -283,7 +283,7 @@ getCurrentSemester = do
 
 --- The last semester of the support period.
 lastValidSemester :: (String,Int)
-lastValidSemester = ("SS",2025)
+lastValidSemester = ("SS",2036)
 
 --- Checks whether the semester is valid in the support period
 --- of the module data base, i.e., from SS06 until SS25:
