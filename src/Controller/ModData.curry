@@ -559,15 +559,17 @@ formatCatModulesForm catmods = do
 latexFormatForm :: UserSessionInfo -> Float -> String -> String -> IO [BaseHtml]
 latexFormatForm sinfo tlimit tmp title = do
   let t = translate sinfo
+      latexcmd = "pdflatex '\\nonstopmode\\input{" ++ tmp ++ ".tex}'"
+      outfile  = tmp <.> "output"
+  writeFile outfile $ "EXECUTING: " ++ latexcmd ++ "\n\n"
   system $ "/usr/bin/timeout " ++ show tlimit ++ "s " ++
            --"/usr/bin/time -p -o /tmp/xxxMH " ++
-           "pdflatex \'\\nonstopmode\\input{" ++ tmp ++ ".tex}\' " ++
-           "> " ++ tmp <.> "output" ++ " 2>&1"
+           latexcmd ++ " >> " ++ outfile ++ " 2>&1"
   pdfexist <- doesFileExist (tmp <.> "pdf")
   when pdfexist $ do
     system $ unwords [ "chmod", "644", tmp <.> "pdf", tmp <.> "tex" ]
     return ()
-  output <- readFile (tmp <.> "output")
+  output <- readFile outfile
   --system ("/bin/rm -f "++tmp++".tex "++tmp++".aux "++tmp++".log")
   system $ unwords ["/bin/rm", "-f", tmp <.> "aux", tmp <.> "log"]
   return
