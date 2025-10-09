@@ -17,7 +17,7 @@ import HTML.Session
 import HTML.WUI
 import Network.URL        ( string2urlencoded )
 import System.Directory   ( doesFileExist )
-import System.FilePath    ( takeBaseName )
+import System.FilePath    ( (<.>), takeBaseName )
 import System.Mail        ( sendMailWithOptions, MailOption(..) )
 import System.Process     ( getPID, system )
 import System.SessionInfo
@@ -561,17 +561,17 @@ latexFormatForm sinfo tlimit tmp title = do
   let t = translate sinfo
   system $ "/usr/bin/timeout " ++ show tlimit ++ "s " ++
            --"/usr/bin/time -p -o /tmp/xxxMH " ++
-           "pdflatex \'\\nonstopmode\\input{" ++ tmp ++ ".tex}\' 2>&1 > " ++
-           tmp++".output"
-  pdfexist <- doesFileExist (tmp++".pdf")
-  when pdfexist $ do system $ unwords [ "chmod", "644", tmp ++ ".pdf"
-                                      , tmp ++ ".tex", "moddefs.tex"]
-                     return ()
-  output <- readFile (tmp++".output")
+           "pdflatex \'\\nonstopmode\\input{" ++ tmp ++ ".tex}\' " ++
+           "> " ++ tmp <.> "output" ++ " 2>&1"
+  pdfexist <- doesFileExist (tmp <.> "pdf")
+  when pdfexist $ do
+    system $ unwords [ "chmod", "644", tmp <.> "pdf", tmp <.> "tex" ]
+    return ()
+  output <- readFile (tmp <.> "output")
   --system ("/bin/rm -f "++tmp++".tex "++tmp++".aux "++tmp++".log")
-  system ("/bin/rm -f " ++ tmp ++ ".aux " ++ tmp ++".log")
+  system $ unwords ["/bin/rm", "-f", tmp <.> "aux", tmp <.> "log"]
   return
-    [par $ [ hrefPrimButton (tmp ++ ".pdf") [htxt (t title ++ " (PDF)")]] ++
+    [par $ [ hrefPrimButton (tmp <.> "pdf") [htxt (t title ++ " (PDF)")]] ++
        maybe
          []
          (const ([ nbsp
