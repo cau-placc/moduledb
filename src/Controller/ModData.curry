@@ -17,10 +17,7 @@ import HTML.Styles.Bootstrap4
 import HTML.Session
 import HTML.WUI
 import Network.URL        ( string2urlencoded )
-import System.Directory   ( copyFile, createDirectory, doesDirectoryExist
-                          , doesFileExist, getCurrentDirectory
-                          , getDirectoryContents, getModificationTime
-                          , getModificationTime, removeFile
+import System.Directory   ( copyFile, doesFileExist, getCurrentDirectory
                           , setCurrentDirectory )
 import System.FilePath    ( (<.>), (</>), takeBaseName )
 import System.Mail        ( sendMailWithOptions, MailOption(..) )
@@ -602,26 +599,6 @@ latexFormatForm sinfo tlimit tmp title = do
 
 -----------------------------------------------------------------------------
 -- Auxiliary operations to format modules as LaTeX documents.
-
--- Prefix a file name with the directory where PDFs are stored.
-inPDFDir :: String -> String
-inPDFDir filename = pdfDir </> filename
-
--- Ensures that the directory to store PDF files exists.
--- If it does not exist, it will be created.
--- Furthermore, files older than 60 minutes are deleted.  
-ensureAndCleanPDFDir :: IO ()
-ensureAndCleanPDFDir = do
-  exspd <- doesDirectoryExist pdfDir
-  unless exspd $ createDirectory pdfDir
-  system $ "chmod 775 " ++ pdfDir
-  tmpfiles <- fmap (filter ("tmp" `isPrefixOf`)) $ getDirectoryContents pdfDir
-  curtime <- getClockTime
-  mapM_ (deleteIfOld curtime) (map (pdfDir </>) tmpfiles)
- where
-  deleteIfOld curtime fn = do
-    mtime <- getModificationTime fn
-    when (addMinutes 60 mtime < curtime) $ removeFile fn
 
 -- Generate LaTeX document containing a detailed description of a module:
 writeModulesLatexFile :: UserSessionInfo -> String -> ModData

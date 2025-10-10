@@ -4,11 +4,20 @@
 
 module Model.ConfigMDB
   ( isTestSystem, adminEmail, getBaseURL, getExamreqsURL, getStorageDir
-  , systemHashKey, pdfDir
+  , systemHashKey, pdfDir, inPDFDir, ensureAndCleanPDFDir
   )
  where
 
+import Control.Monad      ( unless, when )
+import Data.List          ( isPrefixOf )
 import System.Environment ( getEnv )
+
+import Data.Time          ( addMinutes, getClockTime )
+import System.Directory   ( createDirectory, doesDirectoryExist
+                          , getDirectoryContents, getModificationTime
+                          , removeFile )
+import System.FilePath    ( (</>) )
+import System.Process     ( system )
 
 ------------------------------------------------------------------------------
 -- | Is the current installation a test system?
@@ -49,10 +58,34 @@ getStorageDir = return "../mdbData"
 -- | The system hash key used to encode passwords
 --   (compare `System.Authentication`).
 systemHashKey :: String
-systemHashKey = "4caumdb2" -- change this key for every spicey instance
+systemHashKey = "4caumdb2" -- change this key for every Spicey instance
 
 -- | Directory to store generated PDFs.
 pdfDir :: FilePath
 pdfDir = "pdfs"
+
+------------------------------------------------------------------------------
+-- Operations to support mangagement of PDFs.
+
+-- | Prefix a file name with the directory where PDFs are stored.
+inPDFDir :: String -> String
+inPDFDir filename = pdfDir </> filename
+
+-- | Ensures that the directory to store PDF files exists.
+--   If it does not exist, it will be created.
+--   Furthermore, `tmp` files in this directory which are older than 60 minutes
+--   are deleted.  
+ensureAndCleanPDFDir :: IO ()
+ensureAndCleanPDFDir = do
+  exspd <- doesDirectoryExist pdfDir
+  unless exspd $ createDirectory pdfDir
+  system $ "chmod 775 " ++ pdfDir
+  tmpfiles <- fmap (filter ("tmp" `isPrefixOf`)) $ getDirectoryContents pdfDir
+  curtime <- getClockTime
+  mapM_ (deleteIfOld curtime) (map (pdfDir </>) tmpfiles)
+ where
+  deleteIfOld curtime fn = do
+    mtime <- getModificationTime fn
+    when (addMinutes 60 mtime < curtime) $ removeFile fn
 
 ------------------------------------------------------------------------------

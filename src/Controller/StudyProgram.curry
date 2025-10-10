@@ -15,7 +15,7 @@ import HTML.WUI
 import ShowDotGraph ( showDotGraph )
 
 import Config.EntityRoutes
-import Model.ConfigMDB     ( getBaseURL )
+import Model.ConfigMDB     ( getBaseURL, ensureAndCleanPDFDir, inPDFDir )
 import Model.MDB
 import Model.MDB.Queries
 import System.Helpers
@@ -155,11 +155,12 @@ showPrereqsStudyProgramController :: StudyProgram -> Controller
 showPrereqsStudyProgramController sprog =
   checkAuthorization (studyProgramOperationAllowed (ShowEntity sprog))
    $ \sinfo -> do
+    ensureAndCleanPDFDir
     let t = translate sinfo
     pid <- getPID
-    let tmppdf = "tmp_" ++ show pid ++ ".pdf"
+    let tmppdf = inPDFDir $ "tmp_" ++ show pid ++ ".pdf"
     pdfexists <- doesFileExist tmppdf
-    if pdfexists then system ("chmod 644 " ++ tmppdf)
+    if pdfexists then system $ "chmod 664 " ++ tmppdf
                  else return 0
     mcodes  <- getModuleCodesOfStudyProg sprog
     prereqs <- getStudyProgRequirements sprog
@@ -180,4 +181,4 @@ showPrereqsStudyProgramController sprog =
            , block [htmlText svgtxt]
            , h3 [htxt $ t "Modules without prerequisites", htxt ":"]
            , showModDatasAsLinks sinfo basemoddatas
-            ]
+           ]
