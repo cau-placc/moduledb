@@ -11,13 +11,18 @@ module Controller.ModData
 import Control.Monad      ( unless, when )
 import Data.List
 
+import Data.Time ( addMinutes, getClockTime )
 import HTML.Base
 import HTML.Styles.Bootstrap4
 import HTML.Session
 import HTML.WUI
 import Network.URL        ( string2urlencoded )
-import System.Directory   ( doesFileExist )
-import System.FilePath    ( (<.>), takeBaseName )
+import System.Directory   ( copyFile, createDirectory, doesDirectoryExist
+                          , doesFileExist, getCurrentDirectory
+                          , getDirectoryContents, getModificationTime
+                          , getModificationTime, removeFile
+                          , setCurrentDirectory )
+import System.FilePath    ( (<.>), (</>), takeBaseName )
 import System.Mail        ( sendMailWithOptions, MailOption(..) )
 import System.Process     ( getPID, system )
 import System.SessionInfo
@@ -520,22 +525,24 @@ moduleUrlForm md = do
 formatModuleForm :: ModData -> [ModInst] -> User -> [StudyProgram] -> [Category]
                  -> [ModData] -> Maybe ModDescr -> IO [BaseHtml]
 formatModuleForm md mis respuser sprogs categorys prerequisites mbdesc = do
+  ensureAndCleanPDFDir
   sinfo <- getUserSessionInfo
   pid <- getPID
-  let tmp = "tmp_"++show pid
-  writeModulesLatexFile sinfo (tmp++".tex")
+  let tmp = "tmp_" ++ show pid
+  writeModulesLatexFile sinfo (inPDFDir $ tmp <.> "tex")
                         md mis respuser sprogs categorys prerequisites mbdesc
   latexFormatForm sinfo 2.0 tmp "Formatted module description"
 
 -- Format a list of categories containing modules as PDF
 formatCatModulesForm :: [(String,[ModData])] -> IO [BaseHtml]
 formatCatModulesForm catmods = do
+  ensureAndCleanPDFDir
   sprogs <- runQ queryAllStudyPrograms
   sinfo <- getUserSessionInfo
   pid <- getPID
-  let tmp = "tmp_"++show pid
+  let tmp = "tmp_" ++ show pid
   mstr <- mapM (formatCatMods sinfo sprogs) catmods
-  writeStandaloneLatexFile (tmp++".tex") (concat mstr)
+  writeStandaloneLatexFile (inPDFDir $ tmp <.> "tex") (concat mstr)
   latexFormatForm sinfo 10.0 tmp "Formatted module descriptions"
  where
   formatCatMods sinfo sprogs (catname,mods) = do
@@ -558,34 +565,63 @@ formatCatModulesForm catmods = do
 -- by bad latex sources.
 latexFormatForm :: UserSessionInfo -> Float -> String -> String -> IO [BaseHtml]
 latexFormatForm sinfo tlimit tmp title = do
+  let deffile  = "moddefs.tex"
+  -- copy (if necessary) module macro definitions into pdfDir:
+  exdef <- doesFileExist (inPDFDir deffile)
+  unless exdef $ copyFile deffile (inPDFDir deffile)
+  curdir <- getCurrentDirectory
+  setCurrentDirectory pdfDir
   let t = translate sinfo
-      latexcmd = "pdflatex '\\nonstopmode\\input{" ++ tmp ++ ".tex}'"
+      texfile  = tmp <.> "tex"
+      pdffile  = tmp <.> "pdf"
       outfile  = tmp <.> "output"
+      latexcmd = "pdflatex '\\nonstopmode\\input{" ++ texfile ++ "}'"
   writeFile outfile $ "EXECUTING: " ++ latexcmd ++ "\n\n"
   system $ "/usr/bin/timeout " ++ show tlimit ++ "s " ++
            --"/usr/bin/time -p -o /tmp/xxxMH " ++
            latexcmd ++ " >> " ++ outfile ++ " 2>&1"
-  pdfexist <- doesFileExist (tmp <.> "pdf")
+  pdfexist <- doesFileExist pdffile
   when pdfexist $ do
-    system $ unwords [ "chmod", "644", tmp <.> "pdf", tmp <.> "tex" ]
+    system $ unwords [ "chmod", "644", texfile, pdffile ]
     return ()
   output <- readFile outfile
   --system ("/bin/rm -f "++tmp++".tex "++tmp++".aux "++tmp++".log")
   system $ unwords ["/bin/rm", "-f", tmp <.> "aux", tmp <.> "log"]
+  setCurrentDirectory curdir
   return
-    [par $ [ hrefPrimButton (tmp <.> "pdf") [htxt (t title ++ " (PDF)")]] ++
+    [par $ [ hrefPrimButton (inPDFDir pdffile) [htxt (t title ++ " (PDF)")]] ++
        maybe
          []
          (const ([ nbsp
-         , hrefScndSmButton (tmp ++ ".tex") [htxt "LaTeX source"], nbsp
-         , hrefScndSmButton "moddefs.tex" [htxt "LaTeX include: moddefs.tex"]]))
+         , hrefScndSmButton (inPDFDir texfile) [htxt "LaTeX source"], nbsp
+         , hrefScndSmButton deffile [htxt "LaTeX include: moddefs.tex"]]))
          (userLoginOfSession sinfo),
      hrule,
-     h3 [htxt $ t "LaTeX output" ++":"],
+     h3 [htxt $ t "LaTeX output" ++ ":"],
      verbatim output]
 
 -----------------------------------------------------------------------------
--- Formatting modules as LaTeX documents:
+-- Auxiliary operations to format modules as LaTeX documents.
+
+-- Prefix a file name with the directory where PDFs are stored.
+inPDFDir :: String -> String
+inPDFDir filename = pdfDir </> filename
+
+-- Ensures that the directory to store PDF files exists.
+-- If it does not exist, it will be created.
+-- Furthermore, files older than 60 minutes are deleted.  
+ensureAndCleanPDFDir :: IO ()
+ensureAndCleanPDFDir = do
+  exspd <- doesDirectoryExist pdfDir
+  unless exspd $ createDirectory pdfDir
+  system $ "chmod 775 " ++ pdfDir
+  tmpfiles <- fmap (filter ("tmp" `isPrefixOf`)) $ getDirectoryContents pdfDir
+  curtime <- getClockTime
+  mapM_ (deleteIfOld curtime) (map (pdfDir </>) tmpfiles)
+ where
+  deleteIfOld curtime fn = do
+    mtime <- getModificationTime fn
+    when (addMinutes 60 mtime < curtime) $ removeFile fn
 
 -- Generate LaTeX document containing a detailed description of a module:
 writeModulesLatexFile :: UserSessionInfo -> String -> ModData
