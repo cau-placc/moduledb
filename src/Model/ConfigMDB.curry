@@ -84,8 +84,9 @@ ensureAndCleanPDFDir = do
   curtime <- getClockTime
   mapM_ (deleteIfOld curtime) (map (pdfDir </>) tmpfiles)
  where
-  deleteIfOld curtime fn = do
-    mtime <- getModificationTime fn
-    when (addMinutes 60 mtime < curtime) $ removeFile fn
+  deleteIfOld curtime fn =
+    catch (do mtime <- getModificationTime fn
+              when (addMinutes 60 mtime < curtime) $ removeFile fn)
+          (\_ -> return ())
 
 ------------------------------------------------------------------------------
