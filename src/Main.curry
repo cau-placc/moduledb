@@ -49,26 +49,26 @@ main = do
   case params of
     ('M':s1:s2:code) -> if [s1,s2] `elem`
                             ["BS","BW","B2","MS","MW","ME","M2","NF","EX","OI"]
-                        -- for compatibility with old URLs...
-                        then showModDataWithCode (urlencoded2string code)
+                          -- for compatibility with old URLs...
+                          then showModDataWithCode (urlencoded2string code)
                                                                  >>= getPage
-                        else dispatcher
+                          else dispatcher
     ('m':'o':'d':'=':code) -> showModDataWithCode (urlencoded2string code)
                                                                  >>= getPage
     ('x':'m':'l':'=':code) -> showXmlModule (urlencoded2string code)
     "xml"                  -> showXmlIndex
     ('x':'m':'l':'p':'r':'o':'g':'=':code)
         -> if code=="all"
-           then showAllXmlMasterPrograms
-           else maybe (displayUrlError >>= getPage)
-                      showXmlMasterProgram
-                      (readMasterProgramKey (urlencoded2string code))
+             then showAllXmlMasterPrograms
+             else maybe (displayUrlError >>= getPage)
+                         showXmlMasterProgram
+                         (readMasterProgramKey (urlencoded2string code))
     ('x':'m':'l':'a':'p':'r':'o':'g':'=':code)
         -> if code=="all"
-           then showAllXmlAdvisorStudyPrograms
-           else maybe (displayUrlError >>= getPage)
-                      showXmlAdvisorStudyProgram
-                      (readAdvisorStudyProgramKey (urlencoded2string code))
+             then showAllXmlAdvisorStudyPrograms
+             else maybe (displayUrlError >>= getPage)
+                        showXmlAdvisorStudyProgram
+                        (readAdvisorStudyProgramKey (urlencoded2string code))
     ['l','a','n','g',l1,l2] -> setLanguage [l1,l2]
     "about"    -> showHtmlFile "about.html"
     "privacy"  -> showHtmlFile "datenschutz.html"
@@ -137,7 +137,7 @@ modules2CSV studyprogs mods = do
 -------------------------------------------------------------------------
 -- For benchmarking:
 --benchMDB :: IO ()
---benchMDB = allModuleCSV >>= print . length . show
+--benchMDB = allModuleCSV >>= print . length . showHtmlPage
 --> lussac/pakcs: 13.8s
 --> lussac/kics2: 0.88s
 --> lascombes/pakcs: 7.26

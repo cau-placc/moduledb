@@ -314,8 +314,8 @@ minorNotes sinfo = langSelect sinfo
    ulist
      [[htxt "The Department of Computer Science has decided to terminate ",
        htxt "the use of this Module Information System by the end of 2025. ",
-       htxt "Due to this reason, the planning of modules is shown only ",
-       htxt "until the summer term 2025."],
+       htxt "Due to this reason, the official planning of modules is shown ",
+       htxt "only until the summer term 2025."],
       [htxt "The Department of Computer Science has decided to stop ",
        htxt "the long-term planning of modules after the summer term 2025."],
       [htxt "The possible minor/application subjects and their modules are listed ",
@@ -324,8 +324,8 @@ minorNotes sinfo = langSelect sinfo
    ulist
      [[htxt "Das Institut für Informatik hat beschlossen, dieses ",
        htxt "Modulinformationssystem ab dem WS25/26 nicht mehr ",
-       htxt "weiterzuführen. Aus diesem Grund endet die Langfristplanung der ",
-       htxt "Module im Sommersemester 2025."],
+       htxt "weiterzuführen. Aus diesem Grund endet die offizielle ",
+       htxt "Langfristplanung der Module im Sommersemester 2025."],
       [htxt "Das Institut für Informatik hat beschlossen, zukünftig ",
        htxt "keine Langfristplanung der Module mehr durchzuführen, sodass ",
        htxt "eine Modulplanung nicht mehr zu finden ist."],
