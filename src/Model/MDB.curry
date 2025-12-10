@@ -1,6 +1,6 @@
 --- This file has been generated from
 --- 
----     /net/medoc/home/mh/home/curry/applications/MDB/WithCDBI/MDB.erdterm
+---     /home/mh/home/curry/applications/MDB/WithCDBI/MDB.erdterm
 --- 
 --- and contains definitions for all entities and relations
 --- specified in this model.

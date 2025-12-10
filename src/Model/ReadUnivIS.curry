@@ -67,8 +67,8 @@ findLectureURL univissem
   (with [xml' "Lecture"
      (with ([xml "id" nr, xml "name" name]))]))
   = (textOf name,
-     "http://univis.uni-kiel.de/prg?search=lectures&id=" ++ textOf nr ++
-     "&show=long&sem="++univissem)
+     "https://univis.uni-kiel.de/prg?search=lectures&id=" ++ textOf nr ++
+     "&show=long&sem=" ++ univissem)
 
 -- Read all Informatik-lectures from UnivIS in a given semester
 -- and store the corresponding Curry terms in a file
@@ -78,19 +78,17 @@ loadLectures sem = do
   let univissem = showSemUnivis sem
       termfile  = storagedir </> "UnivisLectureURL_" ++ univissem ++ ".terms"
   xmlstring <- getContentsOfUrl $
-    "http://univis.uni-kiel.de/prg?search=lectures&department=080110000&sem="++
-    univissem++"&show=xml"
-  --writeFile ("univis_lectures_"++univissem++".xml") xmlstring
+    "https://univis.uni-kiel.de/prg?search=lectures&department=080110000&sem="++
+    univissem ++ "&show=xml"
+  writeFile ("univis_lectures_" ++ univissem ++ ".xml") xmlstring
   let xexps = parseXmlString xmlstring
-  if null xexps
-   then return (Right "No XML document!")
-   else
-    if not (null (tail xexps))
-    then return (Right "More than one XML document!")
-    else do
-     writeFile termfile
-       (unlines (map show
-                     (sortValues (set2 findLectureURL univissem (head xexps)))))
+  case xexps of
+    []      -> return $ Right "No XML document!"
+    (_:_:_) -> return $ Right "More than one XML document!"
+    _       -> do
+     writeFile termfile $
+       unlines $ map show
+                     (sortValues (set2 findLectureURL univissem (head xexps)))
      return (Left $ "...and written into file " ++ termfile)
 
 -- ...with benchmarking
