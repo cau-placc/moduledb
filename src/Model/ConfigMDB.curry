@@ -31,7 +31,7 @@ isTestSystem = do
 ------------------------------------------------------------------------------
 -- | Email address of administrator:
 adminEmail :: String
-adminEmail = "mh@informatik.uni-kiel.de"
+adminEmail = "moduldb@informatik.uni-kiel.de"
 
 -- | Gets the URL of the main page of the module system
 --   (without the script part).
