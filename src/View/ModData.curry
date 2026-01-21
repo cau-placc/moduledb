@@ -20,7 +20,7 @@ import View.MDBEntitiesToHtml
 import System.Helpers
 import View.ModInst
 import Model.ConfigMDB
-import View.User(leqUser)
+import View.User          ( leqUser )
 import System.SessionInfo
 import System.MultiLang
 
@@ -314,8 +314,7 @@ singleModDataView :: UserSessionInfo -> Bool -> ModData -> User
                   -> [BaseHtml]
 singleModDataView sinfo editallowed modData responsibleUser
      sprogs categorys prerequisites modinsts maybedesc xmlurl =
-  [par $ stopPlanNote sinfo,
-   h1 [htxt ((langSelect sinfo modDataNameE modDataNameG) modData), nbsp,
+  [h1 [htxt ((langSelect sinfo modDataNameE modDataNameG) modData), nbsp,
        ehrefScndBadge ("?ModData/url/" ++ modKeyString) [htxt "URL"], nbsp,
        ehrefScndBadge ("?ModData/pdf/" ++ modKeyString) [htxt "PDF"], nbsp,
        ehrefScndBadge xmlurl [htxt "XML"]],

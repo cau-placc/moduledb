@@ -312,29 +312,17 @@ minorNotes :: HTML h => UserSessionInfo -> [h]
 minorNotes sinfo = langSelect sinfo
   [italic [htxt "Important notes: "] `addClass` "badge badge-danger",
    ulist
-     [[htxt "The Department of Computer Science has decided to terminate ",
-       htxt "the use of this Module Information System by the end of 2025. ",
-       htxt "Due to this reason, the official planning of modules is shown ",
-       htxt "only until the summer term 2025."],
-      [htxt "The Department of Computer Science has decided to stop ",
-       htxt "the long-term planning of modules after the summer term 2025."],
-      [htxt "The possible minor/application subjects and their modules are listed ",
-       ehrefScndBadge minorURL [htxt "on this page."]]]]
+     [[htxt "The possible minor subjects and their modules are listed ",
+       ehrefScndBadge minorURLen [htxt "on this page."]]]]
   [italic [htxt "Wichtige Hinweise: "] `addClass` "badge badge-danger",
    ulist
-     [[htxt "Das Institut für Informatik hat beschlossen, dieses ",
-       htxt "Modulinformationssystem ab dem WS25/26 nicht mehr ",
-       htxt "weiterzuführen. Aus diesem Grund endet die offizielle ",
-       htxt "Langfristplanung der Module im Sommersemester 2025."],
-      [htxt "Das Institut für Informatik hat beschlossen, zukünftig ",
-       htxt "keine Langfristplanung der Module mehr durchzuführen, sodass ",
-       htxt "eine Modulplanung nicht mehr zu finden ist."],
-      [htxt "Die möglichen Anwendungsgebiete im Bachelor- und Masterstudiengang ",
+     [[htxt "Die möglichen Nebenfächer im Bachelor- und Masterstudiengang ",
        htxt "Informatik sowie die dazugehörigen Module findet man ",
-       ehrefScndBadge minorURL [htxt "auf dieser Seite."]]
+       ehrefScndBadge minorURLde [htxt "auf dieser Seite."]]
      ]]
  where
-  minorURL = "https://www.inf.uni-kiel.de/de/studium/studiengaenge/informatik-1-fach-bachelorstudiengang/nebenfaecher_anwendungsgebiete"
+  minorURLen = "https://www.uni-kiel.de/en/tf/study/ba-computer-science/students/course-of-study/minor-subject"
+  minorURLde = "https://www.uni-kiel.de/de/tf/studieren/ba-informatik/studierende/studienverlauf/nebenfach"
 
 stopPlanNote :: HTML h => UserSessionInfo -> [h]
 stopPlanNote sinfo = langSelect sinfo

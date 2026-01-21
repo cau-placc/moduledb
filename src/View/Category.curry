@@ -361,8 +361,8 @@ listEmailCorrectionView modinsts semperiod users =
    sendSingleMail (md,sem,reason) = do
      let to      = getResponsibleEmail md
          from    = adminEmail
-         subject = "Modul "++modDataCode md++": "++modDataNameG md
-         contents = (if reason=="NOMDB"
+         subject = "Modul " ++ modDataCode md ++ ": " ++ modDataNameG md
+         contents = (if reason == "NOMDB"
                        then missingMDBMessage
                        else missingUnivISMessage) md sem
      sendMail from to subject contents

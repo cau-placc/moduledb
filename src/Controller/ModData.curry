@@ -475,7 +475,7 @@ emailModuleMessageForm =
         [longTextField mcc adminEmail]],
        [[bold [htxt "Betreff:"]],
         [longTextField msub
-                      ("Modul "++modDataCode mdata++": "++modDataNameG mdata)]],
+           ("Modul " ++ modDataCode mdata ++ ": " ++ modDataNameG mdata)]],
        [[bold [htxt "Inhalt:"]],
         [textArea mcnt (10,70) msg `addClass` "input-xxlarge"]]],
      par [spPrimButton "Absenden" sendTo,
