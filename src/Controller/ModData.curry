@@ -167,14 +167,17 @@ editModDataController mdata =
   checkAuthorization (modDataOperationAllowed (UpdateEntity mdata)) $
    \sinfo -> do
     admin <- isAdmin
-    spcats <- if admin then getStudyProgramsWithCats else return []
-    allUsers <- runQ queryAllUsers
-    responsibleUser <- runJustT (getResponsibleUser mdata)
-    categorizingCategorys <- runJustT (getModDataCategories mdata)
-    setParWuiStore wuiEditModDataStore
-      (sinfo,admin,mdata,responsibleUser,allUsers,spcats)
-      (mdata, categorizingCategorys)
-    return [formElem editModDataForm]
+    if not admin && modDataVisible mdata
+      then displayError "Operation not allowed"
+      else do
+        spcats <- if admin then getStudyProgramsWithCats else return []
+        allUsers <- runQ queryAllUsers
+        responsibleUser <- runJustT (getResponsibleUser mdata)
+        categorizingCategorys <- runJustT (getModDataCategories mdata)
+        setParWuiStore wuiEditModDataStore
+          (sinfo,admin,mdata,responsibleUser,allUsers,spcats)
+          (mdata, categorizingCategorys)
+        return [formElem editModDataForm]
 
 --- A WUI form to edit the given ModData entity.
 editModDataForm ::

@@ -319,7 +319,9 @@ singleModDataView sinfo editallowed modData responsibleUser
        ehrefScndBadge ("?ModData/pdf/" ++ modKeyString) [htxt "PDF"], nbsp,
        ehrefScndBadge xmlurl [htxt "XML"]],
    par $ (if admin || editallowed
-          then [modDataEditButton "edit" "Change basic data", nbsp ] ++
+          then (if not admin && modDataVisible modData
+                  then []
+                  else [modDataEditButton "edit" "Change basic data", nbsp ]) ++
                (maybe []
                   (\_ ->
                     [modDataEditButton "editdesc" "Change description", nbsp])
